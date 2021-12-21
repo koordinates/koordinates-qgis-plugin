@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<button onclick="logout()">Log out</button>
+<h1>Koordinates catalog</h1>
+
+<div onmouseover="showBoundingBox()" onmouseout="hideBoundingBox()" style="border:1px solid black; margin: 10px;">
+<p>Dataset: Test</p>
+<button onclick="clone('test1')">Clone</button>
+<button onclick="addWms('test1')">Add as WMS</button>
+<button onclick="addWfs('test1')">Add as WFS</button>
+<p id="test1"></p>
+</div>
+<p></p>
+<div onmouseover="showBoundingBox()" onmouseout="hideBoundingBox()" style="border:1px solid black; margin: 10px;">
+<p>Dataset: Test2</p>
+<button onclick="clone('test2')">Clone</button>
+<button onclick="addWms('test2')">Add as WMS</button>
+<button onclick="addWfs('test2')">Add as WFS</button>
+<p id="test2"></p>
+</div>
+
+<script>
+function clone(url) {
+  qgisPlugin.clone(url);
+}
+function addWms(url) {
+  qgisPlugin.addWms(url);
+}
+function addWfs(url) {
+  qgisPlugin.addWfs(url);
+}
+function logout() {
+  qgisPlugin.logout();
+}
+function showBoundingBox(){
+	qgisPlugin.showBoundingBox()
+}
+function hideBoundingBox(){
+	qgisPlugin.hideBoundingBox()
+}
+function setLayerIsInProject(layername, isInProject){
+	document.getElementById(layername).innerHTML = "Added to QGIS project:" + String(isInProject);
+}
+</script>
+
+</body>
+</html>
