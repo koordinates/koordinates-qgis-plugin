@@ -1,6 +1,7 @@
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import QApplication
 
+
 def waitcursor(method):
     def func(*args, **kw):
         try:
@@ -16,6 +17,7 @@ def waitcursor(method):
 
 class KartNotInstalledException(Exception):
     pass
+
 
 def cloneKartRepo(url, parent):
     try:
@@ -34,4 +36,3 @@ def cloneKartRepo(url, parent):
             return False
     except ImportError:
         raise KartNotInstalledException()
-

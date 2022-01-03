@@ -5,20 +5,20 @@
 <button onclick="logout()">Log out</button>
 <h1>Koordinates catalog</h1>
 
-<div onmouseover="showBoundingBox()" onmouseout="hideBoundingBox()" style="border:1px solid black; margin: 10px;">
+<div onmouseover="showBoundingBox([0, 0, 90, 90])" onmouseout="hideBoundingBox()" style="border:1px solid black; margin: 10px;">
 <p>Dataset: Test</p>
 <button onclick="clone('test1')">Clone</button>
 <button onclick="addWms('test1')">Add as WMS</button>
 <button onclick="addWfs('test1')">Add as WFS</button>
-<p id="test1"></p>
+<p id="test1">Layer is not added to current Project</p>
 </div>
 <p></p>
-<div onmouseover="showBoundingBox()" onmouseout="hideBoundingBox()" style="border:1px solid black; margin: 10px;">
+<div onmouseover="showBoundingBox([-90, -90, 0, 0])" onmouseout="hideBoundingBox()" style="border:1px solid black; margin: 10px;">
 <p>Dataset: Test2</p>
 <button onclick="clone('test2')">Clone</button>
 <button onclick="addWms('test2')">Add as WMS</button>
 <button onclick="addWfs('test2')">Add as WFS</button>
-<p id="test2"></p>
+<p id="test2">Layer is not added to current Project</p>
 </div>
 
 <script>
@@ -34,14 +34,20 @@ function addWfs(url) {
 function logout() {
   qgisPlugin.logout();
 }
-function showBoundingBox(){
-	qgisPlugin.showBoundingBox()
+function showBoundingBox(coords){
+	qgisPlugin.showBoundingBox(coords);
 }
 function hideBoundingBox(){
-	qgisPlugin.hideBoundingBox()
+	qgisPlugin.hideBoundingBox();
 }
 function setLayerIsInProject(layername, isInProject){
-	document.getElementById(layername).innerHTML = "Added to QGIS project:" + String(isInProject);
+	try{
+		document.getElementById(layername).innerHTML = "Added to QGIS project: " + String(isInProject);
+		return layername + String(isInProject);
+	}
+	catch (e){
+		return e.toString()
+	}
 }
 </script>
 

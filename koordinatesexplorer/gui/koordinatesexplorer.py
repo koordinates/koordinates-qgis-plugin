@@ -1,15 +1,24 @@
 import os
 
-from qgis.core import QgsApplication, Qgis, QgsProject
-from qgis.gui import QgsMessageBar
+from qgis.core import (
+    QgsApplication,
+    Qgis,
+    QgsProject,
+    QgsWkbTypes,
+    QgsCoordinateTransform,
+    QgsCoordinateReferenceSystem,
+    QgsGeometry,
+    QgsRectangle
+)
+from qgis.gui import QgsMessageBar, QgsRubberBand
 from qgis.utils import iface
 
 from qgis.PyQt import uic
-from qgis.PyQt.QtCore import QObject, QSettings, QUrl, pyqtSlot
+from qgis.PyQt.QtCore import QObject, QSettings, QUrl, pyqtSlot, Qt
 from qgis.PyQt.QtWidgets import QDockWidget, QVBoxLayout, QSizePolicy
 from qgis.PyQt.QtWebKitWidgets import QWebView, QWebInspector
 from qgis.PyQt.QtWebKit import QWebSettings
-from qgis.PyQt.QtGui import QPixmap
+from qgis.PyQt.QtGui import QPixmap, QColor
 
 from koordinatesexplorer.client import KoordinatesClient, LoginException
 from koordinatesexplorer.utils import cloneKartRepo, KartNotInstalledException
@@ -26,10 +35,18 @@ SAVE_API_KEY = "SaveApiKey"
 
 AUTH_CONFIG_ID = "koordinates_auth_id"
 
+
 class KoordinatesExplorer(BASE, WIDGET):
     def __init__(self):
         super(QDockWidget, self).__init__(iface.mainWindow())
         self.setupUi(self)
+        self.webView = QWebView()
+        layout = QVBoxLayout()
+        layout.setMargin(0)
+        layout.addWidget(self.webView)
+        self.pageBrowser.setLayout(layout)
+        self.webView.page().mainFrame().javaScriptWindowObjectCleared.connect(self._addToJavaScript)
+        self.webView.page().settings().setAttribute(QWebSettings.JavascriptEnabled, True)
 
         pixmap = QPixmap(os.path.join(pluginPath, "img", "koordinates.png"))
         self.labelHeader.setPixmap(pixmap)
@@ -51,44 +68,48 @@ class KoordinatesExplorer(BASE, WIDGET):
 
         self.setForLogin(KoordinatesClient.instance().isLoggedIn())
 
-        QgsProject.instance().layerWillBeRemoved.connect(self.layerRemoved)
-        QgsProject.instance().layerWasAdded.connect(self.layerAdded)
-
     def layerAdded(self, layer):
         js = f'setLayerIsInProject("{layer.name()}", true)'
-        print(js)
         self.webView.page().mainFrame().evaluateJavaScript(js)
 
     def layerRemoved(self, layerid):
-        layer = QgsProject.mapLayers()[layerid]
+        layer = QgsProject.instance().mapLayers()[layerid]
         self.webView.page().mainFrame().evaluateJavaScript(f'setLayerIsInProject("{layer.name()}", false)')
 
     def setForLogin(self, loggedIn):
         if loggedIn:
-            self.webView = QWebView()
-            layout = QVBoxLayout()
-            layout.setMargin(0)
-            layout.addWidget(self.webView)
-            self.pageBrowser.setLayout(layout)
             self.jsObject = JSObject(self)
-            self.webView.page().mainFrame().addToJavaScriptWindowObject("qgisPlugin", self.jsObject)
             #self.webView.page().settings().setAttribute(QWebSettings.DeveloperExtrasEnabled, True)
-            self.webView.page().settings().setAttribute(QWebSettings.JavascriptEnabled, True)
             self.webView.load(URL)
             #inspector = QWebInspector(self.webView)
             #inspector.setPage(self.webView.page())
             self.stackedWidget.setCurrentWidget(self.pageBrowser)
+            QgsProject.instance().layerWillBeRemoved.connect(self.layerRemoved)
+            QgsProject.instance().layerWasAdded.connect(self.layerAdded)
         else:
             self.stackedWidget.setCurrentWidget(self.pageAuth)
+            try:
+                QgsProject.instance().layerWillBeRemoved.disconnect(self.layerRemoved)
+                QgsProject.instance().layerWasAdded.disconnect(self.layerAdded)
+                self.jsObject.hideBoundingBox()
+            except Exception:  # signal might not be connected
+                pass
+
+    def _addToJavaScript(self):
+        self.webView.page().mainFrame().addToJavaScriptWindowObject("qgisPlugin", self.jsObject)
 
     def loginClicked(self):
         apiKey = self.txtApiKey.text()
         if apiKey:
             try:
                 KoordinatesClient.instance().login(apiKey)
-            except LoginException:
+            except (LoginException, ValueError):
                 self.bar.pushMessage("Invalid API Key", Qgis.Warning, duration=5)
                 return
+            except Exception:
+                self.bar.pushMessage("Could not log in. Check your connection and your API Key value", Qgis.Warning, duration=5)
+                return
+
             if self.saveApiKey:
                 self.storeApiKey()
         else:
@@ -111,7 +132,6 @@ class KoordinatesExplorer(BASE, WIDGET):
         )
         return apiKey
 
-
     def setApiKeyField(self):
         self.txtApiKey.setPasswordVisibility(False)
         if not self.saveApiKey:
@@ -127,6 +147,14 @@ class KoordinatesExplorer(BASE, WIDGET):
 
 
 class JSObject(QObject):
+
+    def __init__(self, parent):
+        QObject.__init__(self, parent)
+        self.aoi = QgsRubberBand(iface.mapCanvas(), QgsWkbTypes.PolygonGeometry)
+        self.aoi.setFillColor(QColor(0, 0, 0, 0))
+        self.aoi.setStrokeColor(QColor(255, 0, 0))
+        self.aoi.setWidth(2)
+        self.aoi.setLineStyle(Qt.DashLine)
 
     @pyqtSlot(str)
     def clone(self, url):
@@ -150,11 +178,25 @@ class JSObject(QObject):
     def logout(self):
         KoordinatesClient.instance().logout()
 
-    @pyqtSlot()
-    def showBoundingBox(self):
-        print("show")
+    def _geom_in_project_crs(self, coords):
+        transform = QgsCoordinateTransform(
+            QgsCoordinateReferenceSystem("EPSG:4326"),
+            QgsProject.instance().crs(),
+            QgsProject.instance(),
+        )
+        rect = QgsRectangle(*coords)
+        geom = QgsGeometry.fromRect(rect)
+        geom.transform(transform)
+        return geom
+
+    @pyqtSlot(list)
+    def showBoundingBox(self, coords):
+        geom = self._geom_in_project_crs(coords)
+        self.aoi.setToGeometry(geom)
+        for layer in QgsProject.instance().mapLayers().values():
+            print(layer.name())
+            self.parent().layerAdded(layer)
 
     @pyqtSlot()
     def hideBoundingBox(self):
-        print("hide")
-
+        self.aoi.reset(QgsWkbTypes.PolygonGeometry)

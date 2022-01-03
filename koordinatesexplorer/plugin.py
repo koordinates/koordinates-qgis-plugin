@@ -26,12 +26,10 @@ class KoordinatesPlugin(object):
         self.explorerAction.triggered.connect(self.showDock)
         self.dock.hide()
 
-
     def showDock(self):
-       self.dock.show()
+        self.dock.show()
 
     def unload(self):
         self.iface.removeDockWidget(self.dock)
         self.dock = None
         self.iface.removePluginMenu("Koordinates", self.explorerAction)
-
