@@ -23,14 +23,13 @@ def cloneKartRepo(url, parent):
     try:
         from kart.gui.clonedialog import CloneDialog
         from kart.kartapi import Repository
+
         dialog = CloneDialog(parent)
         dialog.txtSrc.setText(url)
         dialog.show()
         ret = dialog.exec_()
         if ret == dialog.Accepted:
-            Repository.clone(
-                dialog.src, dialog.dst, dialog.location, dialog.extent
-            )
+            Repository.clone(dialog.src, dialog.dst, dialog.location, dialog.extent)
             return True
         else:
             return False

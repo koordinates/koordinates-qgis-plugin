@@ -8,7 +8,7 @@ from qgis.core import (
     QgsCoordinateTransform,
     QgsCoordinateReferenceSystem,
     QgsGeometry,
-    QgsRectangle
+    QgsRectangle,
 )
 from qgis.gui import QgsMessageBar, QgsRubberBand
 from qgis.utils import iface
@@ -25,10 +25,14 @@ from koordinatesexplorer.utils import cloneKartRepo, KartNotInstalledException
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
-WIDGET, BASE = uic.loadUiType(os.path.join(os.path.dirname(__file__), "koordinatesexplorer.ui"))
+WIDGET, BASE = uic.loadUiType(
+    os.path.join(os.path.dirname(__file__), "koordinatesexplorer.ui")
+)
 
-URL = QUrl(f"file:///{os.path.join(os.path.dirname(os.path.abspath(__file__)), 'index.html')}")
-#URL = QUrl("https://koordinates.com/uivx")
+URL = QUrl(
+    f"file:///{os.path.join(os.path.dirname(os.path.abspath(__file__)), 'index.html')}"
+)
+# URL = QUrl("https://koordinates.com/uivx")
 
 SETTINGS_NAMESPACE = "Koordinates"
 SAVE_API_KEY = "SaveApiKey"
@@ -45,8 +49,12 @@ class KoordinatesExplorer(BASE, WIDGET):
         layout.setMargin(0)
         layout.addWidget(self.webView)
         self.pageBrowser.setLayout(layout)
-        self.webView.page().mainFrame().javaScriptWindowObjectCleared.connect(self._addToJavaScript)
-        self.webView.page().settings().setAttribute(QWebSettings.JavascriptEnabled, True)
+        self.webView.page().mainFrame().javaScriptWindowObjectCleared.connect(
+            self._addToJavaScript
+        )
+        self.webView.page().settings().setAttribute(
+            QWebSettings.JavascriptEnabled, True
+        )
 
         pixmap = QPixmap(os.path.join(pluginPath, "img", "koordinates.png"))
         self.labelHeader.setPixmap(pixmap)
@@ -74,15 +82,17 @@ class KoordinatesExplorer(BASE, WIDGET):
 
     def layerRemoved(self, layerid):
         layer = QgsProject.instance().mapLayers()[layerid]
-        self.webView.page().mainFrame().evaluateJavaScript(f'setLayerIsInProject("{layer.name()}", false)')
+        self.webView.page().mainFrame().evaluateJavaScript(
+            f'setLayerIsInProject("{layer.name()}", false)'
+        )
 
     def setForLogin(self, loggedIn):
         if loggedIn:
             self.jsObject = JSObject(self)
-            #self.webView.page().settings().setAttribute(QWebSettings.DeveloperExtrasEnabled, True)
+            # self.webView.page().settings().setAttribute(QWebSettings.DeveloperExtrasEnabled, True)
             self.webView.load(URL)
-            #inspector = QWebInspector(self.webView)
-            #inspector.setPage(self.webView.page())
+            # inspector = QWebInspector(self.webView)
+            # inspector.setPage(self.webView.page())
             self.stackedWidget.setCurrentWidget(self.pageBrowser)
             QgsProject.instance().layerWillBeRemoved.connect(self.layerRemoved)
             QgsProject.instance().layerWasAdded.connect(self.layerAdded)
@@ -96,7 +106,9 @@ class KoordinatesExplorer(BASE, WIDGET):
                 pass
 
     def _addToJavaScript(self):
-        self.webView.page().mainFrame().addToJavaScriptWindowObject("qgisPlugin", self.jsObject)
+        self.webView.page().mainFrame().addToJavaScriptWindowObject(
+            "qgisPlugin", self.jsObject
+        )
 
     def loginClicked(self):
         apiKey = self.txtApiKey.text()
@@ -107,7 +119,11 @@ class KoordinatesExplorer(BASE, WIDGET):
                 self.bar.pushMessage("Invalid API Key", Qgis.Warning, duration=5)
                 return
             except Exception:
-                self.bar.pushMessage("Could not log in. Check your connection and your API Key value", Qgis.Warning, duration=5)
+                self.bar.pushMessage(
+                    "Could not log in. Check your connection and your API Key value",
+                    Qgis.Warning,
+                    duration=5,
+                )
                 return
 
             if self.saveApiKey:
@@ -127,7 +143,9 @@ class KoordinatesExplorer(BASE, WIDGET):
 
     def retrieveApiKey(self):
         apiKey = (
-            QgsApplication.authManager().authSetting(AUTH_CONFIG_ID, defaultValue="", decrypt=True)
+            QgsApplication.authManager().authSetting(
+                AUTH_CONFIG_ID, defaultValue="", decrypt=True
+            )
             or ""
         )
         return apiKey
@@ -147,7 +165,6 @@ class KoordinatesExplorer(BASE, WIDGET):
 
 
 class JSObject(QObject):
-
     def __init__(self, parent):
         QObject.__init__(self, parent)
         self.aoi = QgsRubberBand(iface.mapCanvas(), QgsWkbTypes.PolygonGeometry)
@@ -160,9 +177,15 @@ class JSObject(QObject):
     def clone(self, url):
         try:
             if cloneKartRepo(url, self.parent()):
-                self.parent().bar.pushMessage("Repository correctly cloned", Qgis.Information, duration=5)
+                self.parent().bar.pushMessage(
+                    "Repository correctly cloned", Qgis.Information, duration=5
+                )
         except KartNotInstalledException:
-            self.parent().bar.pushMessage("Kart plugin must be installed to clone repositories", Qgis.Warning, duration=5)
+            self.parent().bar.pushMessage(
+                "Kart plugin must be installed to clone repositories",
+                Qgis.Warning,
+                duration=5,
+            )
 
     @pyqtSlot(str)
     def addWms(self, url):

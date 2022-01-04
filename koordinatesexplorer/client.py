@@ -4,6 +4,7 @@ from qgis.PyQt.QtCore import pyqtSignal, QObject
 
 from koordinatesexplorer.utils import waitcursor
 
+
 class LoginException(Exception):
     pass
 

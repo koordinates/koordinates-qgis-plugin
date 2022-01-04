@@ -21,7 +21,9 @@ class KoordinatesPlugin(object):
         self.dock = KoordinatesExplorer()
         self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dock)
 
-        self.explorerAction = QAction("Koordinates explorer...", self.iface.mainWindow())
+        self.explorerAction = QAction(
+            "Koordinates explorer...", self.iface.mainWindow()
+        )
         self.iface.addPluginToMenu("Koordinates", self.explorerAction)
         self.explorerAction.triggered.connect(self.showDock)
         self.dock.hide()

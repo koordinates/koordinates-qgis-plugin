@@ -30,7 +30,7 @@ def package(version=None):
         cfg.read(os.path.join(src_dir, "metadata.txt"))
 
         if version:
-            cfg.set("general", "version", re.sub(r'^v', '', version))
+            cfg.set("general", "version", re.sub(r"^v", "", version))
 
         buf = StringIO()
         cfg.write(buf)
@@ -83,6 +83,7 @@ def install():
     elif not os.path.exists(dst):
         os.symlink(src, dst, True)
 
+
 def setup():
     extlibs = os.path.join(os.path.dirname(__file__), "koordinatesexplorer", "extlibs")
     os.makedirs(extlibs, exist_ok=True)
@@ -106,13 +107,18 @@ def setup():
             print(f"Error installing {req} with pip.")
             sys.exit(1)
 
+
 def usage():
-    print((
-        "Usage:\n"
-        f"  {sys.argv[0]} package [VERSION]    Build a QGIS plugin zip file\n"
-        f"  {sys.argv[0]} install              Install in your local QGIS (for development)\n"
-    ), file=sys.stderr)
+    print(
+        (
+            "Usage:\n"
+            f"  {sys.argv[0]} package [VERSION]    Build a QGIS plugin zip file\n"
+            f"  {sys.argv[0]} install              Install in your local QGIS (for development)\n"
+        ),
+        file=sys.stderr,
+    )
     sys.exit(2)
+
 
 if len(sys.argv) == 2 and sys.argv[1] == "install":
     install()
