@@ -32,4 +32,4 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         allowUpdates: true
         omitNameDuringUpdate: true
-        artifacts: "kart-${GITHUB_REF##*/}.zip"
+        artifacts: "koordinates-${GITHUB_REF##*/}.zip"

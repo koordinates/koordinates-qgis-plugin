@@ -20,9 +20,9 @@ jobs:
       run: |
         python helper.py package dev-${GITHUB_SHA}
         mkdir tmp
-        unzip kart.zip -d tmp
+        unzip koordinates.zip -d tmp
 
     - uses: actions/upload-artifact@v2
       with:
-        name: kart_package
+        name: koordinates_package
         path: tmp
