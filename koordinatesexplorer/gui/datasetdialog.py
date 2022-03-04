@@ -8,6 +8,8 @@ from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import QPixmap
 from qgis.PyQt.QtWidgets import QDialog
 
+from koordinatesexplorer.gui.thumbnails import downloadThumbnail
+
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
 WIDGET, BASE = uic.loadUiType(
@@ -27,11 +29,13 @@ class DatasetDialog(BASE, WIDGET):
         self.labelLastUpdated.setText(parser.parse(dataset["published_at"]).strftime("%d, %b %Y"))
         self.labelLayerId.setText(str(dataset["id"]))
         self.labelDataType.setText(f'<b>Data type</b>: {dataset["data"]["geometry_type"]}. {dataset["data"]["feature_count"]} features')
-        path = f"c:\\temp\\{dataset['id']}.png"
-        thumbnail = QPixmap(path)
+        downloadThumbnail(dataset["thumbnail_url"], self)
+        self.labelMap.setFixedSize(360, 189)
+        self.txtDescription.setHtml(dataset["description_html"])
+
+    def setThumbnail(self, img):
+        thumbnail = QPixmap(img)
         thumb = thumbnail.scaled(
             360, 189, Qt.KeepAspectRatio, Qt.SmoothTransformation
         )
         self.labelMap.setPixmap(thumb)
-        self.labelMap.setFixedSize(360, 189)
-        self.txtDescription.setHtml(dataset["description_html"])

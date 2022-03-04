@@ -5,6 +5,7 @@ from qgis.PyQt.QtCore import pyqtSignal, QObject
 
 from koordinatesexplorer.utils import waitcursor
 
+PAGE_SIZE = 20
 
 class LoginException(Exception):
     pass
@@ -47,14 +48,10 @@ class KoordinatesClient(QObject):
 
         self.headers = {"Authorization": f"key {apiKey}"}
 
-        ret = requests.get(
-            "https://koordinates.com/services/api/v1/layers?kind=raster",
-            headers=self.headers,
-        )
-        if not ret.ok:
+        try:
+            self.userEMail()
+        except Exception:
             raise LoginException()
-
-        self._datasets = ret.json()
 
         if oldKey != apiKey:
             self.loginChanged.emit(self.isLoggedIn())
@@ -70,18 +67,28 @@ class KoordinatesClient(QObject):
     def isLoggedIn(self):
         return self.apiKey is not None
 
-    def datasets(self):
-        return self._datasets
+    def datasets(self, page=1):
+        headers = {"Expand": "list,list.publisher,list.styles,list.data.source_summary"}
+        params = {"page_size": PAGE_SIZE, "page": page}
+        return self._get("data", headers, params)
+
+    def userEMail(self):
+        return self._get("users/me")["email"]
 
     def dataset(self, datasetid):
         if str(datasetid) not in self.layers:
-            ret = requests.get(
-                f"https://koordinates.com/services/api/v1/layers/{datasetid}",
-                headers=self.headers,
-            )
-            self.layers[str(datasetid)] = ret.json()
-        '''
-        with open("c:\\temp\\layers.json", "w") as f:
-            json.dump(self.layers, f)
-        '''
+            self.layers[str(datasetid)] = self._get(f"layers/{datasetid}")
         return self.layers[str(datasetid)]
+
+    @waitcursor
+    def _get(self, url, headers=None, params=None):
+        headers = headers or {}
+        headers.update(self.headers)
+        params = params or {}
+        ret = requests.get(
+                f"https://koordinates.com/services/api/v1/{url}",
+                headers=headers,
+                params=params
+            )
+        ret.raise_for_status()
+        return ret.json()

@@ -1,6 +1,6 @@
 import os
 import json
-import requests
+import math
 from dateutil import parser
 
 from qgis.PyQt.QtCore import Qt, pyqtSignal
@@ -12,12 +12,7 @@ from qgis.PyQt.QtWidgets import (
     QFrame,
     QLabel,
     QToolButton,
-    QMenu,
-    QDialog,
     QVBoxLayout,
-    QTableWidget,
-    QTableWidgetItem,
-    QHeaderView
 )
 
 from qgis.gui import QgsRubberBand
@@ -30,12 +25,11 @@ from qgis.core import (
     QgsCoordinateReferenceSystem,
     QgsFields,
     QgsJsonUtils,
-    Qgis,
-    QgsMessageLog,
 )
 
-from koordinatesexplorer.client import KoordinatesClient
+from koordinatesexplorer.client import KoordinatesClient, PAGE_SIZE
 from koordinatesexplorer.gui.datasetdialog import DatasetDialog
+from koordinatesexplorer.gui.thumbnails import downloadThumbnail
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
@@ -47,50 +41,62 @@ class DatasetsBrowserWidget(QListWidget):
     def populate(self):
         self.clear()
         datasets = KoordinatesClient.instance().datasets()
-        for dataset in datasets[1:40]:
+        for dataset in datasets:
             datasetItem = QListWidgetItem()
             datasetWidget = DatasetItemWidget(dataset)
             self.addItem(datasetItem)
             self.setItemWidget(datasetItem, datasetWidget)
             datasetItem.setSizeHint(datasetWidget.sizeHint())
-            datasetWidget.datasetDetailsRequested.connect(self._datasetDetailsRequested)
+        loadMoreItem = QListWidgetItem()
+        loadMoreWidget = LoadMoreItemWidget(self)
+        self.addItem(loadMoreItem)
+        self.setItemWidget(loadMoreItem, loadMoreWidget)
+        loadMoreItem.setSizeHint(loadMoreWidget.sizeHint())
 
-    def _datasetDetailsRequested(self, dataset):
-        self.datasetDetailsRequested.emit(dataset)
+
+class LoadMoreItemWidget(QFrame):
+    def __init__(self, listWidget):
+        QFrame.__init__(self)
+        self.listWidget = listWidget
+        self.btnLoadMore = QToolButton()
+        self.btnLoadMore.setText("Load more...")
+        self.btnLoadMore.clicked.connect(self.loadMore)
+
+        layout = QHBoxLayout()
+        layout.addStretch()
+        layout.addWidget(self.btnLoadMore)
+        layout.addStretch()
+        self.setLayout(layout)
+
+    def loadMore(self):
+        page = math.ceil(self.listWidget.count() / PAGE_SIZE)
+        datasets = KoordinatesClient.instance().datasets(page=page)
+        for dataset in datasets:
+            datasetItem = QListWidgetItem()
+            datasetWidget = DatasetItemWidget(dataset)
+            self.listWidget.insertItem(self.listWidget.count() - 1, datasetItem)
+            self.listWidget.setItemWidget(datasetItem, datasetWidget)
+            datasetItem.setSizeHint(datasetWidget.sizeHint())
 
 
 class DatasetItemWidget(QFrame):
-
-    datasetDetailsRequested = pyqtSignal(dict)
-
     def __init__(self, dataset):
         QFrame.__init__(self)
         self.setMouseTracking(True)
         self.setStyleSheet("DatasetItemWidget{border: 2px solid transparent;}")
-        self.dataset = KoordinatesClient.instance().dataset(dataset["id"])
-
-        path = f"c:\\temp\\{dataset['id']}.png"
-        '''
-        r = requests.get(self.dataset["thumbnail_url"], stream=True)
-        with open(path, 'wb') as f:
-            for chunk in r.iter_content():
-                f.write(chunk)
-        '''
+        self.dataset = dataset
 
         def pixmap(name):
             return QPixmap(os.path.join(os.path.dirname(os.path.dirname(__file__)), "img", name))
 
-        thumbnail = QPixmap(path)
-        thumb = thumbnail.scaled(
-            120, 63, Qt.KeepAspectRatio, Qt.SmoothTransformation
-        )
-        self.iconLabel = QLabel()
-        self.iconLabel.setPixmap(thumb)
-        self.iconLabel.setFixedSize(120, 63)
+        self.labelMap = QLabel()
+        self.labelMap.setFixedSize(120, 63)
+        downloadThumbnail(self.dataset["thumbnail_url"], self)
 
         date = parser.parse(self.dataset["published_at"])
         self.labelName = QLabel()
         self.labelName.setFont(QFont('Arial', 10))
+        self.labelName.setWordWrap(True)
         self.labelName.setText(
             f'<b>{self.dataset["title"].upper()}</b><br>'
         )
@@ -120,13 +126,14 @@ class DatasetItemWidget(QFrame):
         self.btnAdd = QToolButton()
         self.btnAdd.setText("+Add")
         self.btnAdd.clicked.connect(self.addLayer)
+        self.btnAdd.setEnabled(self.dataset["kind"] == "raster")
 
         self.btnDetails = QToolButton()
         self.btnDetails.setText("Details")
         self.btnDetails.clicked.connect(self.showDetails)
 
         layout = QHBoxLayout()
-        layout.addWidget(self.iconLabel)
+        layout.addWidget(self.labelMap)
         layout.addLayout(vlayout)
         layout.addStretch()
         layout.addWidget(self.btnAdd)
@@ -139,6 +146,13 @@ class DatasetItemWidget(QFrame):
         self.footprint.setColor(QColor(255, 0, 0, 200))
         self.footprint.setFillColor(QColor(255, 0, 0, 40))
 
+    def setThumbnail(self, img):
+        thumbnail = QPixmap(img)
+        thumb = thumbnail.scaled(
+            120, 63, Qt.KeepAspectRatio, Qt.SmoothTransformation
+        )
+        self.labelMap.setPixmap(thumb)
+
     def addLayer(self):
         apikey = KoordinatesClient.instance().apiKey
         uri = (
@@ -149,7 +163,8 @@ class DatasetItemWidget(QFrame):
         iface.addRasterLayer(uri, self.dataset["title"], "wms")
 
     def showDetails(self):
-        dlg = DatasetDialog(self.dataset)
+        dataset = KoordinatesClient.instance().dataset(self.dataset["id"])
+        dlg = DatasetDialog(dataset)
         dlg.exec()
 
     def _geomFromGeoJson(self, geojson):
@@ -192,100 +207,3 @@ class DatasetItemWidget(QFrame):
         rect.scale(1.05)
         iface.mapCanvas().setExtent(rect)
         iface.mapCanvas().refresh()
-
-    def showProperties(self):
-        dialog = QDialog()
-        dialog.setWindowTitle("Dataset properties")
-        layout = QVBoxLayout()
-        table = QTableWidget()
-
-        table.setRowCount(len(self.dataset))
-        table.setColumnCount(2)
-        table.setHorizontalHeaderLabels(["Property", "Value"])
-
-        for i, key in enumerate(self.dataset):
-            table.setItem(i, 0, QTableWidgetItem(str(key)))
-            table.setItem(i, 1, QTableWidgetItem(str(self.dataset[key])))
-
-        table.horizontalHeader().setStretchLastSection(True)
-        table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.Stretch)
-        table.verticalHeader().hide()
-
-        layout.addWidget(table)
-        dialog.setLayout(layout)
-        dialog.exec()
-
-
-class PointsDatasetItemWidget(DatasetItemWidget):
-    def __init__(self, dataset, username):
-        DatasetItemWidget.__init__(self, dataset)
-        self.username = username
-        self.labelName.setText(
-            f'<b>{dataset["datasetname"].upper()}</b><br>'
-            f'{dataset["date"] or "N/A"}<br>'
-            f'{dataset["count"]} points'
-        )
-
-        self.menu = QMenu()
-        self.actionDownload = self.menu.addAction("Download full dataset")
-        self.actionDownload.triggered.connect(self.download)
-        self.actionDownloadFiltered = self.menu.addAction(
-            "Download dataset filtered with current extent"
-        )
-        self.actionDownloadFiltered.triggered.connect(self.downloadFiltered)
-        self.menu.addSeparator()
-        self.actionZoom = self.menu.addAction("Zoom to dataset")
-        self.actionZoom.triggered.connect(self.zoomToBoundingBox)
-        self.menu.addSeparator()
-        self.actionShowProperties = self.menu.addAction("Show properties")
-        self.actionShowProperties.triggered.connect(self.showProperties)
-
-        self.btnAdd.setMenu(self.menu)
-        self.btnAdd.clicked.connect(self.btnAdd.showMenu)
-
-    def download(self):
-        self._download(False)
-
-    def downloadFiltered(self):
-        self._download(True)
-
-    def _download(self, filtered):
-        try:
-            if filtered:
-                ext = iface.mapCanvas().extent()
-                bbox = ",".join(
-                    [
-                        str(v)
-                        for v in [
-                            ext.xMinimum(),
-                            ext.xMaximum(),
-                            ext.yMinimum(),
-                            ext.yMaximum(),
-                        ]
-                    ]
-                )
-                geojson = self._downloadGeoJson(bbox)
-            else:
-                geojson = self._downloadGeoJson()
-            self._addLayer(geojson)
-        except Exception as e:
-            QgsMessageLog.logMessage(
-                f"Dataset '{self.dataset['datasetname']}' could not be"
-                f" downloaded.\n{e}",
-                "Detektia",
-                Qgis.Warning,
-            )
-            iface.messageBar().pushMessage(
-                "Detektia",
-                f"Dataset '{self.dataset['datasetname']}' could not be downloaded. See log for"
-                " details",
-                level=Qgis.Warning,
-                duration=5,
-            )
-
-    def _downloadGeoJson(self, bbox=None):
-        return DetektiaClient.instance().downloadPoints(
-            self.dataset["datasetname"], self.username, bbox
-        )
-

@@ -22,11 +22,6 @@ WIDGET, BASE = uic.loadUiType(
     os.path.join(os.path.dirname(__file__), "koordinatesexplorer.ui")
 )
 
-URL = QUrl(
-    f"file:///{os.path.join(os.path.dirname(os.path.abspath(__file__)), 'index.html')}"
-)
-# URL = QUrl("https://koordinates.com/uivx")
-
 SETTINGS_NAMESPACE = "Koordinates"
 SAVE_API_KEY = "SaveApiKey"
 
@@ -51,6 +46,7 @@ class KoordinatesExplorer(BASE, WIDGET):
         self.layout().addWidget(self.bar)
 
         self.btnLogin.clicked.connect(self.loginClicked)
+        self.btnLogout.clicked.connect(self.logoutClicked)
         self.chkSaveApiKey.stateChanged.connect(self.saveApiKeyChanged)
 
         self.saveApiKey = bool(
@@ -69,7 +65,8 @@ class KoordinatesExplorer(BASE, WIDGET):
     def setForLogin(self, loggedIn):
         if loggedIn:
             self.stackedWidget.setCurrentWidget(self.pageBrowser)
-            self.labelLoggedAs.setText("Logged as <b>volaya</b>")
+            email = KoordinatesClient.instance().userEMail()
+            self.labelLoggedAs.setText(f"Logged as <b>{email}</b>")
             self.browser.populate()
             '''
             QgsProject.instance().layerWillBeRemoved.connect(self.layerRemoved)
@@ -106,6 +103,9 @@ class KoordinatesExplorer(BASE, WIDGET):
         else:
             self.bar.pushMessage("Invalid API Key", Qgis.Warning, duration=5)
 
+    def logoutClicked(self):
+        KoordinatesClient.instance().logout()
+
     def saveApiKeyChanged(self, state):
         if state == 0:
             self.removeApiKey()
@@ -137,5 +137,3 @@ class KoordinatesExplorer(BASE, WIDGET):
 
     def removeApiKey(self):
         QgsApplication.authManager().removeAuthSetting(AUTH_CONFIG_ID)
-
-
