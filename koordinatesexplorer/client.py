@@ -7,6 +7,7 @@ from koordinatesexplorer.utils import waitcursor
 
 PAGE_SIZE = 20
 
+
 class LoginException(Exception):
     pass
 
@@ -33,9 +34,6 @@ class KoordinatesClient(QObject):
         KoordinatesClient.__instance = self
 
         self.layers = {}
-
-        with open("c:\\temp\\layers.json") as f:
-            self.layers = json.load(f)
 
         self.apiKey = None
         self.headers = None
@@ -86,9 +84,9 @@ class KoordinatesClient(QObject):
         headers.update(self.headers)
         params = params or {}
         ret = requests.get(
-                f"https://koordinates.com/services/api/v1/{url}",
-                headers=headers,
-                params=params
-            )
+            f"https://koordinates.com/services/api/v1/{url}",
+            headers=headers,
+            params=params,
+        )
         ret.raise_for_status()
         return ret.json()
