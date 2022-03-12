@@ -3,8 +3,9 @@ import json
 import math
 from dateutil import parser
 
+from qgis.core import Qgis
 from qgis.PyQt.QtCore import Qt, pyqtSignal
-from qgis.PyQt.QtGui import QColor, QPixmap, QFont
+from qgis.PyQt.QtGui import QColor, QPixmap, QFont, QCursor
 from qgis.PyQt.QtWidgets import (
     QListWidget,
     QListWidgetItem,
@@ -13,6 +14,8 @@ from qgis.PyQt.QtWidgets import (
     QLabel,
     QToolButton,
     QVBoxLayout,
+    QMenu,
+    QSizePolicy,
 )
 
 from qgis.gui import QgsRubberBand
@@ -30,6 +33,7 @@ from qgis.core import (
 from koordinatesexplorer.client import KoordinatesClient, PAGE_SIZE
 from koordinatesexplorer.gui.datasetdialog import DatasetDialog
 from koordinatesexplorer.gui.thumbnails import downloadThumbnail
+from koordinatesexplorer.utils import cloneKartRepo, KartNotInstalledException
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
@@ -38,26 +42,38 @@ class DatasetsBrowserWidget(QListWidget):
 
     datasetDetailsRequested = pyqtSignal(dict)
 
-    def populate(self):
+    def __init__(self):
+        QListWidget.__init__(self)
+        self.itemClicked.connect(self._itemClicked)
+        self.setSelectionMode(self.NoSelection)
+
+    def populate(self, params):
         self.clear()
-        datasets = KoordinatesClient.instance().datasets()
+        datasets, finished = KoordinatesClient.instance().datasets(params=params)
         for dataset in datasets:
             datasetItem = QListWidgetItem()
             datasetWidget = DatasetItemWidget(dataset)
             self.addItem(datasetItem)
             self.setItemWidget(datasetItem, datasetWidget)
             datasetItem.setSizeHint(datasetWidget.sizeHint())
-        loadMoreItem = QListWidgetItem()
-        loadMoreWidget = LoadMoreItemWidget(self)
-        self.addItem(loadMoreItem)
-        self.setItemWidget(loadMoreItem, loadMoreWidget)
-        loadMoreItem.setSizeHint(loadMoreWidget.sizeHint())
+        if not finished:
+            loadMoreItem = QListWidgetItem()
+            loadMoreWidget = LoadMoreItemWidget(self, params)
+            self.addItem(loadMoreItem)
+            self.setItemWidget(loadMoreItem, loadMoreWidget)
+            loadMoreItem.setSizeHint(loadMoreWidget.sizeHint())
+
+    def _itemClicked(self, item):
+        widget = self.itemWidget(item)
+        if isinstance(widget, DatasetItemWidget):
+            widget.showDetails()
 
 
 class LoadMoreItemWidget(QFrame):
-    def __init__(self, listWidget):
+    def __init__(self, listWidget, params):
         QFrame.__init__(self)
         self.listWidget = listWidget
+        self.params = params
         self.btnLoadMore = QToolButton()
         self.btnLoadMore.setText("Load more...")
         self.btnLoadMore.clicked.connect(self.loadMore)
@@ -70,13 +86,17 @@ class LoadMoreItemWidget(QFrame):
 
     def loadMore(self):
         page = math.ceil(self.listWidget.count() / PAGE_SIZE)
-        datasets = KoordinatesClient.instance().datasets(page=page)
+        datasets, finished = KoordinatesClient.instance().datasets(
+            page=page, params=self.params
+        )
         for dataset in datasets:
             datasetItem = QListWidgetItem()
             datasetWidget = DatasetItemWidget(dataset)
             self.listWidget.insertItem(self.listWidget.count() - 1, datasetItem)
             self.listWidget.setItemWidget(datasetItem, datasetWidget)
             datasetItem.setSizeHint(datasetWidget.sizeHint())
+        if finished:
+            self.listWidget.takeItem(self.listWidget.count())
 
 
 class DatasetItemWidget(QFrame):
@@ -86,20 +106,27 @@ class DatasetItemWidget(QFrame):
         self.setStyleSheet("DatasetItemWidget{border: 2px solid transparent;}")
         self.dataset = dataset
 
+        self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+
         def pixmap(name):
-            return QPixmap(os.path.join(os.path.dirname(os.path.dirname(__file__)), "img", name))
+            return QPixmap(
+                os.path.join(os.path.dirname(os.path.dirname(__file__)), "img", name)
+            )
 
         self.labelMap = QLabel()
         self.labelMap.setFixedSize(120, 63)
         downloadThumbnail(self.dataset["thumbnail_url"], self)
 
         date = parser.parse(self.dataset["published_at"])
-        self.labelName = QLabel()
-        self.labelName.setFont(QFont('Arial', 10))
+        self.labelName = QLabel(f'<b>{self.dataset["title"].upper()}</b><br>')
+        self.labelName.setFont(QFont("Arial", 10))
         self.labelName.setWordWrap(True)
-        self.labelName.setText(
-            f'<b>{self.dataset["title"].upper()}</b><br>'
-        )
+
+        def mousePressed(event):
+            self.showDetails()
+
+        self.labelName.mousePressEvent = mousePressed
+
         self.labelUpdatedIcon = QLabel()
         self.labelUpdatedIcon.setPixmap(pixmap("updated.png"))
         self.labelUpdated = QLabel(f'{date.strftime("%d, %b %Y")}')
@@ -125,33 +152,66 @@ class DatasetItemWidget(QFrame):
 
         self.btnAdd = QToolButton()
         self.btnAdd.setText("+Add")
-        self.btnAdd.clicked.connect(self.addLayer)
-        self.btnAdd.setEnabled(self.dataset["kind"] == "raster")
+        self.btnAdd.setStyleSheet(
+            """
+                background-color: rgb(140, 186, 127);
+                border-style: outset;
+                border-width: 2px;
+                border-radius: 10px;
+                border-color: black;
+                font: bold 14px;
+                padding: 20px;
+                """
+        )
+        self.btnAdd.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
 
-        self.btnDetails = QToolButton()
-        self.btnDetails.setText("Details")
-        self.btnDetails.clicked.connect(self.showDetails)
+        self.menu = QMenu()
+        if self.dataset.get("kind") == "raster":
+            self.actionWmts = self.menu.addAction("WMTS layer")
+            self.actionWmts.triggered.connect(self.addLayer)
+        if self.dataset.get("repository") is not None:
+            self.actionClone = self.menu.addAction("Clone repository")
+            self.actionClone.triggered.connect(self.cloneRepository)
+
+        if self.menu.actions():
+            self.btnAdd.setMenu(self.menu)
+            self.btnAdd.clicked.connect(self.btnAdd.showMenu)
+            self.btnAdd.setEnabled(True)
+        else:
+            self.btnAdd.setEnabled(False)
 
         layout = QHBoxLayout()
         layout.addWidget(self.labelMap)
         layout.addLayout(vlayout)
-        layout.addStretch()
         layout.addWidget(self.btnAdd)
-        layout.addWidget(self.btnDetails)
         self.setLayout(layout)
 
-        self.bbox = self._geomFromGeoJson(self.dataset["data"]["extent"])
+        self.bbox = self._geomFromGeoJson(self.dataset["data"].get("extent"))
         self.footprint = QgsRubberBand(iface.mapCanvas(), QgsWkbTypes.PolygonGeometry)
         self.footprint.setWidth(2)
         self.footprint.setColor(QColor(255, 0, 0, 200))
         self.footprint.setFillColor(QColor(255, 0, 0, 40))
 
+        self.setCursor(QCursor(Qt.PointingHandCursor))
+
     def setThumbnail(self, img):
         thumbnail = QPixmap(img)
-        thumb = thumbnail.scaled(
-            120, 63, Qt.KeepAspectRatio, Qt.SmoothTransformation
-        )
+        thumb = thumbnail.scaled(120, 63, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         self.labelMap.setPixmap(thumb)
+
+    def cloneRepository(self):
+        url = self.dataset["repository"]["clone_location_https"]
+        try:
+            if cloneKartRepo(url, iface.mainWindow()):
+                iface.messageBar().pushMessage(
+                    "Repository correctly cloned", Qgis.Info, duration=5
+                )
+        except KartNotInstalledException:
+            iface.messageBar().pushMessage(
+                "Kart plugin must be installed to clone repositories",
+                Qgis.Warning,
+                duration=5,
+            )
 
     def addLayer(self):
         apikey = KoordinatesClient.instance().apiKey
@@ -163,7 +223,9 @@ class DatasetItemWidget(QFrame):
         iface.addRasterLayer(uri, self.dataset["title"], "wms")
 
     def showDetails(self):
-        dataset = KoordinatesClient.instance().dataset(self.dataset["id"])
+        dataset = (
+            self.dataset
+        )  # KoordinatesClient.instance().dataset(self.dataset["id"])
         dlg = DatasetDialog(dataset)
         dlg.exec()
 
@@ -197,7 +259,8 @@ class DatasetItemWidget(QFrame):
         return geom
 
     def showFootprint(self):
-        self.footprint.setToGeometry(self._bboxInProjectCrs())
+        if self.bbox is not None:
+            self.footprint.setToGeometry(self._bboxInProjectCrs())
 
     def hideFootprint(self):
         self.footprint.reset(QgsWkbTypes.PolygonGeometry)

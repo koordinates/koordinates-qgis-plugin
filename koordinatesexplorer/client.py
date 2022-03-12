@@ -34,9 +34,10 @@ class KoordinatesClient(QObject):
         KoordinatesClient.__instance = self
 
         self.layers = {}
+        self._categories = None
 
         self.apiKey = None
-        self.headers = None
+        self.headers = {}
         self._datasets = None
 
     @waitcursor
@@ -65,18 +66,33 @@ class KoordinatesClient(QObject):
     def isLoggedIn(self):
         return self.apiKey is not None
 
-    def datasets(self, page=1):
+    def datasets(self, page=1, params=None):
+        params = params or {}
         headers = {"Expand": "list,list.publisher,list.styles,list.data.source_summary"}
-        params = {"page_size": PAGE_SIZE, "page": page}
-        return self._get("data", headers, params)
+        params.update({"page_size": PAGE_SIZE, "page": page})
+        ret = self._get("data", headers, params)
+        tokens = ret.headers.get("X-Resource-Range", "").split("/")
+        total = tokens[-1]
+        last = tokens[0].split("-")[-1]
+        return ret.json(), last == total
 
     def userEMail(self):
-        return self._get("users/me")["email"]
+        return self._get("users/me").json()["email"]
 
     def dataset(self, datasetid):
         if str(datasetid) not in self.layers:
-            self.layers[str(datasetid)] = self._get(f"layers/{datasetid}")
+            self.layers[str(datasetid)] = self._get(f"data/{datasetid}").json()
         return self.layers[str(datasetid)]
+
+    def table(self, tableid):
+        if str(tableid) not in self.layers:
+            self.tables[str(tableid)] = self._get(f"tables/{tableid}").json()
+        return self.layers[str(tableid)]
+
+    def categories(self):
+        if self._categories is None:
+            self._categories = self._get("categories").json()
+        return self._categories
 
     @waitcursor
     def _get(self, url, headers=None, params=None):
@@ -89,4 +105,4 @@ class KoordinatesClient(QObject):
             params=params,
         )
         ret.raise_for_status()
-        return ret.json()
+        return ret
