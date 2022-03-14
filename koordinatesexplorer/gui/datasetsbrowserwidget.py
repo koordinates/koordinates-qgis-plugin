@@ -154,7 +154,7 @@ class DatasetItemWidget(QFrame):
         self.btnAdd.setText("+Add")
         self.btnAdd.setStyleSheet(
             """
-                background-color: rgb(140, 186, 127);
+                background-color: rgb(255, 255, 255);
                 border-style: outset;
                 border-width: 2px;
                 border-radius: 10px;
