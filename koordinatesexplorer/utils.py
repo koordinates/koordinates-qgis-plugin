@@ -19,13 +19,14 @@ class KartNotInstalledException(Exception):
     pass
 
 
-def cloneKartRepo(url, parent):
+def cloneKartRepo(url, username, password, parent):
     try:
         from kart.gui.clonedialog import CloneDialog
         from kart.kartapi import Repository
 
         dialog = CloneDialog(parent)
-        dialog.txtSrc.setText(url)
+        dialog.setSrc(url)
+        dialog.setCredentials(username, password)
         dialog.show()
         ret = dialog.exec_()
         if ret == dialog.Accepted:

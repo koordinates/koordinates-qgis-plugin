@@ -67,7 +67,7 @@ class KoordinatesExplorer(BASE, WIDGET):
         self.radioRGB.toggled.connect(self.filtersChanged)
         self.radioGrayscale.toggled.connect(self.filtersChanged)
         self.radioAerial.toggled.connect(self.filtersChanged)
-        self.radioNoAerial.toggle.connect(self.filtersChanged)
+        self.radioNoAerial.toggled.connect(self.filtersChanged)
         self.chkOnlyAlpha.stateChanged.connect(self.filtersChanged)
 
         self.saveApiKey = bool(

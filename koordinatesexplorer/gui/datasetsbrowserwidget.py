@@ -202,7 +202,9 @@ class DatasetItemWidget(QFrame):
     def cloneRepository(self):
         url = self.dataset["repository"]["clone_location_https"]
         try:
-            if cloneKartRepo(url, iface.mainWindow()):
+            if cloneKartRepo(
+                url, "kart", KoordinatesClient.instance().apiKey, iface.mainWindow()
+            ):
                 iface.messageBar().pushMessage(
                     "Repository correctly cloned", Qgis.Info, duration=5
                 )
