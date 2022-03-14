@@ -32,10 +32,10 @@ class DatasetDialog(BASE, WIDGET):
             parser.parse(dataset["published_at"]).strftime("%d, %b %Y")
         )
         self.labelLayerId.setText(str(dataset["id"]))
-        if "geometry_type" == dataset["data"]:
+        if "geometry_type" in dataset["data"]:
             self.labelDataType.setText(
                 f'<b>Data type</b>: {dataset["data"]["geometry_type"]}.'
-                ' {dataset["data"]["feature_count"]} features'
+                f' {dataset["data"]["feature_count"]} features'
             )
         else:
             self.labelDataType.setText("<b>Data type</b>: ---.")
