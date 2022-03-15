@@ -150,10 +150,11 @@ class DatasetItemWidget(QFrame):
         vlayout.addWidget(self.labelName)
         vlayout.addLayout(hlayout)
 
-        self.btnAdd = QToolButton()
-        self.btnAdd.setText("+Add")
-        self.btnAdd.setStyleSheet(
-            """
+        layout = QHBoxLayout()
+        layout.addWidget(self.labelMap)
+        layout.addLayout(vlayout)
+
+        style = """
                 background-color: rgb(255, 255, 255);
                 border-style: outset;
                 border-width: 2px;
@@ -162,28 +163,22 @@ class DatasetItemWidget(QFrame):
                 font: bold 14px;
                 padding: 20px;
                 """
-        )
-        self.btnAdd.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
-
-        self.menu = QMenu()
-        if self.dataset.get("kind") == "raster":
-            self.actionWmts = self.menu.addAction("WMTS layer")
-            self.actionWmts.triggered.connect(self.addLayer)
         if self.dataset.get("repository") is not None:
-            self.actionClone = self.menu.addAction("Clone repository")
-            self.actionClone.triggered.connect(self.cloneRepository)
+            self.btnClone = QToolButton()
+            self.btnClone.setText("Clone")
+            self.btnClone.setStyleSheet(style)
+            self.btnClone.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+            self.btnClone.clicked.connect(self.cloneRepository)
+            layout.addWidget(self.btnClone)
 
-        if self.menu.actions():
-            self.btnAdd.setMenu(self.menu)
-            self.btnAdd.clicked.connect(self.btnAdd.showMenu)
-            self.btnAdd.setEnabled(True)
-        else:
-            self.btnAdd.setEnabled(False)
+        if self.dataset.get("kind") in ["raster", "vector"]:
+            self.btnAdd = QToolButton()
+            self.btnAdd.setText("+Add")
+            self.btnAdd.setStyleSheet(style)
+            self.btnAdd.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+            self.btnAdd.clicked.connect(self.addLayer)
+            layout.addWidget(self.btnAdd)
 
-        layout = QHBoxLayout()
-        layout.addWidget(self.labelMap)
-        layout.addLayout(vlayout)
-        layout.addWidget(self.btnAdd)
         self.setLayout(layout)
 
         self.bbox = self._geomFromGeoJson(self.dataset["data"].get("extent"))
@@ -218,9 +213,8 @@ class DatasetItemWidget(QFrame):
     def addLayer(self):
         apikey = KoordinatesClient.instance().apiKey
         uri = (
-            "contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&featureCount=10&format=image/png&layers=layer-"
-            f"{self.dataset['id']}&styles=style%3Dauto&tileMatrixSet=EPSG:3857&"
-            f"url=https://koordinates.com/services;key%3D{apikey}/wmts/1.0.0/layer/{self.dataset['id']}/WMTSCapabilities.xml"
+            f"type=xyz&url=https://tiles-a.koordinates.com/services;key%3D{apikey}/tiles/v4/"
+            f"layer={self.dataset['id']}/EPSG:3857/%7BZ%7D/%7BX%7D/%7BY%7D.png&zmax=19&zmin=0&crs=EPSG3857"
         )
         iface.addRasterLayer(uri, self.dataset["title"], "wms")
 

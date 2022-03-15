@@ -1,4 +1,3 @@
-import json
 import requests
 
 from qgis.PyQt.QtCore import pyqtSignal, QObject
