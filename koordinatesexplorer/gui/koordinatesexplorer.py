@@ -7,12 +7,13 @@ from qgis.core import (
 from qgis.utils import iface
 
 from qgis.PyQt import uic
-from qgis.PyQt.QtCore import QSettings, Qt, QDate, QDateTime
-from qgis.PyQt.QtWidgets import QDockWidget, QVBoxLayout
+from qgis.PyQt.QtCore import Qt, QDate, QDateTime, QThread
+from qgis.PyQt.QtWidgets import QDockWidget, QVBoxLayout, QApplication
 from qgis.PyQt.QtGui import QPixmap
 
 from koordinatesexplorer.client import KoordinatesClient, LoginException
 from koordinatesexplorer.gui.datasetsbrowserwidget import DatasetsBrowserWidget
+from koordinatesexplorer.auth import OAuthWorkflow
 
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
@@ -22,8 +23,6 @@ WIDGET, BASE = uic.loadUiType(
 )
 
 SETTINGS_NAMESPACE = "Koordinates"
-SAVE_API_KEY = "SaveApiKey"
-
 AUTH_CONFIG_ID = "koordinates_auth_id"
 
 
@@ -42,7 +41,6 @@ class KoordinatesExplorer(BASE, WIDGET):
 
         self.btnLogin.clicked.connect(self.loginClicked)
         self.btnLogout.clicked.connect(self.logoutClicked)
-        self.chkSaveApiKey.stateChanged.connect(self.saveApiKeyChanged)
 
         self.groupBox.collapsedStateChanged.connect(self.groupCollapseStateChanged)
 
@@ -70,15 +68,16 @@ class KoordinatesExplorer(BASE, WIDGET):
         self.radioNoAerial.toggled.connect(self.filtersChanged)
         self.chkOnlyAlpha.stateChanged.connect(self.filtersChanged)
 
-        self.saveApiKey = bool(
-            QSettings().value(f"{SETTINGS_NAMESPACE}/{SAVE_API_KEY}")
-        )
+        KoordinatesClient.instance().loginChanged.connect(self._loginChanged)
 
-        self.setApiKeyField()
+        apiKey = self.retrieveApiKey()
+        if apiKey:
+            try:
+                KoordinatesClient.instance().login(apiKey)
+            except LoginException:
+                pass
 
-        KoordinatesClient.instance().loginChanged.connect(self.setForLogin)
-
-        self.setForLogin(KoordinatesClient.instance().isLoggedIn())
+        self.setForLogin(False)
 
     def backToBrowser(self):
         self.stackedWidget.setCurrentWidget(self.pageBrowser)
@@ -201,6 +200,11 @@ class KoordinatesExplorer(BASE, WIDGET):
         if datatype == "Data Repository":
             self.stackedWidgetDatatype.setCurrentWidget(self.pageRepos)
 
+    def _loginChanged(self, loggedIn):
+        if not loggedIn:
+            self.removeApiKey()
+        self.setForLogin(loggedIn)
+
     def setForLogin(self, loggedIn):
         if loggedIn:
             self.stackedWidget.setCurrentWidget(self.pageBrowser)
@@ -212,53 +216,54 @@ class KoordinatesExplorer(BASE, WIDGET):
                     self.comboCategory.addItem(c["name"], c["key"])
             self.setDefaultParameters()
             self.search()
-            """
-            QgsProject.instance().layerWillBeRemoved.connect(self.layerRemoved)
-            QgsProject.instance().layerWasAdded.connect(self.layerAdded)
-            """
         else:
+            self.labelWaiting.setVisible(False)
             self.stackedWidget.setCurrentWidget(self.pageAuth)
-            try:
-                """
-                QgsProject.instance().layerWillBeRemoved.disconnect(self.layerRemoved)
-                QgsProject.instance().layerWasAdded.disconnect(self.layerAdded)
-                """
-            except Exception:  # signal might not be connected
-                pass
 
     def loginClicked(self):
-        apiKey = self.txtApiKey.text()
+        self.labelWaiting.setVisible(True)
+        if KoordinatesClient.instance().isLoggedIn():
+            apiKey = KoordinatesClient.instance().apiKey
+            self._authFinished(apiKey)
+        else:
+            self.labelWaiting.setText("Waiting for OAuth authentication response...")
+            QApplication.processEvents()
+            self.oauth = OAuthWorkflow()
+
+            self.objThread = QThread()
+            self.oauth.moveToThread(self.objThread)
+            self.oauth.finished.connect(self._authFinished)
+            self.oauth.finished.connect(self.objThread.quit)
+            self.objThread.started.connect(self.oauth.doAuth)
+            self.objThread.start()
+
+    def _authFinished(self, apiKey):
+        print(apiKey)
         if apiKey:
+            self.labelWaiting.setText("Logging in and retrieving datasets...")
+            QApplication.processEvents()
             try:
                 KoordinatesClient.instance().login(apiKey)
-            except (LoginException, ValueError):
-                raise
-                iface.messageBar().pushMessage(
-                    "Invalid API Key", Qgis.Warning, duration=5
-                )
-                return
+                self.storeApiKey()
+                self.labelWaiting.setVisible(False)
             except Exception:
+                raise
                 iface.messageBar().pushMessage(
                     "Could not log in. Check your connection and your API Key value",
                     Qgis.Warning,
                     duration=5,
                 )
-                return
-
-            if self.saveApiKey:
-                self.storeApiKey()
+                self.labelWaiting.setVisible(False)
         else:
-            print(1)
-            iface.messageBar().pushMessage("Invalid API Key", Qgis.Warning, duration=5)
+            self.labelWaiting.setVisible(False)
+            iface.messageBar().pushMessage(
+                "Authorization worflow failed or was canceled",
+                Qgis.Warning,
+                duration=5,
+            )
 
     def logoutClicked(self):
         KoordinatesClient.instance().logout()
-
-    def saveApiKeyChanged(self, state):
-        if state == 0:
-            self.removeApiKey()
-        self.saveApiKey = state > 0
-        QSettings().setValue(f"{SETTINGS_NAMESPACE}/{SAVE_API_KEY}", self.saveApiKey)
 
     def storeApiKey(self):
         key = KoordinatesClient.instance().apiKey
@@ -272,16 +277,6 @@ class KoordinatesExplorer(BASE, WIDGET):
             or ""
         )
         return apiKey
-
-    def setApiKeyField(self):
-        self.txtApiKey.setPasswordVisibility(False)
-        if not self.saveApiKey:
-            self.txtApiKey.setText("")
-            self.chkSaveApiKey.setChecked(False)
-        else:
-            self.chkSaveApiKey.setChecked(True)
-            apiKey = self.retrieveApiKey()
-            self.txtApiKey.setText(apiKey)
 
     def removeApiKey(self):
         QgsApplication.authManager().removeAuthSetting(AUTH_CONFIG_ID)

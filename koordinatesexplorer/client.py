@@ -41,9 +41,6 @@ class KoordinatesClient(QObject):
 
     @waitcursor
     def login(self, apiKey):
-        oldKey = self.apiKey
-        self.apiKey = apiKey
-
         self.headers = {"Authorization": f"key {apiKey}"}
 
         try:
@@ -51,8 +48,8 @@ class KoordinatesClient(QObject):
         except Exception:
             raise LoginException()
 
-        if oldKey != apiKey:
-            self.loginChanged.emit(self.isLoggedIn())
+        self.apiKey = apiKey
+        self.loginChanged.emit(True)
 
     def logout(self):
         oldKey = self.apiKey
