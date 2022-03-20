@@ -226,7 +226,7 @@ class KoordinatesExplorer(BASE, WIDGET):
 
     def loginClicked(self):
         key = self.retrieveApiKey()
-        if key is not None:
+        if key:
             self._authFinished(key)
         else:
             self.labelWaiting.setText("Waiting for OAuth authentication response...")
