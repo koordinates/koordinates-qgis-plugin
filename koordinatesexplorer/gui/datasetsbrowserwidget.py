@@ -14,7 +14,6 @@ from qgis.PyQt.QtWidgets import (
     QLabel,
     QToolButton,
     QVBoxLayout,
-    QMenu,
     QSizePolicy,
 )
 
@@ -47,9 +46,11 @@ class DatasetsBrowserWidget(QListWidget):
         self.itemClicked.connect(self._itemClicked)
         self.setSelectionMode(self.NoSelection)
 
-    def populate(self, params):
+    def populate(self, params, context):
         self.clear()
-        datasets, finished = KoordinatesClient.instance().datasets(params=params)
+        datasets, finished = KoordinatesClient.instance().datasets(
+            params=params, context=context
+        )
         for dataset in datasets:
             datasetItem = QListWidgetItem()
             datasetWidget = DatasetItemWidget(dataset)

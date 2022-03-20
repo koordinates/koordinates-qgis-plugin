@@ -62,11 +62,17 @@ class KoordinatesClient(QObject):
     def isLoggedIn(self):
         return self.apiKey is not None
 
-    def datasets(self, page=1, params=None):
+    def datasets(self, page=1, params=None, context=None):
         params = params or {}
+        context = context or {"type": "site", "domain": "all"}
         headers = {"Expand": "list,list.publisher,list.styles,list.data.source_summary"}
         params.update({"page_size": PAGE_SIZE, "page": page})
-        ret = self._get("data", headers, params)
+        if context["type"] == "site":
+            url = "data"
+            # params["from"] = context["domain"]
+        else:
+            url = "users/me/data"
+        ret = self._get(url, headers, params)
         tokens = ret.headers.get("X-Resource-Range", "").split("/")
         total = tokens[-1]
         last = tokens[0].split("-")[-1]
@@ -74,6 +80,9 @@ class KoordinatesClient(QObject):
 
     def userEMail(self):
         return self._get("users/me").json()["email"]
+
+    def userContexts(self):
+        return self._get("users/me").json()["contexts"]
 
     def dataset(self, datasetid):
         if str(datasetid) not in self.layers:

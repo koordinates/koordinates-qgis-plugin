@@ -11,7 +11,7 @@ from qgis.PyQt.QtCore import Qt, QDate, QDateTime, QThread
 from qgis.PyQt.QtWidgets import QDockWidget, QVBoxLayout, QApplication
 from qgis.PyQt.QtGui import QPixmap
 
-from koordinatesexplorer.client import KoordinatesClient, LoginException
+from koordinatesexplorer.client import KoordinatesClient
 from koordinatesexplorer.gui.datasetsbrowserwidget import DatasetsBrowserWidget
 from koordinatesexplorer.auth import OAuthWorkflow
 
@@ -69,13 +69,6 @@ class KoordinatesExplorer(BASE, WIDGET):
         self.chkOnlyAlpha.stateChanged.connect(self.filtersChanged)
 
         KoordinatesClient.instance().loginChanged.connect(self._loginChanged)
-
-        apiKey = self.retrieveApiKey()
-        if apiKey:
-            try:
-                KoordinatesClient.instance().login(apiKey)
-            except LoginException:
-                pass
 
         self.setForLogin(False)
 
@@ -151,11 +144,15 @@ class KoordinatesExplorer(BASE, WIDGET):
 
         self.btnSearch.setEnabled(False)
 
-        self.browser.populate(params)
+        context = self.comboContext.currentData()
+
+        self.browser.populate(params, context)
 
     def groupCollapseStateChanged(self):
         self.datatypeChanged()
         self.categoryChanged()
+        self.comboContext.setVisible(self.comboContext.count() > 1)
+        self.labelContext.setVisible(self.comboContext.count() > 1)
 
     def setDefaultParameters(self):
         self.groupBox.setCollapsed(True)
@@ -214,6 +211,13 @@ class KoordinatesExplorer(BASE, WIDGET):
                 self.comboCategory.addItem("All")
                 for c in KoordinatesClient.instance().categories():
                     self.comboCategory.addItem(c["name"], c["key"])
+            contexts = KoordinatesClient.instance().userContexts()
+            self.comboContext.clear()
+            self.comboContext.addItem("all", {"type": "site", "domain": "all"})
+            for context in contexts:
+                self.comboContext.addItems(context.get("domain", "user"), context)
+            self.comboContext.setVisible(self.comboContext.count() > 1)
+            self.labelContext.setVisible(self.comboContext.count() > 1)
             self.setDefaultParameters()
             self.search()
         else:
@@ -221,12 +225,12 @@ class KoordinatesExplorer(BASE, WIDGET):
             self.stackedWidget.setCurrentWidget(self.pageAuth)
 
     def loginClicked(self):
-        self.labelWaiting.setVisible(True)
-        if KoordinatesClient.instance().isLoggedIn():
-            apiKey = KoordinatesClient.instance().apiKey
-            self._authFinished(apiKey)
+        key = self.retrieveApiKey()
+        if key is not None:
+            self._authFinished(key)
         else:
             self.labelWaiting.setText("Waiting for OAuth authentication response...")
+            self.labelWaiting.setVisible(True)
             QApplication.processEvents()
             self.oauth = OAuthWorkflow()
 
@@ -238,16 +242,15 @@ class KoordinatesExplorer(BASE, WIDGET):
             self.objThread.start()
 
     def _authFinished(self, apiKey):
-        print(apiKey)
         if apiKey:
             self.labelWaiting.setText("Logging in and retrieving datasets...")
+            self.labelWaiting.setVisible(True)
             QApplication.processEvents()
             try:
                 KoordinatesClient.instance().login(apiKey)
                 self.storeApiKey()
                 self.labelWaiting.setVisible(False)
             except Exception:
-                raise
                 iface.messageBar().pushMessage(
                     "Could not log in. Check your connection and your API Key value",
                     Qgis.Warning,
