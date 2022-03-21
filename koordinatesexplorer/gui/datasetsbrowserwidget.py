@@ -142,7 +142,7 @@ class DatasetItemWidget(QFrame):
 
         self.labelUpdatedIcon = QLabel()
         self.labelUpdatedIcon.setPixmap(pixmap("updated.png"))
-        self.labelUpdated = QLabel(f'{date.strftime("%d, %b %Y")}')
+        self.labelUpdated = QLabel(f'{date.strftime("%d %b %Y")}')
         self.labelViewsIcon = QLabel()
         self.labelViewsIcon.setPixmap(pixmap("eye.png"))
         self.labelViews = QLabel(str(self.dataset["num_views"]))
@@ -225,7 +225,7 @@ class DatasetItemWidget(QFrame):
         rect = QRect(365, 0, 810, 630)
         cropped = thumbnail.copy(rect)
 
-        thumb = cropped.scaled(150, 200, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+        thumb = cropped.scaled(150, 200, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
 
         self.target = QPixmap(self.labelMap.size())
         self.target.fill(Qt.transparent)
