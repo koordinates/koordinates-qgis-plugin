@@ -4,8 +4,9 @@ import math
 from dateutil import parser
 
 from qgis.core import Qgis
-from qgis.PyQt.QtCore import Qt, pyqtSignal
-from qgis.PyQt.QtGui import QColor, QPixmap, QFont, QCursor
+from qgis.PyQt.QtCore import Qt, pyqtSignal, QRect
+from qgis.PyQt.QtGui import QColor, QPixmap, QFont, QCursor, QPainter, QPainterPath
+
 from qgis.PyQt.QtWidgets import (
     QListWidget,
     QListWidgetItem,
@@ -37,6 +38,13 @@ from koordinatesexplorer.utils import cloneKartRepo, KartNotInstalledException
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
 
+class Label(QLabel):
+    def __init__(self):
+        super(Label, self).__init__()
+        self.setMaximumSize(150, 200)
+        self.setMinimumSize(150, 200)
+
+
 class DatasetsBrowserWidget(QListWidget):
 
     datasetDetailsRequested = pyqtSignal(dict)
@@ -45,6 +53,8 @@ class DatasetsBrowserWidget(QListWidget):
         QListWidget.__init__(self)
         self.itemClicked.connect(self._itemClicked)
         self.setSelectionMode(self.NoSelection)
+        self.setSpacing(10)
+        self.setStyleSheet("""QListWidget{background: #E5E7E9;}""")
 
     def populate(self, params, context):
         self.clear()
@@ -104,7 +114,9 @@ class DatasetItemWidget(QFrame):
     def __init__(self, dataset):
         QFrame.__init__(self)
         self.setMouseTracking(True)
-        self.setStyleSheet("DatasetItemWidget{border: 2px solid transparent;}")
+        self.setStyleSheet(
+            "DatasetItemWidget{border: 0px solid black; border-radius: 15px; background: white;}"
+        )
         self.dataset = dataset
 
         self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
@@ -114,8 +126,8 @@ class DatasetItemWidget(QFrame):
                 os.path.join(os.path.dirname(os.path.dirname(__file__)), "img", name)
             )
 
-        self.labelMap = QLabel()
-        self.labelMap.setFixedSize(120, 63)
+        self.labelMap = Label()
+        self.labelMap.setFixedSize(150, 200)
         downloadThumbnail(self.dataset["thumbnail_url"], self)
 
         date = parser.parse(self.dataset["published_at"])
@@ -152,25 +164,37 @@ class DatasetItemWidget(QFrame):
         vlayout.addLayout(hlayout)
 
         layout = QHBoxLayout()
+        layout.setMargin(0)
         layout.addWidget(self.labelMap)
         layout.addLayout(vlayout)
 
         style = """
-                background-color: rgb(255, 255, 255);
+                QToolButton{
+                background-color: #1b9a4b;
                 border-style: outset;
-                border-width: 2px;
+                border-width: 1px;
                 border-radius: 10px;
-                border-color: black;
+                border-color: rgb(150, 150, 150);
                 font: bold 14px;
-                padding: 20px;
+                color: white;
+                padding: 15px 0px 15px 0px;
+                }
+                QToolButton:hover{
+                    background-color: #119141;
+                }
                 """
+
+        buttonsLayout = QVBoxLayout()
+        buttonsLayout.addStretch()
+
         if self.dataset.get("repository") is not None:
             self.btnClone = QToolButton()
             self.btnClone.setText("Clone")
             self.btnClone.setStyleSheet(style)
             self.btnClone.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
             self.btnClone.clicked.connect(self.cloneRepository)
-            layout.addWidget(self.btnClone)
+            self.btnClone.setFixedSize(80, 60)
+            buttonsLayout.addWidget(self.btnClone)
 
         if self.dataset.get("kind") in ["raster", "vector"]:
             self.btnAdd = QToolButton()
@@ -178,7 +202,12 @@ class DatasetItemWidget(QFrame):
             self.btnAdd.setStyleSheet(style)
             self.btnAdd.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
             self.btnAdd.clicked.connect(self.addLayer)
-            layout.addWidget(self.btnAdd)
+            self.btnAdd.setFixedSize(80, 60)
+            buttonsLayout.addWidget(self.btnAdd)
+
+        buttonsLayout.addSpacing(10)
+        layout.addLayout(buttonsLayout)
+        layout.addSpacing(20)
 
         self.setLayout(layout)
 
@@ -192,8 +221,27 @@ class DatasetItemWidget(QFrame):
 
     def setThumbnail(self, img):
         thumbnail = QPixmap(img)
-        thumb = thumbnail.scaled(120, 63, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        self.labelMap.setPixmap(thumb)
+
+        rect = QRect(365, 0, 810, 630)
+        cropped = thumbnail.copy(rect)
+
+        thumb = cropped.scaled(150, 200, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+
+        self.target = QPixmap(self.labelMap.size())
+        self.target.fill(Qt.transparent)
+
+        painter = QPainter(self.target)
+
+        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
+        painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
+
+        path = QPainterPath()
+        path.addRoundedRect(0, 0, 200, 200, 15, 15)
+
+        painter.setClipPath(path)
+        painter.drawPixmap(0, 0, thumb)
+        self.labelMap.setPixmap(self.target)
 
     def cloneRepository(self):
         url = self.dataset["repository"]["clone_location_https"]
@@ -238,11 +286,15 @@ class DatasetItemWidget(QFrame):
         return geom
 
     def enterEvent(self, event):
-        self.setStyleSheet("DatasetItemWidget{border: 2px solid rgb(180, 180, 180);}")
+        self.setStyleSheet(
+            "DatasetItemWidget{border: 1px solid rgb(180, 180, 180); border-radius: 15px; background: white;}"
+        )
         self.showFootprint()
 
     def leaveEvent(self, event):
-        self.setStyleSheet("DatasetItemWidget{border: 2px solid transparent;}")
+        self.setStyleSheet(
+            "DatasetItemWidget{border: 0px solid black; border-radius: 15px; background: white;}"
+        )
         self.hideFootprint()
 
     def _bboxInProjectCrs(self):
