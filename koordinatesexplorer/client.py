@@ -69,7 +69,7 @@ class KoordinatesClient(QObject):
         params.update({"page_size": PAGE_SIZE, "page": page})
         if context["type"] == "site":
             url = "data"
-            # params["from"] = context["domain"]
+            params["from"] = context["domain"]
         else:
             url = "users/me/data"
         ret = self._get(url, headers, params)
@@ -105,7 +105,7 @@ class KoordinatesClient(QObject):
         headers.update(self.headers)
         params = params or {}
         ret = requests.get(
-            f"https://koordinates.com/services/api/v1/{url}",
+            f"https://koordinates.com/services/api/v1.x/{url}",
             headers=headers,
             params=params,
         )
