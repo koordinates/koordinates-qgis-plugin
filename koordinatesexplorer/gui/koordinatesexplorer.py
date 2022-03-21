@@ -215,7 +215,7 @@ class KoordinatesExplorer(BASE, WIDGET):
             self.comboContext.clear()
             self.comboContext.addItem("all", {"type": "site", "domain": "all"})
             for context in contexts:
-                self.comboContext.addItems(context.get("domain", "user"), context)
+                self.comboContext.addItem(context.get("name", "user"), context)
             self.comboContext.setVisible(self.comboContext.count() > 1)
             self.labelContext.setVisible(self.comboContext.count() > 1)
             self.setDefaultParameters()
