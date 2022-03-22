@@ -68,10 +68,10 @@ class KoordinatesClient(QObject):
         headers = {"Expand": "list,list.publisher,list.styles,list.data.source_summary"}
         params.update({"page_size": PAGE_SIZE, "page": page})
         if context["type"] == "site":
-            url = "data"
+            url = "data/"
             params["from"] = context["domain"]
         else:
-            url = "users/me/data"
+            url = "users/me/data/"
         ret = self._get(url, headers, params)
         tokens = ret.headers.get("X-Resource-Range", "").split("/")
         total = tokens[-1]
@@ -79,19 +79,19 @@ class KoordinatesClient(QObject):
         return ret.json(), last == total
 
     def userEMail(self):
-        return self._get("users/me").json()["email"]
+        return self._get("users/me/").json()["email"]
 
     def userContexts(self):
-        return self._get("users/me").json()["contexts"]
+        return self._get("users/me/").json()["contexts"]
 
     def dataset(self, datasetid):
         if str(datasetid) not in self.layers:
-            self.layers[str(datasetid)] = self._get(f"data/{datasetid}").json()
+            self.layers[str(datasetid)] = self._get(f"data/{datasetid}/").json()
         return self.layers[str(datasetid)]
 
     def table(self, tableid):
         if str(tableid) not in self.layers:
-            self.tables[str(tableid)] = self._get(f"tables/{tableid}").json()
+            self.tables[str(tableid)] = self._get(f"tables/{tableid}/").json()
         return self.layers[str(tableid)]
 
     def categories(self):
