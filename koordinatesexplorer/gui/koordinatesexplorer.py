@@ -48,6 +48,7 @@ class KoordinatesExplorer(BASE, WIDGET):
         self.comboDatatype.currentIndexChanged.connect(self.datatypeChanged)
         self.comboCategory.currentIndexChanged.connect(self.categoryChanged)
 
+        self.comboContext.currentIndexChanged.connect(self.filtersChanged)
         self.dateCreatedBefore.dateChanged.connect(self.filtersChanged)
         self.dateUpdatedBefore.dateChanged.connect(self.filtersChanged)
         self.dateCreatedAfter.dateChanged.connect(self.filtersChanged)
@@ -213,7 +214,7 @@ class KoordinatesExplorer(BASE, WIDGET):
                     self.comboCategory.addItem(c["name"], c["key"])
             contexts = KoordinatesClient.instance().userContexts()
             self.comboContext.clear()
-            self.comboContext.addItem("all", {"type": "site", "domain": "all"})
+            self.comboContext.addItem("All", {"type": "site", "domain": "all"})
             for context in contexts:
                 self.comboContext.addItem(context.get("name", "user"), context)
             self.comboContext.setVisible(self.comboContext.count() > 1)
