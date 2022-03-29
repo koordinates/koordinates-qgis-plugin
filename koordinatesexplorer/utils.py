@@ -20,6 +20,12 @@ class KartNotInstalledException(Exception):
 
 
 def cloneKartRepo(url, username, password, parent):
+    import qgis
+
+    if "kart" not in qgis.utils.plugins:
+        raise KartNotInstalledException()
+    kart_plugin = qgis.utils.plugins["kart"]
+
     try:
         from kart.gui.clonedialog import CloneDialog
         from kart.kartapi import Repository
@@ -30,7 +36,15 @@ def cloneKartRepo(url, username, password, parent):
         dialog.show()
         ret = dialog.exec_()
         if ret == dialog.Accepted:
-            Repository.clone(dialog.src, dialog.dst, dialog.location, dialog.extent)
+            repo = Repository.clone(
+                dialog.src,
+                dialog.dst,
+                location=dialog.location,
+                extent=dialog.extent,
+                username=dialog.username,
+                password=dialog.password,
+            )
+            kart_plugin.dock.reposItem.addRepoToUI(repo)
             return True
         else:
             return False
