@@ -37,6 +37,7 @@ from koordinatesexplorer.utils import cloneKartRepo, KartNotInstalledException
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
+COLOR_INDEX = 0
 
 class Label(QLabel):
     def __init__(self):
@@ -115,7 +116,7 @@ class DatasetItemWidget(QFrame):
         QFrame.__init__(self)
         self.setMouseTracking(True)
         self.setStyleSheet(
-            "DatasetItemWidget{border: 0px solid black; border-radius: 15px; background: white;}"
+            "DatasetItemWidget{border: 0px solid black; border-radius: 10px; background: white;}"
         )
         self.dataset = dataset
 
@@ -127,11 +128,14 @@ class DatasetItemWidget(QFrame):
             )
 
         self.labelMap = Label()
-        self.labelMap.setFixedSize(150, 200)
+        self.labelMap.setFixedSize(150, 150)
         downloadThumbnail(self.dataset["thumbnail_url"], self)
 
         date = parser.parse(self.dataset["published_at"])
-        self.labelName = QLabel(f'<b>{self.dataset["title"].upper()}</b><br>')
+        self.labelName = QLabel(
+            f'<b>{self.dataset["title"]}</b><br>'
+            f'{self.dataset["publisher"]["name"]}<br>'
+        )
         self.labelName.setFont(QFont("Arial", 10))
         self.labelName.setWordWrap(True)
 
@@ -173,11 +177,11 @@ class DatasetItemWidget(QFrame):
                 background-color: #1b9a4b;
                 border-style: outset;
                 border-width: 1px;
-                border-radius: 10px;
+                border-radius: 4px;
                 border-color: rgb(150, 150, 150);
                 font: bold 14px;
                 color: white;
-                padding: 15px 0px 15px 0px;
+                padding: 5px 0px 5px 0px;
                 }
                 QToolButton:hover{
                     background-color: #119141;
@@ -193,7 +197,7 @@ class DatasetItemWidget(QFrame):
             self.btnClone.setStyleSheet(style)
             self.btnClone.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
             self.btnClone.clicked.connect(self.cloneRepository)
-            self.btnClone.setFixedSize(80, 60)
+            self.btnClone.setFixedSize(80, 40)
             buttonsLayout.addWidget(self.btnClone)
 
         if self.dataset.get("kind") in ["raster", "vector"]:
@@ -202,7 +206,7 @@ class DatasetItemWidget(QFrame):
             self.btnAdd.setStyleSheet(style)
             self.btnAdd.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
             self.btnAdd.clicked.connect(self.addLayer)
-            self.btnAdd.setFixedSize(80, 60)
+            self.btnAdd.setFixedSize(80, 40)
             buttonsLayout.addWidget(self.btnAdd)
 
         buttonsLayout.addSpacing(10)
@@ -222,10 +226,10 @@ class DatasetItemWidget(QFrame):
     def setThumbnail(self, img):
         thumbnail = QPixmap(img)
 
-        rect = QRect(365, 0, 810, 630)
+        rect = QRect(300, 15, 600, 600)
         cropped = thumbnail.copy(rect)
 
-        thumb = cropped.scaled(150, 200, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
+        thumb = cropped.scaled(150, 150, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
 
         self.target = QPixmap(self.labelMap.size())
         self.target.fill(Qt.transparent)
@@ -237,7 +241,7 @@ class DatasetItemWidget(QFrame):
         painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
 
         path = QPainterPath()
-        path.addRoundedRect(0, 0, 200, 200, 15, 15)
+        path.addRoundedRect(0, 0, 150, 150, 10, 10)
 
         painter.setClipPath(path)
         painter.drawPixmap(0, 0, thumb)
@@ -260,10 +264,31 @@ class DatasetItemWidget(QFrame):
             )
 
     def addLayer(self):
+        MAP_LAYER_COLORS = (
+            "003399",
+            "ff0000",
+            "009e00",
+            "ff7b00",
+            "ff0090",
+            "9900ff",
+            "6b6b6b",
+            "ff7e7e",
+            "d4c021",
+            "00cf9f",
+            "81331f",
+            "7ca6ff",
+            "82d138",
+            "32c8db",
+        )
+
+        global COLOR_INDEX
+        color = MAP_LAYER_COLORS[COLOR_INDEX % len(MAP_LAYER_COLORS)]
+        COLOR_INDEX += 1
+
         apikey = KoordinatesClient.instance().apiKey
         uri = (
             f"type=xyz&url=https://tiles-a.koordinates.com/services;key%3D{apikey}/tiles/v4/"
-            f"layer={self.dataset['id']}/EPSG:3857/%7BZ%7D/%7BX%7D/%7BY%7D.png&zmax=19&zmin=0&crs=EPSG3857"
+            f"layer={self.dataset['id']},color={color}/EPSG:3857/%7BZ%7D/%7BX%7D/%7BY%7D.png&zmax=19&zmin=0&crs=EPSG3857"
         )
         iface.addRasterLayer(uri, self.dataset["title"], "wms")
 
