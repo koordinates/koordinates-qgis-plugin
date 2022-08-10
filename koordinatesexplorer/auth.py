@@ -8,7 +8,6 @@ from webbrowser import open as web_open
 from .pkce import generate_pkce_pair
 
 from PyQt5.QtCore import QObject, pyqtSignal
-from qgis.core import QgsMessageLog, Qgis
 
 
 AUTH_HANDLER_RESPONSE = """\
@@ -106,7 +105,7 @@ class OAuthWorkflow(QObject):
             f"redirect_uri={REDIRECT_URL}"
         )
         code_verifier, code_challenge = generate_pkce_pair()
-        authorization_url = f"{authorization_url}&code_challenge={code_challenge}&code_challenge_method=S256"
+        authorization_url = f"{authorization_url}&code_challenge={code_challenge}&code_challenge_method=S256"  # noqa: E501
 
         server = HTTPServer(("127.0.0.1", REDIRECT_PORT), _Handler)
         server.code_verifier = code_verifier

@@ -53,7 +53,9 @@ class DatasetDialog(BASE, WIDGET):
                 </tr><tr>
                 <td> Feature count </td><td> {self.dataset["data"]["feature_count"]} </td>
                 </tr><tr>
-                  <td> Attributes </td><td>{", ".join([f["name"] for f in self.dataset["data"]["fields"]])}</td>
+                  <td> Attributes </td><td>{", ".join(
+                    [f["name"] for f in self.dataset["data"]["fields"]]
+                    )}</td>
             """
 
         elif "feature_count" in self.dataset["data"]:

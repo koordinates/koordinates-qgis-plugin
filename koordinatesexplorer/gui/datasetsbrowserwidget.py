@@ -39,6 +39,7 @@ pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
 COLOR_INDEX = 0
 
+
 class Label(QLabel):
     def __init__(self):
         super(Label, self).__init__()
@@ -229,7 +230,9 @@ class DatasetItemWidget(QFrame):
         rect = QRect(300, 15, 600, 600)
         cropped = thumbnail.copy(rect)
 
-        thumb = cropped.scaled(150, 150, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
+        thumb = cropped.scaled(
+            150, 150, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation
+        )
 
         self.target = QPixmap(self.labelMap.size())
         self.target.fill(Qt.transparent)
@@ -288,7 +291,7 @@ class DatasetItemWidget(QFrame):
         apikey = KoordinatesClient.instance().apiKey
         uri = (
             f"type=xyz&url=https://tiles-a.koordinates.com/services;key%3D{apikey}/tiles/v4/"
-            f"layer={self.dataset['id']},color={color}/EPSG:3857/%7BZ%7D/%7BX%7D/%7BY%7D.png&zmax=19&zmin=0&crs=EPSG3857"
+            f"layer={self.dataset['id']},color={color}/EPSG:3857/%7BZ%7D/%7BX%7D/%7BY%7D.png&zmax=19&zmin=0&crs=EPSG3857"  # noqa: E501
         )
         iface.addRasterLayer(uri, self.dataset["title"], "wms")
 
@@ -312,7 +315,7 @@ class DatasetItemWidget(QFrame):
 
     def enterEvent(self, event):
         self.setStyleSheet(
-            "DatasetItemWidget{border: 1px solid rgb(180, 180, 180); border-radius: 15px; background: white;}"
+            "DatasetItemWidget{border: 1px solid rgb(180, 180, 180); border-radius: 15px; background: white;}"  # noqa: E501
         )
         self.showFootprint()
 
