@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 from qgis.core import (
     QgsApplication,
@@ -31,6 +32,8 @@ class KoordinatesExplorer(BASE, WIDGET):
         super(QDockWidget, self).__init__(iface.mainWindow())
         self.setupUi(self)
         self.browser = DatasetsBrowserWidget()
+        self.oauth: Optional[OAuthWorkflow] = None
+
         layout = QVBoxLayout()
         layout.setMargin(0)
         layout.addWidget(self.browser)
@@ -70,6 +73,7 @@ class KoordinatesExplorer(BASE, WIDGET):
         self.chkOnlyAlpha.stateChanged.connect(self.filtersChanged)
 
         KoordinatesClient.instance().loginChanged.connect(self._loginChanged)
+        KoordinatesClient.instance().error_occurred.connect(self._client_error_occurred)
 
         self.setForLogin(False)
 
@@ -238,33 +242,45 @@ class KoordinatesExplorer(BASE, WIDGET):
             self.objThread = QThread()
             self.oauth.moveToThread(self.objThread)
             self.oauth.finished.connect(self._authFinished)
+            self.oauth.error_occurred.connect(self._auth_error_occurred)
             self.oauth.finished.connect(self.objThread.quit)
             self.objThread.started.connect(self.oauth.doAuth)
             self.objThread.start()
 
     def _authFinished(self, apiKey):
-        if apiKey:
-            self.labelWaiting.setText("Logging in and retrieving datasets...")
-            self.labelWaiting.setVisible(True)
-            QApplication.processEvents()
-            try:
-                KoordinatesClient.instance().login(apiKey)
-                self.storeApiKey()
-                self.labelWaiting.setVisible(False)
-            except Exception:
-                iface.messageBar().pushMessage(
-                    "Could not log in. Check your connection and your API Key value",
-                    Qgis.Warning,
-                    duration=5,
-                )
-                self.labelWaiting.setVisible(False)
-        else:
+        if not apiKey:
+            return
+
+        self.labelWaiting.setText("Logging in and retrieving datasets...")
+        self.labelWaiting.setVisible(True)
+        QApplication.processEvents()
+        try:
+            KoordinatesClient.instance().login(apiKey)
+            self.storeApiKey()
             self.labelWaiting.setVisible(False)
+        except FileExistsError:
             iface.messageBar().pushMessage(
-                "Authorization worflow failed or was canceled",
+                "Could not log in. Check your connection and your API Key value",
                 Qgis.Warning,
                 duration=5,
             )
+            self.labelWaiting.setVisible(False)
+
+    def _auth_error_occurred(self, error: str):
+        self.labelWaiting.setVisible(False)
+        iface.messageBar().pushMessage(
+            "Authorization failed: {}".format(error),
+            Qgis.Warning,
+            duration=5,
+        )
+
+    def _client_error_occurred(self, error: str):
+        self.labelWaiting.setVisible(False)
+        iface.messageBar().pushMessage(
+            "Request failed: {}".format(error),
+            Qgis.Warning,
+            duration=5,
+        )
 
     def logoutClicked(self):
         KoordinatesClient.instance().logout()

@@ -1,4 +1,8 @@
 import json
+from typing import (
+    Optional,
+    List
+)
 
 from qgis.PyQt.QtCore import (
     pyqtSignal,
@@ -24,6 +28,7 @@ class LoginException(Exception):
 class KoordinatesClient(QObject):
 
     loginChanged = pyqtSignal(bool)
+    error_occurred = pyqtSignal(str)
 
     __instance = None
 
@@ -53,9 +58,13 @@ class KoordinatesClient(QObject):
     def login(self, apiKey):
         self.headers = {"Authorization": f"key {apiKey}"}
 
+        email = None
         try:
-            self.userEMail()
+            email = self.userEMail()
         except Exception:
+            pass
+
+        if email is None:
             raise LoginException()
 
         self.apiKey = apiKey
@@ -89,11 +98,11 @@ class KoordinatesClient(QObject):
         last = tokens[0].split("-")[-1]
         return ret['json'], last == total
 
-    def userEMail(self):
-        return self._get("users/me/")['json']["email"]
+    def userEMail(self) -> Optional[str]:
+        return self._get("users/me/")['json'].get("email")
 
-    def userContexts(self):
-        return self._get("users/me/")['json']["contexts"]
+    def userContexts(self) -> List[str]:
+        return self._get("users/me/")['json'].get("contexts", [])
 
     def dataset(self, datasetid):
         if str(datasetid) not in self.layers:
@@ -131,12 +140,10 @@ class KoordinatesClient(QObject):
 
         request = QgsBlockingNetworkRequest()
         if request.get(network_request) != QgsBlockingNetworkRequest.NoError:
-            # todo error handling
-            print('error')
-            print(request.reply().content())
-            return
-
-        reply_json = json.loads(request.reply().content().data().decode())
+            self.error_occurred.emit(request.reply().errorString())
+            reply_json = {}
+        else:
+            reply_json = json.loads(request.reply().content().data().decode())
 
         return {
             'json': reply_json,

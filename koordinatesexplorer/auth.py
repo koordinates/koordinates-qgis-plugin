@@ -54,6 +54,7 @@ class _Handler(BaseHTTPRequestHandler):
         code = params.get("code")
 
         if not code:
+            self.server.error = 'Authorization canceled'
             self._send_response()
             return
 
@@ -75,9 +76,8 @@ class _Handler(BaseHTTPRequestHandler):
         if request.post(network_request,
                         data=token_body,
                         forceRefresh=True) != QgsBlockingNetworkRequest.NoError:
-            # todo error handling
-            print('error')
-            print(request.reply().content())
+            self.server.error = request.reply().content().data().decode() or request.reply().errorString()
+            self._send_response()
             return
 
         resp = json.loads(request.reply().content().data().decode())
@@ -86,6 +86,11 @@ class _Handler(BaseHTTPRequestHandler):
         expires_in = resp.get("expires_in")
 
         if not access_token or not expires_in:
+            if not access_token:
+                self.server.error = 'Could not find access_token in reply'
+            elif not expires_in:
+                self.server.error = 'Could not find expires_in in reply'
+
             self._send_response()
             return
 
@@ -104,9 +109,8 @@ class _Handler(BaseHTTPRequestHandler):
         if request.post(network_request,
                         data=api_token_body,
                         forceRefresh=True) != QgsBlockingNetworkRequest.NoError:
-            # todo error handling
-            print('error')
-            print(request.reply().content())
+            self.server.error = request.reply().content().data().decode() or request.reply().errorString()
+            self._send_response()
             return
 
         resp = json.loads(request.reply().content().data().decode())
@@ -124,6 +128,7 @@ class _Handler(BaseHTTPRequestHandler):
 class OAuthWorkflow(QObject):
 
     finished = pyqtSignal(str)
+    error_occurred = pyqtSignal(str)
 
     def doAuth(self):
         code_verifier, code_challenge = generate_pkce_pair()
@@ -146,9 +151,12 @@ class OAuthWorkflow(QObject):
         server = HTTPServer(("127.0.0.1", REDIRECT_PORT), _Handler)
         server.code_verifier = code_verifier
         server.apikey = None
+        server.error = None
         web_open(authorization_url)
 
         server.handle_request()
 
+        if server.error:
+            self.error_occurred.emit(server.error)
+
         self.finished.emit(server.apikey)
-        # print(self.server.apikey)
