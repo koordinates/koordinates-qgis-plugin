@@ -30,7 +30,7 @@ from qgis.core import (
     QgsJsonUtils,
 )
 
-from koordinatesexplorer.client import KoordinatesClient, PAGE_SIZE
+from ..api import KoordinatesClient, PAGE_SIZE
 from koordinatesexplorer.gui.datasetdialog import DatasetDialog
 from koordinatesexplorer.gui.thumbnails import downloadThumbnail
 from koordinatesexplorer.utils import cloneKartRepo, KartNotInstalledException

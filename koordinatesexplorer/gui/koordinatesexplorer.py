@@ -13,7 +13,7 @@ from qgis.PyQt.QtCore import Qt, QDate, QDateTime, QThread
 from qgis.PyQt.QtWidgets import QVBoxLayout, QApplication
 from qgis.PyQt.QtGui import QPixmap
 
-from koordinatesexplorer.client import KoordinatesClient
+from ..api import KoordinatesClient
 from koordinatesexplorer.gui.datasetsbrowserwidget import DatasetsBrowserWidget
 from koordinatesexplorer.auth import OAuthWorkflow
 
