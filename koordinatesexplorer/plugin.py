@@ -1,5 +1,6 @@
 import os
 
+from qgis.PyQt import sip
 from qgis.PyQt.QtWidgets import QAction
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtCore import Qt
@@ -31,6 +32,9 @@ class KoordinatesPlugin(object):
         self.dock.show()
 
     def unload(self):
-        self.iface.removeDockWidget(self.dock)
+        if not sip.isdeleted(self.dock):
+            self.iface.removeDockWidget(self.dock)
+            self.dock.deleteLater()
         self.dock = None
+
         self.iface.removePluginMenu("Koordinates", self.explorerAction)
