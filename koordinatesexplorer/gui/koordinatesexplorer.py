@@ -10,7 +10,7 @@ from qgis.utils import iface
 
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import Qt, QDate, QDateTime, QThread
-from qgis.PyQt.QtWidgets import QDockWidget, QVBoxLayout, QApplication
+from qgis.PyQt.QtWidgets import QVBoxLayout, QApplication
 from qgis.PyQt.QtGui import QPixmap
 
 from koordinatesexplorer.client import KoordinatesClient
