@@ -69,9 +69,12 @@ class _Handler(BaseHTTPRequestHandler):
         token_body = urllib.parse.urlencode(body).encode()
 
         network_request = QNetworkRequest(QUrl(TOKEN_URL))
-        network_request.setHeader(QNetworkRequest.ContentTypeHeader, 'application/x-www-form-urlencoded')
+        network_request.setHeader(QNetworkRequest.ContentTypeHeader,
+                                  'application/x-www-form-urlencoded')
 
-        if request.post(network_request, data=token_body, forceRefresh=True) != QgsBlockingNetworkRequest.NoError:
+        if request.post(network_request,
+                        data=token_body,
+                        forceRefresh=True) != QgsBlockingNetworkRequest.NoError:
             # todo error handling
             print('error')
             print(request.reply().content())
@@ -94,10 +97,13 @@ class _Handler(BaseHTTPRequestHandler):
         api_token_body = urllib.parse.urlencode(body).encode()
 
         network_request = QNetworkRequest(QUrl(API_TOKEN_URL))
-        network_request.setHeader(QNetworkRequest.ContentTypeHeader, 'application/x-www-form-urlencoded')
+        network_request.setHeader(QNetworkRequest.ContentTypeHeader,
+                                  'application/x-www-form-urlencoded')
         network_request.setRawHeader(b"Authorization", f"Bearer {access_token}".encode())
 
-        if request.post(network_request, data=api_token_body, forceRefresh=True) != QgsBlockingNetworkRequest.NoError:
+        if request.post(network_request,
+                        data=api_token_body,
+                        forceRefresh=True) != QgsBlockingNetworkRequest.NoError:
             # todo error handling
             print('error')
             print(request.reply().content())
