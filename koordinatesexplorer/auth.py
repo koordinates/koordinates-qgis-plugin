@@ -1,13 +1,23 @@
-import requests
+import json
 from random import choice
 from string import ascii_lowercase
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlsplit
 from webbrowser import open as web_open
+import urllib
 
 from .pkce import generate_pkce_pair
 
-from qgis.PyQt.QtCore import QObject, pyqtSignal
+from qgis.PyQt.QtCore import (
+    QObject,
+    pyqtSignal,
+    QUrl
+)
+from qgis.PyQt.QtNetwork import QNetworkRequest
+
+from qgis.core import (
+    QgsBlockingNetworkRequest
+)
 
 
 AUTH_HANDLER_RESPONSE = """\
@@ -38,8 +48,8 @@ SCOPE_KX = (
 
 
 class _Handler(BaseHTTPRequestHandler):
+
     def do_GET(self):
-        print(self.path)
         params = parse_qs(urlsplit(self.path).query)
         code = params.get("code")
 
@@ -51,11 +61,23 @@ class _Handler(BaseHTTPRequestHandler):
             "grant_type": "authorization_code",
             "client_id": CLIENT_ID,
             "code_verifier": self.server.code_verifier,
-            "code": code,
+            "code": code[0],
             "redirect_uri": REDIRECT_URL,
         }
 
-        resp = requests.post(TOKEN_URL, data=body).json()
+        request = QgsBlockingNetworkRequest()
+        token_body = urllib.parse.urlencode(body).encode()
+
+        network_request = QNetworkRequest(QUrl(TOKEN_URL))
+        network_request.setHeader(QNetworkRequest.ContentTypeHeader, 'application/x-www-form-urlencoded')
+
+        if request.post(network_request, data=token_body, forceRefresh=True) != QgsBlockingNetworkRequest.NoError:
+            # todo error handling
+            print('error')
+            print(request.reply().content())
+            return
+
+        resp = json.loads(request.reply().content().data().decode())
 
         access_token = resp.get("access_token")
         expires_in = resp.get("expires_in")
@@ -64,18 +86,26 @@ class _Handler(BaseHTTPRequestHandler):
             self._send_response()
             return
 
-        headers = {"Authorization": f"Bearer {access_token}"}
         body = {
             "scope": SCOPE_KX,
             "name": "koordinates-qgis-plugin-token",
-            "expires_at": None,
-            "referrers": [],
             "site": "*",
         }
-        resp = requests.post(API_TOKEN_URL, headers=headers, data=body).json()
+        api_token_body = urllib.parse.urlencode(body).encode()
+
+        network_request = QNetworkRequest(QUrl(API_TOKEN_URL))
+        network_request.setHeader(QNetworkRequest.ContentTypeHeader, 'application/x-www-form-urlencoded')
+        network_request.setRawHeader(b"Authorization", f"Bearer {access_token}".encode())
+
+        if request.post(network_request, data=api_token_body, forceRefresh=True) != QgsBlockingNetworkRequest.NoError:
+            # todo error handling
+            print('error')
+            print(request.reply().content())
+            return
+
+        resp = json.loads(request.reply().content().data().decode())
 
         self.server.apikey = resp["key"]
-
         self._send_response()
 
     def _send_response(self):
