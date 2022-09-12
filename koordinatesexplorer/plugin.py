@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 from qgis.PyQt import sip
 from qgis.PyQt.QtWidgets import QAction
@@ -17,19 +18,20 @@ def icon(f):
 class KoordinatesPlugin(object):
     def __init__(self, iface):
         self.iface = iface
+        self.dock: Optional[KoordinatesExplorer] = None
+        self.explorerAction: Optional[QAction] = None
 
     def initGui(self):
         self.dock = KoordinatesExplorer()
         self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dock)
 
-        self.explorerAction = QAction("Data Browser...", self.iface.mainWindow())
+        self.explorerAction = QAction("Show Data Browser", self.iface.mainWindow())
+        self.explorerAction.setCheckable(True)
+        self.dock.setToggleVisibilityAction(self.explorerAction)
+
         self.iface.addPluginToMenu("Koordinates", self.explorerAction)
-        self.explorerAction.triggered.connect(self.showDock)
 
         self.dock.hide()
-
-    def showDock(self):
-        self.dock.show()
 
     def unload(self):
         if not sip.isdeleted(self.dock):

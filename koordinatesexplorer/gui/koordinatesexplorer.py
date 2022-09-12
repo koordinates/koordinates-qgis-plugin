@@ -5,6 +5,7 @@ from qgis.core import (
     QgsApplication,
     Qgis,
 )
+from qgis.gui import QgsDockWidget
 from qgis.utils import iface
 
 from qgis.PyQt import uic
@@ -29,7 +30,7 @@ AUTH_CONFIG_ID = "koordinates_auth_id"
 
 class KoordinatesExplorer(BASE, WIDGET):
     def __init__(self):
-        super(QDockWidget, self).__init__(iface.mainWindow())
+        super(QgsDockWidget, self).__init__(iface.mainWindow())
         self.setupUi(self)
         self.browser = DatasetsBrowserWidget()
         self.oauth: Optional[OAuthWorkflow] = None
