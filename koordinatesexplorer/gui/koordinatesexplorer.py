@@ -20,7 +20,7 @@ from koordinatesexplorer.auth import OAuthWorkflow
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
-WIDGET, BASE = uic.loadUiType(
+WIDGET, _ = uic.loadUiType(
     os.path.join(os.path.dirname(__file__), "koordinatesexplorer.ui")
 )
 
@@ -28,7 +28,7 @@ SETTINGS_NAMESPACE = "Koordinates"
 AUTH_CONFIG_ID = "koordinates_auth_id"
 
 
-class KoordinatesExplorer(BASE, WIDGET):
+class KoordinatesExplorer(QgsDockWidget, WIDGET):
     def __init__(self):
         super(QgsDockWidget, self).__init__(iface.mainWindow())
         self.setupUi(self)
