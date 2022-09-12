@@ -7,7 +7,7 @@ from webbrowser import open as web_open
 
 from .pkce import generate_pkce_pair
 
-from PyQt5.QtCore import QObject, pyqtSignal
+from qgis.PyQt.QtCore import QObject, pyqtSignal
 
 
 AUTH_HANDLER_RESPONSE = """\
