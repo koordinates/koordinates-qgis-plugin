@@ -1,6 +1,16 @@
-import requests
+import json
 
-from qgis.PyQt.QtCore import pyqtSignal, QObject
+from qgis.PyQt.QtCore import (
+    pyqtSignal,
+    QObject,
+    QUrl,
+    QUrlQuery
+)
+from qgis.PyQt.QtNetwork import QNetworkRequest
+
+from qgis.core import QgsBlockingNetworkRequest
+
+
 
 from koordinatesexplorer.utils import waitcursor
 
@@ -73,41 +83,62 @@ class KoordinatesClient(QObject):
         else:
             url = "users/me/data/"
         ret = self._get(url, headers, params)
-        tokens = ret.headers.get("X-Resource-Range", "").split("/")
+
+        tokens = ret['reply'].rawHeader(b"X-Resource-Range").data().decode().split("/")
         total = tokens[-1]
         last = tokens[0].split("-")[-1]
-        return ret.json(), last == total
+        return ret['json'], last == total
 
     def userEMail(self):
-        return self._get("users/me/").json()["email"]
+        return self._get("users/me/")['json']["email"]
 
     def userContexts(self):
-        return self._get("users/me/").json()["contexts"]
+        return self._get("users/me/")['json']["contexts"]
 
     def dataset(self, datasetid):
         if str(datasetid) not in self.layers:
-            self.layers[str(datasetid)] = self._get(f"data/{datasetid}/").json()
+            self.layers[str(datasetid)] = self._get(f"data/{datasetid}/")['json']
         return self.layers[str(datasetid)]
 
     def table(self, tableid):
         if str(tableid) not in self.layers:
-            self.tables[str(tableid)] = self._get(f"tables/{tableid}/").json()
+            self.tables[str(tableid)] = self._get(f"tables/{tableid}/")['json']
         return self.layers[str(tableid)]
 
     def categories(self):
         if self._categories is None:
-            self._categories = self._get("categories").json()
+            self._categories = self._get("categories")['json']
         return self._categories
 
     @waitcursor
     def _get(self, url, headers=None, params=None):
+
+        url = QUrl(f"https://koordinates.com/services/api/v1.x/{url}")
+
+        params = params or {}
+        query = QUrlQuery()
+        for name, value in params.items():
+            query.addQueryItem(name, str(value))
+        url.setQuery(query)
+
+        network_request = QNetworkRequest(url)
+
         headers = headers or {}
         headers.update(self.headers)
-        params = params or {}
-        ret = requests.get(
-            f"https://koordinates.com/services/api/v1.x/{url}",
-            headers=headers,
-            params=params,
-        )
-        ret.raise_for_status()
-        return ret
+        for header, value in headers.items():
+            network_request.setRawHeader(header.encode(),
+                                         value.encode())
+
+        request = QgsBlockingNetworkRequest()
+        if request.get(network_request) != QgsBlockingNetworkRequest.NoError:
+            # todo error handling
+            print('error')
+            print(request.reply().content())
+            return
+
+        reply_json = json.loads(request.reply().content().data().decode())
+
+        return {
+            'json': reply_json,
+            'reply': request.reply()
+        }
