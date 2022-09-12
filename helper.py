@@ -52,20 +52,22 @@ def package(version=None):
             filter_excludes(dirs)
 
 
-def install():
+def install(profile: str = None):
+    if not profile:
+        profile = 'default'
+
     src = os.path.join(os.path.dirname(__file__), "koordinatesexplorer")
     if os.name == "nt":
         default_profile_plugins = (
-            "~/AppData/Roaming/QGIS/QGIS3/profiles/default/python/plugins"
+            f"~/AppData/Roaming/QGIS/QGIS3/profiles/{profile}/python/plugins"
         )
     elif sys.platform == "darwin":
         default_profile_plugins = (
-            "~/Library/Application Support/QGIS/QGIS3"
-            "/profiles/default/python/plugins"
+            f"~/Library/Application Support/QGIS/QGIS3/profiles/{profile}/python/plugins"
         )
     else:
         default_profile_plugins = (
-            "~/.local/share/QGIS/QGIS3/profiles/default/python/plugins"
+            f"~/.local/share/QGIS/QGIS3/profiles/{profile}/python/plugins"
         )
 
     dst_plugins = os.path.expanduser(default_profile_plugins)
@@ -112,16 +114,16 @@ def usage():
     print(
         (
             "Usage:\n"
-            f"  {sys.argv[0]} package [VERSION]    Build a QGIS plugin zip file\n"
-            f"  {sys.argv[0]} install              Install in your local QGIS (for development)\n"
+            f"  {sys.argv[0]} package [VERSION]      Build a QGIS plugin zip file\n"
+            f"  {sys.argv[0]} install [profile name] Install in your local QGIS (for development)\n"
         ),
         file=sys.stderr,
     )
     sys.exit(2)
 
 
-if len(sys.argv) == 2 and sys.argv[1] == "install":
-    install()
+if len(sys.argv) >= 2 and sys.argv[1] == "install":
+    install(profile=(None if len(sys.argv) < 3 else sys.argv[2]))
 elif len(sys.argv) == 2 and sys.argv[1] == "setup":
     setup()
 elif len(sys.argv) in [2, 3] and sys.argv[1] == "package":
