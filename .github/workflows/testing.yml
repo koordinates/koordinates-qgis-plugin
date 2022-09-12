@@ -2,25 +2,48 @@ name: Testing
 
 on:
   push:
-    branches:
-      - main
+    paths:
+    - "koordinatesexplorer/**"
+    - ".github/workflows/testing.yaml"
   pull_request:
-    branches:
-      - '**'
+    types: [opened, synchronize, edited]
+
+env:
+  # plugin name/directory where the code for the plugin is stored
+  PLUGIN_NAME: koordinatesexplorer
+  # python notation to test running inside plugin
+  TESTS_RUN_FUNCTION: koordinatesexplorer.test_suite.test_package
+  # Docker settings
+  DOCKER_IMAGE: qgis/qgis
+
 
 jobs:
-  # Run unit tests
-  test:
-    runs-on: ubuntu-20.04
+
+  Test-plugin-koordinatesexplorer:
+
+    runs-on: ubuntu-latest
+
     strategy:
       matrix:
-        qgis_version: [release-3_22, release-3_16, latest]
-    env:
-      QGIS_TEST_VERSION: ${{ matrix.qgis_version }}
+        docker_tags: [release-3_16, release-3_22, latest]
+
     steps:
+
       - name: Checkout
         uses: actions/checkout@v2
-        with:
-          submodules: recursive
-      - name: Test on QGIS
-        run: docker-compose -f .docker/docker-compose.gh.yml run qgis /usr/src/.docker/run-docker-tests.sh
+
+      - name: Docker pull and create qgis-testing-environment
+        run: |
+          docker pull "$DOCKER_IMAGE":${{ matrix.docker_tags }}
+          docker run -d --name qgis-testing-environment -v "$GITHUB_WORKSPACE":/tests_directory -e DISPLAY=:99 "$DOCKER_IMAGE":${{ matrix.docker_tags }}
+
+      - name: Docker set up QGIS
+        run: |
+          docker exec qgis-testing-environment sh -c "qgis_setup.sh $PLUGIN_NAME"
+          docker exec qgis-testing-environment sh -c "rm -f /root/.local/share/QGIS/QGIS3/profiles/default/python/plugins/$PLUGIN_NAME"
+          docker exec qgis-testing-environment sh -c "ln -s /tests_directory/$PLUGIN_NAME /root/.local/share/QGIS/QGIS3/profiles/default/python/plugins/$PLUGIN_NAME"
+          docker exec qgis-testing-environment sh -c "pip3 install -r /tests_directory/requirements_test.txt"
+
+      - name: Docker run plugin test
+        run: |
+          docker exec qgis-testing-environment sh -c "qgis_testrunner.sh $TESTS_RUN_FUNCTION"

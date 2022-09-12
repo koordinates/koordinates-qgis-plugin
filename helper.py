@@ -21,7 +21,7 @@ def package(version=None):
     print(f"Creating {archive} ...")
 
     with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as zipFile:
-        excludes = {"test", "tests", "*.pyc", ".git", "metadata.txt"}
+        excludes = {"test", "test", "*.pyc", ".git", "metadata.txt"}
         src_dir = os.path.join(os.path.dirname(__file__), "koordinatesexplorer")
         exclude = lambda p: any([fnmatch.fnmatch(p, e) for e in excludes])
 
