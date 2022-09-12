@@ -9,3 +9,7 @@ from .data_browser import (  # NOQA
     CreativeCommonLicenseVersions,
     AccessType
 )
+from .client import (
+    KoordinatesClient,
+    PAGE_SIZE
+)
