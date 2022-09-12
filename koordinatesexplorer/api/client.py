@@ -123,7 +123,11 @@ class KoordinatesClient(QObject):
         params = params or {}
         query = QUrlQuery()
         for name, value in params.items():
-            query.addQueryItem(name, str(value))
+            if isinstance(value, (list, tuple)):
+                for v in value:
+                    query.addQueryItem(name, str(v))
+            else:
+                query.addQueryItem(name, str(value))
         url.setQuery(query)
 
         network_request = QNetworkRequest(url)
