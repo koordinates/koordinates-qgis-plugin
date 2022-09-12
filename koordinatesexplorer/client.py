@@ -11,10 +11,7 @@ from qgis.PyQt.QtCore import (
     QUrlQuery
 )
 from qgis.PyQt.QtNetwork import QNetworkRequest
-
 from qgis.core import QgsBlockingNetworkRequest
-
-
 
 from koordinatesexplorer.utils import waitcursor
 
@@ -26,7 +23,6 @@ class LoginException(Exception):
 
 
 class KoordinatesClient(QObject):
-
     loginChanged = pyqtSignal(bool)
     error_occurred = pyqtSignal(str)
 

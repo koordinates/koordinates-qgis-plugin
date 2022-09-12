@@ -1,12 +1,10 @@
 import json
+import urllib
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from random import choice
 from string import ascii_lowercase
-from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlsplit
 from webbrowser import open as web_open
-import urllib
-
-from .pkce import generate_pkce_pair
 
 from qgis.PyQt.QtCore import (
     QObject,
@@ -14,11 +12,11 @@ from qgis.PyQt.QtCore import (
     QUrl
 )
 from qgis.PyQt.QtNetwork import QNetworkRequest
-
 from qgis.core import (
     QgsBlockingNetworkRequest
 )
 
+from .pkce import generate_pkce_pair
 
 AUTH_HANDLER_RESPONSE = """\
 <html>
@@ -32,7 +30,6 @@ AUTH_HANDLER_RESPONSE = """\
 """.encode(
     "utf-8"
 )
-
 
 AUTH_URL = "https://id.koordinates.com/o/authorize/"
 TOKEN_URL = "https://id.koordinates.com/o/token/"
@@ -76,7 +73,8 @@ class _Handler(BaseHTTPRequestHandler):
         if request.post(network_request,
                         data=token_body,
                         forceRefresh=True) != QgsBlockingNetworkRequest.NoError:
-            self.server.error = request.reply().content().data().decode() or request.reply().errorString()
+            self.server.error = request.reply().content().data().decode() \
+                                or request.reply().errorString()
             self._send_response()
             return
 
@@ -109,7 +107,8 @@ class _Handler(BaseHTTPRequestHandler):
         if request.post(network_request,
                         data=api_token_body,
                         forceRefresh=True) != QgsBlockingNetworkRequest.NoError:
-            self.server.error = request.reply().content().data().decode() or request.reply().errorString()
+            self.server.error = request.reply().content().data().decode() \
+                                or request.reply().errorString()
             self._send_response()
             return
 
@@ -126,7 +125,6 @@ class _Handler(BaseHTTPRequestHandler):
 
 
 class OAuthWorkflow(QObject):
-
     finished = pyqtSignal(str)
     error_occurred = pyqtSignal(str)
 
