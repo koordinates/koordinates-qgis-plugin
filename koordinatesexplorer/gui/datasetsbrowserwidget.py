@@ -30,7 +30,11 @@ from qgis.core import (
     QgsJsonUtils,
 )
 
-from ..api import KoordinatesClient, PAGE_SIZE
+from ..api import (
+    KoordinatesClient,
+    PAGE_SIZE,
+    DataBrowserQuery
+)
 from koordinatesexplorer.gui.datasetdialog import DatasetDialog
 from koordinatesexplorer.gui.thumbnails import downloadThumbnail
 from koordinatesexplorer.utils import cloneKartRepo, KartNotInstalledException
@@ -58,11 +62,12 @@ class DatasetsBrowserWidget(QListWidget):
         self.setSpacing(10)
         self.setStyleSheet("""QListWidget{background: #E5E7E9;}""")
 
-    def populate(self, params, context):
+    def populate(self, query: DataBrowserQuery, context):
         self.clear()
         datasets, finished = KoordinatesClient.instance().datasets(
-            params=params, context=context
+            query=query, context=context
         )
+
         for dataset in datasets:
             datasetItem = QListWidgetItem()
             datasetWidget = DatasetItemWidget(dataset)
@@ -71,7 +76,7 @@ class DatasetsBrowserWidget(QListWidget):
             datasetItem.setSizeHint(datasetWidget.sizeHint())
         if not finished:
             loadMoreItem = QListWidgetItem()
-            loadMoreWidget = LoadMoreItemWidget(self, params)
+            loadMoreWidget = LoadMoreItemWidget(self, query)
             self.addItem(loadMoreItem)
             self.setItemWidget(loadMoreItem, loadMoreWidget)
             loadMoreItem.setSizeHint(loadMoreWidget.sizeHint())
@@ -83,10 +88,10 @@ class DatasetsBrowserWidget(QListWidget):
 
 
 class LoadMoreItemWidget(QFrame):
-    def __init__(self, listWidget, params):
+    def __init__(self, listWidget, query: DataBrowserQuery):
         QFrame.__init__(self)
         self.listWidget = listWidget
-        self.params = params
+        self.query: DataBrowserQuery = query
         self.btnLoadMore = QToolButton()
         self.btnLoadMore.setText("Load more...")
         self.btnLoadMore.clicked.connect(self.loadMore)
@@ -100,8 +105,9 @@ class LoadMoreItemWidget(QFrame):
     def loadMore(self):
         page = math.ceil(self.listWidget.count() / PAGE_SIZE)
         datasets, finished = KoordinatesClient.instance().datasets(
-            page=page, params=self.params
+            page=page, query=self.query
         )
+
         for dataset in datasets:
             datasetItem = QListWidgetItem()
             datasetWidget = DatasetItemWidget(dataset)
