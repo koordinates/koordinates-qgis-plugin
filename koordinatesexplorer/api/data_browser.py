@@ -259,4 +259,24 @@ class DataBrowserQuery:
         elif license_types:
             params["license.type"] = license_types[0]
 
+        # extra query logic for defaults:
+        # 1. If no filters are active, the query string is initialized to the default data types
+        if 'kind' not in params and DataType.Vectors not in self.data_types:
+            params['kind'] = ['layer', 'table', 'set', 'document']
+
+        # 2. If there are filters active, but nothing for `kind` or `data.geometry_type`
+        # then the query string has the default data types appended to it
+        if 'data.geometry_type' not in params and DataType.Vectors in self.data_types:
+            params['data.geometry_type'] = ['point', 'linestring', 'polygon']
+
+        # 3. If intersite data is enabled, and there are no active filters blocking
+        # intersite data (presence of `from`, `org`, or `user` query params) then the
+        # query string has `from=all` appended to it
+
+        # 4. If we are filtering to a country (presence of `country` query param)
+        # then the query string has `country_boost=4` appended to it
+
+        # 5. If we are filtering to a geotag (presence of `geotag` query param)
+        # then the query string has `geotag_boost=10` appended to it
+
         return params
