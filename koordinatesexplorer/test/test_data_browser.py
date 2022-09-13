@@ -41,29 +41,30 @@ class TestDataBrowser(unittest.TestCase):
 
     def test_query(self):
         query = DataBrowserQuery()
-        self.assertEqual(query.build_query(), {})
         query.search = 'my filter'
-        self.assertEqual(query.build_query(), {'q': 'my filter'})
+        self.assertEqual(query.build_query(),
+                         {'q': 'my filter', 'kind': ['layer', 'table', 'set', 'document']})
 
     def test_starred(self):
         query = DataBrowserQuery()
-        self.assertEqual(query.build_query(), {})
         query.starred = True
-        self.assertEqual(query.build_query(), {'is_starred': True})
+        self.assertEqual(query.build_query(),
+                         {'is_starred': True, 'kind': ['layer', 'table', 'set', 'document']})
 
     def test_access(self):
         query = DataBrowserQuery()
-        self.assertEqual(query.build_query(), {})
         query.access_type = AccessType.Private
-        self.assertEqual(query.build_query(), {'public': False})
+        self.assertEqual(query.build_query(),
+                         {'public': False, 'kind': ['layer', 'table', 'set', 'document']})
         query.access_type = AccessType.Public
-        self.assertEqual(query.build_query(), {'public': True})
+        self.assertEqual(query.build_query(),
+                         {'public': True, 'kind': ['layer', 'table', 'set', 'document']})
 
     def test_category(self):
         query = DataBrowserQuery()
-        self.assertEqual(query.build_query(), {})
         query.category = 'my filter'
-        self.assertEqual(query.build_query(), {'category': 'my filter'})
+        self.assertEqual(query.build_query(),
+                         {'category': 'my filter', 'kind': ['layer', 'table', 'set', 'document']})
 
     def test_data_type_to_string(self):
         self.assertEqual(DataBrowserQuery.data_type_to_string(DataType.Vectors),
@@ -85,7 +86,6 @@ class TestDataBrowser(unittest.TestCase):
 
     def test_kind(self):
         query = DataBrowserQuery()
-        self.assertEqual(query.build_query(), {})
         query.data_types = {DataType.Rasters}
         self.assertEqual(query.build_query(), {'kind': 'raster'})
         query.data_types = {DataType.Grids}
@@ -106,7 +106,7 @@ class TestDataBrowser(unittest.TestCase):
 
     def test_vector_filters(self):
         query = DataBrowserQuery()
-        self.assertEqual(query.build_query(), {})
+        query.data_types = {DataType.Vectors}
         query.vector_filters = {VectorFilter.Point}
         self.assertEqual(query.build_query(), {'data.geometry_type': 'point'})
         query.vector_filters = {VectorFilter.Line}
@@ -117,10 +117,13 @@ class TestDataBrowser(unittest.TestCase):
         self.assertEqual(query.build_query(), {'data.geometry_type': ['linestring', 'polygon']})
 
         query.vector_filters = {VectorFilter.HasZ}
-        self.assertEqual(query.build_query(), {'has_z': True})
+        self.assertEqual(query.build_query(),
+                         {'has_z': True, 'data.geometry_type': ['point', 'linestring', 'polygon']})
 
         query.vector_filters = {VectorFilter.HasPrimaryKey}
-        self.assertEqual(query.build_query(), {'has_pk': True})
+        self.assertEqual(query.build_query(),
+                         {'has_pk': True,
+                          'data.geometry_type': ['point', 'linestring', 'polygon']})
 
         # combined
         query.vector_filters = {VectorFilter.HasZ, VectorFilter.HasPrimaryKey, VectorFilter.Point}
@@ -129,24 +132,32 @@ class TestDataBrowser(unittest.TestCase):
 
     def test_raster_filters(self):
         query = DataBrowserQuery()
-        self.assertEqual(query.build_query(), {})
+        query.data_types = {DataType.Rasters}
         query.raster_filters = {RasterFilter.AerialSatellitePhotos}
-        self.assertEqual(query.build_query(), {'is_imagery': True})
+        self.assertEqual(query.build_query(),
+                         {'is_imagery': True, 'kind': 'raster'})
         query.raster_filters = {RasterFilter.NotAerialSatellitePhotos}
-        self.assertEqual(query.build_query(), {'is_imagery': False})
+        self.assertEqual(query.build_query(),
+                         {'is_imagery': False, 'kind': 'raster'})
         query.raster_filters = {RasterFilter.ByBand}
-        self.assertEqual(query.build_query(), {})
+        self.assertEqual(query.build_query(),
+                         {'kind': 'raster'})
         query.raster_band_filters = {RasterBandFilter.RGB}
-        self.assertEqual(query.build_query(), {'raster_band': ['blue', 'green', 'red']})
+        self.assertEqual(query.build_query(),
+                         {'raster_band': ['blue', 'green', 'red'], 'kind': 'raster'})
         query.raster_band_filters = {RasterBandFilter.BlackAndWhite}
-        self.assertEqual(query.build_query(), {'raster_band': 'gray'})
+        self.assertEqual(query.build_query(),
+                         {'raster_band': 'gray', 'kind': 'raster'})
         query.raster_filter_options = {RasterFilterOptions.WithAlphaChannel}
-        self.assertEqual(query.build_query(), {'raster_band': ['alpha', 'gray']})
+        self.assertEqual(query.build_query(),
+                         {'raster_band': ['alpha', 'gray'], 'kind': 'raster'})
         query.raster_band_filters = {RasterBandFilter.RGB}
-        self.assertEqual(query.build_query(), {'raster_band': ['alpha', 'blue', 'green', 'red']})
+        self.assertEqual(query.build_query(),
+                         {'raster_band': ['alpha', 'blue', 'green', 'red'], 'kind': 'raster'})
 
         query.raster_filters = {RasterFilter.NotAerialSatellitePhotos}
-        self.assertEqual(query.build_query(), {'is_imagery': False, 'raster_band': 'alpha'})
+        self.assertEqual(query.build_query(),
+                         {'is_imagery': False, 'raster_band': 'alpha', 'kind': 'raster'})
 
         query.data_types = {DataType.Rasters}
 
@@ -174,7 +185,6 @@ class TestDataBrowser(unittest.TestCase):
 
     def test_grid_filters(self):
         query = DataBrowserQuery()
-        self.assertEqual(query.build_query(), {})
         query.data_types = {DataType.Grids}
         self.assertEqual(query.build_query(), {'kind': ['attribute-grid', 'grid']})
         query.grid_filter_options = {GridFilterOptions.MultiAttributeGridsOnly}
@@ -184,7 +194,6 @@ class TestDataBrowser(unittest.TestCase):
 
     def test_table_filter(self):
         query = DataBrowserQuery()
-        self.assertEqual(query.build_query(), {})
         query.data_types = {DataType.Tables}
         self.assertEqual(query.build_query(), {'kind': 'table'})
         query.vector_filters.add(VectorFilter.HasPrimaryKey)
@@ -192,59 +201,73 @@ class TestDataBrowser(unittest.TestCase):
 
     def test_date_filters(self):
         query = DataBrowserQuery()
-        self.assertEqual(query.build_query(), {})
         query.created_minimum = QDateTime(QDate(2022, 1, 3), QTime(0, 0, 0))
-        self.assertEqual(query.build_query(), {'created_at.after': '2022-01-03T00:00:00'})
+        self.assertEqual(query.build_query(), {'created_at.after': '2022-01-03T00:00:00',
+                                               'kind': ['layer', 'table', 'set', 'document']})
         query.created_minimum = None
         query.created_maximum = QDateTime(QDate(2022, 1, 3), QTime(0, 0, 0))
-        self.assertEqual(query.build_query(), {'created_at.before': '2022-01-03T00:00:00'})
+        self.assertEqual(query.build_query(), {'created_at.before': '2022-01-03T00:00:00',
+                                               'kind': ['layer', 'table', 'set', 'document']})
         query.created_maximum = None
         query.updated_minimum = QDateTime(QDate(2022, 1, 3), QTime(0, 0, 0))
-        self.assertEqual(query.build_query(), {'updated_at.after': '2022-01-03T00:00:00'})
+        self.assertEqual(query.build_query(), {'updated_at.after': '2022-01-03T00:00:00',
+                                               'kind': ['layer', 'table', 'set', 'document']})
         query.updated_minimum = None
         query.updated_maximum = QDateTime(QDate(2022, 1, 3), QTime(0, 0, 0))
-        self.assertEqual(query.build_query(), {'updated_at.before': '2022-01-03T00:00:00'})
+        self.assertEqual(query.build_query(), {'updated_at.before': '2022-01-03T00:00:00',
+                                               'kind': ['layer', 'table', 'set', 'document']})
         query.updated_minimum = QDateTime(QDate(2020, 1, 3), QTime(0, 0, 0))
         self.assertEqual(query.build_query(), {'updated_at.after': '2020-01-03T00:00:00',
-                                               'updated_at.before': '2022-01-03T00:00:00'})
+                                               'updated_at.before': '2022-01-03T00:00:00',
+                                               'kind': ['layer', 'table', 'set', 'document']})
 
     def test_license_filters(self):
         query = DataBrowserQuery()
 
         query.cc_license_versions = {CreativeCommonLicenseVersions.Version3}
-        self.assertEqual(query.build_query(), {'license.version': '3.0'})
+        self.assertEqual(query.build_query(), {'license.version': '3.0',
+                                               'kind': ['layer', 'table', 'set', 'document']})
         query.cc_license_versions = {CreativeCommonLicenseVersions.Version4}
-        self.assertEqual(query.build_query(), {'license.version': '4.0'})
+        self.assertEqual(query.build_query(), {'license.version': '4.0',
+                                               'kind': ['layer', 'table', 'set', 'document']})
         query.cc_license_versions = {CreativeCommonLicenseVersions.Version3,
                                      CreativeCommonLicenseVersions.Version4}
-        self.assertEqual(query.build_query(), {'license.version': ['3.0', '4.0']})
+        self.assertEqual(query.build_query(), {'license.version': ['3.0', '4.0'],
+                                               'kind': ['layer', 'table', 'set', 'document']})
 
         query.cc_license_versions = {CreativeCommonLicenseVersions.Version3}
         query.cc_license_allow_derivates = True
         self.assertEqual(query.build_query(),
-                         {'license.type': '-cc-by-nd', 'license.version': '3.0'})
+                         {'license.type': '-cc-by-nd', 'license.version': '3.0',
+                          'kind': ['layer', 'table', 'set', 'document']})
         query.cc_license_allow_derivates = False
         self.assertEqual(query.build_query(),
-                         {'license.type': 'cc-by-nd', 'license.version': '3.0'})
+                         {'license.type': 'cc-by-nd', 'license.version': '3.0',
+                          'kind': ['layer', 'table', 'set', 'document']})
         query.cc_license_allow_derivates = None
 
         query.cc_license_allow_commercial = True
         self.assertEqual(query.build_query(),
-                         {'license.type': '-cc-by-nc', 'license.version': '3.0'})
+                         {'license.type': '-cc-by-nc', 'license.version': '3.0',
+                          'kind': ['layer', 'table', 'set', 'document']})
         query.cc_license_allow_commercial = False
         self.assertEqual(query.build_query(),
-                         {'license.type': 'cc-by-nc', 'license.version': '3.0'})
+                         {'license.type': 'cc-by-nc', 'license.version': '3.0',
+                          'kind': ['layer', 'table', 'set', 'document']})
         query.cc_license_allow_commercial = None
 
         query.cc_license_changes_must_be_shared = True
         self.assertEqual(query.build_query(),
-                         {'license.type': 'cc-by-sa', 'license.version': '3.0'})
+                         {'license.type': 'cc-by-sa', 'license.version': '3.0',
+                          'kind': ['layer', 'table', 'set', 'document']})
         query.cc_license_changes_must_be_shared = False
         self.assertEqual(query.build_query(),
-                         {'license.type': '-cc-by-sa', 'license.version': '3.0'})
+                         {'license.type': '-cc-by-sa', 'license.version': '3.0',
+                          'kind': ['layer', 'table', 'set', 'document']})
         query.cc_license_allow_commercial = True
         self.assertEqual(query.build_query(),
-                         {'license.type': ['-cc-by-nc', '-cc-by-sa'], 'license.version': '3.0'})
+                         {'license.type': ['-cc-by-nc', '-cc-by-sa'], 'license.version': '3.0',
+                          'kind': ['layer', 'table', 'set', 'document']})
 
 
 if __name__ == '__main__':
