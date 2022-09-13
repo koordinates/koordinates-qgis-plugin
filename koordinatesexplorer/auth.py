@@ -18,6 +18,8 @@ from qgis.core import (
 
 from .pkce import generate_pkce_pair
 
+AUTH_HANDLER_REDIRECT = ""
+
 AUTH_HANDLER_RESPONSE = """\
 <html>
   <head>
@@ -118,10 +120,15 @@ class _Handler(BaseHTTPRequestHandler):
         self._send_response()
 
     def _send_response(self):
-        self.send_response(200)
-        self.send_header("Content-type", "text/html")
-        self.end_headers()
-        self.wfile.write(AUTH_HANDLER_RESPONSE)
+        if AUTH_HANDLER_REDIRECT:
+            self.send_response(302)
+            self.send_header("Location", AUTH_HANDLER_REDIRECT)
+            self.end_headers()
+        else:
+            self.send_response(200)
+            self.send_header("Content-type", "text/html")
+            self.end_headers()
+            self.wfile.write(AUTH_HANDLER_RESPONSE)
 
 
 class OAuthWorkflow(QObject):
