@@ -13,6 +13,8 @@ from qgis.PyQt.QtCore import (
 from qgis.PyQt.QtNetwork import QNetworkRequest
 from qgis.core import QgsBlockingNetworkRequest
 
+from .utils import ApiUtils
+
 from koordinatesexplorer.utils import waitcursor
 
 PAGE_SIZE = 20
@@ -116,19 +118,12 @@ class KoordinatesClient(QObject):
         return self._categories
 
     @waitcursor
-    def _get(self, url, headers=None, params=None):
+    def _get(self, endpoint, headers=None, params=None):
 
-        url = QUrl(f"https://koordinates.com/services/api/v1.x/{url}")
+        url = QUrl(f"https://koordinates.com/services/api/v1.x/{endpoint}")
 
-        params = params or {}
-        query = QUrlQuery()
-        for name, value in params.items():
-            if isinstance(value, (list, tuple)):
-                for v in value:
-                    query.addQueryItem(name, str(v))
-            else:
-                query.addQueryItem(name, str(value))
-        url.setQuery(query)
+        if params:
+            url.setQuery(ApiUtils.to_url_query(params))
 
         network_request = QNetworkRequest(url)
 

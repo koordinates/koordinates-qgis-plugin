@@ -1,3 +1,7 @@
+from .client import (  # NOQA
+    KoordinatesClient,
+    PAGE_SIZE
+)
 from .data_browser import (  # NOQA
     DataBrowserQuery,
     DataType,
@@ -9,10 +13,4 @@ from .data_browser import (  # NOQA
     CreativeCommonLicenseVersions,
     AccessType
 )
-from .client import (  # NOQA
-    KoordinatesClient,
-    PAGE_SIZE
-)
 from .utils import ApiUtils  # NOQA
-
-
