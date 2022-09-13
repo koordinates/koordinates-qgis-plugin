@@ -13,3 +13,6 @@ from .client import (  # NOQA
     KoordinatesClient,
     PAGE_SIZE
 )
+from .utils import ApiUtils  # NOQA
+
+
