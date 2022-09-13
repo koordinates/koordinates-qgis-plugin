@@ -9,11 +9,20 @@ from qgis.gui import QgsDockWidget
 from qgis.utils import iface
 
 from qgis.PyQt import uic
-from qgis.PyQt.QtCore import Qt, QDate, QDateTime, QThread
+from qgis.PyQt.QtCore import QDate, QDateTime, QThread
 from qgis.PyQt.QtWidgets import QVBoxLayout, QApplication
 from qgis.PyQt.QtGui import QPixmap
 
-from ..api import KoordinatesClient
+from ..api import (
+    KoordinatesClient,
+    DataBrowserQuery,
+    DataType,
+    VectorFilter,
+    RasterFilter,
+    RasterFilterOptions,
+    RasterBandFilter
+)
+
 from koordinatesexplorer.gui.datasetsbrowserwidget import DatasetsBrowserWidget
 from koordinatesexplorer.auth import OAuthWorkflow
 
@@ -47,6 +56,15 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         self.btnLogout.clicked.connect(self.logoutClicked)
 
         self.groupBox.collapsedStateChanged.connect(self.groupCollapseStateChanged)
+
+        self.comboDatatype.addItem(self.tr('All'))
+        self.comboDatatype.addItem(self.tr('Vector'), DataType.Vectors)
+        self.comboDatatype.addItem(self.tr('Raster'), DataType.Rasters)
+        self.comboDatatype.addItem(self.tr('Grid'), DataType.Grids)
+        self.comboDatatype.addItem(self.tr('Table'), DataType.Tables)
+        self.comboDatatype.addItem(self.tr('Set'), DataType.Sets)
+        self.comboDatatype.addItem(self.tr('Data Repository'), DataType.Repositories)
+        self.comboDatatype.addItem(self.tr('Document'), DataType.Documents)
 
         self.btnSearch.clicked.connect(self.search)
         self.comboDatatype.currentIndexChanged.connect(self.datatypeChanged)
@@ -85,74 +103,63 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         self.btnSearch.setEnabled(True)
 
     def search(self):
-        params = {}
-        datatypeName = self.comboDatatype.currentText()
-        datatype = {"Data Repository": "repo"}.get(datatypeName, datatypeName.lower())
-        if datatype != "all":
-            params["kind"] = datatype
-        if datatype == "vector":
-            geomtype = []
+        browser_query = DataBrowserQuery()
+
+        if self.comboDatatype.currentData() is not None:
+            browser_query.data_types = {self.comboDatatype.currentData()}
+
+        if DataType.Vectors in browser_query.data_types:
             if self.chkPoints.isChecked():
-                geomtype.append("point")
+                browser_query.vector_filters.add(VectorFilter.Point)
             if self.chkLines.isChecked():
-                geomtype.append("linestring")
+                browser_query.vector_filters.add(VectorFilter.Line)
             if self.chkPolygons.isChecked():
-                geomtype.append("polygon")
-            geomtype = geomtype or ["point", "linestring", "polygon"]
-            params["data.geometry_type"] = geomtype
+                browser_query.vector_filters.add(VectorFilter.Polygon)
             if self.chkHasZ.isChecked():
-                params["has_z"] = True
+                browser_query.vector_filters.add(VectorFilter.HasZ)
             if self.chkHasPrimaryKey.isChecked():
-                params["has_pk"] = True
-            if self.chkHasDataRepository.isChecked():
-                params["has_repo"] = True
-        if datatype == "raster":
-            bands = []
-            if self.radioRGB.isChecked():
-                bands.extend(["red", "green", "blue"])
-            if self.radioGrayscale.isChecked():
-                bands.append("gray")
-            if self.chkOnlyAlpha.isChecked():
-                bands.append("alpha")
-            if bands:
-                params["raster_band"] = bands
+                browser_query.vector_filters.add(VectorFilter.HasPrimaryKey)
+            # if self.chkHasDataRepository.isChecked():
+            #    params["has_repo"] = True
+        if DataType.Rasters in browser_query.data_types:
             if self.radioAerial.isChecked():
-                params["is_imagery"] = True
-            if self.radioNoAerial.isChecked():
-                params["is_imagery"] = False
-        if datatype == "repo":
-            if self.chkIncludeRepos.isChecked():
-                params["kind"] = ["vector", "repo", "table"]
-                params["has_repo"] = True
+                browser_query.raster_filters.add(RasterFilter.AerialSatellitePhotos)
+            elif self.radioNoAerial.isChecked():
+                browser_query.raster_filters.add(RasterFilter.NotAerialSatellitePhotos)
+            elif self.radioRGB.isChecked():
+                browser_query.raster_filters.add(RasterFilter.ByBand)
+                browser_query.raster_band_filters.add(RasterBandFilter.RGB)
+            elif self.radioGrayscale.isChecked():
+                browser_query.raster_filters.add(RasterFilter.ByBand)
+                browser_query.raster_band_filters.add(RasterBandFilter.BlackAndWhite)
+
+            if self.chkOnlyAlpha.isChecked():
+                browser_query.raster_filter_options.add(RasterFilterOptions.WithAlphaChannel)
+        # if datatype == "repo":
+        #    if self.chkIncludeRepos.isChecked():
+        #        params["kind"] = ["vector", "repo", "table"]
+        #        params["has_repo"] = True
         category = self.comboCategory.currentData()
         if category is not None:
             if self.comboSubcategory.isVisible():
-                params["category"] = self.comboSubcategory.currentData()
+                browser_query.category = self.comboSubcategory.currentData()
             else:
-                params["category"] = category
+                browser_query.category = category
 
-        params["created_at.before"] = QDateTime(self.dateCreatedBefore.date()).toString(
-            Qt.ISODate
-        )
-        params["created_at.after"] = QDateTime(self.dateCreatedAfter.date()).toString(
-            Qt.ISODate
-        )
-        params["updated_at.before"] = QDateTime(self.dateUpdatedBefore.date()).toString(
-            Qt.ISODate
-        )
-        params["updated_at.after"] = QDateTime(self.dateUpdatedAfter.date()).toString(
-            Qt.ISODate
-        )
+        browser_query.created_maximum = QDateTime(self.dateCreatedBefore.date())
+        browser_query.created_minimum = QDateTime(self.dateCreatedAfter.date())
+        browser_query.updated_maximum = QDateTime(self.dateUpdatedBefore.date())
+        browser_query.updated_minimum = QDateTime(self.dateUpdatedAfter.date())
 
         text = self.txtSearch.text().strip("")
         if text:
-            params["q"] = text
+            browser_query.search = text
 
         self.btnSearch.setEnabled(False)
 
         context = self.comboContext.currentData()
 
-        self.browser.populate(params, context)
+        self.browser.populate(browser_query, context)
 
     def groupCollapseStateChanged(self):
         self.datatypeChanged()

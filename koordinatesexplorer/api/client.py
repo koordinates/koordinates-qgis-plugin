@@ -7,13 +7,13 @@ from typing import (
 from qgis.PyQt.QtCore import (
     pyqtSignal,
     QObject,
-    QUrl,
-    QUrlQuery
+    QUrl
 )
 from qgis.PyQt.QtNetwork import QNetworkRequest
 from qgis.core import QgsBlockingNetworkRequest
 
 from .utils import ApiUtils
+from .data_browser import DataBrowserQuery
 
 from koordinatesexplorer.utils import waitcursor
 
@@ -79,10 +79,15 @@ class KoordinatesClient(QObject):
     def isLoggedIn(self):
         return self.apiKey is not None
 
-    def datasets(self, page=1, params=None, context=None):
-        params = params or {}
+    def datasets(self, page=1, query: Optional[DataBrowserQuery] = None, context=None):
         context = context or {"type": "site", "domain": "all"}
         headers = {"Expand": "list,list.publisher,list.styles,list.data.source_summary"}
+
+        if query:
+            params = query.build_query()
+        else:
+            params = {}
+
         params.update({"page_size": PAGE_SIZE, "page": page})
         if context["type"] == "site":
             url = "data/"

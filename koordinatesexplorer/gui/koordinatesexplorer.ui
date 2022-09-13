@@ -287,46 +287,6 @@
              </property>
              <item>
               <widget class="QComboBox" name="comboDatatype">
-               <item>
-                <property name="text">
-                 <string>All</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Vector</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Raster</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Grid</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Table</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Set</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Data Repository</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Document</string>
-                </property>
-               </item>
               </widget>
              </item>
             </layout>
