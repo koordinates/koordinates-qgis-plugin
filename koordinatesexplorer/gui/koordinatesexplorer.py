@@ -25,6 +25,7 @@ from ..api import (
 
 from koordinatesexplorer.gui.datasetsbrowserwidget import DatasetsBrowserWidget
 from koordinatesexplorer.auth import OAuthWorkflow
+from .filter_widget import FilterWidget
 
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
@@ -54,6 +55,11 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
         self.btnLogin.clicked.connect(self.loginClicked)
         self.btnLogout.clicked.connect(self.logoutClicked)
+
+        self.filter_widget = FilterWidget(self)
+        filter_layout = QVBoxLayout()
+        filter_layout.addWidget(self.filter_widget)
+        self.filter_group_box.setLayout(filter_layout)
 
         self.groupBox.collapsedStateChanged.connect(self.groupCollapseStateChanged)
 
@@ -308,3 +314,4 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
     def removeApiKey(self):
         QgsApplication.authManager().removeAuthSetting(AUTH_CONFIG_ID)
+
