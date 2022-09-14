@@ -20,7 +20,8 @@ from qgis.PyQt.QtWidgets import (
     QVBoxLayout,
     QComboBox,
     QStyleOptionComboBox,
-    QApplication
+    QApplication,
+    QSizePolicy
 )
 from qgis.core import (
     Qgis,
@@ -49,6 +50,7 @@ class CustomComboBox(QWidget):
 
             self.frame = QFrame()
             self.frame.setObjectName('base_frame')
+            self.frame.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
 
             opt = QStyleOptionFrame()
             border = self.style().pixelMetric(QStyle.PM_DefaultFrameWidth, opt)
@@ -74,6 +76,11 @@ class CustomComboBox(QWidget):
         def set_contents_widget(self, widget):
             self.setMinimumSize(widget.sizeHint())
             self.frame.layout().addWidget(widget)
+
+        def reflow(self):
+            self.frame.setFixedWidth(self.anchorWidget().size().width())
+            self.frame.adjustSize()
+            self.adjustSize()
 
     class BoxComponent(Enum):
         DropDownButton = 1
@@ -111,6 +118,9 @@ class CustomComboBox(QWidget):
         self._focus_watcher = None
         self._block_focus_change = 0
 
+    def __del__(self):
+        self._floating_widget.deleteLater()
+
     def component_for_pos(self, pos: QPoint):
         """
         Returns the component for the given widget pos
@@ -147,6 +157,7 @@ class CustomComboBox(QWidget):
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self._floating_widget.setFixedWidth(event.size().width())
+        self._floating_widget.reflow()
 
     def mouseMoveEvent(self, event):
         self._hover_state = self.component_for_pos(event.pos())
@@ -175,7 +186,7 @@ class CustomComboBox(QWidget):
                 else:
                     parent = parent.parent()
 
-            if not parent:
+            if not parent and new_focus_widget != self:
                 self._floating_widget.hide()
             else:
                 self._focus_watcher = QgsFocusWatcher(new_focus_widget)
