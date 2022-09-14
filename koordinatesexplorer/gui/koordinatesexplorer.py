@@ -1,6 +1,10 @@
 import os
 from typing import Optional
 
+from qgis.PyQt import uic
+from qgis.PyQt.QtCore import QDate, QDateTime, QThread
+from qgis.PyQt.QtGui import QPixmap
+from qgis.PyQt.QtWidgets import QVBoxLayout, QApplication
 from qgis.core import (
     QgsApplication,
     Qgis,
@@ -8,11 +12,9 @@ from qgis.core import (
 from qgis.gui import QgsDockWidget
 from qgis.utils import iface
 
-from qgis.PyQt import uic
-from qgis.PyQt.QtCore import QDate, QDateTime, QThread
-from qgis.PyQt.QtWidgets import QVBoxLayout, QApplication
-from qgis.PyQt.QtGui import QPixmap
-
+from koordinatesexplorer.auth import OAuthWorkflow
+from koordinatesexplorer.gui.datasetsbrowserwidget import DatasetsBrowserWidget
+from .filter_widget import FilterWidget
 from ..api import (
     KoordinatesClient,
     DataBrowserQuery,
@@ -22,11 +24,6 @@ from ..api import (
     RasterFilterOptions,
     RasterBandFilter
 )
-
-from koordinatesexplorer.gui.datasetsbrowserwidget import DatasetsBrowserWidget
-from koordinatesexplorer.auth import OAuthWorkflow
-from .filter_widget import FilterWidget
-
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
@@ -305,13 +302,12 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
     def retrieveApiKey(self):
         apiKey = (
-            QgsApplication.authManager().authSetting(
-                AUTH_CONFIG_ID, defaultValue="", decrypt=True
-            )
-            or ""
+                QgsApplication.authManager().authSetting(
+                    AUTH_CONFIG_ID, defaultValue="", decrypt=True
+                )
+                or ""
         )
         return apiKey
 
     def removeApiKey(self):
         QgsApplication.authManager().removeAuthSetting(AUTH_CONFIG_ID)
-

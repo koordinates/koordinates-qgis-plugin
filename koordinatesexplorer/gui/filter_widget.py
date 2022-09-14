@@ -4,17 +4,17 @@ from qgis.PyQt.QtWidgets import (
     QVBoxLayout,
     QHBoxLayout,
     QToolButton,
-QSizePolicy
+    QSizePolicy
 )
-
 from qgis.gui import (
     QgsFilterLineEdit
 )
 
-from .data_type_filter_widget import DataTypeFilterWidget
-from .resolution_filter_widget import ResolutionFilterWidget
-from .license_filter_widget import LicenseFilterWidget
 from .access_filter_widget import AccessFilterWidget
+from .data_type_filter_widget import DataTypeFilterWidget
+from .license_filter_widget import LicenseFilterWidget
+from .resolution_filter_widget import ResolutionFilterWidget
+
 
 class FilterWidget(QWidget):
 
@@ -24,10 +24,10 @@ class FilterWidget(QWidget):
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
 
         vl = QVBoxLayout()
-        vl.setContentsMargins(0,0,0,0)
+        vl.setContentsMargins(0, 0, 0, 0)
 
         hl = QHBoxLayout()
-        hl.setContentsMargins(0,0,0,0)
+        hl.setContentsMargins(0, 0, 0, 0)
 
         self.search_line_edit = QgsFilterLineEdit()
         self.search_line_edit.setShowClearButton(True)
@@ -48,10 +48,10 @@ class FilterWidget(QWidget):
         vl.addLayout(hl)
 
         self.advanced_frame = QWidget()
-        self.advanced_frame.setSizePolicy(QSizePolicy.Ignored,QSizePolicy.Preferred)
+        self.advanced_frame.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
         advanced_layout = QGridLayout()
 
-        advanced_layout.setContentsMargins(0,0,0,0)
+        advanced_layout.setContentsMargins(0, 0, 0, 0)
         self.data_type_filter_widget = DataTypeFilterWidget(self)
         self.resolution_widget = ResolutionFilterWidget(self)
         self.license_widget = LicenseFilterWidget(self)

@@ -183,8 +183,9 @@ class DataTypeFilterWidget(CustomComboBox):
         self.raster_band_frame.setVisible(self.band_radio.isChecked())
 
         should_show_raster_group = self.raster_radio.isChecked() or \
-                                   self.aerial_radio.isChecked() or self.not_aerial_radio.isChecked() or \
-                                   self.band_radio.isChecked()
+            self.aerial_radio.isChecked() or \
+            self.not_aerial_radio.isChecked() or \
+            self.band_radio.isChecked()
 
         self.raster_frame.setVisible(should_show_raster_group)
 
@@ -226,7 +227,9 @@ class DataTypeFilterWidget(CustomComboBox):
             text = 'Data type'
         elif self.vector_radio.isChecked():
             options = []
-            if self.point_checkbox.isChecked() and self.line_checkbox.isChecked() and self.polygon_checkbox.isChecked():
+            if self.point_checkbox.isChecked() and \
+               self.line_checkbox.isChecked() and \
+               self.polygon_checkbox.isChecked():
                 text = 'Vectors'
             else:
                 if self.point_checkbox.isChecked():

@@ -55,7 +55,7 @@ class ResolutionFilterWidget(CustomComboBox):
             self.set_current_text('Resolution')
         else:
             self.set_current_text('Resolution {} m - {} m'.format(self.slider.lowerValue(),
-                                                              self.slider.upperValue()))
+                                                                  self.slider.upperValue()))
 
     def clear(self):
         self.slider.setRange(self.slider.minimum(), self.slider.maximum())

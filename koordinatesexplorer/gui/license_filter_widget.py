@@ -87,7 +87,8 @@ class LicenseFilterWidget(CustomComboBox):
         self.clear()
 
     def _update_visible_frames(self):
-        self.cc_options_widget.setVisible(self.cc_3_checkbox.isChecked() or self.cc_4_checkbox.isChecked())
+        self.cc_options_widget.setVisible(self.cc_3_checkbox.isChecked()
+                                          or self.cc_4_checkbox.isChecked())
 
         self.drop_down_widget.adjustSize()
         self._floating_widget.reflow()
