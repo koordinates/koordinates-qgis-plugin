@@ -47,9 +47,9 @@ class GuiUtilsTest(unittest.TestCase):
         Tests get_ui_file_path svg path
         """
         self.assertTrue(
-            GuiUtils.get_ui_file_path('test.ui'))
-        self.assertIn('test.ui',
-                      GuiUtils.get_ui_file_path('test.ui'))
+            GuiUtils.get_ui_file_path('koordinatesexplorer.ui'))
+        self.assertIn('koordinatesexplorer.ui',
+                      GuiUtils.get_ui_file_path('koordinatesexplorer.ui'))
         self.assertFalse(GuiUtils.get_ui_file_path('not_a_form.ui'))
 
 
