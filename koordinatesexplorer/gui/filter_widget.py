@@ -1,3 +1,4 @@
+from qgis.PyQt.QtCore import QTimer
 from qgis.PyQt.QtWidgets import (
     QWidget,
     QGridLayout,
@@ -68,6 +69,12 @@ class FilterWidget(QWidget):
                                self.license_widget,
                                self.access_widget)
 
+        # changes to filter parameters are deferred to a small timeout, to avoid
+        # starting lots of queries while a user is mid-operation (such as dragging a slider)
+        self._update_query_timeout = QTimer(self)
+        self._update_query_timeout.setSingleShot(True)
+        self._update_query_timeout.timeout.connect(self._update_query)
+
         for w in self.filter_widgets:
             w.changed.connect(self._filter_widget_changed)
         self.search_line_edit.textChanged.connect(self._filter_widget_changed)
@@ -125,7 +132,11 @@ class FilterWidget(QWidget):
         self.advanced_frame.adjustSize()
 
     def _filter_widget_changed(self):
-        # update query
+        # changes to filter parameters are deferred to a small timeout, to avoid
+        # starting lots of queries while a user is mid-operation (such as dragging a slider)
+        self._update_query_timeout.start(500)
+
+    def _update_query(self):
         query = DataBrowserQuery()
 
         if self.search_line_edit.text().strip():
