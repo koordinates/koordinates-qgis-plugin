@@ -14,6 +14,7 @@ from .access_filter_widget import AccessFilterWidget
 from .data_type_filter_widget import DataTypeFilterWidget
 from .license_filter_widget import LicenseFilterWidget
 from .resolution_filter_widget import ResolutionFilterWidget
+from .gui_utils import GuiUtils
 
 
 class FilterWidget(QWidget):
@@ -35,7 +36,9 @@ class FilterWidget(QWidget):
         hl.addWidget(self.search_line_edit)
 
         self.show_advanced_button = QToolButton()
+        self.show_advanced_button.setIcon(GuiUtils.get_icon('filter.svg'))
         self.show_advanced_button.setText('Advanced')
+        self.show_advanced_button.setToolTip('Advanced')
         self.show_advanced_button.setCheckable(True)
         hl.addWidget(self.show_advanced_button)
         self.show_advanced_button.toggled.connect(self._show_advanced)
@@ -43,6 +46,10 @@ class FilterWidget(QWidget):
         self.clear_all_button = QToolButton()
         self.clear_all_button.setText('Clear All')
         self.clear_all_button.clicked.connect(self._clear_all)
+        # a QToolButton with an icon will appear smaller by default vs one with text, so
+        # force the advanced button to match the Clear All button size
+        self.show_advanced_button.setFixedHeight(self.clear_all_button.sizeHint().height())
+        self.show_advanced_button.setFixedWidth(self.show_advanced_button.height())
         hl.addWidget(self.clear_all_button)
 
         vl.addLayout(hl)
