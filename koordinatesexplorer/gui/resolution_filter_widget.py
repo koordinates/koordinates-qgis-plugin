@@ -6,17 +6,16 @@ from qgis.PyQt.QtWidgets import (
 )
 from qgis.gui import QgsRangeSlider
 
-from .custom_combo_box import CustomComboBox
+from .filter_widget_combo_base import FilterWidgetComboBase
+from ..api import DataBrowserQuery
 
-
-class ResolutionFilterWidget(CustomComboBox):
+class ResolutionFilterWidget(FilterWidgetComboBase):
     """
     Custom widget for resolution selection
     """
 
     def __init__(self, parent):
         super().__init__(parent)
-        self.set_show_clear_button(True)
 
         self.drop_down_widget = QWidget()
         vl = QVBoxLayout()
@@ -56,6 +55,7 @@ class ResolutionFilterWidget(CustomComboBox):
         else:
             self.set_current_text('Resolution {} m - {} m'.format(self.slider.lowerValue(),
                                                                   self.slider.upperValue()))
+        self.changed.emit()
 
     def clear(self):
         self.slider.setRange(self.slider.minimum(), self.slider.maximum())
@@ -67,3 +67,9 @@ class ResolutionFilterWidget(CustomComboBox):
             return False
 
         return super().should_show_clear()
+
+    def apply_constraints_to_query(self, query: DataBrowserQuery):
+        if self.slider.lowerValue() != self.slider.minimum():
+            query.minimum_resolution = self.slider.lowerValue()
+        if self.slider.upperValue() != self.slider.maximum():
+            query.maximum_resolution = self.slider.upperValue()

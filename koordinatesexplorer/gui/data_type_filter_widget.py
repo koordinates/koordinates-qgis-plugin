@@ -7,23 +7,27 @@ from qgis.PyQt.QtWidgets import (
     QButtonGroup
 )
 
-from .custom_combo_box import CustomComboBox
+from .filter_widget_combo_base import FilterWidgetComboBase
+from ..api import (
+    DataBrowserQuery,
+    DataType,
+    RasterFilter,
+    RasterFilterOptions,
+    RasterBandFilter,
+    VectorFilter,
+    GridFilterOptions,
+)
 
 
-class DataTypeFilterWidget(CustomComboBox):
+class DataTypeFilterWidget(FilterWidgetComboBase):
     """
     Custom widget for data type filtering
     """
 
-    changed = pyqtSignal()
-
     def __init__(self, parent):
         super().__init__(parent)
-        self.set_show_clear_button(True)
 
         self._block_geometry_type_constraint_update = 0
-
-        indent_margin = self.fontMetrics().width('xx')
 
         self.drop_down_widget = QWidget()
         vl = QVBoxLayout()
@@ -33,14 +37,14 @@ class DataTypeFilterWidget(CustomComboBox):
 
         self.layers_widget = QWidget()
         layers_widget_layout = QVBoxLayout()
-        layers_widget_layout.setContentsMargins(indent_margin, 0, 0, 0)
+        layers_widget_layout.setContentsMargins(self._indent_margin, 0, 0, 0)
 
         self.vector_radio = QRadioButton('Vectors')
         layers_widget_layout.addWidget(self.vector_radio)
 
         self.vector_frame = QWidget()
         vector_frame_layout = QVBoxLayout()
-        vector_frame_layout.setContentsMargins(indent_margin, 0, 0, 0)
+        vector_frame_layout.setContentsMargins(self._indent_margin, 0, 0, 0)
 
         self.point_checkbox = QCheckBox('Point')
         vector_frame_layout.addWidget(self.point_checkbox)
@@ -67,7 +71,7 @@ class DataTypeFilterWidget(CustomComboBox):
 
         self.raster_frame = QWidget()
         raster_frame_layout = QVBoxLayout()
-        raster_frame_layout.setContentsMargins(indent_margin, 0, 0, 0)
+        raster_frame_layout.setContentsMargins(self._indent_margin, 0, 0, 0)
 
         self.aerial_radio = QRadioButton('Aerial && satellite photos')
         raster_frame_layout.addWidget(self.aerial_radio)
@@ -78,7 +82,7 @@ class DataTypeFilterWidget(CustomComboBox):
 
         self.raster_band_frame = QWidget()
         raster_band_frame_layout = QVBoxLayout()
-        raster_band_frame_layout.setContentsMargins(indent_margin, 0, 0, 0)
+        raster_band_frame_layout.setContentsMargins(self._indent_margin, 0, 0, 0)
 
         self.rgb_radio = QRadioButton('RGB')
         raster_band_frame_layout.addWidget(self.rgb_radio)
@@ -105,7 +109,7 @@ class DataTypeFilterWidget(CustomComboBox):
 
         self.grid_frame = QWidget()
         grid_frame_layout = QVBoxLayout()
-        grid_frame_layout.setContentsMargins(indent_margin, 0, 0, 0)
+        grid_frame_layout.setContentsMargins(self._indent_margin, 0, 0, 0)
         self.multi_attribute_grids_only_checkbox = QCheckBox('Multi-attribute grids only (RAT\'s)')
         grid_frame_layout.addWidget(self.multi_attribute_grids_only_checkbox)
 
@@ -122,7 +126,7 @@ class DataTypeFilterWidget(CustomComboBox):
 
         self.table_frame = QWidget()
         table_frame_layout = QVBoxLayout()
-        table_frame_layout.setContentsMargins(indent_margin, 0, 0, 0)
+        table_frame_layout.setContentsMargins(self._indent_margin, 0, 0, 0)
         self.table_has_pk_checkbox = QCheckBox('Has primary key')
         table_frame_layout.addWidget(self.table_has_pk_checkbox)
         self.table_frame.setLayout(table_frame_layout)
@@ -292,3 +296,60 @@ class DataTypeFilterWidget(CustomComboBox):
             text = 'Documents'
 
         self.set_current_text(text)
+        self.changed.emit()
+
+    def apply_constraints_to_query(self, query: DataBrowserQuery):
+        if self.layers_radio.isChecked():
+            query.data_types = {DataType.Vectors, DataType.Rasters, DataType.Grids}
+        elif self.vector_radio.isChecked():
+            query.data_types = {DataType.Vectors}
+            if self.point_checkbox.isChecked() and \
+               self.line_checkbox.isChecked() and \
+               self.polygon_checkbox.isChecked():
+                pass
+            else:
+                if self.point_checkbox.isChecked():
+                    query.vector_filters.add(VectorFilter.Point)
+                if self.line_checkbox.isChecked():
+                    query.vector_filters.add(VectorFilter.Line)
+                if self.polygon_checkbox.isChecked():
+                    query.vector_filters.add(VectorFilter.Polygon)
+
+            if self.has_z_elevation_checkbox.isChecked():
+                query.vector_filters.add(VectorFilter.HasZ)
+            if self.vector_has_primary_key_checkbox.isChecked():
+                query.vector_filters.add(VectorFilter.HasPrimaryKey)
+
+        elif self.raster_radio.isChecked():
+            query.data_types = {DataType.Rasters}
+        elif self.aerial_radio.isChecked():
+            query.data_types = {DataType.Rasters}
+            query.raster_filters = {RasterFilter.AerialSatellitePhotos}
+        elif self.not_aerial_radio.isChecked():
+            query.data_types = {DataType.Rasters}
+            query.raster_filters = {RasterFilter.NotAerialSatellitePhotos}
+        elif self.band_radio.isChecked():
+            query.data_types = {DataType.Rasters}
+            query.raster_filters = {RasterFilter.ByBand}
+            if self.rgb_radio.isChecked():
+                query.raster_band_filters = {RasterBandFilter.RGB}
+            elif self.grayscale_radio.isChecked():
+                query.raster_band_filters = {RasterBandFilter.BlackAndWhite}
+        elif self.grid_radio.isChecked():
+            query.data_types = {DataType.Grids}
+            if self.multi_attribute_grids_only_checkbox.isChecked():
+                query.grid_filter_options.add(GridFilterOptions.MultiAttributeGridsOnly)
+        elif self.table_radio.isChecked():
+            query.data_types = {DataType.Tables}
+            if self.table_has_pk_checkbox.isChecked():
+                query.vector_filters.add(VectorFilter.HasPrimaryKey)
+        elif self.set_radio.isChecked():
+            query.data_types = {DataType.Sets}
+        elif self.data_repository_radio.isChecked():
+            query.data_types = {DataType.Repositories}
+        elif self.document_radio.isChecked():
+            query.data_types = {DataType.Documents}
+
+        if DataType.Rasters in query.data_types and self.alpha_channel_checkbox.isChecked():
+            query.raster_filter_options.add(RasterFilterOptions.WithAlphaChannel)
+

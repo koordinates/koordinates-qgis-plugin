@@ -6,21 +6,19 @@ from qgis.PyQt.QtWidgets import (
     QButtonGroup
 )
 
-from .custom_combo_box import CustomComboBox
+from .filter_widget_combo_base import FilterWidgetComboBase
+from ..api import (
+    DataBrowserQuery,
+    AccessType
+)
 
-
-class AccessFilterWidget(CustomComboBox):
+class AccessFilterWidget(FilterWidgetComboBase):
     """
     Custom widget for access based filtering
     """
 
-    changed = pyqtSignal()
-
     def __init__(self, parent):
         super().__init__(parent)
-        self.set_show_clear_button(True)
-
-        self._block_geometry_type_constraint_update = 0
 
         self.drop_down_widget = QWidget()
         vl = QVBoxLayout()
@@ -65,3 +63,10 @@ class AccessFilterWidget(CustomComboBox):
             text = 'Shared with me'
 
         self.set_current_text(text)
+        self.changed.emit()
+
+    def apply_constraints_to_query(self, query: DataBrowserQuery):
+        if self.public_radio.isChecked():
+            query.access_type = AccessType.Public
+        else:
+            query.access_type = AccessType.Private

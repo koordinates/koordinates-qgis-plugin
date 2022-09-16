@@ -15,7 +15,7 @@ from .data_type_filter_widget import DataTypeFilterWidget
 from .license_filter_widget import LicenseFilterWidget
 from .resolution_filter_widget import ResolutionFilterWidget
 from .gui_utils import GuiUtils
-
+from ..api import DataBrowserQuery
 
 class FilterWidget(QWidget):
 
@@ -54,26 +54,29 @@ class FilterWidget(QWidget):
 
         vl.addLayout(hl)
 
-        self.advanced_frame = QWidget()
-        self.advanced_frame.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
-        advanced_layout = QGridLayout()
+        # these are dynamically created
+        self.advanced_frame = None
+        self.advanced_layout = None
 
-        advanced_layout.setContentsMargins(0, 0, 0, 0)
         self.data_type_filter_widget = DataTypeFilterWidget(self)
         self.resolution_widget = ResolutionFilterWidget(self)
         self.license_widget = LicenseFilterWidget(self)
         self.access_widget = AccessFilterWidget(self)
-        advanced_layout.addWidget(self.data_type_filter_widget, 0, 1)
-        advanced_layout.addWidget(self.resolution_widget, 1, 0)
-        advanced_layout.addWidget(self.license_widget, 2, 0)
-        advanced_layout.addWidget(self.access_widget, 2, 1)
-        self.advanced_frame.setLayout(advanced_layout)
 
-        vl.addWidget(self.advanced_frame)
+        self.filter_widgets = (self.data_type_filter_widget,
+                               self.resolution_widget,
+                               self.license_widget,
+                               self.access_widget)
 
-        self.advanced_frame.hide()
+        for w in self.filter_widgets:
+            w.changed.connect(self._filter_widget_changed)
+        self.search_line_edit.textChanged.connect(self._filter_widget_changed)
+
+        self.visible_widgets = self.filter_widgets[:]
 
         self.setLayout(vl)
+
+        self._reflow()
 
     def _clear_all(self):
         self.data_type_filter_widget.clear()
@@ -86,3 +89,50 @@ class FilterWidget(QWidget):
         self.advanced_frame.setMinimumWidth(self.width())
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
         self.adjustSize()
+
+    def _reflow(self):
+        """
+        Rearranges the filter widgets based on what's visible
+        """
+        item_index = 0
+
+        for widget in self.filter_widgets:
+            widget.setParent(None)
+
+        self.advanced_layout = QGridLayout()
+        self.advanced_layout.setContentsMargins(0, 0, 0, 0)
+
+
+        row = 0
+        column = 0
+        for widget in self.visible_widgets:
+            self.advanced_layout.addWidget(widget, row, column)
+            column += 1
+            if column > 1:
+                row += 1
+                column = 0
+
+        self.advanced_frame = QWidget()
+        self.advanced_frame.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
+
+        self.advanced_frame.setLayout(self.advanced_layout)
+
+        self.advanced_frame.setVisible(self.show_advanced_button.isChecked())
+
+
+        self.layout().addWidget(self.advanced_frame)
+
+        self.advanced_frame.adjustSize()
+
+    def _filter_widget_changed(self):
+        # update query
+        query = DataBrowserQuery()
+
+        if self.search_line_edit.text().strip():
+            query.search = self.search_line_edit.text().strip()
+
+        for w in self.filter_widgets:
+            w.apply_constraints_to_query(query)
+
+        print(query.build_query())
+

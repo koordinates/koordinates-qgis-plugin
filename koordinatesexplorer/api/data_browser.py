@@ -103,7 +103,7 @@ class DataBrowserQuery:
         self.updated_minimum: Optional[QDateTime] = None
         self.updated_maximum: Optional[QDateTime] = None
 
-        self.cc_license_versions: Set[CreativeCommonLicenseVersions] = {}
+        self.cc_license_versions: Set[CreativeCommonLicenseVersions] = set()
         self.cc_license_allow_derivates: Optional[bool] = None
         self.cc_license_allow_commercial: Optional[bool] = None
         self.cc_license_changes_must_be_shared: Optional[bool] = None
