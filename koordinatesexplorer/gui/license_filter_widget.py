@@ -7,23 +7,19 @@ from qgis.PyQt.QtWidgets import (
     QButtonGroup
 )
 
-from .custom_combo_box import CustomComboBox
+from .filter_widget_combo_base import FilterWidgetComboBase
+from ..api import (
+    DataBrowserQuery,
+    CreativeCommonLicenseVersions
+)
 
-
-class LicenseFilterWidget(CustomComboBox):
+class LicenseFilterWidget(FilterWidgetComboBase):
     """
     Custom widget for license filtering
     """
 
-    changed = pyqtSignal()
-
     def __init__(self, parent):
         super().__init__(parent)
-        self.set_show_clear_button(True)
-
-        self._block_geometry_type_constraint_update = 0
-
-        indent_margin = self.fontMetrics().width('xx')
 
         self.drop_down_widget = QWidget()
         vl = QVBoxLayout()
@@ -36,7 +32,7 @@ class LicenseFilterWidget(CustomComboBox):
 
         self.cc_options_widget = QWidget()
         cc_options_layout = QVBoxLayout()
-        cc_options_layout.setContentsMargins(indent_margin, 0, 0, 0)
+        cc_options_layout.setContentsMargins(self._indent_margin, 0, 0, 0)
 
         cc_attribute_checkbox = QCheckBox('Must attribute licensor')
         cc_attribute_checkbox.setChecked(True)
@@ -129,3 +125,14 @@ class LicenseFilterWidget(CustomComboBox):
             text = 'CC4 {}'.format(cc_license_suffice)
 
         self.set_current_text(text)
+        self.changed.emit()
+
+    def apply_constraints_to_query(self, query: DataBrowserQuery):
+        query.cc_license_changes_must_be_shared = self.changes_need_to_be_shared_radio.isChecked()
+        query.cc_license_allow_commercial  = self.commercial_use_allowed_radio.isChecked()
+        query.cc_license_allow_derivates = self.derivatives_allowed_radio.isChecked()
+
+        if self.cc_3_checkbox.isChecked():
+            query.cc_license_versions.add(CreativeCommonLicenseVersions.Version3)
+        if self.cc_4_checkbox.isChecked():
+            query.cc_license_versions.add(CreativeCommonLicenseVersions.Version4)
