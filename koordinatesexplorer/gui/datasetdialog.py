@@ -10,11 +10,11 @@ from qgis.PyQt.QtWidgets import QDialog
 
 from koordinatesexplorer.gui.thumbnails import downloadThumbnail
 
+from .gui_utils import GuiUtils
+
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
-WIDGET, BASE = uic.loadUiType(
-    os.path.join(os.path.dirname(__file__), "datasetdialog.ui")
-)
+WIDGET, BASE = uic.loadUiType(GuiUtils.get_ui_file_path("datasetdialog.ui"))
 
 
 class DatasetDialog(BASE, WIDGET):

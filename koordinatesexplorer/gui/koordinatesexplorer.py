@@ -25,11 +25,11 @@ from ..api import (
     RasterBandFilter
 )
 
+from .gui_utils import GuiUtils
+
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
-WIDGET, _ = uic.loadUiType(
-    os.path.join(os.path.dirname(__file__), "koordinatesexplorer.ui")
-)
+WIDGET, _ = uic.loadUiType(GuiUtils.get_ui_file_path('koordinatesexplorer.ui'))
 
 SETTINGS_NAMESPACE = "Koordinates"
 AUTH_CONFIG_ID = "koordinates_auth_id"
