@@ -1,4 +1,5 @@
-from qgis.PyQt.QtCore import pyqtSignal
+from typing import Set
+
 from qgis.PyQt.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -187,9 +188,9 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
         self.raster_band_frame.setVisible(self.band_radio.isChecked())
 
         should_show_raster_group = self.raster_radio.isChecked() or \
-            self.aerial_radio.isChecked() or \
-            self.not_aerial_radio.isChecked() or \
-            self.band_radio.isChecked()
+                                   self.aerial_radio.isChecked() or \
+                                   self.not_aerial_radio.isChecked() or \
+                                   self.band_radio.isChecked()
 
         self.raster_frame.setVisible(should_show_raster_group)
 
@@ -232,8 +233,8 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
         elif self.vector_radio.isChecked():
             options = []
             if self.point_checkbox.isChecked() and \
-               self.line_checkbox.isChecked() and \
-               self.polygon_checkbox.isChecked():
+                    self.line_checkbox.isChecked() and \
+                    self.polygon_checkbox.isChecked():
                 text = 'Vectors'
             else:
                 if self.point_checkbox.isChecked():
@@ -296,7 +297,35 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
             text = 'Documents'
 
         self.set_current_text(text)
-        self.changed.emit()
+        if not self._block_changes:
+            self.changed.emit()
+
+    def data_types(self) -> Set[DataType]:
+        """
+        Returns the set of selected data types
+        """
+        types = set()
+        if self.layers_radio.isChecked():
+            types = {DataType.Vectors, DataType.Rasters, DataType.Grids}
+        elif self.vector_radio.isChecked():
+            types = {DataType.Vectors}
+        elif any((self.raster_radio.isChecked(),
+                 self.aerial_radio.isChecked(),
+                 self.not_aerial_radio.isChecked(),
+                 self.band_radio.isChecked())):
+            types = {DataType.Rasters}
+        elif self.grid_radio.isChecked():
+            types = {DataType.Grids}
+        elif self.table_radio.isChecked():
+            types = {DataType.Tables}
+        elif self.set_radio.isChecked():
+            types = {DataType.Sets}
+        elif self.data_repository_radio.isChecked():
+            types = {DataType.Repositories}
+        elif self.document_radio.isChecked():
+            types = {DataType.Documents}
+
+        return types
 
     def apply_constraints_to_query(self, query: DataBrowserQuery):
         if self.layers_radio.isChecked():
@@ -304,8 +333,8 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
         elif self.vector_radio.isChecked():
             query.data_types = {DataType.Vectors}
             if self.point_checkbox.isChecked() and \
-               self.line_checkbox.isChecked() and \
-               self.polygon_checkbox.isChecked():
+                    self.line_checkbox.isChecked() and \
+                    self.polygon_checkbox.isChecked():
                 pass
             else:
                 if self.point_checkbox.isChecked():
@@ -353,3 +382,51 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
         if DataType.Rasters in query.data_types and self.alpha_channel_checkbox.isChecked():
             query.raster_filter_options.add(RasterFilterOptions.WithAlphaChannel)
 
+    def set_from_query(self, query: DataBrowserQuery):
+        self._block_changes = True
+
+        if query.data_types == {DataType.Vectors, DataType.Rasters, DataType.Grids}:
+            self.layers_radio.setChecked(True)
+        elif query.data_types == {DataType.Vectors}:
+            self.vector_radio.setChecked(True)
+            if not query.vector_filters:
+                self.point_checkbox.setChecked(True)
+                self.line_checkbox.setChecked(True)
+                self.polygon_checkbox.setChecked(True)
+            else:
+                self.point_checkbox.setChecked(VectorFilter.Point in query.vector_filters)
+                self.line_checkbox.setChecked(VectorFilter.Line in query.vector_filters)
+                self.polygon_checkbox.setChecked(VectorFilter.Polygon in query.vector_filters)
+
+            self.has_z_elevation_checkbox.setChecked(VectorFilter.HasZ in query.vector_filters)
+            self.vector_has_primary_key_checkbox.setChecked(VectorFilter.HasPrimaryKey in query.vector_filters)
+        elif query.data_types == {DataType.Rasters}:
+            self.raster_radio.setChecked(True)
+            if RasterFilter.AerialSatellitePhotos in query.raster_filters:
+                self.aerial_radio.setChecked(True)
+            if RasterFilter.NotAerialSatellitePhotos in query.raster_filters:
+                self.not_aerial_radio.setChecked(True)
+            if RasterFilter.ByBand in query.raster_filters:
+                self.band_radio.setChecked(True)
+                if RasterBandFilter.RGB in query.raster_band_filters:
+                    self.rgb_radio.setChecked(True)
+                if RasterBandFilter.BlackAndWhite in query.raster_band_filters:
+                    self.grayscale_radio.setChecked(True)
+        elif query.data_types == {DataType.Grids}:
+            self.grid_radio.setChecked(True)
+            self.multi_attribute_grids_only_checkbox.setChecked(GridFilterOptions.MultiAttributeGridsOnly in query.grid_filter_options)
+        elif query.data_types == {DataType.Tables}:
+            self.table_radio.setChecked(True)
+            self.table_has_pk_checkbox.setChecked(VectorFilter.HasPrimaryKey in query.vector_filters)
+        elif query.data_types == {DataType.Sets}:
+            self.set_radio.setChecked(True)
+        elif query.data_types == {DataType.Repositories}:
+            self.data_repository_radio.setChecked(True)
+        elif query.data_types == {DataType.Documents}:
+            self.document_radio.setChecked(True)
+
+        if DataType.Rasters in query.data_types:
+            self.alpha_channel_checkbox.setChecked(RasterFilterOptions.WithAlphaChannel in query.raster_filter_options)
+
+        self._update_value()
+        self._block_changes = False

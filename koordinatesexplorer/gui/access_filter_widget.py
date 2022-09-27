@@ -63,10 +63,22 @@ class AccessFilterWidget(FilterWidgetComboBase):
             text = 'Shared with me'
 
         self.set_current_text(text)
-        self.changed.emit()
+        if not self._block_changes:
+            self.changed.emit()
 
     def apply_constraints_to_query(self, query: DataBrowserQuery):
         if self.public_radio.isChecked():
             query.access_type = AccessType.Public
         else:
             query.access_type = AccessType.Private
+
+    def set_from_query(self, query: DataBrowserQuery):
+        self._block_changes = True
+
+        if query.access_type == AccessType.Public:
+            self.public_radio.setChecked(True)
+        else:
+            self.private_radio.setChecked(True)
+
+        self._update_value()
+        self._block_changes = False
