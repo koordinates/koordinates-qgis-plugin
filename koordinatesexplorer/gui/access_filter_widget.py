@@ -81,4 +81,5 @@ class AccessFilterWidget(FilterWidgetComboBase):
             self.private_radio.setChecked(True)
 
         self._update_value()
+        self._update_visible_frames()
         self._block_changes = False
