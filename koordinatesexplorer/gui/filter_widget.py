@@ -5,7 +5,9 @@ from qgis.PyQt.QtWidgets import (
     QVBoxLayout,
     QHBoxLayout,
     QToolButton,
-    QSizePolicy
+    QSizePolicy,
+    QStackedWidget,
+    QSpacerItem
 )
 from qgis.gui import (
     QgsFilterLineEdit
@@ -16,7 +18,11 @@ from .data_type_filter_widget import DataTypeFilterWidget
 from .license_filter_widget import LicenseFilterWidget
 from .resolution_filter_widget import ResolutionFilterWidget
 from .gui_utils import GuiUtils
-from ..api import DataBrowserQuery
+from ..api import (
+    DataBrowserQuery,
+    DataType
+)
+
 
 class FilterWidget(QWidget):
 
@@ -55,19 +61,50 @@ class FilterWidget(QWidget):
 
         vl.addLayout(hl)
 
-        # these are dynamically created
-        self.advanced_frame = None
-        self.advanced_layout = None
-
-        self.data_type_filter_widget = DataTypeFilterWidget(self)
+        # Warning: we can't create a dynamic QLayout for these widgets, as it is NOT possible
+        # to re-parent a QgsFloatingWidget without risk of crashing.
+        # Accordingly, we instead use a stacked widget with two different layouts (one for grid/raster and
+        # one for all other types), and have multiple filter widgets shown on the different stacked widget pages
+        self.data_type_filter_widget_1 = DataTypeFilterWidget(self)
+        self.data_type_filter_widget_2 = DataTypeFilterWidget(self)
         self.resolution_widget = ResolutionFilterWidget(self)
-        self.license_widget = LicenseFilterWidget(self)
-        self.access_widget = AccessFilterWidget(self)
+        self.license_widget_1 = LicenseFilterWidget(self)
+        self.license_widget_2 = LicenseFilterWidget(self)
+        self.access_widget_1 = AccessFilterWidget(self)
+        self.access_widget_2 = AccessFilterWidget(self)
 
-        self.filter_widgets = (self.data_type_filter_widget,
+        self.advanced_stacked_widget = QStackedWidget()
+        self.advanced_stacked_widget.setVisible(False)
+        self.advanced_stacked_widget.setSizePolicy(self.advanced_stacked_widget.sizePolicy().horizontalPolicy(), QSizePolicy.Maximum)
+
+        self.filter_widget_page_non_grid = QWidget()
+        filter_widget_layout_1 = QGridLayout()
+        filter_widget_layout_1.setContentsMargins(0,0,0,0)
+        filter_widget_layout_1.addWidget(self.data_type_filter_widget_1, 0, 1)
+        filter_widget_layout_1.addWidget(self.license_widget_1, 1, 0)
+        filter_widget_layout_1.addWidget(self.access_widget_1, 1, 1)
+        filter_widget_layout_1.addItem(QSpacerItem(1,1, QSizePolicy.Ignored, QSizePolicy.Expanding), 2,0)
+        self.filter_widget_page_non_grid.setLayout(filter_widget_layout_1)
+        self.advanced_stacked_widget.addWidget(self.filter_widget_page_non_grid)
+
+        self.filter_widget_page_grid = QWidget()
+        filter_widget_layout_2 = QGridLayout()
+        filter_widget_layout_2.setContentsMargins(0,0,0,0)
+        filter_widget_layout_2.addWidget(self.data_type_filter_widget_2, 0, 1)
+        filter_widget_layout_2.addWidget(self.resolution_widget, 1, 0)
+        filter_widget_layout_2.addWidget(self.license_widget_2, 1, 1)
+        filter_widget_layout_2.addWidget(self.access_widget_2, 2, 0)
+        self.filter_widget_page_grid.setLayout(filter_widget_layout_2)
+        self.advanced_stacked_widget.addWidget(self.filter_widget_page_grid)
+        self.advanced_stacked_widget.setCurrentWidget(self.filter_widget_page_grid)
+
+        self.filter_widgets = (self.data_type_filter_widget_1,
+                               self.data_type_filter_widget_2,
                                self.resolution_widget,
-                               self.license_widget,
-                               self.access_widget)
+                               self.license_widget_1,
+                               self.license_widget_2,
+                                self.access_widget_1,
+                               self.access_widget_2)
 
         # changes to filter parameters are deferred to a small timeout, to avoid
         # starting lots of queries while a user is mid-operation (such as dragging a slider)
@@ -79,62 +116,79 @@ class FilterWidget(QWidget):
             w.changed.connect(self._filter_widget_changed)
         self.search_line_edit.textChanged.connect(self._filter_widget_changed)
 
-        self.visible_widgets = self.filter_widgets[:]
+        vl.addWidget(self.advanced_stacked_widget)
 
         self.setLayout(vl)
 
-        self._reflow()
+    def _current_filter_widgets(self):
+        if self.advanced_stacked_widget.currentWidget() == self.filter_widget_page_non_grid:
+            return (self.data_type_filter_widget_1,
+                    self.license_widget_1,
+                    self.access_widget_1)
+        else:
+            return (self.data_type_filter_widget_2,
+                    self.resolution_widget,
+                    self.license_widget_2,
+                    self.access_widget_2)
 
     def _clear_all(self):
-        self.data_type_filter_widget.clear()
+        self.data_type_filter_widget_1.clear()
+        self.data_type_filter_widget_2.clear()
         self.resolution_widget.clear()
-        self.license_widget.clear()
-        self.access_widget.clear()
+        self.license_widget_1.clear()
+        self.license_widget_2.clear()
+        self.access_widget_1.clear()
+        self.access_widget_2.clear()
 
     def _show_advanced(self, show):
-        self.advanced_frame.setVisible(show)
-        self.advanced_frame.setMinimumWidth(self.width())
+        self.advanced_stacked_widget.setVisible(show)
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
+        self.advanced_stacked_widget.adjustSize()
         self.adjustSize()
 
-    def _reflow(self):
-        """
-        Rearranges the filter widgets based on what's visible
-        """
-        item_index = 0
-
-        for widget in self.filter_widgets:
-            widget.setParent(None)
-
-        self.advanced_layout = QGridLayout()
-        self.advanced_layout.setContentsMargins(0, 0, 0, 0)
-
-
-        row = 0
-        column = 0
-        for widget in self.visible_widgets:
-            self.advanced_layout.addWidget(widget, row, column)
-            column += 1
-            if column > 1:
-                row += 1
-                column = 0
-
-        self.advanced_frame = QWidget()
-        self.advanced_frame.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
-
-        self.advanced_frame.setLayout(self.advanced_layout)
-
-        self.advanced_frame.setVisible(self.show_advanced_button.isChecked())
-
-
-        self.layout().addWidget(self.advanced_frame)
-
-        self.advanced_frame.adjustSize()
+    def data_type_filter_widget(self):
+        if self.advanced_stacked_widget.currentWidget() == self.filter_widget_page_non_grid:
+            return self.data_type_filter_widget_1
+        else:
+            return self.data_type_filter_widget_2
 
     def _filter_widget_changed(self):
         # changes to filter parameters are deferred to a small timeout, to avoid
         # starting lots of queries while a user is mid-operation (such as dragging a slider)
         self._update_query_timeout.start(500)
+
+        selected_data_types = self.data_type_filter_widget().data_types()
+
+        if DataType.Rasters in selected_data_types or DataType.Grids in selected_data_types:
+            if self.advanced_stacked_widget.currentWidget() != self.filter_widget_page_grid:
+                current_query = self._update_query()
+                self.advanced_stacked_widget.setCurrentWidget(self.filter_widget_page_grid)
+                for w in (self.data_type_filter_widget_2,
+                    self.resolution_widget,
+                    self.license_widget_2,
+                    self.access_widget_2):
+                    w.set_from_query(current_query)
+                if self.sender() == self.data_type_filter_widget_1 and self.data_type_filter_widget_1.is_expanded():
+                    self.data_type_filter_widget_2.expand()
+                for w in (self.data_type_filter_widget_1,
+                    self.license_widget_1,
+                    self.access_widget_1):
+                    w.collapse()
+        else:
+            if self.advanced_stacked_widget.currentWidget() != self.filter_widget_page_non_grid:
+                current_query = self._update_query()
+                self.advanced_stacked_widget.setCurrentWidget(self.filter_widget_page_non_grid)
+                for w in (self.data_type_filter_widget_1,
+                    self.license_widget_1,
+                    self.access_widget_1):
+                    w.set_from_query(current_query)
+                if self.sender() == self.data_type_filter_widget_2 and self.data_type_filter_widget_2.is_expanded():
+                    self.data_type_filter_widget_1.expand()
+                for w in (self.data_type_filter_widget_2,
+                          self.resolution_widget,
+                          self.license_widget_2,
+                          self.access_widget_2):
+                    w.collapse()
 
     def _update_query(self):
         query = DataBrowserQuery()
@@ -142,8 +196,9 @@ class FilterWidget(QWidget):
         if self.search_line_edit.text().strip():
             query.search = self.search_line_edit.text().strip()
 
-        for w in self.filter_widgets:
+        for w in self._current_filter_widgets():
             w.apply_constraints_to_query(query)
 
         print(query.build_query())
+        return query
 

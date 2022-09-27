@@ -125,7 +125,8 @@ class LicenseFilterWidget(FilterWidgetComboBase):
             text = 'CC4 {}'.format(cc_license_suffice)
 
         self.set_current_text(text)
-        self.changed.emit()
+        if not self._block_changes:
+            self.changed.emit()
 
     def apply_constraints_to_query(self, query: DataBrowserQuery):
         query.cc_license_changes_must_be_shared = self.changes_need_to_be_shared_radio.isChecked()
@@ -136,3 +137,16 @@ class LicenseFilterWidget(FilterWidgetComboBase):
             query.cc_license_versions.add(CreativeCommonLicenseVersions.Version3)
         if self.cc_4_checkbox.isChecked():
             query.cc_license_versions.add(CreativeCommonLicenseVersions.Version4)
+
+    def set_from_query(self, query: DataBrowserQuery):
+        self._block_changes = True
+
+        self.changes_need_to_be_shared_radio.setChecked(query.cc_license_changes_must_be_shared)
+        self.commercial_use_allowed_radio.setChecked(query.cc_license_allow_commercial)
+        self.derivatives_allowed_radio.setChecked(query.cc_license_allow_derivates)
+
+        self.cc_3_checkbox.setChecked(CreativeCommonLicenseVersions.Version3 in query.cc_license_versions)
+        self.cc_4_checkbox.setChecked(CreativeCommonLicenseVersions.Version4 in query.cc_license_versions)
+
+        self._update_value()
+        self._block_changes = False

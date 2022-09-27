@@ -231,6 +231,17 @@ class CustomComboBox(QWidget):
             self._floating_widget.show()
             self._floating_widget.raise_()
 
+    def is_expanded(self):
+        return self._floating_widget.isVisible()
+
+    def collapse(self):
+        if self._floating_widget.isVisible():
+            self._floating_widget.hide()
+
+    def expand(self):
+        if not self._floating_widget.isVisible():
+            self._show_drop_down()
+
     def set_current_text(self, text):
         self._current_text = text
         self.update()

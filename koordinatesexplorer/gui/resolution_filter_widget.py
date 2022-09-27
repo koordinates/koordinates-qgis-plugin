@@ -55,7 +55,8 @@ class ResolutionFilterWidget(FilterWidgetComboBase):
         else:
             self.set_current_text('Resolution {} m - {} m'.format(self.slider.lowerValue(),
                                                                   self.slider.upperValue()))
-        self.changed.emit()
+        if not self._block_changes:
+            self.changed.emit()
 
     def clear(self):
         self.slider.setRange(self.slider.minimum(), self.slider.maximum())
@@ -73,3 +74,18 @@ class ResolutionFilterWidget(FilterWidgetComboBase):
             query.minimum_resolution = self.slider.lowerValue()
         if self.slider.upperValue() != self.slider.maximum():
             query.maximum_resolution = self.slider.upperValue()
+
+    def set_from_query(self, query: DataBrowserQuery):
+        self._block_changes = True
+
+        if query.minimum_resolution is not None:
+            self.slider.setLowerValue(int(query.minimum_resolution))
+        else:
+            self.slider.setLowerValue(self.slider.minimum())
+        if query.maximum_resolution is not None:
+            self.slider.setUpperValue(int(query.maximum_resolution))
+        else:
+            self.slider.setUpperValue(self.slider.maximum())
+
+        self._update_labels()
+        self._block_changes = False
