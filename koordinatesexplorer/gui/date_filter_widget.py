@@ -198,15 +198,17 @@ class DateFilterWidget(FilterWidgetComboBase):
             self.published_date_slider.upperValue() != self.published_date_slider.maximum()) and \
                 (self.updated_date_slider.lowerValue() != self.updated_date_slider.minimum() or
                     self.updated_date_slider.upperValue() != self.updated_date_slider.maximum()):
-            # not sure how to show!
-            self.set_current_text('')
+            min_date = min(self.min_published_date_edit.date(), self.min_updated_date_edit.date())
+            max_date = max(self.max_published_date_edit.date(), self.max_updated_date_edit.date())
+            self.set_current_text('{} - {}'.format(min_date.toString(Qt.ISODate),
+                                                   max_date.toString(Qt.ISODate)))
         elif self.published_date_slider.lowerValue() != self.published_date_slider.minimum() or \
                 self.published_date_slider.upperValue() != self.published_date_slider.maximum():
-            self.set_current_text('Published {} - {}'.format(self.min_published_date_edit.date().toString(Qt.ISODate),
+            self.set_current_text('{} - {}'.format(self.min_published_date_edit.date().toString(Qt.ISODate),
                                                                   self.max_published_date_edit.date().toString(Qt.ISODate)))
         elif self.updated_date_slider.lowerValue() != self.updated_date_slider.minimum() or \
                 self.updated_date_slider.upperValue() != self.updated_date_slider.maximum():
-            self.set_current_text('Updated {} - {}'.format(self.min_updated_date_edit.date().toString(Qt.ISODate),
+            self.set_current_text('{} - {}'.format(self.min_updated_date_edit.date().toString(Qt.ISODate),
                                                              self.max_updated_date_edit.date().toString(Qt.ISODate)))
         else:
             self.set_current_text('Date')
