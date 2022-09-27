@@ -152,6 +152,8 @@ class FilterWidget(QWidget):
         self.advanced_stacked_widget.setVisible(show)
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
         self.advanced_stacked_widget.adjustSize()
+        self.advanced_stacked_widget.setMinimumWidth(self.width())
+        self.advanced_stacked_widget.setMinimumWidth(0)
         self.adjustSize()
 
     def data_type_filter_widget(self):
