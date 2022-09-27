@@ -17,6 +17,7 @@ from .access_filter_widget import AccessFilterWidget
 from .data_type_filter_widget import DataTypeFilterWidget
 from .license_filter_widget import LicenseFilterWidget
 from .resolution_filter_widget import ResolutionFilterWidget
+from .date_filter_widget import DateFilterWidget
 from .gui_utils import GuiUtils
 from ..api import (
     DataBrowserQuery,
@@ -68,6 +69,8 @@ class FilterWidget(QWidget):
         self.data_type_filter_widget_1 = DataTypeFilterWidget(self)
         self.data_type_filter_widget_2 = DataTypeFilterWidget(self)
         self.resolution_widget = ResolutionFilterWidget(self)
+        self.date_filter_widget_1 = DateFilterWidget(self)
+        self.date_filter_widget_2 = DateFilterWidget(self)
         self.license_widget_1 = LicenseFilterWidget(self)
         self.license_widget_2 = LicenseFilterWidget(self)
         self.access_widget_1 = AccessFilterWidget(self)
@@ -81,9 +84,10 @@ class FilterWidget(QWidget):
         filter_widget_layout_1 = QGridLayout()
         filter_widget_layout_1.setContentsMargins(0,0,0,0)
         filter_widget_layout_1.addWidget(self.data_type_filter_widget_1, 0, 1)
-        filter_widget_layout_1.addWidget(self.license_widget_1, 1, 0)
-        filter_widget_layout_1.addWidget(self.access_widget_1, 1, 1)
-        filter_widget_layout_1.addItem(QSpacerItem(1,1, QSizePolicy.Ignored, QSizePolicy.Expanding), 2,0)
+        filter_widget_layout_1.addWidget(self.date_filter_widget_1, 1, 0)
+        filter_widget_layout_1.addWidget(self.license_widget_1, 1, 1)
+        filter_widget_layout_1.addWidget(self.access_widget_1, 2, 0)
+        #filter_widget_layout_1.addItem(QSpacerItem(1,1, QSizePolicy.Ignored, QSizePolicy.Expanding), 2,0)
         self.filter_widget_page_non_grid.setLayout(filter_widget_layout_1)
         self.advanced_stacked_widget.addWidget(self.filter_widget_page_non_grid)
 
@@ -92,8 +96,9 @@ class FilterWidget(QWidget):
         filter_widget_layout_2.setContentsMargins(0,0,0,0)
         filter_widget_layout_2.addWidget(self.data_type_filter_widget_2, 0, 1)
         filter_widget_layout_2.addWidget(self.resolution_widget, 1, 0)
-        filter_widget_layout_2.addWidget(self.license_widget_2, 1, 1)
-        filter_widget_layout_2.addWidget(self.access_widget_2, 2, 0)
+        filter_widget_layout_2.addWidget(self.date_filter_widget_2, 1, 1)
+        filter_widget_layout_2.addWidget(self.license_widget_2, 2, 0)
+        filter_widget_layout_2.addWidget(self.access_widget_2, 2, 1)
         self.filter_widget_page_grid.setLayout(filter_widget_layout_2)
         self.advanced_stacked_widget.addWidget(self.filter_widget_page_grid)
         self.advanced_stacked_widget.setCurrentWidget(self.filter_widget_page_grid)
@@ -101,6 +106,8 @@ class FilterWidget(QWidget):
         self.filter_widgets = (self.data_type_filter_widget_1,
                                self.data_type_filter_widget_2,
                                self.resolution_widget,
+                               self.date_filter_widget_1,
+                               self.date_filter_widget_2,
                                self.license_widget_1,
                                self.license_widget_2,
                                 self.access_widget_1,
@@ -124,23 +131,24 @@ class FilterWidget(QWidget):
         if self.advanced_stacked_widget.currentWidget() == self.filter_widget_page_non_grid:
             return (self.data_type_filter_widget_1,
                     self.license_widget_1,
+                    self.date_filter_widget_1,
                     self.access_widget_1)
         else:
             return (self.data_type_filter_widget_2,
                     self.resolution_widget,
+                    self.date_filter_widget_2,
                     self.license_widget_2,
                     self.access_widget_2)
 
     def _clear_all(self):
-        self.data_type_filter_widget_1.clear()
-        self.data_type_filter_widget_2.clear()
-        self.resolution_widget.clear()
-        self.license_widget_1.clear()
-        self.license_widget_2.clear()
-        self.access_widget_1.clear()
-        self.access_widget_2.clear()
+        for w in self.filter_widgets:
+            w.clear()
+        self.search_line_edit.clear()
 
     def _show_advanced(self, show):
+        if not show:
+            for w in self.filter_widgets:
+                w.collapse()
         self.advanced_stacked_widget.setVisible(show)
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
         self.advanced_stacked_widget.adjustSize()
@@ -165,12 +173,14 @@ class FilterWidget(QWidget):
                 self.advanced_stacked_widget.setCurrentWidget(self.filter_widget_page_grid)
                 for w in (self.data_type_filter_widget_2,
                     self.resolution_widget,
+                    self.date_filter_widget_2,
                     self.license_widget_2,
                     self.access_widget_2):
                     w.set_from_query(current_query)
                 if self.sender() == self.data_type_filter_widget_1 and self.data_type_filter_widget_1.is_expanded():
                     self.data_type_filter_widget_2.expand()
                 for w in (self.data_type_filter_widget_1,
+                    self.date_filter_widget_1,
                     self.license_widget_1,
                     self.access_widget_1):
                     w.collapse()
@@ -180,12 +190,14 @@ class FilterWidget(QWidget):
                 self.advanced_stacked_widget.setCurrentWidget(self.filter_widget_page_non_grid)
                 for w in (self.data_type_filter_widget_1,
                     self.license_widget_1,
+                    self.date_filter_widget_1,
                     self.access_widget_1):
                     w.set_from_query(current_query)
                 if self.sender() == self.data_type_filter_widget_2 and self.data_type_filter_widget_2.is_expanded():
                     self.data_type_filter_widget_1.expand()
                 for w in (self.data_type_filter_widget_2,
                           self.resolution_widget,
+                          self.date_filter_widget_2,
                           self.license_widget_2,
                           self.access_widget_2):
                     w.collapse()
