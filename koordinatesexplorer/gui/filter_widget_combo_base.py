@@ -30,3 +30,9 @@ class FilterWidgetComboBase(CustomComboBox):
         Sets widget state to match a query
         """
         assert False
+
+    def set_logged_in(self, logged_in: bool):
+        """
+        Called when the user has logged in (or out)
+        """
+        pass
