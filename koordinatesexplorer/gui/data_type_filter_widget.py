@@ -428,5 +428,6 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
         if DataType.Rasters in query.data_types:
             self.alpha_channel_checkbox.setChecked(RasterFilterOptions.WithAlphaChannel in query.raster_filter_options)
 
+        self._update_visible_frames()
         self._update_value()
         self._block_changes = False
