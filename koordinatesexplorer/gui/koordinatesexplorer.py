@@ -234,6 +234,9 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
                 self.comboContext.addItem(context.get("name", "user"), context)
             self.comboContext.setVisible(self.comboContext.count() > 1)
             self.labelContext.setVisible(self.comboContext.count() > 1)
+
+            self.filter_widget.set_logged_in(True)
+
             self.setDefaultParameters()
             self.search()
         else:
