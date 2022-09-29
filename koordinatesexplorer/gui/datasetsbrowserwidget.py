@@ -64,18 +64,30 @@ class DatasetsBrowserWidget(QListWidget):
         self.setStyleSheet("""QListWidget{background: #E5E7E9;}""")
         self._current_query: Optional[DataBrowserQuery] = None
         self._current_reply: Optional[QNetworkReply] = None
+        self._current_context = None
         self._load_more_item = None
 
     def populate(self, query: DataBrowserQuery, context):
         self.clear()
         self._load_more_item = None
 
+        self._fetch_records(query, context)
+
+    def _fetch_records(self, query:Optional[DataBrowserQuery] = None, context: Optional[str] = None, page: int = 1):
         if self._current_reply is not None and not sip.isdeleted(self._current_reply):
             self._current_reply.abort()
             self._current_reply = None
 
-        self._current_query = query
-        self._current_reply = KoordinatesClient.instance().datasets_async(query=query, context=context)
+        if query is not None:
+            self._current_query = query
+        if context is not None:
+            self._current_context = context
+
+        self._current_reply = KoordinatesClient.instance().datasets_async(
+            query=self._current_query,
+            context=self._current_context,
+            page=page
+        )
         self._current_reply.finished.connect(partial(self._reply_finished, self._current_reply))
 
     def _reply_finished(self, reply: QNetworkReply):
@@ -96,13 +108,16 @@ class DatasetsBrowserWidget(QListWidget):
 
         self._add_datasets(datasets)
 
-        if not finished:
+        if not finished and not self._load_more_item:
             self._load_more_item = QListWidgetItem()
             loadMoreWidget = LoadMoreItemWidget(self, self._current_query)
             loadMoreWidget.load_more.connect(self.load_more)
             self.addItem(self._load_more_item)
             self.setItemWidget(self._load_more_item, loadMoreWidget)
             self._load_more_item.setSizeHint(loadMoreWidget.sizeHint())
+        elif finished and self._load_more_item:
+            self.takeItem(self.row(self._load_more_item))
+            self._load_more_item = None
 
     def _add_datasets(self, datasets):
         for dataset in datasets:
@@ -121,16 +136,8 @@ class DatasetsBrowserWidget(QListWidget):
             widget.showDetails()
 
     def load_more(self):
-        page = math.ceil(self.count() / PAGE_SIZE)
-        datasets, finished = KoordinatesClient.instance().datasets(
-            page=page, query=self._current_query
-        )
-
-        self._add_datasets(datasets)
-
-        if finished and self._load_more_item:
-            self.takeItem(self.row(self._load_more_item))
-            self._load_more_item = None
+        next_page = math.ceil(self.count() / PAGE_SIZE)
+        self._fetch_records(page=next_page)
 
 
 class LoadMoreItemWidget(QFrame):
