@@ -75,6 +75,9 @@ class DateFilterWidget(FilterWidgetComboBase):
         hl.addWidget(self.min_published_date_edit)
         hl.addStretch()
         self.max_published_date_edit = ClearableDateEdit()
+        self.max_published_date_edit.setDate(QDate.currentDate())
+        self.max_published_date_edit.setMaximumDate(QDate.currentDate())
+
         hl.addWidget(self.max_published_date_edit)
 
         vl.addLayout(hl)
@@ -99,6 +102,8 @@ class DateFilterWidget(FilterWidgetComboBase):
         hl.addWidget(self.min_updated_date_edit)
         hl.addStretch()
         self.max_updated_date_edit = ClearableDateEdit()
+        self.max_updated_date_edit.setDate(QDate.currentDate())
+        self.max_updated_date_edit.setMaximumDate(QDate.currentDate())
         hl.addWidget(self.max_updated_date_edit)
 
         vl.addLayout(hl)
