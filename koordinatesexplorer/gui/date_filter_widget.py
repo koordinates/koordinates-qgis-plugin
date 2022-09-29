@@ -20,6 +20,8 @@ from qgis.gui import (
 from .filter_widget_combo_base import FilterWidgetComboBase
 from ..api import DataBrowserQuery
 
+DATE_FORMAT = 'dd MMM yyyy'
+
 
 class ClearableDateEdit(QgsDateEdit):
 
@@ -30,7 +32,10 @@ class ClearableDateEdit(QgsDateEdit):
         small_font.setPointSize(small_font.pointSize() - 2)
         self.setFont(small_font)
 
-        self.setMinimumWidth(QFontMetrics(small_font).width('x') * 18)
+        # need to set minimum width of widget to fit the full date string, plus extra
+        # space for controls
+        self.setMinimumWidth(QFontMetrics(small_font).width(DATE_FORMAT + 'xxxxxxxxx'))
+        self.setDisplayFormat(DATE_FORMAT)
 
         self._default_date = QDate()
 
@@ -214,19 +219,19 @@ class DateFilterWidget(FilterWidgetComboBase):
                  self.updated_date_slider.upperValue() != self.updated_date_slider.maximum()):
             min_date = min(self.min_published_date_edit.date(), self.min_updated_date_edit.date())
             max_date = max(self.max_published_date_edit.date(), self.max_updated_date_edit.date())
-            self.set_current_text('{} - {}'.format(min_date.toString(Qt.ISODate),
-                                                   max_date.toString(Qt.ISODate)))
+            self.set_current_text('{} - {}'.format(min_date.toString(DATE_FORMAT),
+                                                   max_date.toString(DATE_FORMAT)))
         elif self.published_date_slider.lowerValue() != self.published_date_slider.minimum() or \
                 self.published_date_slider.upperValue() != self.published_date_slider.maximum():
             self.set_current_text('{} - {}'.format(
-                self.min_published_date_edit.date().toString(Qt.ISODate),
-                self.max_published_date_edit.date().toString(Qt.ISODate))
+                self.min_published_date_edit.date().toString(DATE_FORMAT),
+                self.max_published_date_edit.date().toString(DATE_FORMAT))
             )
         elif self.updated_date_slider.lowerValue() != self.updated_date_slider.minimum() or \
                 self.updated_date_slider.upperValue() != self.updated_date_slider.maximum():
             self.set_current_text('{} - {}'.format(
-                self.min_updated_date_edit.date().toString(Qt.ISODate),
-                self.max_updated_date_edit.date().toString(Qt.ISODate))
+                self.min_updated_date_edit.date().toString(DATE_FORMAT),
+                self.max_updated_date_edit.date().toString(DATE_FORMAT))
             )
         else:
             self.set_current_text('Date')
