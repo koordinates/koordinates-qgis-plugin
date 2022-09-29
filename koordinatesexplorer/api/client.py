@@ -20,10 +20,9 @@ from qgis.core import (
     QgsNetworkAccessManager
 )
 
-from .utils import ApiUtils
-from .data_browser import DataBrowserQuery
-
 from koordinatesexplorer.utils import waitcursor
+from .data_browser import DataBrowserQuery
+from .utils import ApiUtils
 
 PAGE_SIZE = 20
 
@@ -87,7 +86,10 @@ class KoordinatesClient(QObject):
     def isLoggedIn(self):
         return self.apiKey is not None
 
-    def _build_datasets_request(self, page=1, query: Optional[DataBrowserQuery] = None, context=None) -> Tuple[str,Dict[str,str],dict]:
+    def _build_datasets_request(self,
+                                page=1,
+                                query: Optional[DataBrowserQuery] = None,
+                                context=None) -> Tuple[str, Dict[str, str], dict]:
         """
         Builds the parameters used for a datasets request
         """
@@ -108,11 +110,14 @@ class KoordinatesClient(QObject):
 
         return endpoint, headers, params
 
-    def datasets_async(self, page=1, query: Optional[DataBrowserQuery] = None, context=None) -> QNetworkReply:
+    def datasets_async(self,
+                       page=1,
+                       query: Optional[DataBrowserQuery] = None,
+                       context=None) -> QNetworkReply:
         """
         Retrieve datasets asynchronously
         """
-        endpoint, headers, params = self._build_datasets_request(page, query,context)
+        endpoint, headers, params = self._build_datasets_request(page, query, context)
         network_request = self._build_request(endpoint, headers, params)
 
         return QgsNetworkAccessManager.instance().get(network_request)
@@ -121,7 +126,7 @@ class KoordinatesClient(QObject):
         """
         Retrieve datasets blocking
         """
-        endpoint, headers, params = self._build_datasets_request(page, query,context)
+        endpoint, headers, params = self._build_datasets_request(page, query, context)
         ret = self._get(endpoint, headers, params)
 
         tokens = ret['reply'].rawHeader(b"X-Resource-Range").data().decode().split("/")
