@@ -2,7 +2,7 @@ import os
 from typing import Optional
 
 from qgis.PyQt import uic
-from qgis.PyQt.QtCore import QDate, QDateTime, QThread
+from qgis.PyQt.QtCore import QThread
 from qgis.PyQt.QtGui import QPixmap
 from qgis.PyQt.QtWidgets import QVBoxLayout, QApplication
 from qgis.core import (
@@ -15,17 +15,10 @@ from qgis.utils import iface
 from koordinatesexplorer.auth import OAuthWorkflow
 from koordinatesexplorer.gui.datasetsbrowserwidget import DatasetsBrowserWidget
 from .filter_widget import FilterWidget
-from ..api import (
-    KoordinatesClient,
-    DataBrowserQuery,
-    DataType,
-    VectorFilter,
-    RasterFilter,
-    RasterFilterOptions,
-    RasterBandFilter
-)
-
 from .gui_utils import GuiUtils
+from ..api import (
+    KoordinatesClient
+)
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
@@ -55,7 +48,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
         self.filter_widget = FilterWidget(self)
         filter_layout = QVBoxLayout()
-        filter_layout.setContentsMargins(0,0,0,0)
+        filter_layout.setContentsMargins(0, 0, 0, 0)
         filter_layout.addWidget(self.filter_widget)
         self.filter_frame.setLayout(filter_layout)
 
