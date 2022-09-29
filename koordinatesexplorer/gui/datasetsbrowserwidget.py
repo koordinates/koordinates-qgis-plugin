@@ -89,6 +89,7 @@ class DatasetsBrowserWidget(QListWidget):
             page=page
         )
         self._current_reply.finished.connect(partial(self._reply_finished, self._current_reply))
+        self.setCursor(Qt.WaitCursor)
 
     def _reply_finished(self, reply: QNetworkReply):
         if reply != self._current_reply:
@@ -107,6 +108,7 @@ class DatasetsBrowserWidget(QListWidget):
         finished = last == total
 
         self._add_datasets(datasets)
+        self.setCursor(Qt.ArrowCursor)
 
         if not finished and not self._load_more_item:
             self._load_more_item = QListWidgetItem()
