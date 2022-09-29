@@ -2,7 +2,6 @@ from qgis.PyQt.QtCore import (
     QDate,
     QDateTime
 )
-from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import QFontMetrics
 from qgis.PyQt.QtWidgets import (
     QWidget,
