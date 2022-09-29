@@ -1,11 +1,16 @@
+from typing import Optional
+
 import os
 import json
 import math
 from dateutil import parser
+from functools import partial
 
 from qgis.core import Qgis
+from qgis.PyQt import sip
 from qgis.PyQt.QtCore import Qt, pyqtSignal, QRect
 from qgis.PyQt.QtGui import QColor, QPixmap, QFont, QCursor, QPainter, QPainterPath
+from qgis.PyQt.QtNetwork import QNetworkReply
 
 from qgis.PyQt.QtWidgets import (
     QListWidget,
@@ -61,12 +66,35 @@ class DatasetsBrowserWidget(QListWidget):
         self.setSelectionMode(self.NoSelection)
         self.setSpacing(10)
         self.setStyleSheet("""QListWidget{background: #E5E7E9;}""")
+        self._current_query: Optional[DataBrowserQuery] = None
+        self._current_reply: Optional[QNetworkReply] = None
 
     def populate(self, query: DataBrowserQuery, context):
         self.clear()
-        datasets, finished = KoordinatesClient.instance().datasets(
-            query=query, context=context
-        )
+
+        if self._current_reply is not None and not sip.isdeleted(self._current_reply):
+            self._current_reply.abort()
+            self._current_reply = None
+
+        self._current_query = query
+        self._current_reply = KoordinatesClient.instance().datasets_async(query=query, context=context)
+        self._current_reply.finished.connect(partial(self._reply_finished, self._current_reply))
+
+    def _reply_finished(self, reply: QNetworkReply):
+        if reply != self._current_reply:
+            # an old reply we don't care about anymore
+            return
+
+        if reply.error() != QNetworkReply.NoError:
+            print('error occurred :(')
+            return
+#            self.error_occurred.emit(request.reply().errorString())
+
+        datasets = json.loads(reply.readAll().data().decode())
+        tokens = reply.rawHeader(b"X-Resource-Range").data().decode().split("/")
+        total = tokens[-1]
+        last = tokens[0].split("-")[-1]
+        finished = last == total
 
         for dataset in datasets:
             datasetItem = QListWidgetItem()
@@ -76,7 +104,7 @@ class DatasetsBrowserWidget(QListWidget):
             datasetItem.setSizeHint(datasetWidget.sizeHint())
         if not finished:
             loadMoreItem = QListWidgetItem()
-            loadMoreWidget = LoadMoreItemWidget(self, query)
+            loadMoreWidget = LoadMoreItemWidget(self, self._current_query)
             self.addItem(loadMoreItem)
             self.setItemWidget(loadMoreItem, loadMoreWidget)
             loadMoreItem.setSizeHint(loadMoreWidget.sizeHint())

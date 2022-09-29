@@ -1,7 +1,9 @@
 import json
 from typing import (
     Optional,
-    List
+    List,
+    Tuple,
+    Dict
 )
 
 from qgis.PyQt.QtCore import (
@@ -9,8 +11,14 @@ from qgis.PyQt.QtCore import (
     QObject,
     QUrl
 )
-from qgis.PyQt.QtNetwork import QNetworkRequest
-from qgis.core import QgsBlockingNetworkRequest
+from qgis.PyQt.QtNetwork import (
+    QNetworkRequest,
+    QNetworkReply
+)
+from qgis.core import (
+    QgsBlockingNetworkRequest,
+    QgsNetworkAccessManager
+)
 
 from .utils import ApiUtils
 from .data_browser import DataBrowserQuery
@@ -31,7 +39,7 @@ class KoordinatesClient(QObject):
     __instance = None
 
     @staticmethod
-    def instance():
+    def instance() -> 'KoordinatesClient':
         if KoordinatesClient.__instance is None:
             KoordinatesClient()
 
@@ -79,7 +87,10 @@ class KoordinatesClient(QObject):
     def isLoggedIn(self):
         return self.apiKey is not None
 
-    def datasets(self, page=1, query: Optional[DataBrowserQuery] = None, context=None):
+    def _build_datasets_request(self, page=1, query: Optional[DataBrowserQuery] = None, context=None) -> Tuple[str,Dict[str,str],dict]:
+        """
+        Builds the parameters used for a datasets request
+        """
         context = context or {"type": "site", "domain": "all"}
         headers = {"Expand": "list,list.publisher,list.styles,list.data.source_summary"}
 
@@ -90,11 +101,28 @@ class KoordinatesClient(QObject):
 
         params.update({"page_size": PAGE_SIZE, "page": page})
         if context["type"] == "site":
-            url = "data/"
+            endpoint = "data/"
             params["from"] = context["domain"]
         else:
-            url = "users/me/data/"
-        ret = self._get(url, headers, params)
+            endpoint = "users/me/data/"
+
+        return endpoint, headers, params
+
+    def datasets_async(self, page=1, query: Optional[DataBrowserQuery] = None, context=None) -> QNetworkReply:
+        """
+        Retrieve datasets asynchronously
+        """
+        endpoint, headers, params = self._build_datasets_request(page, query,context)
+        network_request = self._build_request(endpoint, headers, params)
+
+        return QgsNetworkAccessManager.instance().get(network_request)
+
+    def datasets(self, page=1, query: Optional[DataBrowserQuery] = None, context=None):
+        """
+        Retrieve datasets blocking
+        """
+        endpoint, headers, params = self._build_datasets_request(page, query,context)
+        ret = self._get(endpoint, headers, params)
 
         tokens = ret['reply'].rawHeader(b"X-Resource-Range").data().decode().split("/")
         total = tokens[-1]
@@ -122,9 +150,10 @@ class KoordinatesClient(QObject):
             self._categories = self._get("categories")['json']
         return self._categories
 
-    @waitcursor
-    def _get(self, endpoint, headers=None, params=None):
-
+    def _build_request(self, endpoint: str, headers=None, params=None) -> QNetworkRequest:
+        """
+        Builds a network request
+        """
         url = QUrl(f"https://koordinates.com/services/api/v1.x/{endpoint}")
 
         if params:
@@ -137,6 +166,12 @@ class KoordinatesClient(QObject):
         for header, value in headers.items():
             network_request.setRawHeader(header.encode(),
                                          value.encode())
+
+        return network_request
+
+    @waitcursor
+    def _get(self, endpoint, headers=None, params=None):
+        network_request = self._build_request(endpoint, headers, params)
 
         request = QgsBlockingNetworkRequest()
         if request.get(network_request) != QgsBlockingNetworkRequest.NoError:
