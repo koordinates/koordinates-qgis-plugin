@@ -73,7 +73,10 @@ class DatasetsBrowserWidget(QListWidget):
 
         self._fetch_records(query, context)
 
-    def _fetch_records(self, query:Optional[DataBrowserQuery] = None, context: Optional[str] = None, page: int = 1):
+    def _fetch_records(self,
+                       query: Optional[DataBrowserQuery] = None,
+                       context: Optional[str] = None,
+                       page: int = 1):
         if self._current_reply is not None and not sip.isdeleted(self._current_reply):
             self._current_reply.abort()
             self._current_reply = None
@@ -302,7 +305,7 @@ class DatasetItemWidget(QFrame):
         url = self.dataset["repository"]["clone_location_https"]
         try:
             if cloneKartRepo(
-                url, "kart", KoordinatesClient.instance().apiKey, iface.mainWindow()
+                    url, "kart", KoordinatesClient.instance().apiKey, iface.mainWindow()
             ):
                 iface.messageBar().pushMessage(
                     "Repository correctly cloned", Qgis.Info, duration=5
