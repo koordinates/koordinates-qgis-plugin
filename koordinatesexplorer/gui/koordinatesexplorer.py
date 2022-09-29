@@ -36,7 +36,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         self.oauth: Optional[OAuthWorkflow] = None
 
         layout = QVBoxLayout()
-        layout.setMargin(0)
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.browser)
         self.browserFrame.setLayout(layout)
 
