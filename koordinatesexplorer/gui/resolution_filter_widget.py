@@ -9,6 +9,7 @@ from qgis.gui import QgsRangeSlider
 from .filter_widget_combo_base import FilterWidgetComboBase
 from ..api import DataBrowserQuery
 
+
 class ResolutionFilterWidget(FilterWidgetComboBase):
     """
     Custom widget for resolution selection

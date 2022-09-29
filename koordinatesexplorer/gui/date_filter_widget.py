@@ -1,3 +1,9 @@
+from qgis.PyQt.QtCore import (
+    QDate,
+    QDateTime
+)
+from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtGui import QFontMetrics
 from qgis.PyQt.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -6,15 +12,9 @@ from qgis.PyQt.QtWidgets import (
     QSpacerItem,
     QSizePolicy
 )
-from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtGui import QFontMetrics
 from qgis.gui import (
     QgsRangeSlider,
     QgsDateEdit
-)
-from qgis.PyQt.QtCore import (
-    QDate,
-    QDateTime
 )
 
 from .filter_widget_combo_base import FilterWidgetComboBase
@@ -23,7 +23,7 @@ from ..api import DataBrowserQuery
 
 class ClearableDateEdit(QgsDateEdit):
 
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super().__init__(parent)
 
         small_font = self.font()
@@ -73,7 +73,13 @@ class DateFilterWidget(FilterWidgetComboBase):
         hl.addWidget(self.max_published_date_edit)
 
         vl.addLayout(hl)
-        vl.addItem(QSpacerItem(1,self.fontMetrics().height(), QSizePolicy.Ignored, QSizePolicy.Expanding))
+        vl.addItem(
+            QSpacerItem(1,
+                        self.fontMetrics().height(),
+                        QSizePolicy.Ignored,
+                        QSizePolicy.Expanding
+                        )
+        )
 
         updated_date_label = QLabel('Last Updated')
         updated_date_label.setFont(bold_font)
@@ -105,7 +111,7 @@ class DateFilterWidget(FilterWidgetComboBase):
         self.min_updated_date_edit.dateChanged.connect(self._updated_min_date_changed)
         self.max_updated_date_edit.dateChanged.connect(self._updated_max_date_changed)
 
-        self.set_published_range(QDate(2020,1,1), QDate(2022,9,27))
+        self.set_published_range(QDate(2020, 1, 1), QDate(2022, 9, 27))
         self.set_updated_range(QDate(2021, 1, 1), QDate(2022, 9, 27))
         self.clear()
 
@@ -124,8 +130,12 @@ class DateFilterWidget(FilterWidgetComboBase):
         min_date = self.min_published_date_edit.default_date()
 
         self._block_date_edit_updates = True
-        self.min_published_date_edit.setDate(min_date.addDays(self.published_date_slider.lowerValue()))
-        self.max_published_date_edit.setDate(min_date.addDays(self.published_date_slider.upperValue()))
+        self.min_published_date_edit.setDate(
+            min_date.addDays(self.published_date_slider.lowerValue())
+        )
+        self.max_published_date_edit.setDate(
+            min_date.addDays(self.published_date_slider.upperValue())
+        )
         self._block_date_edit_updates = False
         self._update_labels()
 
@@ -166,8 +176,12 @@ class DateFilterWidget(FilterWidgetComboBase):
         min_date = self.min_updated_date_edit.default_date()
 
         self._block_date_edit_updates = True
-        self.min_updated_date_edit.setDate(min_date.addDays(self.updated_date_slider.lowerValue()))
-        self.max_updated_date_edit.setDate(min_date.addDays(self.updated_date_slider.upperValue()))
+        self.min_updated_date_edit.setDate(
+            min_date.addDays(self.updated_date_slider.lowerValue())
+        )
+        self.max_updated_date_edit.setDate(
+            min_date.addDays(self.updated_date_slider.upperValue())
+        )
         self._block_date_edit_updates = False
         self._update_labels()
 
@@ -197,19 +211,23 @@ class DateFilterWidget(FilterWidgetComboBase):
         if (self.published_date_slider.lowerValue() != self.published_date_slider.minimum() or
             self.published_date_slider.upperValue() != self.published_date_slider.maximum()) and \
                 (self.updated_date_slider.lowerValue() != self.updated_date_slider.minimum() or
-                    self.updated_date_slider.upperValue() != self.updated_date_slider.maximum()):
+                 self.updated_date_slider.upperValue() != self.updated_date_slider.maximum()):
             min_date = min(self.min_published_date_edit.date(), self.min_updated_date_edit.date())
             max_date = max(self.max_published_date_edit.date(), self.max_updated_date_edit.date())
             self.set_current_text('{} - {}'.format(min_date.toString(Qt.ISODate),
                                                    max_date.toString(Qt.ISODate)))
         elif self.published_date_slider.lowerValue() != self.published_date_slider.minimum() or \
                 self.published_date_slider.upperValue() != self.published_date_slider.maximum():
-            self.set_current_text('{} - {}'.format(self.min_published_date_edit.date().toString(Qt.ISODate),
-                                                                  self.max_published_date_edit.date().toString(Qt.ISODate)))
+            self.set_current_text('{} - {}'.format(
+                self.min_published_date_edit.date().toString(Qt.ISODate),
+                self.max_published_date_edit.date().toString(Qt.ISODate))
+            )
         elif self.updated_date_slider.lowerValue() != self.updated_date_slider.minimum() or \
                 self.updated_date_slider.upperValue() != self.updated_date_slider.maximum():
-            self.set_current_text('{} - {}'.format(self.min_updated_date_edit.date().toString(Qt.ISODate),
-                                                             self.max_updated_date_edit.date().toString(Qt.ISODate)))
+            self.set_current_text('{} - {}'.format(
+                self.min_updated_date_edit.date().toString(Qt.ISODate),
+                self.max_updated_date_edit.date().toString(Qt.ISODate))
+            )
         else:
             self.set_current_text('Date')
 
@@ -217,13 +235,20 @@ class DateFilterWidget(FilterWidgetComboBase):
             self.changed.emit()
 
     def clear(self):
-        self.updated_date_slider.setRange(self.updated_date_slider.minimum(), self.updated_date_slider.maximum())
-        self.published_date_slider.setRange(self.published_date_slider.minimum(), self.published_date_slider.maximum())
+        self.updated_date_slider.setRange(
+            self.updated_date_slider.minimum(),
+            self.updated_date_slider.maximum()
+        )
+        self.published_date_slider.setRange(
+            self.published_date_slider.minimum(),
+            self.published_date_slider.maximum()
+        )
         self._update_labels()
 
     def should_show_clear(self):
         if self.published_date_slider.lowerValue() == self.published_date_slider.minimum() and \
-                self.published_date_slider.upperValue() == self.published_date_slider.maximum() and \
+                self.published_date_slider.upperValue() == \
+                self.published_date_slider.maximum() and \
                 self.updated_date_slider.lowerValue() == self.updated_date_slider.minimum() and \
                 self.updated_date_slider.upperValue() == self.updated_date_slider.maximum():
             return False
