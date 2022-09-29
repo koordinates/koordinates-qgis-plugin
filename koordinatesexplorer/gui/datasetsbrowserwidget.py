@@ -1,17 +1,14 @@
-from typing import Optional
-
-import os
 import json
 import math
-from dateutil import parser
+import os
 from functools import partial
+from typing import Optional
 
-from qgis.core import Qgis
+from dateutil import parser
 from qgis.PyQt import sip
 from qgis.PyQt.QtCore import Qt, pyqtSignal, QRect
 from qgis.PyQt.QtGui import QColor, QPixmap, QFont, QCursor, QPainter, QPainterPath
 from qgis.PyQt.QtNetwork import QNetworkReply
-
 from qgis.PyQt.QtWidgets import (
     QListWidget,
     QListWidgetItem,
@@ -22,9 +19,7 @@ from qgis.PyQt.QtWidgets import (
     QVBoxLayout,
     QSizePolicy,
 )
-
-from qgis.gui import QgsRubberBand
-from qgis.utils import iface
+from qgis.core import Qgis
 from qgis.core import (
     QgsProject,
     QgsGeometry,
@@ -34,15 +29,17 @@ from qgis.core import (
     QgsFields,
     QgsJsonUtils,
 )
+from qgis.gui import QgsRubberBand
+from qgis.utils import iface
 
+from koordinatesexplorer.gui.datasetdialog import DatasetDialog
+from koordinatesexplorer.gui.thumbnails import downloadThumbnail
+from koordinatesexplorer.utils import cloneKartRepo, KartNotInstalledException
 from ..api import (
     KoordinatesClient,
     PAGE_SIZE,
     DataBrowserQuery
 )
-from koordinatesexplorer.gui.datasetdialog import DatasetDialog
-from koordinatesexplorer.gui.thumbnails import downloadThumbnail
-from koordinatesexplorer.utils import cloneKartRepo, KartNotInstalledException
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
@@ -57,7 +54,6 @@ class Label(QLabel):
 
 
 class DatasetsBrowserWidget(QListWidget):
-
     datasetDetailsRequested = pyqtSignal(dict)
 
     def __init__(self):
@@ -68,9 +64,11 @@ class DatasetsBrowserWidget(QListWidget):
         self.setStyleSheet("""QListWidget{background: #E5E7E9;}""")
         self._current_query: Optional[DataBrowserQuery] = None
         self._current_reply: Optional[QNetworkReply] = None
+        self._load_more_item = None
 
     def populate(self, query: DataBrowserQuery, context):
         self.clear()
+        self._load_more_item = None
 
         if self._current_reply is not None and not sip.isdeleted(self._current_reply):
             self._current_reply.abort()
@@ -88,7 +86,7 @@ class DatasetsBrowserWidget(QListWidget):
         if reply.error() != QNetworkReply.NoError:
             print('error occurred :(')
             return
-#            self.error_occurred.emit(request.reply().errorString())
+        #            self.error_occurred.emit(request.reply().errorString())
 
         datasets = json.loads(reply.readAll().data().decode())
         tokens = reply.rawHeader(b"X-Resource-Range").data().decode().split("/")
@@ -96,54 +94,61 @@ class DatasetsBrowserWidget(QListWidget):
         last = tokens[0].split("-")[-1]
         finished = last == total
 
+        self._add_datasets(datasets)
+
+        if not finished:
+            self._load_more_item = QListWidgetItem()
+            loadMoreWidget = LoadMoreItemWidget(self, self._current_query)
+            loadMoreWidget.load_more.connect(self.load_more)
+            self.addItem(self._load_more_item)
+            self.setItemWidget(self._load_more_item, loadMoreWidget)
+            self._load_more_item.setSizeHint(loadMoreWidget.sizeHint())
+
+    def _add_datasets(self, datasets):
         for dataset in datasets:
             datasetItem = QListWidgetItem()
             datasetWidget = DatasetItemWidget(dataset)
-            self.addItem(datasetItem)
+            if self._load_more_item:
+                self.insertItem(self.count() - 1, datasetItem)
+            else:
+                self.addItem(datasetItem)
             self.setItemWidget(datasetItem, datasetWidget)
             datasetItem.setSizeHint(datasetWidget.sizeHint())
-        if not finished:
-            loadMoreItem = QListWidgetItem()
-            loadMoreWidget = LoadMoreItemWidget(self, self._current_query)
-            self.addItem(loadMoreItem)
-            self.setItemWidget(loadMoreItem, loadMoreWidget)
-            loadMoreItem.setSizeHint(loadMoreWidget.sizeHint())
 
     def _itemClicked(self, item):
         widget = self.itemWidget(item)
         if isinstance(widget, DatasetItemWidget):
             widget.showDetails()
 
+    def load_more(self):
+        page = math.ceil(self.count() / PAGE_SIZE)
+        datasets, finished = KoordinatesClient.instance().datasets(
+            page=page, query=self._current_query
+        )
+
+        self._add_datasets(datasets)
+
+        if finished and self._load_more_item:
+            self.takeItem(self.row(self._load_more_item))
+            self._load_more_item = None
+
 
 class LoadMoreItemWidget(QFrame):
+    load_more = pyqtSignal()
+
     def __init__(self, listWidget, query: DataBrowserQuery):
         QFrame.__init__(self)
         self.listWidget = listWidget
         self.query: DataBrowserQuery = query
         self.btnLoadMore = QToolButton()
         self.btnLoadMore.setText("Load more...")
-        self.btnLoadMore.clicked.connect(self.loadMore)
+        self.btnLoadMore.clicked.connect(self.load_more)
 
         layout = QHBoxLayout()
         layout.addStretch()
         layout.addWidget(self.btnLoadMore)
         layout.addStretch()
         self.setLayout(layout)
-
-    def loadMore(self):
-        page = math.ceil(self.listWidget.count() / PAGE_SIZE)
-        datasets, finished = KoordinatesClient.instance().datasets(
-            page=page, query=self.query
-        )
-
-        for dataset in datasets:
-            datasetItem = QListWidgetItem()
-            datasetWidget = DatasetItemWidget(dataset)
-            self.listWidget.insertItem(self.listWidget.count() - 1, datasetItem)
-            self.listWidget.setItemWidget(datasetItem, datasetWidget)
-            datasetItem.setSizeHint(datasetWidget.sizeHint())
-        if finished:
-            self.listWidget.takeItem(self.listWidget.count())
 
 
 class DatasetItemWidget(QFrame):
