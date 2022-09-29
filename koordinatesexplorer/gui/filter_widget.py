@@ -1,4 +1,7 @@
-from qgis.PyQt.QtCore import QTimer
+from qgis.PyQt.QtCore import (
+    QTimer,
+    pyqtSignal
+)
 from qgis.PyQt.QtWidgets import (
     QWidget,
     QGridLayout,
@@ -26,6 +29,8 @@ from ..api import (
 
 
 class FilterWidget(QWidget):
+
+    filters_changed = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -184,7 +189,7 @@ class FilterWidget(QWidget):
 
         if DataType.Rasters in selected_data_types or DataType.Grids in selected_data_types:
             if self.advanced_stacked_widget.currentWidget() != self.filter_widget_page_grid:
-                current_query = self._update_query()
+                current_query = self.build_query()
                 self.advanced_stacked_widget.setCurrentWidget(self.filter_widget_page_grid)
                 for w in (self.data_type_filter_widget_2,
                           self.category_filter_widget_2,
@@ -204,7 +209,7 @@ class FilterWidget(QWidget):
                     w.collapse()
         else:
             if self.advanced_stacked_widget.currentWidget() != self.filter_widget_page_non_grid:
-                current_query = self._update_query()
+                current_query = self.build_query()
                 self.advanced_stacked_widget.setCurrentWidget(self.filter_widget_page_non_grid)
                 for w in (self.data_type_filter_widget_1,
                           self.category_filter_widget_1,
@@ -223,7 +228,10 @@ class FilterWidget(QWidget):
                           self.access_widget_2):
                     w.collapse()
 
-    def _update_query(self):
+    def build_query(self) -> DataBrowserQuery:
+        """
+        Returns a query representing the current widget state
+        """
         query = DataBrowserQuery()
 
         if self.search_line_edit.text().strip():
@@ -232,8 +240,10 @@ class FilterWidget(QWidget):
         for w in self._current_filter_widgets():
             w.apply_constraints_to_query(query)
 
-        print(query.build_query())
         return query
+
+    def _update_query(self):
+        self.filters_changed.emit()
 
     def set_logged_in(self, logged_in: bool):
         for w in self.filter_widgets:
