@@ -161,341 +161,35 @@
          </layout>
         </item>
         <item>
-         <widget class="QGroupBox" name="filter_group_box">
-          <property name="title">
-           <string>New Filters</string>
+         <widget class="QLabel" name="labelContext">
+          <property name="font">
+           <font>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>User Scope</string>
           </property>
          </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <property name="leftMargin">
+           <number>9</number>
+          </property>
+          <item>
+           <widget class="QComboBox" name="comboContext"/>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QWidget" name="filter_frame" native="true"/>
         </item>
         <item>
          <widget class="Line" name="line_4">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QgsCollapsibleGroupBox" name="groupBox">
-          <property name="title">
-           <string>Filters</string>
-          </property>
-          <layout class="QVBoxLayout" name="verticalLayout_4">
-           <item>
-            <widget class="QLabel" name="labelContext">
-             <property name="font">
-              <font>
-               <bold>true</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>User Scope</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_4">
-             <property name="leftMargin">
-              <number>9</number>
-             </property>
-             <item>
-              <widget class="QComboBox" name="comboContext"/>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <widget class="QLabel" name="label_8">
-             <property name="font">
-              <font>
-               <bold>true</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>Text</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout">
-             <property name="leftMargin">
-              <number>9</number>
-             </property>
-             <item>
-              <widget class="QLineEdit" name="txtSearch"/>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <widget class="QLabel" name="label">
-             <property name="font">
-              <font>
-               <italic>false</italic>
-               <bold>true</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>Category</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_2">
-             <property name="leftMargin">
-              <number>9</number>
-             </property>
-             <item>
-              <widget class="QComboBox" name="comboCategory">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="labelSubcategory">
-               <property name="text">
-                <string>Subcategory</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QComboBox" name="comboSubcategory">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <widget class="QLabel" name="label_3">
-             <property name="font">
-              <font>
-               <bold>true</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>Data Type</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_3">
-             <property name="leftMargin">
-              <number>9</number>
-             </property>
-             <item>
-              <widget class="QComboBox" name="comboDatatype"/>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <widget class="QStackedWidget" name="stackedWidgetDatatype">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="currentIndex">
-              <number>1</number>
-             </property>
-             <widget class="QWidget" name="pageRaster">
-              <layout class="QVBoxLayout" name="verticalLayout_2">
-               <property name="leftMargin">
-                <number>0</number>
-               </property>
-               <property name="topMargin">
-                <number>0</number>
-               </property>
-               <property name="rightMargin">
-                <number>0</number>
-               </property>
-               <property name="bottomMargin">
-                <number>0</number>
-               </property>
-               <item>
-                <layout class="QGridLayout" name="gridLayout_4">
-                 <property name="leftMargin">
-                  <number>18</number>
-                 </property>
-                 <item row="1" column="0">
-                  <widget class="QRadioButton" name="radioNoAerial">
-                   <property name="text">
-                    <string>Not Aerial &amp; Satellite Photos</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="1">
-                  <widget class="QRadioButton" name="radioGrayscale">
-                   <property name="text">
-                    <string>Grayscale</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="0">
-                  <widget class="QRadioButton" name="radioAerial">
-                   <property name="text">
-                    <string>Aerial &amp; Satellite Photos</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="1">
-                  <widget class="QRadioButton" name="radioRGB">
-                   <property name="text">
-                    <string>RGB </string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="0">
-                  <widget class="QCheckBox" name="chkOnlyAlpha">
-                   <property name="text">
-                    <string>Only With Alpha Channel</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-              </layout>
-             </widget>
-             <widget class="QWidget" name="pageRepos">
-              <layout class="QVBoxLayout" name="verticalLayout_6">
-               <property name="leftMargin">
-                <number>18</number>
-               </property>
-               <item>
-                <widget class="QCheckBox" name="chkIncludeRepos">
-                 <property name="text">
-                  <string>Include Data Repos for Published Data</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-             <widget class="QWidget" name="pageVector">
-              <layout class="QVBoxLayout" name="verticalLayout_3">
-               <property name="leftMargin">
-                <number>0</number>
-               </property>
-               <property name="topMargin">
-                <number>0</number>
-               </property>
-               <property name="rightMargin">
-                <number>0</number>
-               </property>
-               <property name="bottomMargin">
-                <number>0</number>
-               </property>
-               <item>
-                <layout class="QGridLayout" name="gridLayout_3">
-                 <property name="leftMargin">
-                  <number>18</number>
-                 </property>
-                 <item row="1" column="0">
-                  <widget class="QCheckBox" name="chkLines">
-                   <property name="text">
-                    <string>Lines</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="0">
-                  <widget class="QCheckBox" name="chkPolygons">
-                   <property name="text">
-                    <string>Polygons</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="0">
-                  <widget class="QCheckBox" name="chkPoints">
-                   <property name="text">
-                    <string>Points</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="1">
-                  <widget class="QCheckBox" name="chkHasZ">
-                   <property name="text">
-                    <string>Has Z</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="1">
-                  <widget class="QCheckBox" name="chkHasPrimaryKey">
-                   <property name="text">
-                    <string>Has Primary Key</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="1">
-                  <widget class="QCheckBox" name="chkHasDataRepository">
-                   <property name="text">
-                    <string>Has Data Repository</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-              </layout>
-             </widget>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="label_4">
-             <property name="font">
-              <font>
-               <bold>true</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>Date</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <layout class="QGridLayout" name="gridLayout_2">
-             <property name="leftMargin">
-              <number>9</number>
-             </property>
-             <item row="0" column="2">
-              <widget class="QDateEdit" name="dateCreatedBefore"/>
-             </item>
-             <item row="1" column="2">
-              <widget class="QDateEdit" name="dateUpdatedBefore"/>
-             </item>
-             <item row="1" column="1">
-              <widget class="QDateEdit" name="dateUpdatedAfter"/>
-             </item>
-             <item row="0" column="1">
-              <widget class="QDateEdit" name="dateCreatedAfter"/>
-             </item>
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_5">
-               <property name="text">
-                <string>First Published</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="label_6">
-               <property name="text">
-                <string>Last Updated</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <widget class="QPushButton" name="btnSearch">
-             <property name="text">
-              <string>Search</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
          </widget>
         </item>
         <item>
@@ -528,14 +222,6 @@
    </layout>
   </widget>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>QgsCollapsibleGroupBox</class>
-   <extends>QGroupBox</extends>
-   <header>qgis.gui</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>
