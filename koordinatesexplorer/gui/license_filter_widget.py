@@ -1,4 +1,3 @@
-from qgis.PyQt.QtCore import pyqtSignal
 from qgis.PyQt.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -12,6 +11,7 @@ from ..api import (
     DataBrowserQuery,
     CreativeCommonLicenseVersions
 )
+
 
 class LicenseFilterWidget(FilterWidgetComboBase):
     """
@@ -130,7 +130,7 @@ class LicenseFilterWidget(FilterWidgetComboBase):
 
     def apply_constraints_to_query(self, query: DataBrowserQuery):
         query.cc_license_changes_must_be_shared = self.changes_need_to_be_shared_radio.isChecked()
-        query.cc_license_allow_commercial  = self.commercial_use_allowed_radio.isChecked()
+        query.cc_license_allow_commercial = self.commercial_use_allowed_radio.isChecked()
         query.cc_license_allow_derivates = self.derivatives_allowed_radio.isChecked()
 
         if self.cc_3_checkbox.isChecked():
@@ -154,8 +154,12 @@ class LicenseFilterWidget(FilterWidgetComboBase):
         else:
             self.no_derivatives_allowed_radio.setChecked(True)
 
-        self.cc_3_checkbox.setChecked(CreativeCommonLicenseVersions.Version3 in query.cc_license_versions)
-        self.cc_4_checkbox.setChecked(CreativeCommonLicenseVersions.Version4 in query.cc_license_versions)
+        self.cc_3_checkbox.setChecked(
+            CreativeCommonLicenseVersions.Version3 in query.cc_license_versions
+        )
+        self.cc_4_checkbox.setChecked(
+            CreativeCommonLicenseVersions.Version4 in query.cc_license_versions
+        )
 
         self._update_value()
         self._update_visible_frames()

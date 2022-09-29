@@ -1,4 +1,3 @@
-from qgis.PyQt.QtCore import pyqtSignal
 from qgis.PyQt.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -11,6 +10,7 @@ from ..api import (
     DataBrowserQuery,
     AccessType
 )
+
 
 class AccessFilterWidget(FilterWidgetComboBase):
     """

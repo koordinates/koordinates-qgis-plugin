@@ -188,9 +188,9 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
         self.raster_band_frame.setVisible(self.band_radio.isChecked())
 
         should_show_raster_group = self.raster_radio.isChecked() or \
-                                   self.aerial_radio.isChecked() or \
-                                   self.not_aerial_radio.isChecked() or \
-                                   self.band_radio.isChecked()
+            self.aerial_radio.isChecked() or \
+            self.not_aerial_radio.isChecked() or \
+            self.band_radio.isChecked()
 
         self.raster_frame.setVisible(should_show_raster_group)
 
@@ -310,9 +310,9 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
         elif self.vector_radio.isChecked():
             types = {DataType.Vectors}
         elif any((self.raster_radio.isChecked(),
-                 self.aerial_radio.isChecked(),
-                 self.not_aerial_radio.isChecked(),
-                 self.band_radio.isChecked())):
+                  self.aerial_radio.isChecked(),
+                  self.not_aerial_radio.isChecked(),
+                  self.band_radio.isChecked())):
             types = {DataType.Rasters}
         elif self.grid_radio.isChecked():
             types = {DataType.Grids}
@@ -399,7 +399,9 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
                 self.polygon_checkbox.setChecked(VectorFilter.Polygon in query.vector_filters)
 
             self.has_z_elevation_checkbox.setChecked(VectorFilter.HasZ in query.vector_filters)
-            self.vector_has_primary_key_checkbox.setChecked(VectorFilter.HasPrimaryKey in query.vector_filters)
+            self.vector_has_primary_key_checkbox.setChecked(
+                VectorFilter.HasPrimaryKey in query.vector_filters
+            )
         elif query.data_types == {DataType.Rasters}:
             self.raster_radio.setChecked(True)
             if RasterFilter.AerialSatellitePhotos in query.raster_filters:
@@ -414,10 +416,13 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
                     self.grayscale_radio.setChecked(True)
         elif query.data_types == {DataType.Grids}:
             self.grid_radio.setChecked(True)
-            self.multi_attribute_grids_only_checkbox.setChecked(GridFilterOptions.MultiAttributeGridsOnly in query.grid_filter_options)
+            self.multi_attribute_grids_only_checkbox.setChecked(
+                GridFilterOptions.MultiAttributeGridsOnly in query.grid_filter_options)
         elif query.data_types == {DataType.Tables}:
             self.table_radio.setChecked(True)
-            self.table_has_pk_checkbox.setChecked(VectorFilter.HasPrimaryKey in query.vector_filters)
+            self.table_has_pk_checkbox.setChecked(
+                VectorFilter.HasPrimaryKey in query.vector_filters
+            )
         elif query.data_types == {DataType.Sets}:
             self.set_radio.setChecked(True)
         elif query.data_types == {DataType.Repositories}:
@@ -426,7 +431,9 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
             self.document_radio.setChecked(True)
 
         if DataType.Rasters in query.data_types:
-            self.alpha_channel_checkbox.setChecked(RasterFilterOptions.WithAlphaChannel in query.raster_filter_options)
+            self.alpha_channel_checkbox.setChecked(
+                RasterFilterOptions.WithAlphaChannel in query.raster_filter_options
+            )
 
         self._update_visible_frames()
         self._update_value()

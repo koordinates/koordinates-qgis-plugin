@@ -1,4 +1,3 @@
-from qgis.PyQt.QtCore import pyqtSignal
 from qgis.PyQt.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -9,9 +8,9 @@ from qgis.PyQt.QtWidgets import (
 from .filter_widget_combo_base import FilterWidgetComboBase
 from ..api import (
     DataBrowserQuery,
-    AccessType,
     KoordinatesClient
 )
+
 
 class CategoryFilterWidget(FilterWidgetComboBase):
     """
