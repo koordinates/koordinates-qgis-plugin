@@ -7,7 +7,16 @@ from typing import Optional
 from dateutil import parser
 from qgis.PyQt import sip
 from qgis.PyQt.QtCore import Qt, pyqtSignal, QRect
-from qgis.PyQt.QtGui import QColor, QPixmap, QFont, QCursor, QPainter, QPainterPath
+from qgis.PyQt.QtGui import (
+    QColor,
+    QPixmap,
+    QFont,
+    QCursor,
+    QPainter,
+    QPainterPath,
+    QImage,
+    QBrush
+)
 from qgis.PyQt.QtNetwork import QNetworkReply
 from qgis.PyQt.QtWidgets import (
     QListWidget,
@@ -66,9 +75,22 @@ class DatasetsBrowserWidget(QListWidget):
         self._current_reply: Optional[QNetworkReply] = None
         self._current_context = None
         self._load_more_item = None
+        self._temporary_blank_items = []
+
+    def _create_temporary_items_for_page(self):
+        for i in range(PAGE_SIZE):
+            datasetItem = QListWidgetItem()
+            datasetWidget = EmptyDatasetItemWidget()
+            self.addItem(datasetItem)
+            self.setItemWidget(datasetItem, datasetWidget)
+            datasetItem.setSizeHint(datasetWidget.sizeHint())
+            self._temporary_blank_items.append(datasetItem)
 
     def populate(self, query: DataBrowserQuery, context):
         self.clear()
+        self._temporary_blank_items = []
+        self._create_temporary_items_for_page()
+
         self._load_more_item = None
 
         self._fetch_records(query, context)
@@ -103,6 +125,10 @@ class DatasetsBrowserWidget(QListWidget):
             print('error occurred :(')
             return
         #            self.error_occurred.emit(request.reply().errorString())
+
+        for i in self._temporary_blank_items:
+            self.takeItem(self.row(i))
+        self._temporary_blank_items = []
 
         datasets = json.loads(reply.readAll().data().decode())
         tokens = reply.rawHeader(b"X-Resource-Range").data().decode().split("/")
@@ -142,6 +168,9 @@ class DatasetsBrowserWidget(QListWidget):
 
     def load_more(self):
         next_page = math.ceil(self.count() / PAGE_SIZE)
+        self.takeItem(self.row(self._load_more_item))
+        self._load_more_item = None
+        self._create_temporary_items_for_page()
         self._fetch_records(page=next_page)
 
 
@@ -163,66 +192,201 @@ class LoadMoreItemWidget(QFrame):
         self.setLayout(layout)
 
 
-class DatasetItemWidget(QFrame):
-    def __init__(self, dataset):
-        QFrame.__init__(self)
-        self.setMouseTracking(True)
+class DatasetItemWidgetBase(QFrame):
+    """
+    Base class for dataset items
+    """
+
+    def __init__(self):
+        super().__init__()
         self.setStyleSheet(
-            "DatasetItemWidget{border: 0px solid black; border-radius: 10px; background: white;}"
+            """DatasetItemWidgetBase {
+               border: 0px solid black;
+               border-radius: 10px; background: white;
+            }"""
         )
-        self.dataset = dataset
-
         self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
-
-        def pixmap(name):
-            return QPixmap(
-                os.path.join(os.path.dirname(os.path.dirname(__file__)), "img", name)
-            )
 
         self.labelMap = Label()
         self.labelMap.setFixedSize(150, 150)
+
+        self.labelName = QLabel()
+        self.labelName.setFont(QFont("Arial", 10))
+        self.labelName.setWordWrap(True)
+
+        self.stats_hlayout = QHBoxLayout()
+
+        self.vlayout = QVBoxLayout()
+        self.vlayout.addWidget(self.labelName)
+        self.vlayout.addLayout(self.stats_hlayout)
+
+        layout = QHBoxLayout()
+        layout.setMargin(0)
+        layout.addWidget(self.labelMap)
+        layout.addLayout(self.vlayout)
+
+        self.buttonsLayout = QVBoxLayout()
+
+        layout.addLayout(self.buttonsLayout)
+        layout.addSpacing(20)
+
+        self.setLayout(layout)
+
+    def setThumbnail(self, img: Optional[QImage]):
+
+        target = QPixmap(self.labelMap.size())
+        target.fill(Qt.transparent)
+
+        painter = QPainter(target)
+
+        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
+        painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
+
+        path = QPainterPath()
+        path.addRoundedRect(0, 0, 150, 150, 10, 10)
+
+        painter.setClipPath(path)
+
+        if img is not None:
+            rect = QRect(300, 15, 600, 600)
+            thumbnail = QPixmap(img)
+            cropped = thumbnail.copy(rect)
+
+            thumb = cropped.scaled(
+                150, 150, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation
+            )
+            painter.drawPixmap(0, 0, thumb)
+        else:
+            painter.setBrush(QBrush(QColor('#cccccc')))
+            painter.setPen(Qt.NoPen)
+            painter.drawRect(0, 0, 600, 600)
+
+        painter.end()
+
+        self.labelMap.setPixmap(target)
+
+
+class EmptyDatasetItemWidget(DatasetItemWidgetBase):
+    """
+    Shows an 'empty' dataset item
+    """
+
+    TOP_LABEL_HEIGHT = 40
+    TOP_LABEL_MARGIN = 15
+    TOP_LABEL_WIDTH = 300
+    BOTTOM_LABEL_HEIGHT = 20
+    BOTTOM_LABEL_MARGIN = 40
+    BOTTOM_LABEL_WIDTH = 130
+
+    def __init__(self):
+        super().__init__()
+
+        self.setThumbnail(None)
+
+        target = QPixmap(self.TOP_LABEL_WIDTH,
+                         self.TOP_LABEL_HEIGHT + self.TOP_LABEL_MARGIN)
+        target.fill(Qt.transparent)
+
+        painter = QPainter(target)
+
+        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
+
+        painter.setBrush(QBrush(QColor('#e6e6e6')))
+        painter.setPen(Qt.NoPen)
+        painter.drawRoundedRect(0, self.TOP_LABEL_MARGIN,
+                                self.TOP_LABEL_WIDTH, self.TOP_LABEL_HEIGHT,
+                                4, 4)
+
+        painter.end()
+
+        self.labelName.setPixmap(target)
+        self.vlayout.addStretch()
+
+        target = QPixmap(self.BOTTOM_LABEL_WIDTH,
+                         self.BOTTOM_LABEL_HEIGHT + self.BOTTOM_LABEL_MARGIN)
+        target.fill(Qt.transparent)
+
+        painter = QPainter(target)
+
+        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
+
+        painter.setBrush(QBrush(QColor('#e6e6e6')))
+        painter.setPen(Qt.NoPen)
+        painter.drawRoundedRect(0,
+                                self.BOTTOM_LABEL_MARGIN,
+                                self.BOTTOM_LABEL_WIDTH,
+                                self.BOTTOM_LABEL_HEIGHT,
+                                4,
+                                4)
+
+        painter.end()
+
+        bottom_label = QLabel()
+        bottom_label.setPixmap(target)
+        self.stats_hlayout.addWidget(bottom_label)
+        self.stats_hlayout.addStretch()
+
+
+class DatasetItemWidget(DatasetItemWidgetBase):
+    """
+    Shows details for a dataset item
+    """
+
+    def __init__(self, dataset):
+        super().__init__()
+        self.setMouseTracking(True)
+        self.dataset = dataset
+
         downloadThumbnail(self.dataset["thumbnail_url"], self)
 
         date = parser.parse(self.dataset["published_at"])
-        self.labelName = QLabel(
-            f'<b>{self.dataset["title"]}</b><br>'
-            f'{self.dataset["publisher"]["name"]}<br>'
-        )
-        self.labelName.setFont(QFont("Arial", 10))
-        self.labelName.setWordWrap(True)
 
         def mousePressed(event):
             self.showDetails()
 
         self.labelName.mousePressEvent = mousePressed
 
+        self.labelName.setText(
+            f'<b>{self.dataset["title"]}</b><br>'
+            f'{self.dataset["publisher"]["name"]}<br>'
+        )
+
+        def pixmap(name):
+            return QPixmap(
+                os.path.join(os.path.dirname(os.path.dirname(__file__)), "img", name)
+            )
+
         self.labelUpdatedIcon = QLabel()
         self.labelUpdatedIcon.setPixmap(pixmap("updated.png"))
-        self.labelUpdated = QLabel(f'{date.strftime("%d %b %Y")}')
+
+        self.labelUpdated = QLabel()
+
         self.labelViewsIcon = QLabel()
         self.labelViewsIcon.setPixmap(pixmap("eye.png"))
-        self.labelViews = QLabel(str(self.dataset["num_views"]))
+
+        self.labelViews = QLabel()
+
         self.labelExportsIcon = QLabel()
         self.labelExportsIcon.setPixmap(pixmap("download.png"))
-        self.labelExports = QLabel(str(self.dataset["num_downloads"]))
 
-        hlayout = QHBoxLayout()
-        hlayout.addWidget(self.labelUpdatedIcon)
-        hlayout.addWidget(self.labelUpdated)
-        hlayout.addWidget(self.labelViewsIcon)
-        hlayout.addWidget(self.labelViews)
-        hlayout.addWidget(self.labelExportsIcon)
-        hlayout.addWidget(self.labelExports)
-        hlayout.addStretch()
+        self.labelExports = QLabel()
 
-        vlayout = QVBoxLayout()
-        vlayout.addWidget(self.labelName)
-        vlayout.addLayout(hlayout)
+        self.labelUpdated.setText(f'{date.strftime("%d %b %Y")}')
 
-        layout = QHBoxLayout()
-        layout.setMargin(0)
-        layout.addWidget(self.labelMap)
-        layout.addLayout(vlayout)
+        self.labelViews.setText(str(self.dataset["num_views"]))
+
+        self.labelExports.setText(str(self.dataset["num_downloads"]))
+
+        self.stats_hlayout.addWidget(self.labelUpdatedIcon)
+        self.stats_hlayout.addWidget(self.labelUpdated)
+        self.stats_hlayout.addWidget(self.labelViewsIcon)
+        self.stats_hlayout.addWidget(self.labelViews)
+        self.stats_hlayout.addWidget(self.labelExportsIcon)
+        self.stats_hlayout.addWidget(self.labelExports)
+        self.stats_hlayout.addStretch()
 
         style = """
                 QToolButton{
@@ -240,8 +404,7 @@ class DatasetItemWidget(QFrame):
                 }
                 """
 
-        buttonsLayout = QVBoxLayout()
-        buttonsLayout.addStretch()
+        self.buttonsLayout.addStretch()
 
         if self.dataset.get("repository") is not None:
             self.btnClone = QToolButton()
@@ -250,7 +413,7 @@ class DatasetItemWidget(QFrame):
             self.btnClone.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
             self.btnClone.clicked.connect(self.cloneRepository)
             self.btnClone.setFixedSize(80, 40)
-            buttonsLayout.addWidget(self.btnClone)
+            self.buttonsLayout.addWidget(self.btnClone)
 
         if self.dataset.get("kind") in ["raster", "vector"]:
             self.btnAdd = QToolButton()
@@ -259,13 +422,9 @@ class DatasetItemWidget(QFrame):
             self.btnAdd.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
             self.btnAdd.clicked.connect(self.addLayer)
             self.btnAdd.setFixedSize(80, 40)
-            buttonsLayout.addWidget(self.btnAdd)
+            self.buttonsLayout.addWidget(self.btnAdd)
 
-        buttonsLayout.addSpacing(10)
-        layout.addLayout(buttonsLayout)
-        layout.addSpacing(20)
-
-        self.setLayout(layout)
+        self.buttonsLayout.addSpacing(10)
 
         self.bbox = self._geomFromGeoJson(self.dataset["data"].get("extent"))
         self.footprint = QgsRubberBand(iface.mapCanvas(), QgsWkbTypes.PolygonGeometry)
@@ -274,32 +433,6 @@ class DatasetItemWidget(QFrame):
         self.footprint.setFillColor(QColor(255, 0, 0, 40))
 
         self.setCursor(QCursor(Qt.PointingHandCursor))
-
-    def setThumbnail(self, img):
-        thumbnail = QPixmap(img)
-
-        rect = QRect(300, 15, 600, 600)
-        cropped = thumbnail.copy(rect)
-
-        thumb = cropped.scaled(
-            150, 150, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation
-        )
-
-        self.target = QPixmap(self.labelMap.size())
-        self.target.fill(Qt.transparent)
-
-        painter = QPainter(self.target)
-
-        painter.setRenderHint(QPainter.Antialiasing, True)
-        painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
-        painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
-
-        path = QPainterPath()
-        path.addRoundedRect(0, 0, 150, 150, 10, 10)
-
-        painter.setClipPath(path)
-        painter.drawPixmap(0, 0, thumb)
-        self.labelMap.setPixmap(self.target)
 
     def cloneRepository(self):
         url = self.dataset["repository"]["clone_location_https"]
@@ -342,7 +475,8 @@ class DatasetItemWidget(QFrame):
         apikey = KoordinatesClient.instance().apiKey
         uri = (
             f"type=xyz&url=https://tiles-a.koordinates.com/services;key%3D{apikey}/tiles/v4/"
-            f"layer={self.dataset['id']},color={color}/EPSG:3857/%7BZ%7D/%7BX%7D/%7BY%7D.png&zmax=19&zmin=0&crs=EPSG3857"  # noqa: E501
+            f"layer={self.dataset['id']},color={color}/EPSG:3857/"
+            "%7BZ%7D/%7BX%7D/%7BY%7D.png&zmax=19&zmin=0&crs=EPSG3857"
         )
         iface.addRasterLayer(uri, self.dataset["title"], "wms")
 
@@ -366,7 +500,11 @@ class DatasetItemWidget(QFrame):
 
     def enterEvent(self, event):
         self.setStyleSheet(
-            "DatasetItemWidget{border: 1px solid rgb(180, 180, 180); border-radius: 15px; background: white;}"  # noqa: E501
+            """DatasetItemWidget {
+               border: 1px solid rgb(180, 180, 180);
+               border-radius: 15px;
+               background: white;
+            }"""
         )
         self.showFootprint()
 
