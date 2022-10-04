@@ -89,7 +89,8 @@ class KoordinatesClient(QObject):
     def _build_datasets_request(self,
                                 page=1,
                                 query: Optional[DataBrowserQuery] = None,
-                                context=None) -> Tuple[str, Dict[str, str], dict]:
+                                context=None,
+                                is_facets: bool = False) -> Tuple[str, Dict[str, str], dict]:
         """
         Builds the parameters used for a datasets request
         """
@@ -101,7 +102,11 @@ class KoordinatesClient(QObject):
         else:
             params = {}
 
-        params.update({"page_size": PAGE_SIZE, "page": page})
+        if not is_facets:
+            params.update({"page_size": PAGE_SIZE, "page": page})
+        else:
+            params['facets'] = True
+
         if context["type"] == "site":
             endpoint = "data/"
             params["from"] = context["domain"]
@@ -118,6 +123,18 @@ class KoordinatesClient(QObject):
         Retrieve datasets asynchronously
         """
         endpoint, headers, params = self._build_datasets_request(page, query, context)
+        network_request = self._build_request(endpoint, headers, params)
+
+        return QgsNetworkAccessManager.instance().get(network_request)
+
+    def facets_async(self,
+                       page=1,
+                       query: Optional[DataBrowserQuery] = None,
+                       context=None) -> QNetworkReply:
+        """
+        Retrieve dataset facets asynchronously
+        """
+        endpoint, headers, params = self._build_datasets_request(page, query, context, is_facets=True)
         network_request = self._build_request(endpoint, headers, params)
 
         return QgsNetworkAccessManager.instance().get(network_request)

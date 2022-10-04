@@ -1,4 +1,5 @@
 import os
+import json
 from typing import Optional
 from functools import partial
 
@@ -22,8 +23,11 @@ from qgis.core import (
     QgsApplication,
     Qgis,
 )
+from qgis.PyQt.QtNetwork import QNetworkReply
 from qgis.gui import QgsDockWidget
 from qgis.utils import iface
+
+from qgis.PyQt import sip
 
 from koordinatesexplorer.auth import OAuthWorkflow
 from koordinatesexplorer.gui.datasetsbrowserwidget import DatasetsBrowserWidget
@@ -31,7 +35,8 @@ from .filter_widget import FilterWidget
 from .gui_utils import GuiUtils
 from ..api import (
     KoordinatesClient,
-    SortOrder
+    SortOrder,
+    DataBrowserQuery
 )
 
 from .country_widget import CountryWidgetAction
@@ -48,6 +53,10 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
     def __init__(self):
         super(QgsDockWidget, self).__init__(iface.mainWindow())
         self.setupUi(self)
+
+        self._facets = {}
+        self._current_facets_reply = None
+        self._visible_count = 0
 
         # self.button_home.setIcon(GuiUtils.get_icon('home.svg'))
         # self.button_home.setToolTip('Home')
@@ -80,6 +89,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         self.button_browse.setFixedHeight(self.comboContext.sizeHint().height())
 
         self.browser = DatasetsBrowserWidget()
+        self.browser.visible_count_changed.connect(self._visible_count_changed)
         self.oauth: Optional[OAuthWorkflow] = None
 
         layout = QVBoxLayout()
@@ -228,10 +238,51 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
         context = self.comboContext.currentData()
 
+        self._fetch_facets(browser_query, context)
         self.browser.populate(browser_query, context)
 
+    def _fetch_facets(self,
+                       query: Optional[DataBrowserQuery] = None,
+                       context: Optional[str] = None):
+        if self._current_facets_reply is not None and not sip.isdeleted(self._current_facets_reply):
+            self._current_facets_reply.abort()
+            self._current_facets_reply = None
+
+        self._current_facets_reply = KoordinatesClient.instance().facets_async(
+            query=query,
+            context=context
+        )
+        self._current_facets_reply.finished.connect(partial(self._facets_reply_finished, self._current_facets_reply))
+
+    def _facets_reply_finished(self, reply: QNetworkReply):
+        if reply != self._current_facets_reply:
+            # an old reply we don't care about anymore
+            return
+
+        if reply.error() != QNetworkReply.NoError:
+            print('error occurred :(')
+            return
+        #            self.error_occurred.emit(request.reply().errorString())
+
+        self._facets = json.loads(reply.readAll().data().decode())
+        self._set_count_label()
+
+    def _visible_count_changed(self, count):
+        self._visible_count = count
+        self._set_count_label()
+
     def _set_count_label(self):
-        self.label_count.setText('Showing {} of {} results'.format(20, 9999))
+        if not self._facets:
+            self.label_count.setText('')
+            return
+
+        total = 0
+        for tag in self._facets.get('has_pk', []):
+            print(tag)
+            total += tag.get('total', 0)
+
+
+        self.label_count.setText('Showing {} of {} results'.format(self._visible_count, total))
 
     def _loginChanged(self, loggedIn):
         if not loggedIn:

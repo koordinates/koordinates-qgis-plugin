@@ -64,6 +64,7 @@ class Label(QLabel):
 
 class DatasetsBrowserWidget(QListWidget):
     datasetDetailsRequested = pyqtSignal(dict)
+    visible_count_changed = pyqtSignal(int)
 
     def __init__(self):
         QListWidget.__init__(self)
@@ -93,6 +94,7 @@ class DatasetsBrowserWidget(QListWidget):
 
         self._load_more_item = None
 
+        self.visible_count_changed.emit(0)
         self._fetch_records(query, context)
 
     def _fetch_records(self,
@@ -160,6 +162,7 @@ class DatasetsBrowserWidget(QListWidget):
                 self.addItem(datasetItem)
             self.setItemWidget(datasetItem, datasetWidget)
             datasetItem.setSizeHint(datasetWidget.sizeHint())
+        self.visible_count_changed.emit(self.count() - (1 if self._load_more_item else 0))
 
     def _itemClicked(self, item):
         widget = self.itemWidget(item)
