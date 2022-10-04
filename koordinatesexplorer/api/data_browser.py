@@ -87,6 +87,18 @@ class SortOrder(Enum):
     AlphabeticalZA = 5
     Oldest = 6
 
+    @staticmethod
+    def to_text(order: 'SortOrder'):
+        """
+        Converts sort order to user-friendly text
+        """
+        return {SortOrder.Popularity: 'Popularity',
+                SortOrder.RecentlyAdded: 'Recently Added',
+                SortOrder.RecentlyUpdated: 'Recently Updated',
+                SortOrder.AlphabeticalAZ: 'Alphabetical (A-Z)',
+                SortOrder.AlphabeticalZA: 'Alphabetical (Z-A)',
+                SortOrder.Oldest: 'Oldest'}[order]
+
 
 class DataBrowserQuery:
     """

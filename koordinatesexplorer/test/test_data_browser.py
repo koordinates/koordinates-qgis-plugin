@@ -292,6 +292,13 @@ class TestDataBrowser(unittest.TestCase):
         self.assertEqual(query.build_query(),
                          {'sort': '-created_at', 'kind': ['layer', 'table', 'set', 'document']})
 
+        self.assertEqual(SortOrder.to_text(SortOrder.Popularity), 'Popularity')
+        self.assertEqual(SortOrder.to_text(SortOrder.RecentlyAdded), 'Recently Added')
+        self.assertEqual(SortOrder.to_text(SortOrder.RecentlyUpdated), 'Recently Updated')
+        self.assertEqual(SortOrder.to_text(SortOrder.AlphabeticalAZ), 'Alphabetical (A-Z)')
+        self.assertEqual(SortOrder.to_text(SortOrder.AlphabeticalZA), 'Alphabetical (Z-A)')
+        self.assertEqual(SortOrder.to_text(SortOrder.Oldest), 'Oldest')
+
 
 if __name__ == '__main__':
     unittest.main()
