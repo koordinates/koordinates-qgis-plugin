@@ -51,9 +51,12 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
         self.button_starred.setIcon(GuiUtils.get_icon('star_filled.svg'))
         self.button_starred.setToolTip('Starred')
+        self.button_starred.setCheckable(True)
 
         self.button_browse.setText('Browse')
         self.button_browse.setToolTip('Browse')
+        self.button_browse.setCheckable(True)
+        self.button_browse.setChecked(True)
 
         self.button_help.setIcon(GuiUtils.get_icon('help.svg'))
         self.button_help.setToolTip('Help')
@@ -72,8 +75,6 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
             b.setFixedWidth(b.height())
 
         self.button_browse.setFixedHeight(self.comboContext.sizeHint().height())
-
-        self.button_starred.setCheckable(True)
 
         self.browser = DatasetsBrowserWidget()
         self.oauth: Optional[OAuthWorkflow] = None
@@ -97,7 +98,8 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
         self.filter_widget.filters_changed.connect(self.search)
 
-        self.button_starred.toggled.connect(self.filter_widget.set_starred)
+        self.button_starred.toggled.connect(self._set_starred)
+        self.button_browse.clicked.connect(self._browse)
         self.filter_widget.clear_all.connect(self._clear_all_filters)
 
         self.sort_menu = QMenu(self.button_sort_order)
@@ -162,6 +164,23 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         Sets the correct text for the sort order button
         """
         self.button_sort_order.setText('Sort by {}'.format(SortOrder.to_text(self.filter_widget.sort_order)))
+
+    def _set_starred(self, starred: bool):
+        """
+        Called when the starred button is checked
+        """
+        if starred:
+            self.button_browse.setChecked(False)
+        else:
+            self.button_browse.setChecked(True)
+        self.filter_widget.set_starred(starred)
+
+    def _browse(self):
+        """
+        Switches back to browse mode
+        """
+        self.button_starred.setChecked(False)
+        self.button_browse.setChecked(True)
 
     def backToBrowser(self):
         self.stackedWidget.setCurrentWidget(self.pageBrowser)
