@@ -33,6 +33,9 @@ from ..api import (
     SortOrder
 )
 
+from .country_widget import CountryWidgetAction
+from ..external import flag
+
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
 WIDGET, _ = uic.loadUiType(GuiUtils.get_ui_file_path('koordinatesexplorer.ui'))
@@ -125,6 +128,8 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         self.user_menu = QMenu(self.button_user)
         self.current_user_action = QAction('Current User', self.user_menu)
         self.user_menu.addAction(self.current_user_action)
+        self.user_country_action = CountryWidgetAction(self.user_menu)
+        self.user_menu.addAction(self.user_country_action)
         self.user_menu.addSeparator()
         self.edit_profile_action = QAction('Edit Profile', self.user_menu)
         self.edit_profile_action.triggered.connect(self._edit_profile)
@@ -220,6 +225,9 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
     def setForLogin(self, loggedIn):
         if loggedIn:
             self.stackedWidget.setCurrentWidget(self.pageBrowser)
+
+            user = KoordinatesClient.instance().user_details()
+            self.user_country_action.set_country_code(user['country'])
 
             contexts = KoordinatesClient.instance().userContexts()
             self.comboContext.clear()
