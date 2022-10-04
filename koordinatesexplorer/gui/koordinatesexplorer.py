@@ -125,10 +125,14 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         self.user_menu = QMenu(self.button_user)
         self.current_user_action = QAction('Current User', self.user_menu)
         self.user_menu.addAction(self.current_user_action)
+        self.user_menu.addSeparator()
+        self.edit_profile_action = QAction('Edit Profile', self.user_menu)
+        self.edit_profile_action.triggered.connect(self._edit_profile)
+        self.user_menu.addAction(self.edit_profile_action)
         self.logout_action = QAction('Logout', self.user_menu)
+        self.logout_action.triggered.connect(self.logout)
         self.user_menu.addAction(self.logout_action)
         self.user_menu.aboutToShow.connect(self._user_menu_about_to_show)
-        self.logout_action.triggered.connect(self.logout)
 
         self.button_user.setMenu(self.user_menu)
 
@@ -305,6 +309,12 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
     def removeApiKey(self):
         QgsApplication.authManager().removeAuthSetting(AUTH_CONFIG_ID)
+
+    def _edit_profile(self):
+        """
+        Opens the edit profile page
+        """
+        QDesktopServices.openUrl(QUrl('https://id.koordinates.com/profile/'))
 
     def _show_help(self):
         """
