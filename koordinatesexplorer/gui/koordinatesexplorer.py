@@ -1,8 +1,9 @@
-import os
 import json
-from typing import Optional
+import os
 from functools import partial
+from typing import Optional
 
+from qgis.PyQt import sip
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import (
     QThread,
@@ -13,6 +14,7 @@ from qgis.PyQt.QtGui import (
     QDesktopServices,
     QPalette
 )
+from qgis.PyQt.QtNetwork import QNetworkReply
 from qgis.PyQt.QtWidgets import (
     QVBoxLayout,
     QApplication,
@@ -23,14 +25,12 @@ from qgis.core import (
     QgsApplication,
     Qgis,
 )
-from qgis.PyQt.QtNetwork import QNetworkReply
 from qgis.gui import QgsDockWidget
 from qgis.utils import iface
 
-from qgis.PyQt import sip
-
 from koordinatesexplorer.auth import OAuthWorkflow
 from koordinatesexplorer.gui.datasetsbrowserwidget import DatasetsBrowserWidget
+from .country_widget import CountryWidgetAction
 from .filter_widget import FilterWidget
 from .gui_utils import GuiUtils
 from ..api import (
@@ -38,8 +38,6 @@ from ..api import (
     SortOrder,
     DataBrowserQuery
 )
-
-from .country_widget import CountryWidgetAction
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
@@ -242,9 +240,10 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         self.browser.populate(browser_query, context)
 
     def _fetch_facets(self,
-                       query: Optional[DataBrowserQuery] = None,
-                       context: Optional[str] = None):
-        if self._current_facets_reply is not None and not sip.isdeleted(self._current_facets_reply):
+                      query: Optional[DataBrowserQuery] = None,
+                      context: Optional[str] = None):
+        if self._current_facets_reply is not None and not sip.isdeleted(
+                self._current_facets_reply):
             self._current_facets_reply.abort()
             self._current_facets_reply = None
 
@@ -252,7 +251,8 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
             query=query,
             context=context
         )
-        self._current_facets_reply.finished.connect(partial(self._facets_reply_finished, self._current_facets_reply))
+        self._current_facets_reply.finished.connect(
+            partial(self._facets_reply_finished, self._current_facets_reply))
 
     def _facets_reply_finished(self, reply: QNetworkReply):
         if reply != self._current_facets_reply:
@@ -280,7 +280,6 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         for tag in self._facets.get('has_pk', []):
             print(tag)
             total += tag.get('total', 0)
-
 
         self.label_count.setText('Showing {} of {} results'.format(self._visible_count, total))
 

@@ -128,13 +128,14 @@ class KoordinatesClient(QObject):
         return QgsNetworkAccessManager.instance().get(network_request)
 
     def facets_async(self,
-                       page=1,
-                       query: Optional[DataBrowserQuery] = None,
-                       context=None) -> QNetworkReply:
+                     page=1,
+                     query: Optional[DataBrowserQuery] = None,
+                     context=None) -> QNetworkReply:
         """
         Retrieve dataset facets asynchronously
         """
-        endpoint, headers, params = self._build_datasets_request(page, query, context, is_facets=True)
+        endpoint, headers, params = self._build_datasets_request(page, query, context,
+                                                                 is_facets=True)
         network_request = self._build_request(endpoint, headers, params)
 
         return QgsNetworkAccessManager.instance().get(network_request)
