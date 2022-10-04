@@ -24,7 +24,8 @@ from .license_filter_widget import LicenseFilterWidget
 from .resolution_filter_widget import ResolutionFilterWidget
 from ..api import (
     DataBrowserQuery,
-    DataType
+    DataType,
+    SortOrder
 )
 
 
@@ -37,6 +38,8 @@ class FilterWidget(QWidget):
         super().__init__(parent)
 
         self._starred = False
+
+        self.sort_order = SortOrder.Popularity
 
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
 
@@ -249,6 +252,7 @@ class FilterWidget(QWidget):
         """
         query = DataBrowserQuery()
         query.starred = self._starred
+        query.order = self.sort_order
 
         if self.search_line_edit.text().strip():
             query.search = self.search_line_edit.text().strip()
