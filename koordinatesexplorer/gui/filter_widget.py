@@ -31,9 +31,12 @@ from ..api import (
 class FilterWidget(QWidget):
 
     filters_changed = pyqtSignal()
+    clear_all = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
+
+        self._starred = False
 
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
 
@@ -162,6 +165,17 @@ class FilterWidget(QWidget):
         for w in self.filter_widgets:
             w.clear()
         self.search_line_edit.clear()
+        self.clear_all.emit()
+
+    def set_starred(self, starred: bool):
+        """
+        Sets whether the starred filter should be active
+        """
+        if starred == self._starred:
+            return
+
+        self._starred = starred
+        self._filter_widget_changed()
 
     def _show_advanced(self, show):
         if not show:
@@ -233,6 +247,7 @@ class FilterWidget(QWidget):
         Returns a query representing the current widget state
         """
         query = DataBrowserQuery()
+        query.starred = self._starred
 
         if self.search_line_edit.text().strip():
             query.search = self.search_line_edit.text().strip()
