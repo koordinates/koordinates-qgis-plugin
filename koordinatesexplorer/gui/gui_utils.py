@@ -21,7 +21,8 @@ from qgis.PyQt.QtGui import (
     QFont,
     QFontMetrics,
     QImage,
-    QPixmap
+    QPixmap,
+    QFontDatabase
 )
 from qgis.core import (
     Qgis
@@ -32,6 +33,8 @@ class GuiUtils:
     """
     Utilities for GUI plugin components
     """
+
+    APPLICATION_FONT_MAP = {}
 
     @staticmethod
     def get_icon(icon: str) -> QIcon:
@@ -107,3 +110,38 @@ class GuiUtils:
         scale = 1.1 * standard_size / 24.0
         return int(math.floor(max(Qgis.UI_SCALE_FACTOR * fm.height() * scale,
                                   float(standard_size))))
+
+    @staticmethod
+    def get_font_path(font: str) -> str:
+        """
+        Returns the path to an included font file
+        :param font: font name
+        :return: font file path
+        """
+        path = os.path.join(
+            os.path.dirname(__file__),
+            '..',
+            'fonts',
+            font)
+        if not os.path.exists(path):
+            return ''
+
+        return path
+
+    @staticmethod
+    def get_embedded_font(font: str) -> QFont:
+        """
+        Returns a font created from an embedded font file
+        """
+        if font in GuiUtils.APPLICATION_FONT_MAP:
+            return GuiUtils.APPLICATION_FONT_MAP[font]
+
+        path = GuiUtils.get_font_path(font)
+        if not path:
+            return QFont()
+
+        res = QFontDatabase.addApplicationFont(path)
+        families = QFontDatabase.applicationFontFamilies(res)
+        installed_font = QFont(families[0])
+        GuiUtils.APPLICATION_FONT_MAP[font] = installed_font
+        return installed_font
