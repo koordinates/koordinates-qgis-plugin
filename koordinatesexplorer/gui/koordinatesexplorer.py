@@ -3,8 +3,14 @@ from typing import Optional
 from functools import partial
 
 from qgis.PyQt import uic
-from qgis.PyQt.QtCore import QThread
-from qgis.PyQt.QtGui import QPixmap
+from qgis.PyQt.QtCore import (
+    QThread,
+    QUrl
+)
+from qgis.PyQt.QtGui import (
+    QPixmap,
+    QDesktopServices
+)
 from qgis.PyQt.QtWidgets import (
     QVBoxLayout,
     QApplication,
@@ -51,6 +57,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
         self.button_help.setIcon(GuiUtils.get_icon('help.svg'))
         self.button_help.setToolTip('Help')
+        self.button_help.clicked.connect(self._show_help)
 
         self.button_user.setIcon(GuiUtils.get_icon('user.svg'))
         self.button_user.setToolTip('User')
@@ -262,3 +269,9 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
     def removeApiKey(self):
         QgsApplication.authManager().removeAuthSetting(AUTH_CONFIG_ID)
+
+    def _show_help(self):
+        """
+        Shows the help web page
+        """
+        QDesktopServices.openUrl(QUrl('https://help.koordinates.com/'))
