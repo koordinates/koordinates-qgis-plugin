@@ -88,7 +88,6 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         self.labelHeader.setPixmap(pixmap)
 
         self.btnLogin.clicked.connect(self.loginClicked)
-        self.btnLogout.clicked.connect(self.logoutClicked)
 
         self.filter_widget = FilterWidget(self)
         filter_layout = QVBoxLayout()
@@ -122,6 +121,16 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
         self.sort_menu.aboutToShow.connect(self._sort_order_menu_about_to_show)
         self._set_sort_order_button_text()
+
+        self.user_menu = QMenu(self.button_user)
+        self.current_user_action = QAction('Current User', self.user_menu)
+        self.user_menu.addAction(self.current_user_action)
+        self.logout_action = QAction('Logout', self.user_menu)
+        self.user_menu.addAction(self.logout_action)
+        self.user_menu.aboutToShow.connect(self._user_menu_about_to_show)
+        self.logout_action.triggered.connect(self.logout)
+
+        self.button_user.setMenu(self.user_menu)
 
         #  self.comboContext.currentIndexChanged.connect(self.filtersChanged)
 
@@ -182,6 +191,13 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         self.button_starred.setChecked(False)
         self.button_browse.setChecked(True)
 
+    def _user_menu_about_to_show(self):
+        """
+        Called when the user menu is about to show
+        """
+        user = KoordinatesClient.instance().user_details()
+        self.current_user_action.setText('{} {}'.format(user.get('first_name'), user.get('last_name')).strip())
+
     def backToBrowser(self):
         self.stackedWidget.setCurrentWidget(self.pageBrowser)
 
@@ -200,8 +216,6 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
     def setForLogin(self, loggedIn):
         if loggedIn:
             self.stackedWidget.setCurrentWidget(self.pageBrowser)
-            email = KoordinatesClient.instance().userEMail()
-            self.labelLoggedAs.setText(f"Logged as <b>{email}</b>")
 
             contexts = KoordinatesClient.instance().userContexts()
             self.comboContext.clear()
@@ -270,7 +284,10 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
             duration=5,
         )
 
-    def logoutClicked(self):
+    def logout(self):
+        """
+        Logs the user out
+        """
         KoordinatesClient.instance().logout()
 
     def storeApiKey(self):

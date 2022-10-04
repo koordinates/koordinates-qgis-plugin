@@ -58,18 +58,18 @@ class KoordinatesClient(QObject):
         self.apiKey = None
         self.headers = {}
         self._datasets = None
+        self._user_details = None
 
     @waitcursor
     def login(self, apiKey):
         self.headers = {"Authorization": f"key {apiKey}"}
 
-        email = None
         try:
-            email = self.userEMail()
+            self._user_details = self._get("users/me/")['json']
         except Exception:
-            pass
+            self._user_details = None
 
-        if email is None:
+        if self._user_details is None:
             raise LoginException()
 
         self.apiKey = apiKey
@@ -134,8 +134,11 @@ class KoordinatesClient(QObject):
         last = tokens[0].split("-")[-1]
         return ret['json'], last == total
 
-    def userEMail(self) -> Optional[str]:
-        return self._get("users/me/")['json'].get("email")
+    def user_details(self) -> dict:
+        """
+        Returns a diction of user details
+        """
+        return self._user_details
 
     def userContexts(self) -> List[str]:
         return self._get("users/me/")['json'].get("contexts", [])
