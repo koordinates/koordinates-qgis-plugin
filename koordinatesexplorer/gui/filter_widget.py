@@ -49,6 +49,7 @@ class FilterWidget(QWidget):
         self.search_line_edit = QgsFilterLineEdit()
         self.search_line_edit.setShowClearButton(True)
         self.search_line_edit.setShowSearchIcon(True)
+        self.search_line_edit.setPlaceholderText('Search')
         hl.addWidget(self.search_line_edit)
 
         self.show_advanced_button = QToolButton()
