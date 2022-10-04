@@ -9,7 +9,8 @@ from qgis.PyQt.QtCore import (
 )
 from qgis.PyQt.QtGui import (
     QPixmap,
-    QDesktopServices
+    QDesktopServices,
+    QPalette
 )
 from qgis.PyQt.QtWidgets import (
     QVBoxLayout,
@@ -121,6 +122,15 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         smaller_font.setPointSize(smaller_font.pointSize() - 2)
         self.button_sort_order.setFont(smaller_font)
 
+        self.label_count.setFont(smaller_font)
+        active_color = self.palette().color(QPalette.WindowText)
+        active_color.setAlphaF(0.6)
+        p = QPalette(self.palette())
+        p.setColor(QPalette.WindowText, active_color)
+        self.label_count.setPalette(p)
+
+        self._set_count_label()
+
         self.sort_menu.aboutToShow.connect(self._sort_order_menu_about_to_show)
         self._set_sort_order_button_text()
 
@@ -219,6 +229,9 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         context = self.comboContext.currentData()
 
         self.browser.populate(browser_query, context)
+
+    def _set_count_label(self):
+        self.label_count.setText('Showing {} of {} results'.format(20, 9999))
 
     def _loginChanged(self, loggedIn):
         if not loggedIn:
