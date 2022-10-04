@@ -11,6 +11,7 @@ from .data_browser import (  # NOQA
     RasterBandFilter,
     GridFilterOptions,
     CreativeCommonLicenseVersions,
-    AccessType
+    AccessType,
+    SortOrder
 )
 from .utils import ApiUtils  # NOQA

@@ -76,12 +76,26 @@ class CreativeCommonLicenseVersions(Enum):
     Version4 = 4
 
 
+class SortOrder(Enum):
+    """
+    Sorting options
+    """
+    Popularity = 1
+    RecentlyAdded = 2
+    RecentlyUpdated = 3
+    AlphabeticalAZ = 4
+    AlphabeticalZA = 5
+    Oldest = 6
+
+
 class DataBrowserQuery:
     """
     Represents a query for data browser API
     """
 
     def __init__(self):
+
+        self.order = SortOrder.Popularity
 
         self.search: Optional[str] = None
         self.starred = False
@@ -278,5 +292,18 @@ class DataBrowserQuery:
 
         # 5. If we are filtering to a geotag (presence of `geotag` query param)
         # then the query string has `geotag_boost=10` appended to it
+
+        if self.order == SortOrder.Popularity:
+            params['sort'] = 'popularity'
+        elif self.order == SortOrder.RecentlyAdded:
+            params['sort'] = 'created_at'
+        elif self.order == SortOrder.RecentlyUpdated:
+            params['sort'] = 'updated_at'
+        elif self.order == SortOrder.AlphabeticalAZ:
+            params['sort'] = 'name'
+        elif self.order == SortOrder.AlphabeticalZA:
+            params['sort'] = '-name'
+        elif self.order == SortOrder.Oldest:
+            params['sort'] = '-created_at'
 
         return params
