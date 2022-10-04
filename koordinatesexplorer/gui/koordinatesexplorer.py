@@ -1,10 +1,16 @@
 import os
 from typing import Optional
+from functools import partial
 
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import QThread
 from qgis.PyQt.QtGui import QPixmap
-from qgis.PyQt.QtWidgets import QVBoxLayout, QApplication
+from qgis.PyQt.QtWidgets import (
+    QVBoxLayout,
+    QApplication,
+    QAction,
+    QMenu
+)
 from qgis.core import (
     QgsApplication,
     Qgis,
@@ -17,7 +23,8 @@ from koordinatesexplorer.gui.datasetsbrowserwidget import DatasetsBrowserWidget
 from .filter_widget import FilterWidget
 from .gui_utils import GuiUtils
 from ..api import (
-    KoordinatesClient
+    KoordinatesClient,
+    SortOrder
 )
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
@@ -86,6 +93,27 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         self.button_starred.toggled.connect(self.filter_widget.set_starred)
         self.filter_widget.clear_all.connect(self._clear_all_filters)
 
+        self.sort_menu = QMenu(self.button_sort_order)
+        for order in (
+                SortOrder.Popularity,
+                SortOrder.RecentlyAdded,
+                SortOrder.RecentlyUpdated,
+                SortOrder.AlphabeticalAZ,
+                SortOrder.AlphabeticalZA,
+                SortOrder.Oldest):
+            action = QAction(SortOrder.to_text(order), self.sort_menu)
+            action.setData(order)
+            action.triggered.connect(partial(self._set_sort_order, order))
+            self.sort_menu.addAction(action)
+
+        self.button_sort_order.setMenu(self.sort_menu)
+        smaller_font = self.button_sort_order.font()
+        smaller_font.setPointSize(smaller_font.pointSize() - 2)
+        self.button_sort_order.setFont(smaller_font)
+
+        self.sort_menu.aboutToShow.connect(self._sort_order_menu_about_to_show)
+        self._set_sort_order_button_text()
+
         #  self.comboContext.currentIndexChanged.connect(self.filtersChanged)
 
         KoordinatesClient.instance().loginChanged.connect(self._loginChanged)
@@ -98,6 +126,35 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         Called when the filter widget Clear All action is triggered
         """
         self.button_starred.setChecked(False)
+        self.filter_widget.sort_order = SortOrder.Popularity
+        self._set_sort_order_button_text()
+
+    def _sort_order_menu_about_to_show(self):
+        """
+        Called when the sort order menu is about to show
+        """
+        for action in self.sort_menu.actions():
+            is_checked = action.data() == self.filter_widget.sort_order
+            action.setCheckable(is_checked)
+            if is_checked:
+                action.setChecked(True)
+
+    def _set_sort_order(self, order: SortOrder):
+        """
+        Triggered when the sort order is changed
+        """
+        if self.filter_widget.sort_order == order:
+            return
+
+        self.filter_widget.sort_order = order
+        self._set_sort_order_button_text()
+        self.search()
+
+    def _set_sort_order_button_text(self):
+        """
+        Sets the correct text for the sort order button
+        """
+        self.button_sort_order.setText('Sort by {}'.format(SortOrder.to_text(self.filter_widget.sort_order)))
 
     def backToBrowser(self):
         self.stackedWidget.setCurrentWidget(self.pageBrowser)
