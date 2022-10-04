@@ -46,8 +46,8 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         super(QgsDockWidget, self).__init__(iface.mainWindow())
         self.setupUi(self)
 
-        self.button_home.setIcon(GuiUtils.get_icon('home.svg'))
-        self.button_home.setToolTip('Home')
+        # self.button_home.setIcon(GuiUtils.get_icon('home.svg'))
+        # self.button_home.setToolTip('Home')
 
         self.button_starred.setIcon(GuiUtils.get_icon('star_filled.svg'))
         self.button_starred.setToolTip('Starred')
@@ -64,12 +64,12 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
         # a QToolButton with an icon will appear smaller by default vs one with text, so
         # force the advanced button to match the Clear All button size
-        for b in (self.button_home,
-                  self.button_starred,
+        for b in (self.button_starred,
                   self.button_help,
+                  # self.button_home,
                   self.button_user):
             b.setFixedHeight(self.comboContext.sizeHint().height())
-            b.setFixedWidth(self.button_home.height())
+            b.setFixedWidth(b.height())
 
         self.button_browse.setFixedHeight(self.comboContext.sizeHint().height())
 

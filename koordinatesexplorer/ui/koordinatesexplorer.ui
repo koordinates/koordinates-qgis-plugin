@@ -185,13 +185,6 @@
            </spacer>
           </item>
           <item>
-           <widget class="QToolButton" name="button_home">
-            <property name="text">
-             <string>...</string>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="QToolButton" name="button_starred">
             <property name="text">
              <string>...</string>
