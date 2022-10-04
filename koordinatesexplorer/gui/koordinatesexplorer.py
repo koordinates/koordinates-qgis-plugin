@@ -34,7 +34,6 @@ from ..api import (
 )
 
 from .country_widget import CountryWidgetAction
-from ..external import flag
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
@@ -181,7 +180,9 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         """
         Sets the correct text for the sort order button
         """
-        self.button_sort_order.setText('Sort by {}'.format(SortOrder.to_text(self.filter_widget.sort_order)))
+        self.button_sort_order.setText(
+            'Sort by {}'.format(SortOrder.to_text(self.filter_widget.sort_order))
+        )
 
     def _set_starred(self, starred: bool):
         """
@@ -205,7 +206,9 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         Called when the user menu is about to show
         """
         user = KoordinatesClient.instance().user_details()
-        self.current_user_action.setText('{} {}'.format(user.get('first_name'), user.get('last_name')).strip())
+        self.current_user_action.setText(
+            '{} {}'.format(user.get('first_name'), user.get('last_name')).strip()
+        )
 
     def backToBrowser(self):
         self.stackedWidget.setCurrentWidget(self.pageBrowser)

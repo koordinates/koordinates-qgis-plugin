@@ -19,7 +19,6 @@ Unicode country code emoji flags for Python
     'England :gb-eng: is part of the UK :GB:'
 """
 
-import sys
 import warnings
 import re
 from typing import List
