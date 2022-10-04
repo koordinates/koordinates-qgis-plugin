@@ -32,6 +32,35 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
     def __init__(self):
         super(QgsDockWidget, self).__init__(iface.mainWindow())
         self.setupUi(self)
+
+        self.button_home.setIcon(GuiUtils.get_icon('home.svg'))
+        self.button_home.setToolTip('Home')
+
+        self.button_starred.setIcon(GuiUtils.get_icon('star_filled.svg'))
+        self.button_starred.setToolTip('Starred')
+
+        self.button_browse.setText('Browse')
+        self.button_browse.setToolTip('Browse')
+
+        self.button_help.setIcon(GuiUtils.get_icon('help.svg'))
+        self.button_help.setToolTip('Help')
+
+        self.button_user.setIcon(GuiUtils.get_icon('user.svg'))
+        self.button_user.setToolTip('User')
+
+        # a QToolButton with an icon will appear smaller by default vs one with text, so
+        # force the advanced button to match the Clear All button size
+        for b in (self.button_home,
+                  self.button_starred,
+                  self.button_help,
+                  self.button_user):
+            b.setFixedHeight(self.comboContext.sizeHint().height())
+            b.setFixedWidth(self.button_home.height())
+
+        self.button_browse.setFixedHeight(self.comboContext.sizeHint().height())
+
+        self.button_starred.setCheckable(True)
+
         self.browser = DatasetsBrowserWidget()
         self.oauth: Optional[OAuthWorkflow] = None
 
@@ -54,12 +83,21 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
         self.filter_widget.filters_changed.connect(self.search)
 
+        self.button_starred.toggled.connect(self.filter_widget.set_starred)
+        self.filter_widget.clear_all.connect(self._clear_all_filters)
+
         #  self.comboContext.currentIndexChanged.connect(self.filtersChanged)
 
         KoordinatesClient.instance().loginChanged.connect(self._loginChanged)
         KoordinatesClient.instance().error_occurred.connect(self._client_error_occurred)
 
         self.setForLogin(False)
+
+    def _clear_all_filters(self):
+        """
+        Called when the filter widget Clear All action is triggered
+        """
+        self.button_starred.setChecked(False)
 
     def backToBrowser(self):
         self.stackedWidget.setCurrentWidget(self.pageBrowser)
@@ -88,7 +126,6 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
             for context in contexts:
                 self.comboContext.addItem(context.get("name", "user"), context)
             self.comboContext.setVisible(self.comboContext.count() > 1)
-            self.labelContext.setVisible(self.comboContext.count() > 1)
 
             self.filter_widget.set_logged_in(True)
 
