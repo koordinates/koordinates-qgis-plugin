@@ -119,7 +119,7 @@ class DatasetsBrowserWidget(QListWidget):
         self.setCursor(Qt.WaitCursor)
 
     def _reply_finished(self, reply: QNetworkReply):
-        if reply != self._current_reply:
+        if reply != self._current_reply or reply.error() == QNetworkReply.OperationCanceledError:
             # an old reply we don't care about anymore
             return
 
