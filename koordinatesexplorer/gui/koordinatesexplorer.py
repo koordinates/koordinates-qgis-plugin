@@ -266,6 +266,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
         self._facets = json.loads(reply.readAll().data().decode())
         self._set_count_label()
+        self.filter_widget.set_facets(self._facets)
 
     def _visible_count_changed(self, count):
         self._visible_count = count
@@ -276,9 +277,9 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
             self.label_count.setText('')
             return
 
+        # to confirm -- how should we be calculating total count??
         total = 0
         for tag in self._facets.get('has_pk', []):
-            print(tag)
             total += tag.get('total', 0)
 
         self.label_count.setText('Showing {} of {} results'.format(self._visible_count, total))

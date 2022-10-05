@@ -37,3 +37,9 @@ class FilterWidgetComboBase(CustomComboBox):
         Called when the user has logged in (or out)
         """
         pass
+
+    def set_facets(self, facets: dict):
+        """
+        Sets corresponding facets response for tweaking the widget choices
+        """
+        pass
