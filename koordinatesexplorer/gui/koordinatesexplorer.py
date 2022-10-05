@@ -55,6 +55,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         self._facets = {}
         self._current_facets_reply = None
         self._visible_count = 0
+        self._total_count = 0
 
         # self.button_home.setIcon(GuiUtils.get_icon('home.svg'))
         # self.button_home.setToolTip('Home')
@@ -88,6 +89,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
         self.browser = DatasetsBrowserWidget()
         self.browser.visible_count_changed.connect(self._visible_count_changed)
+        self.browser.total_count_changed.connect(self._total_count_changed)
         self.oauth: Optional[OAuthWorkflow] = None
 
         layout = QVBoxLayout()
@@ -266,24 +268,21 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         #            self.error_occurred.emit(request.reply().errorString())
 
         self._facets = json.loads(reply.readAll().data().decode())
-        self._set_count_label()
         self.filter_widget.set_facets(self._facets)
 
     def _visible_count_changed(self, count):
         self._visible_count = count
         self._set_count_label()
 
+    def _total_count_changed(self, count):
+        self._total_count = count
+        self._set_count_label()
+
     def _set_count_label(self):
-        if not self._facets:
-            self.label_count.setText('')
-            return
-
-        # to confirm -- how should we be calculating total count??
-        total = 0
-        for tag in self._facets.get('has_pk', []):
-            total += tag.get('total', 0)
-
-        self.label_count.setText('Showing {} of {} results'.format(self._visible_count, total))
+        if not self._total_count or not self._visible_count:
+            self.label_count.clear()
+        else:
+            self.label_count.setText('Showing {} of {} results'.format(self._visible_count, self._total_count))
 
     def _loginChanged(self, loggedIn):
         if not loggedIn:
