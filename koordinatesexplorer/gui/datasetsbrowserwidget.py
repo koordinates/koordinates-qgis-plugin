@@ -64,6 +64,7 @@ class Label(QLabel):
 
 class DatasetsBrowserWidget(QListWidget):
     datasetDetailsRequested = pyqtSignal(dict)
+    total_count_changed = pyqtSignal(int)
     visible_count_changed = pyqtSignal(int)
 
     def __init__(self):
@@ -135,6 +136,7 @@ class DatasetsBrowserWidget(QListWidget):
         datasets = json.loads(reply.readAll().data().decode())
         tokens = reply.rawHeader(b"X-Resource-Range").data().decode().split("/")
         total = tokens[-1]
+        self.total_count_changed.emit(int(total))
         last = tokens[0].split("-")[-1]
         finished = last == total
 
