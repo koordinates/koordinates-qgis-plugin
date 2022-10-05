@@ -30,7 +30,6 @@ from ..api import (
 
 
 class FilterWidget(QWidget):
-
     filters_changed = pyqtSignal()
     clear_all = pyqtSignal()
 
@@ -275,4 +274,3 @@ class FilterWidget(QWidget):
         """
         for w in self.filter_widgets:
             w.set_facets(facets)
-
