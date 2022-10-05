@@ -12,3 +12,4 @@ repository=https://github.com/koordinates/koordinates-qgis-plugin
 tracker=https://github.com/koordinates/koordinates-qgis-plugin/issues
 icon=img/koordinates.png
 category=Plugins
+plugin_dependencies=Kart
