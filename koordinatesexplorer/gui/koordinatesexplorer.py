@@ -255,7 +255,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
             partial(self._facets_reply_finished, self._current_facets_reply))
 
     def _facets_reply_finished(self, reply: QNetworkReply):
-        if reply != self._current_facets_reply:
+        if reply != self._current_facets_reply or reply.error() == QNetworkReply.OperationCanceledError:
             # an old reply we don't care about anymore
             return
 
