@@ -149,7 +149,7 @@ class DatasetsBrowserWidget(QListWidget):
 
         if not finished and not self._load_more_item:
             self._load_more_item = QListWidgetItem()
-            loadMoreWidget = LoadMoreItemWidget(self, self._current_query)
+            loadMoreWidget = LoadMoreItemWidget()
             loadMoreWidget.load_more.connect(self.load_more)
             self.addItem(self._load_more_item)
             self.setItemWidget(self._load_more_item, loadMoreWidget)
@@ -186,10 +186,8 @@ class DatasetsBrowserWidget(QListWidget):
 class LoadMoreItemWidget(QFrame):
     load_more = pyqtSignal()
 
-    def __init__(self, listWidget, query: DataBrowserQuery):
+    def __init__(self):
         QFrame.__init__(self)
-        self.listWidget = listWidget
-        self.query: DataBrowserQuery = query
         self.btnLoadMore = QToolButton()
         self.btnLoadMore.setText("Load more...")
         self.btnLoadMore.clicked.connect(self.load_more)
