@@ -72,7 +72,11 @@ class DatasetsBrowserWidget(QListWidget):
         self.itemClicked.connect(self._itemClicked)
         self.setSelectionMode(self.NoSelection)
         self.setSpacing(10)
-        self.setStyleSheet("""QListWidget{background: #E5E7E9;}""")
+
+        self.setObjectName('DatasetsBrowserWidget')
+        self.setStyleSheet('#DatasetsBrowserWidget{ border: none; }')
+        self.viewport().setStyleSheet("#qt_scrollarea_viewport{ background: transparent; }")
+
         self._current_query: Optional[DataBrowserQuery] = None
         self._current_reply: Optional[QNetworkReply] = None
         self._current_context = None
@@ -515,7 +519,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
     def leaveEvent(self, event):
         self.setStyleSheet(
-            "DatasetItemWidget{border: 0px solid black; border-radius: 15px; background: white;}"
+            "DatasetItemWidget{border: 1px solid transparent; border-radius: 15px; background: white;}"
         )
         self.hideFootprint()
 
