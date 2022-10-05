@@ -517,7 +517,11 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
     def leaveEvent(self, event):
         self.setStyleSheet(
-            "DatasetItemWidget{border: 1px solid transparent; border-radius: 15px; background: white;}"
+            """DatasetItemWidget {
+                border: 1px solid transparent;
+                border-radius: 15px;
+                background: white;
+            }"""
         )
         self.hideFootprint()
 
