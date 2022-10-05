@@ -268,3 +268,11 @@ class FilterWidget(QWidget):
     def set_logged_in(self, logged_in: bool):
         for w in self.filter_widgets:
             w.set_logged_in(logged_in)
+
+    def set_facets(self, facets: dict):
+        """
+        Sets corresponding facets response for tweaking the widget choices
+        """
+        for w in self.filter_widgets:
+            w.set_facets(facets)
+
