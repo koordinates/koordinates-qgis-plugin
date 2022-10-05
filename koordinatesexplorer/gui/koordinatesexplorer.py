@@ -282,7 +282,11 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         if not self._total_count or not self._visible_count:
             self.label_count.clear()
         else:
-            self.label_count.setText('Showing {} of {} results'.format(self._visible_count, self._total_count))
+            self.label_count.setText(
+                'Showing {} of {} results'.format(
+                    self._visible_count,
+                    self._total_count)
+            )
 
     def _loginChanged(self, loggedIn):
         if not loggedIn:
