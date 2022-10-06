@@ -4,7 +4,11 @@ from typing import Optional
 from qgis.PyQt import sip
 from qgis.PyQt.QtWidgets import QAction
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtCore import (
+    Qt,
+    QCoreApplication,
+    QEvent
+)
 
 from koordinatesexplorer.gui.koordinatesexplorer import KoordinatesExplorer
 
@@ -35,8 +39,11 @@ class KoordinatesPlugin(object):
 
     def unload(self):
         if not sip.isdeleted(self.dock):
+            self.dock.cancel_active_requests()
             self.iface.removeDockWidget(self.dock)
             self.dock.deleteLater()
         self.dock = None
 
         self.iface.removePluginMenu("Koordinates", self.explorerAction)
+
+        QCoreApplication.sendPostedEvents(None, QEvent.DeferredDelete)
