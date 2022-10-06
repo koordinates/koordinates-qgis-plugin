@@ -49,7 +49,7 @@ AUTH_CONFIG_ID = "koordinates_auth_id"
 
 class KoordinatesExplorer(QgsDockWidget, WIDGET):
     def __init__(self):
-        super(QgsDockWidget, self).__init__(iface.mainWindow())
+        super().__init__()
         self.setupUi(self)
 
         self._facets = {}
@@ -167,6 +167,18 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
         self.setForLogin(False)
 
+    def cancel_active_requests(self):
+        """
+        Cancels any active request
+        """
+        if self._current_facets_reply is not None and \
+                not sip.isdeleted(self._current_facets_reply):
+            self._current_facets_reply.abort()
+
+        self._current_facets_reply = None
+
+        self.browser.cancel_active_requests()
+
     def _clear_all_filters(self):
         """
         Called when the filter widget Clear All action is triggered
@@ -257,9 +269,15 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
             partial(self._facets_reply_finished, self._current_facets_reply))
 
     def _facets_reply_finished(self, reply: QNetworkReply):
-        if reply != self._current_facets_reply or \
-                reply.error() == QNetworkReply.OperationCanceledError:
+        if sip.isdeleted(self):
+            return
+
+        if reply != self._current_facets_reply:
             # an old reply we don't care about anymore
+            return
+
+        self._current_facets_reply = None
+        if reply.error() == QNetworkReply.OperationCanceledError:
             return
 
         if reply.error() != QNetworkReply.NoError:

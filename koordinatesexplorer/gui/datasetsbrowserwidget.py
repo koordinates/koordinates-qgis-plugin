@@ -83,6 +83,16 @@ class DatasetsBrowserWidget(QListWidget):
         self._load_more_item = None
         self._temporary_blank_items = []
 
+    def cancel_active_requests(self):
+        """
+        Cancels any active request
+        """
+        if self._current_reply is not None and \
+                not sip.isdeleted(self._current_reply):
+            self._current_reply.abort()
+
+        self._current_reply = None
+
     def _create_temporary_items_for_page(self):
         for i in range(PAGE_SIZE):
             datasetItem = QListWidgetItem()
@@ -124,8 +134,16 @@ class DatasetsBrowserWidget(QListWidget):
         self.setCursor(Qt.WaitCursor)
 
     def _reply_finished(self, reply: QNetworkReply):
-        if reply != self._current_reply or reply.error() == QNetworkReply.OperationCanceledError:
+        if sip.isdeleted(self):
+            return
+
+        if reply != self._current_reply:
             # an old reply we don't care about anymore
+            return
+
+        self._current_reply = None
+
+        if reply.error() == QNetworkReply.OperationCanceledError:
             return
 
         if reply.error() != QNetworkReply.NoError:

@@ -1,6 +1,7 @@
 import math
 from enum import Enum
 
+from qgis.PyQt import sip
 from qgis.PyQt.QtCore import (
     QSize,
     QPoint,
@@ -119,7 +120,8 @@ class CustomComboBox(QWidget):
         self._block_focus_change = 0
 
     def __del__(self):
-        self._floating_widget.deleteLater()
+        if not sip.isdeleted(self._floating_widget):
+            self._floating_widget.deleteLater()
 
     def component_for_pos(self, pos: QPoint):
         """
