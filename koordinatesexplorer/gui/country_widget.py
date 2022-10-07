@@ -8,7 +8,6 @@ from qgis.PyQt.QtCore import (
 from qgis.PyQt.QtGui import (
     QFontMetrics,
     QPainter,
-    QFontDatabase,
     QFont
 )
 from qgis.PyQt.QtWidgets import (
@@ -138,6 +137,12 @@ COUNTRY_NAMES = {'AF': 'Afghanistan',
                  'ZW': 'Zimbabwe',
                  'AX': 'Åland Islands'}
 
+STANDARD_EMOJI_FONTS = (
+    'Segoe UI Emoji',
+    'Noto Color Emoji',
+    'Apple Color Emoji'
+)
+
 
 class CountryWidget(QWidget):
     """
@@ -147,11 +152,13 @@ class CountryWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        if 'Segoe UI Emoji' in QFontDatabase().families():
-            self._emoji_font = QFont('Segoe UI Emoji')
-        elif 'Noto Color Emoji' in QFontDatabase().families():
-            self._emoji_font = QFont('Noto Color Emoji')
-        else:
+        for candidate in STANDARD_EMOJI_FONTS:
+            self._emoji_font = QFont(candidate)
+            if self._emoji_font.exactMatch():
+                break
+
+        if not self._emoji_font.exactMatch():
+            # load from the embedded Noto Emoji subset, which doesn't always work cross-platform...
             self._emoji_font = GuiUtils.get_embedded_font('NotoEmojiSubset.ttf')
 
         self._emoji_font.setPointSize(10)
