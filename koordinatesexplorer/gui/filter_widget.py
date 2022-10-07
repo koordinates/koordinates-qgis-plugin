@@ -17,7 +17,7 @@ from qgis.gui import (
 )
 
 from .access_filter_widget import AccessFilterWidget
-from .category_filter_widget import CategoryFilterWidget
+#  from .category_filter_widget import CategoryFilterWidget
 from .data_type_filter_widget import DataTypeFilterWidget
 from .date_filter_widget import DateFilterWidget
 from .gui_utils import GuiUtils
@@ -107,7 +107,7 @@ class FilterWidget(QWidget):
         filter_widget_layout_1.addWidget(self.license_widget_1, 1, 0)
         filter_widget_layout_1.addWidget(self.access_widget_1, 1, 1)
         filter_widget_layout_1.addItem(
-           QSpacerItem(0,0, QSizePolicy.Ignored, QSizePolicy.Expanding), 2, 0)
+            QSpacerItem(0, 0, QSizePolicy.Ignored, QSizePolicy.Expanding), 2, 0)
         self.filter_widget_page_non_grid.setLayout(filter_widget_layout_1)
         self.advanced_stacked_widget.addWidget(self.filter_widget_page_non_grid)
 
@@ -124,17 +124,17 @@ class FilterWidget(QWidget):
         self.advanced_stacked_widget.addWidget(self.filter_widget_page_grid)
         self.advanced_stacked_widget.setCurrentWidget(self.filter_widget_page_grid)
 
-        self.filter_widgets = (# self.category_filter_widget_1,
-                               # self.category_filter_widget_2,
-                               self.data_type_filter_widget_1,
-                               self.data_type_filter_widget_2,
-                               self.resolution_widget,
-                               self.date_filter_widget_1,
-                               self.date_filter_widget_2,
-                               self.license_widget_1,
-                               self.license_widget_2,
-                               self.access_widget_1,
-                               self.access_widget_2)
+        self.filter_widgets = (  # self.category_filter_widget_1,
+            # self.category_filter_widget_2,
+            self.data_type_filter_widget_1,
+            self.data_type_filter_widget_2,
+            self.resolution_widget,
+            self.date_filter_widget_1,
+            self.date_filter_widget_2,
+            self.license_widget_1,
+            self.license_widget_2,
+            self.access_widget_1,
+            self.access_widget_2)
 
         # changes to filter parameters are deferred to a small timeout, to avoid
         # starting lots of queries while a user is mid-operation (such as dragging a slider)
@@ -152,18 +152,18 @@ class FilterWidget(QWidget):
 
     def _current_filter_widgets(self):
         if self.advanced_stacked_widget.currentWidget() == self.filter_widget_page_non_grid:
-            return (# self.category_filter_widget_1,
-                    self.data_type_filter_widget_1,
-                    self.license_widget_1,
-                    self.date_filter_widget_1,
-                    self.access_widget_1)
+            return (  # self.category_filter_widget_1,
+                self.data_type_filter_widget_1,
+                self.license_widget_1,
+                self.date_filter_widget_1,
+                self.access_widget_1)
         else:
-            return (# self.category_filter_widget_2,
-                    self.data_type_filter_widget_2,
-                    self.resolution_widget,
-                    self.date_filter_widget_2,
-                    self.license_widget_2,
-                    self.access_widget_2)
+            return (  # self.category_filter_widget_2,
+                self.data_type_filter_widget_2,
+                self.resolution_widget,
+                self.date_filter_widget_2,
+                self.license_widget_2,
+                self.access_widget_2)
 
     def _clear_all(self):
         for w in self.filter_widgets:
