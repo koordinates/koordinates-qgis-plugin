@@ -77,7 +77,7 @@ class ResolutionFilterWidget(FilterWidgetComboBase):
             query.maximum_resolution = self.slider.upperValue()
 
     def set_from_query(self, query: DataBrowserQuery):
-        self._block_changes = True
+        self._block_changes += 1
 
         if query.minimum_resolution is not None:
             self.slider.setLowerValue(int(query.minimum_resolution))
@@ -89,4 +89,4 @@ class ResolutionFilterWidget(FilterWidgetComboBase):
             self.slider.setUpperValue(self.slider.maximum())
 
         self._update_labels()
-        self._block_changes = False
+        self._block_changes -= 1

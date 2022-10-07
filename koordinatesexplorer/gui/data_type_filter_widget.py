@@ -383,7 +383,7 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
             query.raster_filter_options.add(RasterFilterOptions.WithAlphaChannel)
 
     def set_from_query(self, query: DataBrowserQuery):
-        self._block_changes = True
+        self._block_changes += 1
 
         if query.data_types == {DataType.Vectors, DataType.Rasters, DataType.Grids}:
             self.layers_radio.setChecked(True)
@@ -437,4 +437,4 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
 
         self._update_visible_frames()
         self._update_value()
-        self._block_changes = False
+        self._block_changes -= 1

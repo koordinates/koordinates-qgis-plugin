@@ -142,7 +142,7 @@ class CategoryFilterWidget(FilterWidgetComboBase):
 
             self.category_radios.append(r)
 
-        self._block_changes = True
+        self._block_changes += 1
 
         if not prev_key:
             self.all_categories_radio.setChecked(True)
@@ -162,7 +162,7 @@ class CategoryFilterWidget(FilterWidgetComboBase):
         self._update_value()
         QCoreApplication.processEvents()
         self._update_visible_frames()
-        self._block_changes = False
+        self._block_changes -= 1
 
     def _update_visible_frames(self):
         for r in self.category_radios:
@@ -232,7 +232,7 @@ class CategoryFilterWidget(FilterWidgetComboBase):
                 query.category = key
 
     def set_from_query(self, query: DataBrowserQuery):
-        self._block_changes = True
+        self._block_changes += 1
 
         if not query.category:
             self.all_categories_radio.setChecked(True)
@@ -246,4 +246,4 @@ class CategoryFilterWidget(FilterWidgetComboBase):
 
         self._update_value()
         self._update_visible_frames()
-        self._block_changes = False
+        self._block_changes -= 1

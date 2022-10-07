@@ -128,7 +128,7 @@ class DateFilterWidget(FilterWidgetComboBase):
         self.clear()
 
     def set_published_range(self, minimum: QDate, maximum: QDate):
-        self._block_changes = True
+        self._block_changes += 1
 
         prev_min_published = self.min_published_date_edit.date()
         if prev_min_published == self.min_published_date_edit.default_date():
@@ -187,7 +187,7 @@ class DateFilterWidget(FilterWidgetComboBase):
 
         self._update_labels()
 
-        self._block_changes = False
+        self._block_changes -= 1
         if changed:
             self.changed.emit()
 
@@ -230,7 +230,7 @@ class DateFilterWidget(FilterWidgetComboBase):
         self._update_labels()
 
     def set_updated_range(self, minimum: QDate, maximum: QDate):
-        self._block_changes = True
+        self._block_changes += 1
 
         prev_min_updated = self.min_updated_date_edit.date()
         if prev_min_updated == self.min_updated_date_edit.default_date():
@@ -285,7 +285,7 @@ class DateFilterWidget(FilterWidgetComboBase):
 
         self._update_labels()
 
-        self._block_changes = False
+        self._block_changes -= 1
         if changed:
             self.changed.emit()
 
@@ -424,7 +424,7 @@ class DateFilterWidget(FilterWidgetComboBase):
             query.updated_maximum = QDateTime(self.max_updated_date_edit.date())
 
     def set_from_query(self, query: DataBrowserQuery):
-        self._block_changes = True
+        self._block_changes += 1
         if query.created_minimum is not None:
             self.min_published_date_edit.setDate(query.created_minimum.date())
         else:
@@ -446,4 +446,4 @@ class DateFilterWidget(FilterWidgetComboBase):
             self.updated_date_slider.setUpperValue(self.updated_date_slider.maximum())
 
         self._update_labels()
-        self._block_changes = False
+        self._block_changes -= 1

@@ -14,7 +14,7 @@ class FilterWidgetComboBase(CustomComboBox):
     def __init__(self, parent):
         super().__init__(parent)
         self.set_show_clear_button(True)
-        self._block_changes = False
+        self._block_changes = 0
 
         self._indent_margin = self.fontMetrics().width('xx')
 

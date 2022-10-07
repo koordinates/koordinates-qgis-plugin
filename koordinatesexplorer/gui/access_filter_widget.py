@@ -73,7 +73,7 @@ class AccessFilterWidget(FilterWidgetComboBase):
             query.access_type = AccessType.Private
 
     def set_from_query(self, query: DataBrowserQuery):
-        self._block_changes = True
+        self._block_changes += 1
 
         if query.access_type == AccessType.Public:
             self.public_radio.setChecked(True)
@@ -82,4 +82,4 @@ class AccessFilterWidget(FilterWidgetComboBase):
 
         self._update_value()
         self._update_visible_frames()
-        self._block_changes = False
+        self._block_changes -= 1
