@@ -1,15 +1,14 @@
+from qgis.PyQt.QtCore import QCoreApplication
 from qgis.PyQt.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QRadioButton,
     QButtonGroup
 )
-from qgis.PyQt.QtCore import QCoreApplication
 
 from .filter_widget_combo_base import FilterWidgetComboBase
 from ..api import (
-    DataBrowserQuery,
-    KoordinatesClient
+    DataBrowserQuery
 )
 
 
@@ -62,19 +61,19 @@ class CategoryFilterWidget(FilterWidgetComboBase):
         for c in facets.get('category', []):
             key = c['key']
             if '/' in key:
-                continue # child category
+                continue  # child category
             else:
                 c['children'] = []
                 categories.append(c)
         for c in facets.get('category', []):
             key = c['key']
             if '/' not in key:
-                continue # parent category
+                continue  # parent category
             else:
                 parent_key = key.split('/')[0]
                 parent = [p for p in categories if p['key'] == parent_key]
                 if not parent:
-                    continue # something bad!
+                    continue  # something bad!
                 parent[0]['children'].append(c)
 
         for c in categories:
@@ -98,7 +97,6 @@ class CategoryFilterWidget(FilterWidgetComboBase):
                 child_frame = QWidget()
                 child_frame_layout = QVBoxLayout()
                 child_frame_layout.setContentsMargins(self._indent_margin, 0, 0, 0)
-                show_child_frame = False
                 for child in children:
                     name = child['name']
                     label = name.replace('&', '&&')
