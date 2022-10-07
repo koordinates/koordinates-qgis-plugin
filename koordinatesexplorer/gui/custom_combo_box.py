@@ -80,8 +80,16 @@ class CustomComboBox(QWidget):
 
         def reflow(self):
             self.frame.setFixedWidth(self.anchorWidget().size().width())
+            self.frame.updateGeometry()
             self.frame.adjustSize()
+            self.updateGeometry()
             self.adjustSize()
+
+        def showEvent(self, e):
+            super().showEvent(e)
+            if not e.spontaneous():
+                self.ensurePolished()
+                self.reflow()
 
     class BoxComponent(Enum):
         DropDownButton = 1
