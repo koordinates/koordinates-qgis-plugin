@@ -1,4 +1,6 @@
+from typing import Optional
 from qgis.PyQt.QtCore import (
+    Qt,
     QDate,
     QDateTime
 )
@@ -120,17 +122,74 @@ class DateFilterWidget(FilterWidgetComboBase):
         self.min_updated_date_edit.dateChanged.connect(self._updated_min_date_changed)
         self.max_updated_date_edit.dateChanged.connect(self._updated_max_date_changed)
 
-        self.set_published_range(QDate(2020, 1, 1), QDate(2022, 9, 27))
-        self.set_updated_range(QDate(2021, 1, 1), QDate(2022, 9, 27))
+        self.set_published_range(QDate(2000, 1, 1), QDate.currentDate())
+        self.set_updated_range(QDate(2000, 1, 1), QDate.currentDate())
+
         self.clear()
 
     def set_published_range(self, minimum: QDate, maximum: QDate):
+        self._block_changes = True
+
+        prev_min_published = self.min_published_date_edit.date()
+        if prev_min_published == self.min_published_date_edit.default_date():
+            prev_min_published = None
+
+        prev_max_published = self.max_published_date_edit.date()
+        if prev_max_published == self.max_published_date_edit.default_date():
+            prev_max_published = None
+
         self.min_published_date_edit.set_default_date(minimum)
         self.max_published_date_edit.set_default_date(maximum)
 
         range_length = minimum.daysTo(maximum)
+        self._block_range_slider_updates = True
         self.published_date_slider.setRangeLimits(0, range_length)
+        self._block_range_slider_updates = False
+
+        self.min_published_date_edit.setMinimumDate(minimum)
+        self.max_published_date_edit.setMinimumDate(minimum)
+
+        if prev_min_published and prev_min_published < minimum:
+            prev_min_published = minimum
+        if prev_max_published and prev_max_published < minimum:
+            prev_max_published = minimum
+
+        self.min_published_date_edit.setMaximumDate(maximum)
+        self.max_published_date_edit.setMaximumDate(maximum)
+        if prev_min_published and prev_min_published > maximum:
+            prev_min_published = maximum
+        if prev_max_published and prev_max_published > maximum:
+            prev_max_published = maximum
+
+        changed = False
+        self._block_range_slider_updates = True
+
+        if prev_min_published and self.min_published_date_edit.date() != prev_min_published:
+            self.min_published_date_edit.setDate(prev_min_published)
+            changed = True
+        elif not prev_min_published:
+            self.min_published_date_edit.setDate(minimum)
+
+        if prev_max_published and self.max_published_date_edit.date() != prev_max_published:
+            self.max_published_date_edit.setDate(prev_max_published)
+            changed = True
+        elif not prev_max_published:
+            self.max_published_date_edit.setDate(maximum)
+
+        self._block_range_slider_updates = True
+        self.published_date_slider.setLowerValue(
+            minimum.daysTo(self.min_published_date_edit.date())
+        )
+        self.published_date_slider.setUpperValue(
+            minimum.daysTo(self.max_published_date_edit.date())
+        )
+        self._block_range_slider_updates = False
+
         self._update_labels()
+
+        self._block_changes = False
+        if changed:
+            self.changed.emit()
 
     def _published_range_slider_changed(self):
         if self._block_range_slider_updates:
@@ -171,12 +230,64 @@ class DateFilterWidget(FilterWidgetComboBase):
         self._update_labels()
 
     def set_updated_range(self, minimum: QDate, maximum: QDate):
+        self._block_changes = True
+
+        prev_min_updated = self.min_updated_date_edit.date()
+        if prev_min_updated == self.min_updated_date_edit.default_date():
+            prev_min_updated = None
+
+        prev_max_updated = self.max_updated_date_edit.date()
+        if prev_max_updated == self.max_updated_date_edit.default_date():
+            prev_max_updated = None
+
         self.min_updated_date_edit.set_default_date(minimum)
         self.max_updated_date_edit.set_default_date(maximum)
 
         range_length = minimum.daysTo(maximum)
+        self._block_range_slider_updates = True
         self.updated_date_slider.setRangeLimits(0, range_length)
+        self._block_range_slider_updates = False
+
+        self.min_updated_date_edit.setMinimumDate(minimum)
+        self.max_updated_date_edit.setMinimumDate(minimum)
+
+        if prev_min_updated and prev_min_updated < minimum:
+            prev_min_updated = minimum
+        if prev_max_updated and prev_max_updated < minimum:
+            prev_max_updated = minimum
+
+        self.min_updated_date_edit.setMaximumDate(maximum)
+        self.max_updated_date_edit.setMaximumDate(maximum)
+        if prev_min_updated and prev_min_updated > maximum:
+            prev_min_updated = maximum
+        if prev_max_updated and prev_max_updated > maximum:
+            prev_max_updated = maximum
+
+        changed = False
+        self._block_range_slider_updates = True
+
+        if prev_min_updated and self.min_updated_date_edit.date() != prev_min_updated:
+            self.min_updated_date_edit.setDate(prev_min_updated)
+            changed = True
+        elif not prev_min_updated:
+            self.min_updated_date_edit.setDate(minimum)
+
+        if prev_max_updated and self.max_updated_date_edit.date() != prev_max_updated:
+            self.max_updated_date_edit.setDate(prev_max_updated)
+            changed = True
+        elif not prev_max_updated:
+            self.max_updated_date_edit.setDate(maximum)
+
+        self._block_range_slider_updates = True
+        self.updated_date_slider.setLowerValue(minimum.daysTo(self.min_updated_date_edit.date()))
+        self.updated_date_slider.setUpperValue(minimum.daysTo(self.max_updated_date_edit.date()))
+        self._block_range_slider_updates = False
+
         self._update_labels()
+
+        self._block_changes = False
+        if changed:
+            self.changed.emit()
 
     def _updated_range_slider_changed(self):
         if self._block_range_slider_updates:
@@ -243,6 +354,44 @@ class DateFilterWidget(FilterWidgetComboBase):
         if not self._block_changes:
             self.changed.emit()
 
+    def set_facets(self, facets: dict):
+
+        def _str_to_date(val: str) -> Optional[str]:
+            if not val:
+                return None
+            return QDateTime.fromString(val, Qt.ISODate).date()
+
+        min_updated = _str_to_date(facets.get('updated_at', {}).get('min'))
+        max_updated = _str_to_date(facets.get('updated_at', {}).get('max'))
+        min_created = _str_to_date(facets.get('created_at', {}).get('min'))
+        max_created = _str_to_date(facets.get('created_at', {}).get('max'))
+
+        if min_updated and max_updated:
+            self.set_updated_range(min_updated, max_updated)
+        if min_created and max_created:
+            self.set_published_range(min_created, max_created)
+
+    def set_created_limits(self, min_date: Optional[QDate], max_date: Optional[QDate]):
+        prev_min_created = self.min_published_date_edit.date()
+        prev_max_created = self.max_published_date_edit.date()
+
+        if min_date:
+            self.min_published_date_edit.setMinimumDate(min_date)
+            self.max_published_date_edit.setMinimumDate(min_date)
+            if prev_min_created < min_date:
+                prev_min_created = min_date
+            if prev_max_created < min_date:
+                prev_max_created = min_date
+        if max_date:
+            self.min_published_date_edit.setMaximumDate(max_date)
+            self.max_published_date_edit.setMaximumDate(max_date)
+            if prev_min_created > max_date:
+                prev_min_created = max_date
+            if prev_max_created > max_date:
+                prev_max_created = max_date
+
+        self.set_published_range(prev_min_created, prev_max_created)
+
     def clear(self):
         self.updated_date_slider.setRange(
             self.updated_date_slider.minimum(),
@@ -276,7 +425,6 @@ class DateFilterWidget(FilterWidgetComboBase):
 
     def set_from_query(self, query: DataBrowserQuery):
         self._block_changes = True
-
         if query.created_minimum is not None:
             self.min_published_date_edit.setDate(query.created_minimum.date())
         else:
