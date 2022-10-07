@@ -9,7 +9,8 @@ from qgis.PyQt.QtWidgets import (
     QHBoxLayout,
     QToolButton,
     QSizePolicy,
-    QStackedWidget
+    QStackedWidget,
+    QSpacerItem
 )
 from qgis.gui import (
     QgsFilterLineEdit
@@ -78,8 +79,8 @@ class FilterWidget(QWidget):
         # Accordingly, we instead use a stacked widget with two different layouts
         # (one for grid/raster and one for all other types), and have multiple filter
         # widgets shown on the different stacked widget pages
-        self.category_filter_widget_1 = CategoryFilterWidget(self)
-        self.category_filter_widget_2 = CategoryFilterWidget(self)
+        # self.category_filter_widget_1 = CategoryFilterWidget(self)
+        # self.category_filter_widget_2 = CategoryFilterWidget(self)
         self.data_type_filter_widget_1 = DataTypeFilterWidget(self)
         self.data_type_filter_widget_2 = DataTypeFilterWidget(self)
         self.resolution_widget = ResolutionFilterWidget(self)
@@ -100,31 +101,31 @@ class FilterWidget(QWidget):
         self.filter_widget_page_non_grid = QWidget()
         filter_widget_layout_1 = QGridLayout()
         filter_widget_layout_1.setContentsMargins(0, 0, 0, 0)
-        filter_widget_layout_1.addWidget(self.category_filter_widget_1, 0, 0)
-        filter_widget_layout_1.addWidget(self.data_type_filter_widget_1, 0, 1)
-        filter_widget_layout_1.addWidget(self.date_filter_widget_1, 1, 0)
-        filter_widget_layout_1.addWidget(self.license_widget_1, 1, 1)
-        filter_widget_layout_1.addWidget(self.access_widget_1, 2, 0)
-        # filter_widget_layout_1.addItem(
-        #   QSpacerItem(1,1, QSizePolicy.Ignored, QSizePolicy.Expanding), 2,0)
+        # filter_widget_layout_1.addWidget(self.category_filter_widget_1, 0, 0)
+        filter_widget_layout_1.addWidget(self.data_type_filter_widget_1, 0, 0)
+        filter_widget_layout_1.addWidget(self.date_filter_widget_1, 0, 1)
+        filter_widget_layout_1.addWidget(self.license_widget_1, 1, 0)
+        filter_widget_layout_1.addWidget(self.access_widget_1, 1, 1)
+        filter_widget_layout_1.addItem(
+           QSpacerItem(0,0, QSizePolicy.Ignored, QSizePolicy.Expanding), 2, 0)
         self.filter_widget_page_non_grid.setLayout(filter_widget_layout_1)
         self.advanced_stacked_widget.addWidget(self.filter_widget_page_non_grid)
 
         self.filter_widget_page_grid = QWidget()
         filter_widget_layout_2 = QGridLayout()
         filter_widget_layout_2.setContentsMargins(0, 0, 0, 0)
-        filter_widget_layout_2.addWidget(self.category_filter_widget_2, 0, 0)
-        filter_widget_layout_2.addWidget(self.data_type_filter_widget_2, 0, 1)
-        filter_widget_layout_2.addWidget(self.resolution_widget, 1, 0)
-        filter_widget_layout_2.addWidget(self.date_filter_widget_2, 1, 1)
-        filter_widget_layout_2.addWidget(self.license_widget_2, 2, 0)
-        filter_widget_layout_2.addWidget(self.access_widget_2, 2, 1)
+        # filter_widget_layout_2.addWidget(self.category_filter_widget_2, 0, 0)
+        filter_widget_layout_2.addWidget(self.data_type_filter_widget_2, 0, 0)
+        filter_widget_layout_2.addWidget(self.resolution_widget, 0, 1)
+        filter_widget_layout_2.addWidget(self.date_filter_widget_2, 1, 0)
+        filter_widget_layout_2.addWidget(self.license_widget_2, 1, 1)
+        filter_widget_layout_2.addWidget(self.access_widget_2, 2, 0)
         self.filter_widget_page_grid.setLayout(filter_widget_layout_2)
         self.advanced_stacked_widget.addWidget(self.filter_widget_page_grid)
         self.advanced_stacked_widget.setCurrentWidget(self.filter_widget_page_grid)
 
-        self.filter_widgets = (self.category_filter_widget_1,
-                               self.category_filter_widget_2,
+        self.filter_widgets = (# self.category_filter_widget_1,
+                               # self.category_filter_widget_2,
                                self.data_type_filter_widget_1,
                                self.data_type_filter_widget_2,
                                self.resolution_widget,
@@ -151,13 +152,13 @@ class FilterWidget(QWidget):
 
     def _current_filter_widgets(self):
         if self.advanced_stacked_widget.currentWidget() == self.filter_widget_page_non_grid:
-            return (self.category_filter_widget_1,
+            return (# self.category_filter_widget_1,
                     self.data_type_filter_widget_1,
                     self.license_widget_1,
                     self.date_filter_widget_1,
                     self.access_widget_1)
         else:
-            return (self.category_filter_widget_2,
+            return (# self.category_filter_widget_2,
                     self.data_type_filter_widget_2,
                     self.resolution_widget,
                     self.date_filter_widget_2,
@@ -209,7 +210,7 @@ class FilterWidget(QWidget):
                 current_query = self.build_query()
                 self.advanced_stacked_widget.setCurrentWidget(self.filter_widget_page_grid)
                 for w in (self.data_type_filter_widget_2,
-                          self.category_filter_widget_2,
+                          # self.category_filter_widget_2,
                           self.resolution_widget,
                           self.date_filter_widget_2,
                           self.license_widget_2,
@@ -219,7 +220,7 @@ class FilterWidget(QWidget):
                         self.data_type_filter_widget_1.is_expanded():
                     self.data_type_filter_widget_2.expand()
                 for w in (self.data_type_filter_widget_1,
-                          self.category_filter_widget_1,
+                          # self.category_filter_widget_1,
                           self.date_filter_widget_1,
                           self.license_widget_1,
                           self.access_widget_1):
@@ -229,7 +230,7 @@ class FilterWidget(QWidget):
                 current_query = self.build_query()
                 self.advanced_stacked_widget.setCurrentWidget(self.filter_widget_page_non_grid)
                 for w in (self.data_type_filter_widget_1,
-                          self.category_filter_widget_1,
+                          # self.category_filter_widget_1,
                           self.license_widget_1,
                           self.date_filter_widget_1,
                           self.access_widget_1):
@@ -238,7 +239,7 @@ class FilterWidget(QWidget):
                         self.data_type_filter_widget_2.is_expanded():
                     self.data_type_filter_widget_1.expand()
                 for w in (self.data_type_filter_widget_2,
-                          self.category_filter_widget_2,
+                          # self.category_filter_widget_2,
                           self.resolution_widget,
                           self.date_filter_widget_2,
                           self.license_widget_2,
