@@ -58,8 +58,10 @@ class CategoryFilterWidget(FilterWidgetComboBase):
         self.category_radios = []
 
         categories = []
+        new_keys = set()
         for c in facets.get('category', []):
             key = c['key']
+            new_keys.add(key)
             if '/' in key:
                 continue  # child category
             else:
@@ -75,6 +77,20 @@ class CategoryFilterWidget(FilterWidgetComboBase):
                 if not parent:
                     continue  # something bad!
                 parent[0]['children'].append(c)
+
+        if prev_key and prev_key not in new_keys:
+            # when a facet response doesn't include the current key, we still
+            # force show it to avoid removing a previously set filter
+            label = prev_name.replace('&', '&&')
+            r = QRadioButton(label)
+            r._key = prev_key
+            r._name = prev_name
+            r._child_frame = None
+            r._child_group = None
+            r.setChecked(True)
+            self.drop_down_widget.layout().addWidget(r)
+            self.category_group.addButton(r)
+            self.category_radios.append(r)
 
         for c in categories:
             name = c['name']
