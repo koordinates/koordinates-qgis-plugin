@@ -4,6 +4,7 @@ from qgis.PyQt.QtWidgets import (
     QRadioButton,
     QButtonGroup
 )
+from qgis.PyQt.QtCore import QCoreApplication
 
 from .filter_widget_combo_base import FilterWidgetComboBase
 from ..api import (
@@ -36,18 +37,47 @@ class CategoryFilterWidget(FilterWidgetComboBase):
         self.category_group.buttonClicked.connect(self._update_value)
         self.category_group.buttonClicked.connect(self._update_visible_frames)
 
+        self.current_categories = set()
         self.clear()
 
-    def set_logged_in(self, logged_in: bool):
-        if not logged_in:
+    def set_facets(self, facets: dict):
+        new_categories = set(c['key'] for c in facets.get('category'))
+        if new_categories == self.current_categories:
+            # no change, do nothing
             return
 
+        self.current_categories = new_categories
+
+        prev_key, prev_name = self._get_current_category()
+
         for w in self.category_radios:
+            if hasattr(w, '_child_frame') and w._child_frame is not None:
+                w._child_frame.deleteLater()
+
             w.deleteLater()
 
         self.category_radios = []
 
-        for c in KoordinatesClient.instance().categories():
+        categories = []
+        for c in facets.get('category', []):
+            key = c['key']
+            if '/' in key:
+                continue # child category
+            else:
+                c['children'] = []
+                categories.append(c)
+        for c in facets.get('category', []):
+            key = c['key']
+            if '/' not in key:
+                continue # parent category
+            else:
+                parent_key = key.split('/')[0]
+                parent = [p for p in categories if p['key'] == parent_key]
+                if not parent:
+                    continue # something bad!
+                parent[0]['children'].append(c)
+
+        for c in categories:
             name = c['name']
             label = name.replace('&', '&&')
             r = QRadioButton(label)
@@ -59,12 +89,16 @@ class CategoryFilterWidget(FilterWidgetComboBase):
             self.drop_down_widget.layout().addWidget(r)
             self.category_group.addButton(r)
 
+            if prev_key == r._key:
+                r.setChecked(True)
+
             children = c.get("children", [])
             if children:
                 child_group = QButtonGroup()
                 child_frame = QWidget()
                 child_frame_layout = QVBoxLayout()
                 child_frame_layout.setContentsMargins(self._indent_margin, 0, 0, 0)
+                show_child_frame = False
                 for child in children:
                     name = child['name']
                     label = name.replace('&', '&&')
@@ -77,6 +111,10 @@ class CategoryFilterWidget(FilterWidgetComboBase):
                     child_group.addButton(r_child)
                     self.category_radios.append(r_child)
 
+                    if prev_key == r_child._key:
+                        r_child.setChecked(True)
+                        r.setChecked(True)
+
                 child_frame.setLayout(child_frame_layout)
                 r._child_frame = child_frame
                 r._child_group = child_group
@@ -84,13 +122,33 @@ class CategoryFilterWidget(FilterWidgetComboBase):
                 child_group.buttonClicked.connect(self._update_value)
                 child_group.buttonClicked.connect(self._update_visible_frames)
 
-                child_frame.hide()
+                if not r.isChecked():
+                    child_frame.hide()
                 self.drop_down_widget.layout().addWidget(child_frame)
 
             self.category_radios.append(r)
 
-        self.drop_down_widget.adjustSize()
-        self._floating_widget.reflow()
+        self._block_changes = True
+
+        if not prev_key:
+            self.all_categories_radio.setChecked(True)
+        else:
+            found = False
+            for r in self.category_radios:
+                if prev_key == r._key:
+                    found = True
+                    r.setChecked(True)
+                    if hasattr(r, '_parent_radio') and r._parent_radio is not None:
+                        r._parent_radio.setChecked(True)
+                    break
+            if not found:
+                self.all_categories_radio.setChecked(True)
+                self.changed.emit()
+
+        self._update_value()
+        QCoreApplication.processEvents()
+        self._update_visible_frames()
+        self._block_changes = False
 
     def _update_visible_frames(self):
         for r in self.category_radios:
