@@ -139,7 +139,7 @@ class LicenseFilterWidget(FilterWidgetComboBase):
             query.cc_license_versions.add(CreativeCommonLicenseVersions.Version4)
 
     def set_from_query(self, query: DataBrowserQuery):
-        self._block_changes = True
+        self._block_changes += 1
 
         if query.cc_license_changes_must_be_shared:
             self.changes_need_to_be_shared_radio.setChecked(True)
@@ -163,4 +163,4 @@ class LicenseFilterWidget(FilterWidgetComboBase):
 
         self._update_value()
         self._update_visible_frames()
-        self._block_changes = False
+        self._block_changes -= 1
