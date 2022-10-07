@@ -333,8 +333,8 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
             self.stackedWidget.setCurrentWidget(self.pageAuth)
 
     def loginClicked(self):
-        key = self.retrieveApiKey()
-        if key:
+        key = self.retrieve_api_key()
+        if key is not None:
             self._authFinished(key)
         else:
             self.labelWaiting.setText("Waiting for OAuth authentication response...")
@@ -359,7 +359,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         QApplication.processEvents()
         try:
             KoordinatesClient.instance().login(apiKey)
-            self.storeApiKey()
+            self.store_api_key()
             self.labelWaiting.setVisible(False)
         except FileExistsError:
             iface.messageBar().pushMessage(
@@ -391,18 +391,34 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         """
         KoordinatesClient.instance().logout()
 
-    def storeApiKey(self):
+    def store_api_key(self) -> bool:
+        """
+        Stores the API key in the secure QGIS password store, IF available
+
+        Returns True if the key could be stored
+        """
+        if not QgsApplication.authManager().masterPasswordHashInDatabase():
+            return False
+
         key = KoordinatesClient.instance().apiKey
         QgsApplication.authManager().storeAuthSetting(AUTH_CONFIG_ID, key, True)
 
-    def retrieveApiKey(self):
-        apiKey = (
+    def retrieve_api_key(self) -> Optional[str]:
+        """
+        Retrieves a previously stored API key, if available
+
+        Returns None if no stored key is available
+        """
+        if not QgsApplication.authManager().masterPasswordHashInDatabase():
+            return None
+
+        api_key = (
                 QgsApplication.authManager().authSetting(
                     AUTH_CONFIG_ID, defaultValue="", decrypt=True
                 )
-                or ""
+                or None
         )
-        return apiKey
+        return api_key
 
     def removeApiKey(self):
         QgsApplication.authManager().removeAuthSetting(AUTH_CONFIG_ID)
