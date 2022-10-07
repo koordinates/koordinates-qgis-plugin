@@ -147,33 +147,35 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
 
         self.set_contents_widget(self.drop_down_widget)
 
+        self.type_radios = (
+            self.layers_radio,
+            self.vector_radio,
+            self.raster_radio,
+            self.aerial_radio,
+            self.not_aerial_radio,
+            self.band_radio,
+            self.rgb_radio,
+            self.grayscale_radio,
+            self.grid_radio,
+            self.table_radio,
+            self.set_radio,
+            self.data_repository_radio,
+            self.document_radio
+        )
+
         self.data_type_group = QButtonGroup(self)
-        self.data_type_group.addButton(self.layers_radio)
-        self.data_type_group.addButton(self.vector_radio)
-        self.data_type_group.addButton(self.raster_radio)
-        self.data_type_group.addButton(self.aerial_radio)
-        self.data_type_group.addButton(self.not_aerial_radio)
-        self.data_type_group.addButton(self.band_radio)
-        self.data_type_group.addButton(self.grid_radio)
-        self.data_type_group.addButton(self.table_radio)
-        self.data_type_group.addButton(self.set_radio)
-        self.data_type_group.addButton(self.data_repository_radio)
-        self.data_type_group.addButton(self.document_radio)
+        for radio in self.type_radios:
+            self.data_type_group.addButton(radio)
+        self.data_type_group.setExclusive(False)
 
-        self.band_group = QButtonGroup(self)
-        self.band_group.addButton(self.rgb_radio)
-        self.band_group.addButton(self.grayscale_radio)
-
-        self.data_type_group.buttonClicked.connect(self._update_visible_frames)
+        self.data_type_group.buttonClicked.connect(self._type_group_member_clicked)
         self._enforce_geometry_type_constraints()
         self.rgb_radio.setChecked(True)
         self.layers_radio.setChecked(True)
 
-        self.data_type_group.buttonClicked.connect(self._update_value)
         self.band_radio.toggled.connect(self._update_value)
         self.alpha_channel_checkbox.toggled.connect(self._update_value)
         self.multi_attribute_grids_only_checkbox.toggled.connect(self._update_value)
-        self.band_group.buttonClicked.connect(self._update_value)
         self.table_has_pk_checkbox.toggled.connect(self._update_value)
         self.point_checkbox.toggled.connect(self._update_value)
         self.line_checkbox.toggled.connect(self._update_value)
@@ -182,6 +184,35 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
         self.vector_has_primary_key_checkbox.toggled.connect(self._update_value)
 
         self.clear()
+
+    def _type_group_member_clicked(self, clicked_button):
+        self._block_changes += 1
+        for radio in self.type_radios:
+            if radio.isChecked() and radio != clicked_button:
+                radio.setChecked(False)
+
+        if clicked_button in (self.aerial_radio,
+                              self.not_aerial_radio,
+                              self.band_radio,
+                              self.rgb_radio,
+                              self.grayscale_radio):
+            self.raster_radio.setChecked(True)
+
+        if clicked_button in (self.rgb_radio,
+                              self.grayscale_radio):
+            self.band_radio.setChecked(clicked_button.isChecked())
+
+        if clicked_button == self.band_radio and \
+                not self.grayscale_radio.isChecked() and \
+                not self.rgb_radio.isChecked():
+            self.rgb_radio.setChecked(True)
+
+        if not any(radio.isChecked() for radio in self.type_radios):
+            self.layers_radio.setChecked(True)
+
+        self._block_changes -= 1
+        self._update_visible_frames()
+        self._update_value()
 
     def _update_visible_frames(self):
         self.vector_frame.setVisible(self.vector_radio.isChecked())
@@ -253,7 +284,8 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
             if options:
                 text = '{}: {}'.format(text, ', '.join(options))
 
-        elif self.raster_radio.isChecked():
+        elif self.raster_radio.isChecked() and not self.aerial_radio.isChecked() and \
+                not self.not_aerial_radio.isChecked() and not self.band_radio.isChecked():
             if self.alpha_channel_checkbox.isChecked():
                 text = 'Raster: Alpha'
             else:
@@ -349,7 +381,8 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
             if self.vector_has_primary_key_checkbox.isChecked():
                 query.vector_filters.add(VectorFilter.HasPrimaryKey)
 
-        elif self.raster_radio.isChecked():
+        elif self.raster_radio.isChecked() and not self.aerial_radio.isChecked() and \
+                not self.not_aerial_radio.isChecked() and not self.band_radio.isChecked():
             query.data_types = {DataType.Rasters}
         elif self.aerial_radio.isChecked():
             query.data_types = {DataType.Rasters}
@@ -385,10 +418,11 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
     def set_from_query(self, query: DataBrowserQuery):
         self._block_changes += 1
 
+        type_radio = None
         if query.data_types == {DataType.Vectors, DataType.Rasters, DataType.Grids}:
-            self.layers_radio.setChecked(True)
+            type_radio = self.layers_radio
         elif query.data_types == {DataType.Vectors}:
-            self.vector_radio.setChecked(True)
+            type_radio = self.vector_radio
             if not query.vector_filters:
                 self.point_checkbox.setChecked(True)
                 self.line_checkbox.setChecked(True)
@@ -403,7 +437,7 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
                 VectorFilter.HasPrimaryKey in query.vector_filters
             )
         elif query.data_types == {DataType.Rasters}:
-            self.raster_radio.setChecked(True)
+            type_radio = self.raster_radio
             if RasterFilter.AerialSatellitePhotos in query.raster_filters:
                 self.aerial_radio.setChecked(True)
             if RasterFilter.NotAerialSatellitePhotos in query.raster_filters:
@@ -415,25 +449,28 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
                 if RasterBandFilter.BlackAndWhite in query.raster_band_filters:
                     self.grayscale_radio.setChecked(True)
         elif query.data_types == {DataType.Grids}:
-            self.grid_radio.setChecked(True)
+            type_radio = self.grid_radio
             self.multi_attribute_grids_only_checkbox.setChecked(
                 GridFilterOptions.MultiAttributeGridsOnly in query.grid_filter_options)
         elif query.data_types == {DataType.Tables}:
-            self.table_radio.setChecked(True)
+            type_radio = self.table_radio
             self.table_has_pk_checkbox.setChecked(
                 VectorFilter.HasPrimaryKey in query.vector_filters
             )
         elif query.data_types == {DataType.Sets}:
-            self.set_radio.setChecked(True)
+            type_radio = self.set_radio
         elif query.data_types == {DataType.Repositories}:
-            self.data_repository_radio.setChecked(True)
+            type_radio = self.data_repository_radio
         elif query.data_types == {DataType.Documents}:
-            self.document_radio.setChecked(True)
+            type_radio = self.document_radio
 
         if DataType.Rasters in query.data_types:
             self.alpha_channel_checkbox.setChecked(
                 RasterFilterOptions.WithAlphaChannel in query.raster_filter_options
             )
+
+        for radio in self.type_radios:
+            radio.setChecked(radio == type_radio)
 
         self._update_visible_frames()
         self._update_value()
