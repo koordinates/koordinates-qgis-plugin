@@ -330,6 +330,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
             self.search()
         else:
             self.labelWaiting.setVisible(False)
+            self.btnLogin.setEnabled(True)
             self.stackedWidget.setCurrentWidget(self.pageAuth)
 
     def loginClicked(self):
@@ -339,6 +340,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         else:
             self.labelWaiting.setText("Waiting for OAuth authentication response...")
             self.labelWaiting.setVisible(True)
+            self.btnLogin.setEnabled(False)
             QApplication.processEvents()
             self.oauth = OAuthWorkflow()
 
@@ -356,11 +358,13 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
         self.labelWaiting.setText("Logging in and retrieving datasets...")
         self.labelWaiting.setVisible(True)
+        self.btnLogin.setEnabled(False)
         QApplication.processEvents()
         try:
             KoordinatesClient.instance().login(apiKey)
             self.store_api_key()
             self.labelWaiting.setVisible(False)
+            self.btnLogin.setEnabled(True)
         except FileExistsError:
             iface.messageBar().pushMessage(
                 "Could not log in. Check your connection and your API Key value",
@@ -368,9 +372,11 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
                 duration=5,
             )
             self.labelWaiting.setVisible(False)
+            self.btnLogin.setEnabled(True)
 
     def _auth_error_occurred(self, error: str):
         self.labelWaiting.setVisible(False)
+        self.btnLogin.setEnabled(True)
         iface.messageBar().pushMessage(
             "Authorization failed: {}".format(error),
             Qgis.Warning,
@@ -379,6 +385,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
     def _client_error_occurred(self, error: str):
         self.labelWaiting.setVisible(False)
+        self.btnLogin.setEnabled(True)
         iface.messageBar().pushMessage(
             "Request failed: {}".format(error),
             Qgis.Warning,
