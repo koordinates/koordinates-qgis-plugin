@@ -102,7 +102,7 @@ class ExtentSelectionPanel(QWidget, WIDGET):
         if self.combo_mode.currentData() == ExtentSelectionPanel.MODE_CANVAS:
             return self.canvas_extent()
         elif self.combo_mode.currentData() == ExtentSelectionPanel.MODE_SELECT:
-            return QgsReferencedRectangle(self._custom_extent)
+            return self._custom_extent
         elif self.combo_mode.currentData() == ExtentSelectionPanel.MODE_LAYER:
             return QgsReferencedRectangle(self.layer_combo.currentLayer().extent(),
                                           self.layer_combo.currentLayer().crs())
