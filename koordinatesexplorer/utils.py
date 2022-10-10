@@ -1,4 +1,4 @@
-from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtCore import Qt, QEventLoop
 from qgis.PyQt.QtWidgets import QApplication
 
 
@@ -27,26 +27,47 @@ def cloneKartRepo(url, username, password, parent):
     kart_plugin = qgis.utils.plugins["kart"]
 
     try:
-        from kart.gui.clonedialog import CloneDialog
+        from .gui.clonedialog import CloneDialog
         from kart.kartapi import Repository
 
         dialog = CloneDialog(parent)
-        dialog.setSrc(url)
-        dialog.setCredentials(username, password)
         dialog.show()
-        ret = dialog.exec_()
-        if ret == dialog.Accepted:
+        el = QEventLoop()
+
+        cloneKartRepo.was_accepted = False
+
+        def on_accept():
+            el.quit()
+            cloneKartRepo.was_accepted = True
+
+        def on_reject():
+            el.quit()
+
+        dialog.clone.connect(on_accept)
+        dialog.was_canceled.connect(on_reject)
+
+        el.exec_()
+
+        if cloneKartRepo.was_accepted:
+            extent = dialog.extent()
+            destination = dialog.destination()
+            location = dialog.location()
+            dialog.deleteLater()
+            del dialog
+
             repo = Repository.clone(
-                dialog.src,
-                dialog.dst,
-                location=dialog.location,
-                extent=dialog.extent,
-                username=dialog.username,
-                password=dialog.password,
+                url,
+                destination,
+                location=location,
+                extent=extent,
+                username=username,
+                password=password,
             )
             kart_plugin.dock.reposItem.addRepoToUI(repo)
             return True
         else:
+            dialog.deleteLater()
             return False
+
     except ImportError:
         raise KartNotInstalledException()
