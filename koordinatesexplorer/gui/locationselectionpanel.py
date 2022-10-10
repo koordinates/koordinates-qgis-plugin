@@ -27,7 +27,7 @@ class LocationSelectionPanel(QWidget, WIDGET):
         else:
             self.type_label = None
 
-        self.grpPostgis.setVisible(False)
+        self.comboChanged(0)
         self.comboStorageType.currentIndexChanged.connect(self.comboChanged)
 
     def comboChanged(self, idx):

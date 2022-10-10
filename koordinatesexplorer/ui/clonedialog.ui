@@ -15,17 +15,10 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,1">
    <item>
-    <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,1,0,1">
+    <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0,0,0">
      <property name="bottomMargin">
       <number>0</number>
      </property>
-     <item row="3" column="1" rowspan="2">
-      <widget class="QWidget" name="extent_widget_frame" native="true">
-       <property name="focusPolicy">
-        <enum>Qt::StrongFocus</enum>
-       </property>
-      </widget>
-     </item>
      <item row="0" column="1">
       <widget class="QWidget" name="folder_widget_frame" native="true">
        <property name="focusPolicy">
@@ -33,10 +26,10 @@
        </property>
       </widget>
      </item>
-     <item row="3" column="0">
-      <widget class="QCheckBox" name="check_spatial_filter">
-       <property name="text">
-        <string>Spatial filter</string>
+     <item row="3" column="1" rowspan="2">
+      <widget class="QWidget" name="extent_widget_frame" native="true">
+       <property name="focusPolicy">
+        <enum>Qt::StrongFocus</enum>
        </property>
       </widget>
      </item>
@@ -54,7 +47,14 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="0">
+     <item row="3" column="0">
+      <widget class="QCheckBox" name="check_spatial_filter">
+       <property name="text">
+        <string>Spatial filter</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0" rowspan="2">
       <widget class="QLabel" name="label_storage_type">
        <property name="text">
         <string>Storage type</string>

@@ -81,6 +81,7 @@ class CloneDialog(QDialog, WIDGET):
         extent_layout.setContentsMargins(0, 0, 0, 0)
         extent_layout.addWidget(self.extentPanel)
         self.extent_widget_frame.setLayout(extent_layout)
+        self.extent_widget_frame.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
 
         self.check_spatial_filter.toggled.connect(self.extentPanel.setEnabled)
 
@@ -89,9 +90,8 @@ class CloneDialog(QDialog, WIDGET):
         location_layout = QVBoxLayout()
         location_layout.setContentsMargins(0, 0, 0, 0)
         location_layout.addWidget(self.locationPanel)
-        location_layout.addStretch(1)
+        self.location_widget_frame.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         self.location_widget_frame.setLayout(location_layout)
-        self.label_storage_type.setFixedHeight(self.check_spatial_filter.sizeHint().height())
 
     def reject(self):
         self.was_canceled.emit()
