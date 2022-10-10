@@ -11,8 +11,7 @@ from qgis.PyQt.QtCore import (
 from qgis.PyQt.QtGui import (
     QPalette,
     QIcon,
-    QPainter,
-    QGuiApplication
+    QPainter
 )
 from qgis.PyQt.QtWidgets import (
     QWidget,
@@ -191,7 +190,7 @@ class CustomComboBox(QWidget):
             else:
                 try:
                     parent = parent.parent()
-                except:
+                except:  # noqa: E722
                     parent = None
 
         if not parent and new != self:
