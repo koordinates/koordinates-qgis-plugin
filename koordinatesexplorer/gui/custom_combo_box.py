@@ -11,7 +11,8 @@ from qgis.PyQt.QtCore import (
 from qgis.PyQt.QtGui import (
     QPalette,
     QIcon,
-    QPainter
+    QPainter,
+    QGuiApplication
 )
 from qgis.PyQt.QtWidgets import (
     QWidget,
@@ -29,8 +30,7 @@ from qgis.core import (
     QgsApplication
 )
 from qgis.gui import (
-    QgsFloatingWidget,
-    QgsFocusWatcher
+    QgsFloatingWidget
 )
 
 
@@ -124,8 +124,9 @@ class CustomComboBox(QWidget):
 
         self._floating_widget.hide()
 
-        self._focus_watcher = None
         self._block_focus_change = 0
+
+        QApplication.instance().focusChanged.connect(self._on_focus_change)
 
     def __del__(self):
         if not sip.isdeleted(self._floating_widget):
@@ -179,45 +180,22 @@ class CustomComboBox(QWidget):
         super().leaveEvent(event)
         self.update()
 
-    def _handle_focus_change(self):
-        if self._focus_watcher:
-            self._focus_watcher.deleteLater()
-            self._focus_watcher = None
-
-        new_focus_widget = QApplication.focusWidget()
-        if not new_focus_widget:
+    def _on_focus_change(self, old, new):
+        if not self._floating_widget.isVisible():
             return
 
-        try:
-            parent = new_focus_widget.parent()
-            while parent:
-                if parent == self._floating_widget:
-                    break
-                else:
-                    parent = parent.parent()
-
-            if not parent and new_focus_widget != self:
-                self._floating_widget.hide()
+        parent = new
+        while parent:
+            if parent == self._floating_widget:
+                break
             else:
-                self._focus_watcher = QgsFocusWatcher(new_focus_widget)
-                self._focus_watcher.focusChanged.connect(self._focus_widget_changed)
+                try:
+                    parent = parent.parent()
+                except:
+                    parent = None
 
-        except TypeError:
-            return
-
-    def focusOutEvent(self, event):
-        super().focusOutEvent(event)
-        self._block_focus_change += 1
-        self._handle_focus_change()
-        self._block_focus_change -= 1
-
-    def _focus_widget_changed(self, focused):
-        if focused:
-            return
-
-        if self._block_focus_change:
-            return
-        self._handle_focus_change()
+        if not parent and new != self:
+            self._floating_widget.hide()
 
     def mousePressEvent(self, event):
         component = self.component_for_pos(event.pos())

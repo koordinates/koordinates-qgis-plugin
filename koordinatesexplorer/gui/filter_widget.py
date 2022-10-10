@@ -203,6 +203,9 @@ class FilterWidget(QWidget):
         # starting lots of queries while a user is mid-operation (such as dragging a slider)
         self._update_query_timeout.start(500)
 
+        data_type_popup_previously_open = self.data_type_filter_widget().is_expanded()
+        widget_to_expand = None
+
         selected_data_types = self.data_type_filter_widget().data_types()
 
         if DataType.Rasters in selected_data_types or DataType.Grids in selected_data_types:
@@ -216,9 +219,8 @@ class FilterWidget(QWidget):
                           self.license_widget_2,
                           self.access_widget_2):
                     w.set_from_query(current_query)
-                if self.sender() == self.data_type_filter_widget_1 and \
-                        self.data_type_filter_widget_1.is_expanded():
-                    self.data_type_filter_widget_2.expand()
+                if data_type_popup_previously_open:
+                    widget_to_expand = self.data_type_filter_widget_2
                 for w in (self.data_type_filter_widget_1,
                           # self.category_filter_widget_1,
                           self.date_filter_widget_1,
@@ -235,9 +237,8 @@ class FilterWidget(QWidget):
                           self.date_filter_widget_1,
                           self.access_widget_1):
                     w.set_from_query(current_query)
-                if self.sender() == self.data_type_filter_widget_2 and \
-                        self.data_type_filter_widget_2.is_expanded():
-                    self.data_type_filter_widget_1.expand()
+                if data_type_popup_previously_open:
+                    widget_to_expand = self.data_type_filter_widget_1
                 for w in (self.data_type_filter_widget_2,
                           # self.category_filter_widget_2,
                           self.resolution_widget,
@@ -245,6 +246,9 @@ class FilterWidget(QWidget):
                           self.license_widget_2,
                           self.access_widget_2):
                     w.collapse()
+
+        if widget_to_expand:
+            widget_to_expand.expand()
 
     def build_query(self) -> DataBrowserQuery:
         """
