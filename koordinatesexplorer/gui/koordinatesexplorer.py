@@ -19,7 +19,8 @@ from qgis.PyQt.QtWidgets import (
     QVBoxLayout,
     QApplication,
     QAction,
-    QMenu
+    QMenu,
+    QLabel
 )
 from qgis.core import (
     QgsApplication,
@@ -60,6 +61,9 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         # self.button_home.setIcon(GuiUtils.get_icon('home.svg'))
         # self.button_home.setToolTip('Home')
 
+        label = QLabel()
+        default_font = label.font()
+
         self.button_starred.setIcon(GuiUtils.get_icon('star_filled.svg'))
         self.button_starred.setToolTip('Starred')
         self.button_starred.setCheckable(True)
@@ -68,6 +72,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         self.button_browse.setToolTip('Browse')
         self.button_browse.setCheckable(True)
         self.button_browse.setChecked(True)
+        self.button_browse.setFont(default_font)
 
         self.button_help.setIcon(GuiUtils.get_icon('help.svg'))
         self.button_help.setToolTip('Help')

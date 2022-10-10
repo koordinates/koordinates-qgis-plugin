@@ -10,7 +10,8 @@ from qgis.PyQt.QtWidgets import (
     QToolButton,
     QSizePolicy,
     QStackedWidget,
-    QSpacerItem
+    QSpacerItem,
+    QLabel
 )
 from qgis.gui import (
     QgsFilterLineEdit
@@ -66,6 +67,10 @@ class FilterWidget(QWidget):
         self.clear_all_button = QToolButton()
         self.clear_all_button.setText('Clear All')
         self.clear_all_button.clicked.connect(self._clear_all)
+        label = QLabel()
+        default_font = label.font()
+        self.clear_all_button.setFont(default_font)
+
         # a QToolButton with an icon will appear smaller by default vs one with text, so
         # force the advanced button to match the Clear All button size
         self.show_advanced_button.setFixedHeight(self.clear_all_button.sizeHint().height())
