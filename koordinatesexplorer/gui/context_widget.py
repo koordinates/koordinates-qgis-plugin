@@ -126,9 +126,14 @@ class ContextItem(QFrame):
         back_color = '#ffffff'
         if self._selected:
             back_color = '#f5f5f7'
-            self.checked_label.setText('✔')
+            self.checked_label.setPixmap(
+                QPixmap.fromImage(
+                    GuiUtils.get_svg_as_image(
+                        'tick.svg', 16, 16
+                    ))
+            )
         else:
-            self.checked_label.setText('')
+            self.checked_label.setPixmap(QPixmap())
 
         self.setStyleSheet(
             """
