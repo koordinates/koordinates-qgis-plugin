@@ -235,9 +235,6 @@
             <property name="autoRaise">
              <bool>true</bool>
             </property>
-            <property name="arrowType">
-             <enum>Qt::DownArrow</enum>
-            </property>
            </widget>
           </item>
          </layout>
