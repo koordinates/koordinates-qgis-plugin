@@ -15,7 +15,8 @@ from qgis.PyQt.QtGui import (
     QPainter,
     QPainterPath,
     QImage,
-    QBrush
+    QBrush,
+    QFontMetrics
 )
 from qgis.PyQt.QtNetwork import QNetworkReply
 from qgis.PyQt.QtWidgets import (
@@ -81,6 +82,7 @@ class DatasetsBrowserWidget(QListWidget):
         self._current_reply: Optional[QNetworkReply] = None
         self._current_context = None
         self._load_more_item = None
+        self._no_records_item = None
         self._temporary_blank_items = []
 
     def cancel_active_requests(self):
@@ -108,6 +110,7 @@ class DatasetsBrowserWidget(QListWidget):
         self._create_temporary_items_for_page()
 
         self._load_more_item = None
+        self._no_records_item = None
 
         self.visible_count_changed.emit(-1)
         self._fetch_records(query, context)
@@ -176,6 +179,16 @@ class DatasetsBrowserWidget(QListWidget):
             self.takeItem(self.row(self._load_more_item))
             self._load_more_item = None
 
+        if total == '0' and not self._no_records_item:
+            self._no_records_item = QListWidgetItem()
+            no_records_widget = NoRecordsItemWidget()
+            self.addItem(self._no_records_item)
+            self.setItemWidget(self._no_records_item, no_records_widget)
+            self._no_records_item.setSizeHint(no_records_widget.sizeHint())
+        elif total != '0' and self._no_records_item:
+            self.takeItem(self.row(self._no_records_item))
+            self._no_records_item = None
+
     def _add_datasets(self, datasets):
         for dataset in datasets:
             datasetItem = QListWidgetItem()
@@ -215,6 +228,36 @@ class LoadMoreItemWidget(QFrame):
         layout.addWidget(self.btnLoadMore)
         layout.addStretch()
         self.setLayout(layout)
+
+
+
+class NoRecordsItemWidget(QFrame):
+    def __init__(self):
+        QFrame.__init__(self)
+        self.no_data_frame = QLabel("No data available")
+
+        self.no_data_frame.setStyleSheet(
+            """
+            QLabel {
+                background-color: #ffffff;
+                border: 1px solid #cccccc;
+                border-radius: 4px;
+                padding: 29px 23px 29px 23px;
+                color: #a4a6a6;
+                }
+            """
+        )
+
+        top_padding = QFontMetrics(self.font()).height() * 3
+        vl = QVBoxLayout()
+        vl.addSpacing(top_padding)
+
+        layout = QHBoxLayout()
+        layout.addStretch()
+        layout.addWidget(self.no_data_frame)
+        layout.addStretch()
+        vl.addLayout(layout)
+        self.setLayout(vl)
 
 
 class DatasetItemWidgetBase(QFrame):
