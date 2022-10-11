@@ -158,9 +158,6 @@ class KoordinatesClient(QObject):
         """
         return self._user_details
 
-    def userContexts(self) -> List[str]:
-        return self._get("users/me/")['json'].get("contexts", [])
-
     def dataset(self, datasetid):
         if str(datasetid) not in self.layers:
             self.layers[str(datasetid)] = self._get(f"data/{datasetid}/")['json']
