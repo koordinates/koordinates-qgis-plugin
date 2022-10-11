@@ -365,7 +365,8 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.setMouseTracking(True)
         self.dataset = dataset
 
-        downloadThumbnail(self.dataset["thumbnail_url"], self)
+        if self.dataset.get('thumbnail_url'):
+            downloadThumbnail(self.dataset["thumbnail_url"], self)
 
         date = parser.parse(self.dataset["published_at"])
 
