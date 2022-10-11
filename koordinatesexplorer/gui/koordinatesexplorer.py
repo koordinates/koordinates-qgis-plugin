@@ -33,10 +33,10 @@ from qgis.utils import iface
 
 from koordinatesexplorer.auth import OAuthWorkflow
 from koordinatesexplorer.gui.datasetsbrowserwidget import DatasetsBrowserWidget
+from .context_widget import ContextWidget
 from .country_widget import CountryWidgetAction
 from .filter_widget import FilterWidget
 from .gui_utils import GuiUtils
-from .context_widget import ContextWidget
 from ..api import (
     KoordinatesClient,
     SortOrder,
@@ -69,7 +69,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
         self.context_widget = ContextWidget(self)
         hl = QHBoxLayout()
-        hl.setContentsMargins( 0,0, 0,0)
+        hl.setContentsMargins(0, 0, 0, 0)
         hl.addWidget(self.context_widget)
         self.context_frame.setLayout(hl)
 

@@ -1,7 +1,6 @@
 import json
 from typing import (
     Optional,
-    List,
     Tuple,
     Dict
 )
