@@ -58,8 +58,8 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
         self._facets = {}
         self._current_facets_reply = None
-        self._visible_count = 0
-        self._total_count = 0
+        self._visible_count = -1
+        self._total_count = -1
 
         # self.button_home.setIcon(GuiUtils.get_icon('home.svg'))
         # self.button_home.setToolTip('Home')
@@ -312,8 +312,12 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         self._set_count_label()
 
     def _set_count_label(self):
-        if not self._total_count or not self._visible_count:
+        if self._total_count < 0 or self._visible_count < 0:
             self.label_count.clear()
+        elif self._total_count == 0:
+            self.label_count.setText(
+                'Showing 0 of 0 results'
+            )
         else:
             self.label_count.setText(
                 'Showing {} of {} results'.format(
