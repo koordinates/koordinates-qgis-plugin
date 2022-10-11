@@ -14,7 +14,6 @@ from qgis.PyQt.QtGui import (
     QCursor,
     QColor
 )
-from qgis.PyQt.QtSvg import QSvgRenderer
 from qgis.PyQt.QtWidgets import (
     QWidget,
     QLabel,
@@ -96,7 +95,7 @@ class ContextItem(QFrame):
                     'kx_icon.svg',
                     ContextIcon.SIZE,
                     ContextIcon.SIZE,
-                    QColor(0,0,0)
+                    QColor(0, 0, 0)
                 ))
         else:
             downloadThumbnail(self._details["org"]["logo_square_url"], self.icon_label)

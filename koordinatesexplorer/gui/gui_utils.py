@@ -15,7 +15,6 @@ __revision__ = '$Format:%H$'
 
 import math
 import os
-
 from typing import Optional
 
 from qgis.PyQt.QtCore import Qt
@@ -91,7 +90,8 @@ class GuiUtils:
         return QPixmap.fromImage(im)
 
     @staticmethod
-    def get_svg_as_image(icon: str, width: int, height: int, background_color: Optional[QColor] = None) -> QImage:
+    def get_svg_as_image(icon: str, width: int, height: int,
+                         background_color: Optional[QColor] = None) -> QImage:
         """
         Returns an SVG returned as an image
         """
