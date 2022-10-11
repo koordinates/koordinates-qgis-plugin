@@ -118,23 +118,24 @@ class DatasetsBrowserWidget(QTableWidget):
         if col_count > self.columnCount():
             target_row = 0
             target_col = 0
+            required_rows = 0
             self.setColumnCount(col_count)
             for row in range(prev_rows):
                 for col in range(prev_columns):
                     widget = self.cellWidget(row,col)
                     if widget:
-
                         new_container = QWidget()
                         new_container.setLayout(widget.layout())
                         item = self.takeItem(row, col)
                         self.setItem(target_row, target_col, item)
                         self.setCellWidget(target_row, target_col, new_container)
+                        required_rows = target_row
                         target_col += 1
                         if target_col == col_count:
                             target_col = 0
                             target_row += 1
 
-            self.setRowCount(target_row)
+            self.setRowCount(required_rows+1)
         else:
             # removing columns
             target_row = 0
@@ -146,7 +147,8 @@ class DatasetsBrowserWidget(QTableWidget):
             remaps = {}
             for row in range(prev_rows):
                 for col in range(prev_columns):
-                    if self.cellWidget(row, col):
+                    if self.cellWidget(row, col) and self.cellWidget(row, col).layout():
+                        assert self.item(row, col)
                         items.append(self.item(row, col))
                         widgets.append(self.cellWidget(row, col))
 
@@ -170,8 +172,6 @@ class DatasetsBrowserWidget(QTableWidget):
 
                 if item.row() == target_row and item.column() == target_col:
                     continue
-
-                assert item.row() < target_row or (item.row() == target_row and item.column() < target_col)
 
                 new_container = QWidget()
                 new_container.setLayout(widget.layout())
