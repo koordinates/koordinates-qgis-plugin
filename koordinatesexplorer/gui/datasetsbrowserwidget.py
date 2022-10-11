@@ -224,14 +224,11 @@ class DatasetsBrowserWidget(QTableWidget):
             datasetItem = QTableWidgetItem()
             datasetItem.setFlags(Qt.ItemFlags())
             datasetWidget = DatasetItemWidget(dataset)
-            if self._load_more_item:
-                self.insertItem(self.count() - 1, datasetItem)
-            else:
-                new_row = len(self._datasets) + i
-                if self.rowCount() < new_row + 1:
-                    self.setRowCount(new_row+1)
+            new_row = len(self._datasets) + i
+            if self.rowCount() < new_row + 1:
+                self.setRowCount(new_row+1)
 
-                self.setItem(new_row, 0, datasetItem)
+            self.setItem(new_row, 0, datasetItem)
             self.setCellWidget(datasetItem.row(), datasetItem.column(), datasetWidget)
             self.setRowHeight(datasetItem.row(), DatasetItemWidget.CARD_HEIGHT+ self.VERTICAL_SPACING)
             datasetItem.setSizeHint(datasetWidget.sizeHint())
