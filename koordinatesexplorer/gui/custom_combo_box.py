@@ -123,8 +123,6 @@ class CustomComboBox(QWidget):
 
         self._floating_widget.hide()
 
-        self._block_focus_change = 0
-
         QApplication.instance().focusChanged.connect(self._on_focus_change)
 
     def __del__(self):

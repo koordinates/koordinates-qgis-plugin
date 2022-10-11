@@ -16,14 +16,20 @@ __revision__ = '$Format:%H$'
 import math
 import os
 
+from typing import Optional
+
+from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import (
     QIcon,
     QFont,
     QFontMetrics,
     QImage,
     QPixmap,
-    QFontDatabase
+    QFontDatabase,
+    QColor,
+    QPainter
 )
+from qgis.PyQt.QtSvg import QSvgRenderer
 from qgis.core import (
     Qgis
 )
@@ -83,6 +89,28 @@ class GuiUtils:
 
         im = QImage(path)
         return QPixmap.fromImage(im)
+
+    @staticmethod
+    def get_svg_as_image(icon: str, width: int, height: int, background_color: Optional[QColor] = None) -> QImage:
+        """
+        Returns an SVG returned as an image
+        """
+        path = GuiUtils.get_icon_svg(icon)
+        if not os.path.exists(path):
+            return QImage()
+
+        renderer = QSvgRenderer(path)
+        image = QImage(width, height, QImage.Format_ARGB32)
+        if not background_color:
+            image.fill(Qt.transparent)
+        else:
+            image.fill(background_color)
+
+        painter = QPainter(image)
+        renderer.render(painter)
+        painter.end()
+
+        return image
 
     @staticmethod
     def get_ui_file_path(file: str) -> str:

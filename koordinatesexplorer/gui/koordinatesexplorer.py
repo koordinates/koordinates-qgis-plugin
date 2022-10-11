@@ -1,7 +1,7 @@
 import json
 import os
 from functools import partial
-from typing import Optional
+from typing import Optional, Dict
 
 from qgis.PyQt import sip
 from qgis.PyQt import uic
@@ -20,7 +20,9 @@ from qgis.PyQt.QtWidgets import (
     QApplication,
     QAction,
     QMenu,
-    QLabel
+    QLabel,
+    QHBoxLayout,
+    QComboBox
 )
 from qgis.core import (
     QgsApplication,
@@ -34,6 +36,7 @@ from koordinatesexplorer.gui.datasetsbrowserwidget import DatasetsBrowserWidget
 from .country_widget import CountryWidgetAction
 from .filter_widget import FilterWidget
 from .gui_utils import GuiUtils
+from .context_widget import ContextWidget
 from ..api import (
     KoordinatesClient,
     SortOrder,
@@ -64,6 +67,12 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         label = QLabel()
         default_font = label.font()
 
+        self.context_widget = ContextWidget(self)
+        hl = QHBoxLayout()
+        hl.setContentsMargins( 0,0, 0,0)
+        hl.addWidget(self.context_widget)
+        self.context_frame.setLayout(hl)
+
         self.button_starred.setIcon(GuiUtils.get_icon('star_filled.svg'))
         self.button_starred.setToolTip('Starred')
         self.button_starred.setCheckable(True)
@@ -83,14 +92,15 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
         # a QToolButton with an icon will appear smaller by default vs one with text, so
         # force the advanced button to match the Clear All button size
+        temp_combo = QComboBox()
         for b in (self.button_starred,
                   self.button_help,
                   # self.button_home,
                   self.button_user):
-            b.setFixedHeight(self.comboContext.sizeHint().height())
+            b.setFixedHeight(temp_combo.sizeHint().height())
             b.setFixedWidth(b.height())
 
-        self.button_browse.setFixedHeight(self.comboContext.sizeHint().height())
+        self.button_browse.setFixedHeight(temp_combo.sizeHint().height())
 
         self.browser = DatasetsBrowserWidget()
         self.browser.visible_count_changed.connect(self._visible_count_changed)
@@ -165,7 +175,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
         self.button_user.setMenu(self.user_menu)
 
-        #  self.comboContext.currentIndexChanged.connect(self.filtersChanged)
+        self.context_widget.context_changed.connect(self._context_changed)
 
         KoordinatesClient.instance().loginChanged.connect(self._loginChanged)
         KoordinatesClient.instance().error_occurred.connect(self._client_error_occurred)
@@ -253,7 +263,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
     def search(self):
         browser_query = self.filter_widget.build_query()
 
-        context = self.comboContext.currentData()
+        context = self.context_widget.current_context()
 
         self._fetch_facets(browser_query, context)
         self.browser.populate(browser_query, context)
@@ -311,6 +321,11 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
                     self._total_count)
             )
 
+    def _context_changed(self, context: Dict):
+        self.filter_widget.update()
+        self.update()
+        self.search()
+
     def _loginChanged(self, loggedIn):
         if not loggedIn:
             self.removeApiKey()
@@ -323,12 +338,8 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
             user = KoordinatesClient.instance().user_details()
             self.user_country_action.set_country_code(user['country'])
 
-            contexts = KoordinatesClient.instance().userContexts()
-            self.comboContext.clear()
-            self.comboContext.addItem("All", {"type": "site", "domain": "all"})
-            for context in contexts:
-                self.comboContext.addItem(context.get("name", "user"), context)
-            self.comboContext.setVisible(self.comboContext.count() > 1)
+            self.context_widget.set_contexts(user.get('contexts', []))
+            self.context_widget.setVisible(self.context_widget.count() > 1)
 
             self.filter_widget.set_logged_in(True)
 
