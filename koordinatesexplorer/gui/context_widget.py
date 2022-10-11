@@ -64,11 +64,19 @@ class ContextIcon(QLabel):
 
 
 class ContextLogo(QLabel):
+    LOGO_HEIGHT = 32
 
     def __init__(self, parent=None):
         super().__init__(parent)
 
     def setThumbnail(self, image: QImage):
+        if image.height() > ContextLogo.LOGO_HEIGHT:
+            image = image.scaled(
+                int(image.width() * ContextLogo.LOGO_HEIGHT / image.height()),
+                ContextLogo.LOGO_HEIGHT,
+                transformMode=Qt.SmoothTransformation
+            )
+
         self.setPixmap(QPixmap.fromImage(image))
 
 
@@ -287,7 +295,7 @@ class ContextWidget(QWidget):
             image = GuiUtils.get_svg_as_image(
                 'koordinates_logo.svg',
                 122,
-                33
+                ContextLogo.LOGO_HEIGHT
             )
 
             self.label.setPixmap(QPixmap.fromImage(image))
