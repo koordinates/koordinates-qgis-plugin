@@ -109,7 +109,7 @@ class DatasetsBrowserWidget(QListWidget):
 
         self._load_more_item = None
 
-        self.visible_count_changed.emit(0)
+        self.visible_count_changed.emit(-1)
         self._fetch_records(query, context)
 
     def _fetch_records(self,
