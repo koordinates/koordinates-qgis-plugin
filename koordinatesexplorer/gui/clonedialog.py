@@ -61,6 +61,9 @@ class CloneDialog(QDialog, WIDGET):
                 QgsSettings.Plugins
             )
 
+            self.raise_()
+            self.activateWindow()
+
         self.dest_widget.fileChanged.connect(store_last_dir)
 
         dest_layout = QVBoxLayout()
