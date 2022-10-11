@@ -230,7 +230,6 @@ class LoadMoreItemWidget(QFrame):
         self.setLayout(layout)
 
 
-
 class NoRecordsItemWidget(QFrame):
     def __init__(self):
         QFrame.__init__(self)
