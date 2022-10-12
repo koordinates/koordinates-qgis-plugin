@@ -260,7 +260,7 @@ class DatasetDialog(QDialog):
         scroll_area = QScrollArea()
         scroll_area.setFrameShape(QFrame.NoFrame)
 
-        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         scroll_area.setWidgetResizable(True)
 
@@ -344,6 +344,7 @@ class DatasetDialog(QDialog):
         contents_widget.setLayout(contents_layout)
         contents_widget.setStyleSheet("QFrame{ background: transparent; }")
         scroll_area.setWidget(contents_widget)
+        scroll_area.setWidgetResizable(True)
 
         scroll_area_layout.addWidget(scroll_area)
         scroll_area.viewport().setStyleSheet("#qt_scrollarea_viewport{ background: transparent; }")
