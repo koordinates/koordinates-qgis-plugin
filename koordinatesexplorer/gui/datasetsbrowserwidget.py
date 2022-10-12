@@ -43,20 +43,20 @@ from qgis.core import (
     QgsCoordinateTransform,
     QgsCoordinateReferenceSystem,
     QgsFields,
-    QgsJsonUtils,
-    QgsFileUtils
+    QgsJsonUtils
 )
 from qgis.gui import QgsRubberBand
 from qgis.utils import iface
 
 from koordinatesexplorer.gui.datasetdialog import DatasetDialog
 from koordinatesexplorer.gui.thumbnails import downloadThumbnail
-from .gui_utils import GuiUtils
-from .star_button import StarButton
 from .action_button import (
     CloneButton,
     AddButton
 )
+from .dataset_utils import DatasetGuiUtils
+from .gui_utils import GuiUtils
+from .star_button import StarButton
 from ..api import (
     KoordinatesClient,
     PAGE_SIZE,
@@ -760,110 +760,6 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         self.setCursor(QCursor(Qt.PointingHandCursor))
 
-    def get_icon_for_dataset(self) -> Optional[str]:
-        if self.dataset.get('type') == 'layer':
-            if self.dataset.get('kind') == 'vector':
-                if self.dataset.get('data', {}).get('geometry_type') in (
-                        'polygon', 'multipolygon'):
-                    return 'polygon-light.svg'
-                elif self.dataset.get('data', {}).get('geometry_type') in ('point', 'multipoint'):
-                    return 'point-light.svg'
-                elif self.dataset.get('data', {}).get('geometry_type') in (
-                        'linestring', 'multilinestring'):
-                    return 'line-light.svg'
-            elif self.dataset.get('kind') == 'raster':
-                return 'raster-light.svg'
-            elif self.dataset.get('kind') == 'grid':
-                return 'grid-light.svg'
-        elif self.dataset.get('type') == 'table':
-            return 'table-light.svg'
-        elif self.dataset.get('type') == 'document':
-            return 'document-light.svg'
-        elif self.dataset.get('type') == 'set':
-            return 'set-light.svg'
-        elif self.dataset.get('type') == 'repo':
-            return 'repo-light.svg'
-
-        return None
-
-    def get_type_description(self) -> Optional[str]:
-        if self.dataset.get('type') == 'layer':
-            if self.dataset.get('kind') == 'vector':
-                if self.dataset.get('data', {}).get('geometry_type') in (
-                        'polygon', 'multipolygon'):
-                    return 'Polygon Layer'
-                elif self.dataset.get('data', {}).get('geometry_type') in ('point', 'multipoint'):
-                    return 'Point Layer'
-                elif self.dataset.get('data', {}).get('geometry_type') in (
-                        'linestring', 'multilinestring'):
-                    return 'Line Layer'
-            elif self.dataset.get('kind') == 'raster':
-                return 'Raster Layer'
-            elif self.dataset.get('kind') == 'grid':
-                return 'Grid Layer'
-        elif self.dataset.get('type') == 'table':
-            return 'Table'
-        elif self.dataset.get('type') == 'document':
-            return 'Document'
-        elif self.dataset.get('type') == 'set':
-            return 'Set'
-        elif self.dataset.get('type') == 'repo':
-            return 'Repository'
-
-        return None
-
-    def get_subtitle(self) -> Optional[str]:
-        if self.dataset.get('type') == 'layer':
-            if self.dataset.get('kind') == 'vector':
-                count = self.dataset["data"]["feature_count"]
-                if self.dataset.get('data', {}).get('geometry_type') in (
-                        'polygon', 'multipolygon'):
-                    return '{} Polygons'.format(self.format_count(count))
-                elif self.dataset.get('data', {}).get('geometry_type') in ('point', 'multipoint'):
-                    return '{} Points'.format(self.format_count(count))
-                elif self.dataset.get('data', {}).get('geometry_type') in (
-                        'linestring', 'multilinestring'):
-                    return '{} Lines'.format(self.format_count(count))
-            elif self.dataset.get('kind') in ('raster', 'grid'):
-                count = self.dataset["data"]["feature_count"]
-                res = self.dataset["data"]["raster_resolution"]
-                return '{}m, {} Tiles'.format(res,
-                                              self.format_count(count))
-        elif self.dataset.get('type') == 'table':
-            count = self.dataset["data"]["feature_count"]
-            return '{} Rows'.format(self.format_count(count))
-        elif self.dataset.get('type') == 'document':
-            ext = self.dataset['extension'].upper()
-            file_size = self.dataset['file_size']
-            return '{} {}'.format(ext, QgsFileUtils.representFileSize(file_size))
-        elif self.dataset.get('type') == 'set':
-            return None
-        elif self.dataset.get('type') == 'repo':
-            return None
-
-        return None
-
-    @staticmethod
-    def format_count(count: int) -> str:
-        """
-        Pretty formats a rounded count
-        """
-        if count >= 1000000:
-            rounded = ((count * 10) // 1000000) / 10
-            if int(rounded) == rounded:
-                rounded = int(rounded)
-
-            return str(rounded) + 'M'
-
-        if count >= 1000:
-            rounded = ((count * 10) // 1000) / 10
-            if int(rounded) == rounded:
-                rounded = int(rounded)
-
-            return str(rounded) + 'K'
-
-        return str(count)
-
     def process_thumbnail(self, img: Optional[QImage]) -> QImage:
         base = super().process_thumbnail(img)
 
@@ -874,11 +770,11 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         painter.setBrush(QBrush(QColor(0, 0, 0, 150)))
         painter.drawRoundedRect(15, 100, 117, 32, 4, 4)
 
-        icon = self.get_icon_for_dataset()
+        icon = DatasetGuiUtils.get_icon_for_dataset(self.dataset)
         if icon:
             painter.drawImage(21, 106, GuiUtils.get_svg_as_image(icon, 20, 20))
 
-        description = self.get_type_description()
+        description = DatasetGuiUtils.get_type_description(self.dataset)
         if description:
             font = QFont('Arial')
             font.setPointSize(8)
@@ -889,7 +785,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             painter.setPen(QPen(QColor(255, 255, 255)))
             painter.drawText(47, 113, description)
 
-        subtitle = self.get_subtitle()
+        subtitle = DatasetGuiUtils.get_subtitle(self.dataset)
         if subtitle:
             font = QFont('Arial')
             font.setPointSize(8)
