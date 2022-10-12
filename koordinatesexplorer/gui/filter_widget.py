@@ -13,6 +13,9 @@ from qgis.PyQt.QtWidgets import (
     QSpacerItem,
     QLabel
 )
+from qgis.PyQt.QtGui import (
+    QFontMetrics
+)
 from qgis.gui import (
     QgsFilterLineEdit
 )
@@ -29,7 +32,7 @@ from ..api import (
     DataType,
     SortOrder
 )
-
+from .flow_layout import FlowLayout
 
 class FilterWidget(QWidget):
     filters_changed = pyqtSignal()
@@ -105,27 +108,36 @@ class FilterWidget(QWidget):
         )
 
         self.filter_widget_page_non_grid = QWidget()
-        filter_widget_layout_1 = QGridLayout()
+        filter_widget_layout_1 = FlowLayout()
         filter_widget_layout_1.setContentsMargins(0, 0, 0, 0)
-        # filter_widget_layout_1.addWidget(self.category_filter_widget_1, 0, 0)
-        filter_widget_layout_1.addWidget(self.data_type_filter_widget_1, 0, 0)
-        filter_widget_layout_1.addWidget(self.date_filter_widget_1, 0, 1)
-        filter_widget_layout_1.addWidget(self.license_widget_1, 1, 0)
-        filter_widget_layout_1.addWidget(self.access_widget_1, 1, 1)
-        filter_widget_layout_1.addItem(
-            QSpacerItem(0, 0, QSizePolicy.Ignored, QSizePolicy.Expanding), 2, 0)
+        #filter_widget_layout_1.addWidget(self.category_filter_widget_1)
+        filter_widget_layout_1.addWidget(self.data_type_filter_widget_1)
+
+        min_filter_widget = QFontMetrics(self.font()).width('x')*20
+        self.data_type_filter_widget_1.setMinimumWidth(min_filter_widget)
+        filter_widget_layout_1.addWidget(self.date_filter_widget_1)
+        self.date_filter_widget_1.setMinimumWidth(min_filter_widget)
+        filter_widget_layout_1.addWidget(self.license_widget_1)
+        self.license_widget_1.setMinimumWidth(min_filter_widget)
+        filter_widget_layout_1.addWidget(self.access_widget_1)
+        self.access_widget_1.setMinimumWidth(min_filter_widget)
         self.filter_widget_page_non_grid.setLayout(filter_widget_layout_1)
         self.advanced_stacked_widget.addWidget(self.filter_widget_page_non_grid)
 
         self.filter_widget_page_grid = QWidget()
-        filter_widget_layout_2 = QGridLayout()
+        filter_widget_layout_2 = FlowLayout()
         filter_widget_layout_2.setContentsMargins(0, 0, 0, 0)
         # filter_widget_layout_2.addWidget(self.category_filter_widget_2, 0, 0)
-        filter_widget_layout_2.addWidget(self.data_type_filter_widget_2, 0, 0)
-        filter_widget_layout_2.addWidget(self.resolution_widget, 0, 1)
-        filter_widget_layout_2.addWidget(self.date_filter_widget_2, 1, 0)
-        filter_widget_layout_2.addWidget(self.license_widget_2, 1, 1)
-        filter_widget_layout_2.addWidget(self.access_widget_2, 2, 0)
+        filter_widget_layout_2.addWidget(self.data_type_filter_widget_2)
+        self.data_type_filter_widget_2.setMinimumWidth(min_filter_widget)
+        filter_widget_layout_2.addWidget(self.resolution_widget)
+        self.resolution_widget.setMinimumWidth(min_filter_widget)
+        filter_widget_layout_2.addWidget(self.date_filter_widget_2)
+        self.date_filter_widget_2.setMinimumWidth(min_filter_widget)
+        filter_widget_layout_2.addWidget(self.license_widget_2)
+        self.license_widget_2.setMinimumWidth(min_filter_widget)
+        filter_widget_layout_2.addWidget(self.access_widget_2)
+        self.access_widget_2.setMinimumWidth(min_filter_widget)
         self.filter_widget_page_grid.setLayout(filter_widget_layout_2)
         self.advanced_stacked_widget.addWidget(self.filter_widget_page_grid)
         self.advanced_stacked_widget.setCurrentWidget(self.filter_widget_page_grid)
