@@ -503,8 +503,6 @@ class DatasetItemWidgetBase(QFrame):
         self.labelName.setWordWrap(True)
         self.labelName.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
-        self.stats_hlayout = QHBoxLayout()
-
         self.vlayout = QVBoxLayout()
         self.vlayout.setContentsMargins(11,17,15,15)
 
@@ -518,8 +516,6 @@ class DatasetItemWidgetBase(QFrame):
         self.buttonsLayout.setContentsMargins(0,0,0,0)
 
         self.vlayout.addLayout(self.buttonsLayout)
-
-        #self.vlayout.addLayout(self.stats_hlayout)
 
         layout = QHBoxLayout()
         layout.setMargin(0)
@@ -642,8 +638,8 @@ class EmptyDatasetItemWidget(DatasetItemWidgetBase):
 
         bottom_label = QLabel()
         bottom_label.setPixmap(target)
-        self.stats_hlayout.addWidget(bottom_label)
-        self.stats_hlayout.addStretch()
+        self.vlayout.addWidget(bottom_label)
+        self.vlayout.addStretch()
 
 
 class DatasetItemWidget(DatasetItemWidgetBase):
@@ -678,21 +674,29 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             f'<span style="color: #868889; font-size: 10pt; font-family: Arial, Sans">{self.dataset["publisher"]["name"]}</span></p>'
         )
 
-        def pixmap(name):
-            return QPixmap(
-                os.path.join(os.path.dirname(os.path.dirname(__file__)), "img", name)
-            )
+        details_layout = QVBoxLayout()
+        details_layout.setContentsMargins(0,0,0,0)
 
+        if self.dataset.get('license'):
+            license = self.dataset['license'].get('type')
+            if license:
+                license = license.upper()
+                self.license_label = QLabel()
+                self.license_label.setText(f'<span style="color: #868889; font-family: Arial, Sans; font-size: 9pt">{license}</span>')
+                details_layout.addWidget(self.license_label)
+
+        updated_layout = QHBoxLayout()
+        updated_layout.setContentsMargins(0,0,0,0)
         self.labelUpdatedIcon = QLabel()
-        self.labelUpdatedIcon.setPixmap(pixmap("updated.png"))
-
+        self.labelUpdatedIcon.setPixmap(QPixmap.fromImage(GuiUtils.get_svg_as_image("history_gray.svg", 13, 12 )))
         self.labelUpdated = QLabel()
+        self.labelUpdated.setText(f'<span style="color: #868889; font-family: Arial, Sans; font-size: 9pt">{date.strftime("%d %b %Y")}</span>')
+        updated_layout.addWidget(self.labelUpdatedIcon)
+        updated_layout.addWidget(self.labelUpdated)
+        details_layout.addLayout(updated_layout)
 
-        self.labelUpdated.setText(f'{date.strftime("%d %b %Y")}')
-
-        self.stats_hlayout.addWidget(self.labelUpdatedIcon)
-        self.stats_hlayout.addWidget(self.labelUpdated)
-        self.stats_hlayout.addStretch()
+        self.buttonsLayout.addLayout(details_layout)
+        self.buttonsLayout.addStretch()
 
         base_style = self.styleSheet()
         base_style += """
