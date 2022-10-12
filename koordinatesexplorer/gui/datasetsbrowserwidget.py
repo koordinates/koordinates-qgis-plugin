@@ -15,7 +15,6 @@ from qgis.PyQt.QtCore import (
 from qgis.PyQt.QtGui import (
     QColor,
     QPixmap,
-    QFont,
     QCursor,
     QPainter,
     QPainterPath,
@@ -52,12 +51,12 @@ from qgis.utils import iface
 from koordinatesexplorer.gui.datasetdialog import DatasetDialog
 from koordinatesexplorer.gui.thumbnails import downloadThumbnail
 from koordinatesexplorer.utils import cloneKartRepo, KartNotInstalledException
+from .gui_utils import GuiUtils
 from ..api import (
     KoordinatesClient,
     PAGE_SIZE,
     DataBrowserQuery
 )
-from .gui_utils import GuiUtils
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
@@ -504,16 +503,16 @@ class DatasetItemWidgetBase(QFrame):
         self.labelName.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
         self.vlayout = QVBoxLayout()
-        self.vlayout.setContentsMargins(11,17,15,15)
+        self.vlayout.setContentsMargins(11, 17, 15, 15)
 
         self.top_layout = QHBoxLayout()
-        self.top_layout.setContentsMargins(0,0,0,0)
+        self.top_layout.setContentsMargins(0, 0, 0, 0)
         self.top_layout.addWidget(self.labelName, 1)
 
         self.vlayout.addLayout(self.top_layout)
 
         self.buttonsLayout = QHBoxLayout()
-        self.buttonsLayout.setContentsMargins(0,0,0,0)
+        self.buttonsLayout.setContentsMargins(0, 0, 0, 0)
 
         self.vlayout.addLayout(self.buttonsLayout)
 
@@ -536,10 +535,10 @@ class DatasetItemWidgetBase(QFrame):
         painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
 
         painter.setPen(Qt.NoPen)
-        painter.setBrush(QBrush(QColor(255,0,0)))
+        painter.setBrush(QBrush(QColor(255, 0, 0)))
 
         path = QPainterPath()
-        path.moveTo(self.THUMBNAIL_CORNER_RADIUS,0)
+        path.moveTo(self.THUMBNAIL_CORNER_RADIUS, 0)
         path.lineTo(self.THUMBNAIL_SIZE, 0)
         path.lineTo(self.THUMBNAIL_SIZE, self.THUMBNAIL_SIZE)
         path.lineTo(self.THUMBNAIL_CORNER_RADIUS, self.THUMBNAIL_SIZE)
@@ -644,7 +643,7 @@ class EmptyDatasetItemWidget(DatasetItemWidgetBase):
 
 class StarButton(QLabel):
 
-    def __init__(self, checked: bool, parent = None):
+    def __init__(self, checked: bool, parent=None):
         super().__init__(parent)
         self.setMouseTracking(True)
         self._checked = checked
@@ -706,27 +705,40 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         date = parser.parse(self.dataset["published_at"])
 
         self.labelName.setText(
-            f'<p style="line-height: 130%; font-size: 11pt; font-family: Arial, Sans"><b>{self.dataset["title"]}</b><br>'
-            f'<span style="color: #868889; font-size: 10pt; font-family: Arial, Sans">{self.dataset["publisher"]["name"]}</span></p>'
+            f"""<p style="line-height: 130%;
+                font-size: 11pt;
+                font-family: Arial, Sans"><b>{self.dataset["title"]}</b><br>"""
+            f"""<span style="color: #868889;
+            font-size: 10pt;
+            font-family: Arial, Sans">{self.dataset["publisher"]["name"]}</span></p>"""
         )
 
         details_layout = QVBoxLayout()
-        details_layout.setContentsMargins(0,0,0,0)
+        details_layout.setContentsMargins(0, 0, 0, 0)
 
         if self.dataset.get('license'):
             license = self.dataset['license'].get('type')
             if license:
                 license = license.upper()
                 self.license_label = QLabel()
-                self.license_label.setText(f'<span style="color: #868889; font-family: Arial, Sans; font-size: 9pt">{license}</span>')
+                self.license_label.setText(
+                    f"""<span style="color: #868889;
+                        font-family: Arial, Sans;
+                        font-size: 9pt">{license}</span>"""
+                )
                 details_layout.addWidget(self.license_label)
 
         updated_layout = QHBoxLayout()
-        updated_layout.setContentsMargins(0,0,0,0)
+        updated_layout.setContentsMargins(0, 0, 0, 0)
         self.labelUpdatedIcon = QLabel()
-        self.labelUpdatedIcon.setPixmap(QPixmap.fromImage(GuiUtils.get_svg_as_image("history_gray.svg", 13, 12 )))
+        self.labelUpdatedIcon.setPixmap(
+            QPixmap.fromImage(GuiUtils.get_svg_as_image("history_gray.svg", 13, 12)))
         self.labelUpdated = QLabel()
-        self.labelUpdated.setText(f'<span style="color: #868889; font-family: Arial, Sans; font-size: 9pt">{date.strftime("%d %b %Y")}</span>')
+        self.labelUpdated.setText(
+            f"""<span style="color: #868889;
+                font-family: Arial, Sans;
+                font-size: 9pt">{date.strftime("%d %b %Y")}</span>"""
+        )
         updated_layout.addWidget(self.labelUpdatedIcon)
         updated_layout.addWidget(self.labelUpdated)
         details_layout.addLayout(updated_layout)
@@ -735,7 +747,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.buttonsLayout.addStretch()
 
         star_layout = QVBoxLayout()
-        star_layout.setContentsMargins(0,0,0,0)
+        star_layout.setContentsMargins(0, 0, 0, 0)
 
         is_starred = self.dataset.get('is_starred', False)
         self.star_button = StarButton(is_starred)
@@ -779,9 +791,9 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             self.btnClone.setIconSize(QSize(63, 11))
             self.btnClone.setStyleSheet(style.format(
                 self.BUTTON_COLOR_CLONE,
-                           self.BUTTON_OUTLINE_CLONE,
-            self.BUTTON_TEXT_CLONE,
-            self.BUTTON_HOVER_CLONE))
+                self.BUTTON_OUTLINE_CLONE,
+                self.BUTTON_TEXT_CLONE,
+                self.BUTTON_HOVER_CLONE))
             self.btnClone.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
             self.btnClone.clicked.connect(self.cloneRepository)
             self.btnClone.setFixedSize(88, self.BUTTON_HEIGHT)
@@ -796,7 +808,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             self.btnAdd.setIcon(icon)
             self.btnAdd.setIconSize(QSize(53, 11))
             self.btnAdd.setStyleSheet(style.format(self.BUTTON_COLOR_ADD,
-                           self.BUTTON_OUTLINE_ADD,
+                                                   self.BUTTON_OUTLINE_ADD,
                                                    self.BUTTON_TEXT_ADD,
                                                    self.BUTTON_HOVER_ADD))
             self.btnAdd.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
