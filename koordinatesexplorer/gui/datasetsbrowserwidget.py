@@ -698,6 +698,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         base_style += """
             DatasetItemWidget:hover {
                 border: 1px solid rgb(180, 180, 180);
+                background: #fcfcfc;
             }
         """
         self.setStyleSheet(base_style)
