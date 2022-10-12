@@ -506,11 +506,11 @@ class DatasetItemWidgetBase(QFrame):
         self.vlayout = QVBoxLayout()
         self.vlayout.setContentsMargins(11,17,15,15)
 
-        hl = QHBoxLayout()
-        hl.setContentsMargins(0,0,0,0)
-        hl.addWidget(self.labelName, 1)
+        self.top_layout = QHBoxLayout()
+        self.top_layout.setContentsMargins(0,0,0,0)
+        self.top_layout.addWidget(self.labelName, 1)
 
-        self.vlayout.addLayout(hl)
+        self.vlayout.addLayout(self.top_layout)
 
         self.buttonsLayout = QHBoxLayout()
         self.buttonsLayout.setContentsMargins(0,0,0,0)
@@ -642,6 +642,42 @@ class EmptyDatasetItemWidget(DatasetItemWidgetBase):
         self.vlayout.addStretch()
 
 
+class StarButton(QLabel):
+
+    def __init__(self, checked: bool, parent = None):
+        super().__init__(parent)
+        self.setMouseTracking(True)
+        self._checked = checked
+        self._hover = False
+        self._update_icon()
+
+    def enterEvent(self, event):
+        if not self._checked:
+            self._hover = True
+        self._update_icon()
+
+    def leaveEvent(self, event):
+        self._hover = False
+        self._update_icon()
+
+    def _update_icon(self):
+        if self._checked:
+            icon = GuiUtils.get_svg_as_image('star_filled.svg', 24, 24)
+        elif self._hover:
+            icon = GuiUtils.get_svg_as_image('star_not-starred-hover.svg', 24, 24)
+        else:
+            icon = GuiUtils.get_svg_as_image('star_not-starred.svg', 24, 24)
+
+        self.setPixmap(QPixmap.fromImage(icon))
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            if not self._checked:
+                print('star')
+        else:
+            super().mousePressEvent(event)
+
+
 class DatasetItemWidget(DatasetItemWidgetBase):
     """
     Shows details for a dataset item
@@ -697,6 +733,15 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         self.buttonsLayout.addLayout(details_layout)
         self.buttonsLayout.addStretch()
+
+        star_layout = QVBoxLayout()
+        star_layout.setContentsMargins(0,0,0,0)
+
+        is_starred = self.dataset.get('is_starred', False)
+        self.star_button = StarButton(is_starred)
+        star_layout.addWidget(self.star_button)
+        star_layout.addStretch()
+        self.top_layout.addLayout(star_layout)
 
         base_style = self.styleSheet()
         base_style += """
