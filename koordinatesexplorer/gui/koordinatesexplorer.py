@@ -1,5 +1,6 @@
 import json
 import os
+import locale
 from functools import partial
 from typing import Optional, Dict
 
@@ -321,8 +322,8 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         else:
             self.label_count.setText(
                 'Showing {} of {} results'.format(
-                    self._visible_count,
-                    self._total_count)
+                    locale.format_string("%d", self._visible_count, grouping=True),
+                    locale.format_string("%d", self._total_count, grouping=True))
             )
 
     def _context_changed(self, context: Dict):
