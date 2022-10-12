@@ -153,10 +153,9 @@ class HeaderWidget(QFrame):
         self.setFrameShape(QFrame.NoFrame)
 
         background_color = self.dataset.get('publisher', {}).get('theme', {}).get(
-            'background_color')
-        if background_color:
-            self.setStyleSheet(
-                'HeaderWidget {{ background-color: #{}; }}'.format(background_color))
+            'background_color') or '555657'
+        self.setStyleSheet(
+            'HeaderWidget {{ background-color: #{}; }}'.format(background_color))
 
         hl = QHBoxLayout()
         hl.setContentsMargins(15, 0, 15, 0)
