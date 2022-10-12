@@ -172,6 +172,26 @@ class KoordinatesClient(QObject):
             self._categories = self._get("categories")['json']
         return self._categories
 
+    @waitcursor
+    def star(self, dataset_id, is_starred: bool):
+        """
+        Stars or unstars a dataset
+        """
+        url = QUrl(f"https://koordinates.com/services/api/v1.x/layers/{dataset_id}/star/")
+        network_request = QNetworkRequest(url)
+
+        for header, value in self.headers.items():
+            network_request.setRawHeader(header.encode(),
+                                         value.encode())
+
+        request = QgsBlockingNetworkRequest()
+        if is_starred:
+            if request.post(network_request, b'') != QgsBlockingNetworkRequest.NoError:
+                self.error_occurred.emit(request.reply().errorString())
+        else:
+            if request.deleteResource(network_request) != QgsBlockingNetworkRequest.NoError:
+                self.error_occurred.emit(request.reply().errorString())
+
     def _build_request(self, endpoint: str, headers=None, params=None) -> QNetworkRequest:
         """
         Builds a network request

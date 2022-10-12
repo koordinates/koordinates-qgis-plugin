@@ -643,9 +643,10 @@ class EmptyDatasetItemWidget(DatasetItemWidgetBase):
 
 class StarButton(QLabel):
 
-    def __init__(self, checked: bool, parent=None):
+    def __init__(self, checked: bool, dataset_id, parent=None):
         super().__init__(parent)
         self.setMouseTracking(True)
+        self._dataset_id = dataset_id
         self._checked = checked
         self._hover = False
         self._update_icon()
@@ -671,8 +672,10 @@ class StarButton(QLabel):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            if not self._checked:
-                print('star')
+            to_star = not self._checked
+            KoordinatesClient.instance().star(self._dataset_id, is_starred=to_star)
+            self._checked = to_star
+            self._update_icon()
         else:
             super().mousePressEvent(event)
 
@@ -750,7 +753,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         star_layout.setContentsMargins(0, 0, 0, 0)
 
         is_starred = self.dataset.get('is_starred', False)
-        self.star_button = StarButton(is_starred)
+        self.star_button = StarButton(dataset_id=self.dataset['id'], checked=is_starred)
         star_layout.addWidget(self.star_button)
         star_layout.addStretch()
         self.top_layout.addLayout(star_layout)
