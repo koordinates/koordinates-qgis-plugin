@@ -708,6 +708,8 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.setMouseTracking(True)
         self.dataset = dataset
 
+        self.setFixedHeight(self.CARD_HEIGHT)
+
         if self.dataset.get('thumbnail_url'):
             downloadThumbnail(self.dataset["thumbnail_url"], self)
 
@@ -972,11 +974,17 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             painter.setBrush(Qt.NoBrush)
             painter.setPen(QPen(QColor(255, 255, 255)))
             painter.drawText(47, 127, subtitle)
-        # self.dataset["data"]["feature_count"]
 
         painter.end()
-
         return base
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+
+        if self.width() < 440:
+            self.labelMap.hide()
+        else:
+            self.labelMap.show()
 
     def cloneRepository(self):
         url = self.dataset["repository"]["clone_location_https"]
