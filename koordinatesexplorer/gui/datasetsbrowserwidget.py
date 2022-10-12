@@ -477,13 +477,16 @@ class DatasetItemWidgetBase(QFrame):
     Base class for dataset items
     """
 
+    THUMBNAIL_CORNER_RADIUS = 5
+    THUMBNAIL_SIZE = 150
+
     def __init__(self):
         super().__init__()
         self.setStyleSheet(
-            """DatasetItemWidgetBase {
-               border: 0px solid black;
-               border-radius: 10px; background: white;
-            }"""
+            """DatasetItemWidgetBase {{
+               border: 1px solid #dddddd;
+               border-radius: {}px; background: white;
+            }}""".format(self.THUMBNAIL_CORNER_RADIUS)
         )
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
 
@@ -523,10 +526,30 @@ class DatasetItemWidgetBase(QFrame):
         painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
         painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
 
-        path = QPainterPath()
-        path.addRoundedRect(0, 0, 150, 150, 10, 10)
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(QBrush(QColor(255,0,0)))
 
-        painter.setClipPath(path)
+        path = QPainterPath()
+        path.moveTo(self.THUMBNAIL_CORNER_RADIUS,0)
+        path.lineTo(self.THUMBNAIL_SIZE, 0)
+        path.lineTo(self.THUMBNAIL_SIZE, self.THUMBNAIL_SIZE)
+        path.lineTo(self.THUMBNAIL_CORNER_RADIUS, self.THUMBNAIL_SIZE)
+        path.arcTo(0,
+                   self.THUMBNAIL_SIZE - self.THUMBNAIL_CORNER_RADIUS * 2,
+                   self.THUMBNAIL_CORNER_RADIUS * 2,
+                   self.THUMBNAIL_CORNER_RADIUS * 2,
+                   270, -90
+                   )
+        path.lineTo(0, self.THUMBNAIL_CORNER_RADIUS)
+        path.arcTo(0,
+                   0,
+                   self.THUMBNAIL_CORNER_RADIUS * 2,
+                   self.THUMBNAIL_CORNER_RADIUS * 2,
+                   180, -90
+                   )
+
+        painter.drawPath(path)
+        painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
 
         if img is not None:
             rect = QRect(300, 15, 600, 600)
@@ -671,6 +694,14 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.stats_hlayout.addWidget(self.labelExports)
         self.stats_hlayout.addStretch()
 
+        base_style = self.styleSheet()
+        base_style += """
+            DatasetItemWidget:hover {
+                border: 1px solid rgb(180, 180, 180);
+            }
+        """
+        self.setStyleSheet(base_style)
+
         style = """
                 QToolButton{
                 background-color: #1b9a4b;
@@ -782,23 +813,9 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         return geom
 
     def enterEvent(self, event):
-        self.setStyleSheet(
-            """DatasetItemWidget {
-               border: 1px solid rgb(180, 180, 180);
-               border-radius: 15px;
-               background: white;
-            }"""
-        )
         self.showFootprint()
 
     def leaveEvent(self, event):
-        self.setStyleSheet(
-            """DatasetItemWidget {
-                border: 1px solid transparent;
-                border-radius: 15px;
-                background: white;
-            }"""
-        )
         self.hideFootprint()
 
     def _bboxInProjectCrs(self):
