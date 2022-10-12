@@ -1,0 +1,115 @@
+from typing import (
+    Optional,
+    Dict
+)
+
+from qgis.core import QgsFileUtils
+
+class DatasetGuiUtils:
+    
+    @staticmethod
+    def get_icon_for_dataset(dataset: Dict) -> Optional[str]:
+        if dataset.get('type') == 'layer':
+            if dataset.get('kind') == 'vector':
+                if dataset.get('data', {}).get('geometry_type') in (
+                        'polygon', 'multipolygon'):
+                    return 'polygon-light.svg'
+                elif dataset.get('data', {}).get('geometry_type') in ('point', 'multipoint'):
+                    return 'point-light.svg'
+                elif dataset.get('data', {}).get('geometry_type') in (
+                        'linestring', 'multilinestring'):
+                    return 'line-light.svg'
+            elif dataset.get('kind') == 'raster':
+                return 'raster-light.svg'
+            elif dataset.get('kind') == 'grid':
+                return 'grid-light.svg'
+        elif dataset.get('type') == 'table':
+            return 'table-light.svg'
+        elif dataset.get('type') == 'document':
+            return 'document-light.svg'
+        elif dataset.get('type') == 'set':
+            return 'set-light.svg'
+        elif dataset.get('type') == 'repo':
+            return 'repo-light.svg'
+    
+        return None
+    
+    @staticmethod
+    def get_type_description(dataset: Dict) -> Optional[str]:
+        if dataset.get('type') == 'layer':
+            if dataset.get('kind') == 'vector':
+                if dataset.get('data', {}).get('geometry_type') in (
+                        'polygon', 'multipolygon'):
+                    return 'Polygon Layer'
+                elif dataset.get('data', {}).get('geometry_type') in ('point', 'multipoint'):
+                    return 'Point Layer'
+                elif dataset.get('data', {}).get('geometry_type') in (
+                        'linestring', 'multilinestring'):
+                    return 'Line Layer'
+            elif dataset.get('kind') == 'raster':
+                return 'Raster Layer'
+            elif dataset.get('kind') == 'grid':
+                return 'Grid Layer'
+        elif dataset.get('type') == 'table':
+            return 'Table'
+        elif dataset.get('type') == 'document':
+            return 'Document'
+        elif dataset.get('type') == 'set':
+            return 'Set'
+        elif dataset.get('type') == 'repo':
+            return 'Repository'
+    
+        return None
+
+    @staticmethod
+    def get_subtitle(dataset: Dict) -> Optional[str]:
+        if dataset.get('type') == 'layer':
+            if dataset.get('kind') == 'vector':
+                count = dataset["data"]["feature_count"]
+                if dataset.get('data', {}).get('geometry_type') in (
+                        'polygon', 'multipolygon'):
+                    return '{} Polygons'.format(DatasetGuiUtils.format_count(count))
+                elif dataset.get('data', {}).get('geometry_type') in ('point', 'multipoint'):
+                    return '{} Points'.format(DatasetGuiUtils.format_count(count))
+                elif dataset.get('data', {}).get('geometry_type') in (
+                        'linestring', 'multilinestring'):
+                    return '{} Lines'.format(DatasetGuiUtils.format_count(count))
+            elif dataset.get('kind') in ('raster', 'grid'):
+                count = dataset["data"]["feature_count"]
+                res = dataset["data"]["raster_resolution"]
+                return '{}m, {} Tiles'.format(res,
+                                              DatasetGuiUtils.format_count(count))
+        elif dataset.get('type') == 'table':
+            count = dataset["data"]["feature_count"]
+            return '{} Rows'.format(DatasetGuiUtils.format_count(count))
+        elif dataset.get('type') == 'document':
+            ext = dataset['extension'].upper()
+            file_size = dataset['file_size']
+            return '{} {}'.format(ext, QgsFileUtils.representFileSize(file_size))
+        elif dataset.get('type') == 'set':
+            return None
+        elif dataset.get('type') == 'repo':
+            return None
+    
+        return None
+    
+    @staticmethod
+    def format_count(count: int) -> str:
+        """
+        Pretty formats a rounded count
+        """
+        if count >= 1000000:
+            rounded = ((count * 10) // 1000000) / 10
+            if int(rounded) == rounded:
+                rounded = int(rounded)
+    
+            return str(rounded) + 'M'
+    
+        if count >= 1000:
+            rounded = ((count * 10) // 1000) / 10
+            if int(rounded) == rounded:
+                rounded = int(rounded)
+    
+            return str(rounded) + 'K'
+    
+        return str(count)
