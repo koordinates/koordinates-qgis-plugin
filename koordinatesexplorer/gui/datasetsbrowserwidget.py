@@ -2,7 +2,7 @@ import json
 import math
 import os
 from functools import partial
-from typing import Optional
+from typing import Optional, Tuple
 
 from dateutil import parser
 from qgis.PyQt import sip
@@ -28,7 +28,8 @@ from qgis.PyQt.QtWidgets import (
     QToolButton,
     QVBoxLayout,
     QSizePolicy,
-    QWidget
+    QWidget,
+    QAbstractItemView
 )
 from qgis.core import Qgis
 from qgis.core import (
@@ -70,6 +71,7 @@ class DatasetsBrowserWidget(QTableWidget):
     visible_count_changed = pyqtSignal(int)
 
     VERTICAL_SPACING = 10
+    HORIZONTAL_SPACING = 10
 
     def __init__(self):
         super().__init__()
@@ -80,13 +82,13 @@ class DatasetsBrowserWidget(QTableWidget):
         self.verticalHeader().hide()
         self.setColumnWidth(0, self.width())
         self.setShowGrid(False)
-        #self.setSpacing(10)
+        self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
 
         self.setObjectName('DatasetsBrowserWidget')
         self.setStyleSheet("""
         #DatasetsBrowserWidget {{ border: none; }}
-        QTableWidget::item {{ padding-top: {}px }}
-        """.format(self.VERTICAL_SPACING))
+        QTableWidget::item {{ padding-top: {}px; padding-right: {}px }}
+        """.format(self.VERTICAL_SPACING, self.HORIZONTAL_SPACING))
         self.viewport().setStyleSheet("#qt_scrollarea_viewport{ background: transparent; }")
 
         self._current_query: Optional[DataBrowserQuery] = None
@@ -95,10 +97,13 @@ class DatasetsBrowserWidget(QTableWidget):
         self._load_more_item = None
         self._no_records_item = None
         self._datasets = []
-        self._temporary_blank_items = []
+        self._is_reflowing = False
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
+
+        if self._is_reflowing:
+            return
 
         width_without_scroll_bar = self.width() - self.verticalScrollBar().width()
         col_count = int(width_without_scroll_bar / 450)
@@ -112,6 +117,8 @@ class DatasetsBrowserWidget(QTableWidget):
     def reflow_cells(self, col_count):
         if col_count == self.columnCount():
             return
+
+        self._is_reflowing = True
 
         prev_columns = self.columnCount()
         prev_rows = self.rowCount()
@@ -183,6 +190,8 @@ class DatasetsBrowserWidget(QTableWidget):
 
         self.setColumnCount(col_count)
 
+        self._is_reflowing = False
+
     def set_cell_widget_in_container(self, row, column, widget):
         container = QWidget()
         container_layout = QVBoxLayout(container)
@@ -200,24 +209,88 @@ class DatasetsBrowserWidget(QTableWidget):
 
         self._current_reply = None
 
+    def get_next_empty_cell(self) -> Tuple[int, int]:
+        """
+        Gets the next empty cell for inserting an item
+        """
+        if self.rowCount() == 0:
+            return 0, 0
+        current_row = self.rowCount() - 1
+        current_col = 0
+
+        while True:
+            if not self.cellWidget(current_row, current_col):
+                return current_row, current_col
+
+            current_col += 1
+            if current_col == self.columnCount():
+                current_col = 0
+                current_row += 1
+
+    def get_next_blank_dataset_cell(self) -> Optional[Tuple[int, int]]:
+        """
+        Gets the next cell containing a blank dataset item, or None if no remaining
+        blank dataset items are available
+        """
+        current_row = 0
+        current_col = 0
+
+        while True:
+            w = self.cellWidget(current_row, current_col)
+            if w and isinstance( w.layout().itemAt(0).widget(), EmptyDatasetItemWidget):
+                return current_row, current_col
+
+            current_col += 1
+            if current_col == self.columnCount():
+                current_col = 0
+                current_row += 1
+
+            if current_row >= self.rowCount():
+                break
+
+        return None
+
     def _create_temporary_items_for_page(self):
         for i in range(PAGE_SIZE):
             datasetItem = QTableWidgetItem()
             datasetItem.setFlags(Qt.ItemFlags())
             datasetWidget = EmptyDatasetItemWidget()
-            new_row = self.rowCount()
-            self.setRowCount(new_row+1)
-            self.setItem(new_row, 0, datasetItem)
+
+            new_row, new_col = self.get_next_empty_cell()
+            if self.rowCount() < new_row+1:
+                self.setRowCount(new_row+1)
+            self.setItem(new_row, new_col, datasetItem)
             self.set_cell_widget_in_container(datasetItem.row(), datasetItem.column(), datasetWidget)
             self.setRowHeight(datasetItem.row(), DatasetItemWidget.CARD_HEIGHT + self.VERTICAL_SPACING)
             datasetItem.setSizeHint(datasetWidget.sizeHint())
-            self._temporary_blank_items.append(datasetItem)
+
+    def _remove_temporary_empty_items(self):
+        current_row = 0
+        current_col = 0
+
+        while True:
+            w = self.cellWidget(current_row, current_col)
+            if w and isinstance( w.layout().itemAt(0).widget(), EmptyDatasetItemWidget):
+                self.setCellWidget(current_row, current_col, None)
+                self.setItem(current_row, current_col, None)
+
+            if self.item(current_row, current_col):
+                last_row_with_item = current_row
+
+            current_col += 1
+            if current_col == self.columnCount():
+                current_col = 0
+                current_row += 1
+
+            if current_row >= self.rowCount():
+                break
+
+        self.setRowCount(math.ceil(len(self._datasets)/ self.columnCount()))
 
     def populate(self, query: DataBrowserQuery, context):
         self.clear()
         self.setRowCount(0)
         self._datasets = []
-        self._temporary_blank_items = []
         self._create_temporary_items_for_page()
 
         self._load_more_item = None
@@ -272,27 +345,27 @@ class DatasetsBrowserWidget(QTableWidget):
         last = tokens[0].split("-")[-1]
         finished = last == total
 
-        prev_count = len(self._datasets)
-        for i in self._temporary_blank_items:
-            #self.removeRow(i.row())
-            self.takeItem(i.row(), i.column())
-
-        self._temporary_blank_items = []
-
-        self.setRowCount(prev_count +len(datasets))
         self._add_datasets(datasets)
+        self._datasets.extend(datasets)
+        self.visible_count_changed.emit(len(self._datasets))
+
         self.setCursor(Qt.ArrowCursor)
+        self._remove_temporary_empty_items()
 
         if not finished and not self._load_more_item:
             self._load_more_item = QTableWidgetItem()
             self._load_more_item.setFlags(Qt.ItemFlags())
             loadMoreWidget = LoadMoreItemWidget()
             loadMoreWidget.load_more.connect(self.load_more)
-            new_row = self.rowCount()
-            self.setRowCount(new_row+1)
-            self.setItem(new_row, 0, self._load_more_item)
+
+            new_row, new_col = self.get_next_empty_cell()
+            if self.rowCount() < new_row+1:
+                self.setRowCount(new_row+1)
+
+            self.setItem(new_row, new_col, self._load_more_item)
             self.set_cell_widget_in_container(self._load_more_item.row(), self._load_more_item.column(), loadMoreWidget)
-            self.setRowHeight(self._load_more_item.row(), loadMoreWidget.sizeHint().height()+self.VERTICAL_SPACING)
+            if self._load_more_item.column() == 0:
+                self.setRowHeight(self._load_more_item.row(), loadMoreWidget.sizeHint().height()+self.VERTICAL_SPACING)
             self._load_more_item.setSizeHint(loadMoreWidget.sizeHint())
         elif finished and self._load_more_item:
             self.takeItem(self.row(self._load_more_item))
@@ -302,31 +375,37 @@ class DatasetsBrowserWidget(QTableWidget):
             self._no_records_item = QTableWidgetItem()
             self._no_records_item.setFlags(Qt.ItemFlags())
             no_records_widget = NoRecordsItemWidget()
-            new_row = self.rowCount()
-            self.setRowCount(new_row + 1)
-            self.setItem(new_row, 0, self._no_records_item)
+            new_row, new_col = self.get_next_empty_cell()
+            if self.rowCount() < new_row+1:
+                self.setRowCount(new_row+1)
+
+            self.setItem(new_row, new_col, self._no_records_item)
             self.set_cell_widget_in_container(self._no_records_item.row(), self._no_records_item.column(), no_records_widget)
-            self.setRowHeight(self._no_records_item.row(), no_records_widget.sizeHint().height()+self.VERTICAL_SPACING)
+            if self._no_records_item.column() == 0:
+                self.setRowHeight(self._no_records_item.row(), no_records_widget.sizeHint().height()+self.VERTICAL_SPACING)
         elif total != '0' and self._no_records_item:
             self.takeItem(self.row(self._no_records_item))
             self._no_records_item = None
-
-        self._datasets.extend(datasets)
 
     def _add_datasets(self, datasets):
         for i, dataset in enumerate(datasets):
             datasetItem = QTableWidgetItem()
             datasetItem.setFlags(Qt.ItemFlags())
             datasetWidget = DatasetItemWidget(dataset)
-            new_row = len(self._datasets) + i
-            if self.rowCount() < new_row + 1:
+            
+            row_col = self.get_next_blank_dataset_cell()
+            if row_col is None:
+                new_row, new_col = self.get_next_empty_cell()
+            else:
+                new_row, new_col = row_col
+
+            if self.rowCount() < new_row+1:
                 self.setRowCount(new_row+1)
 
-            self.setItem(new_row, 0, datasetItem)
+            self.setItem(new_row, new_col, datasetItem)
             self.set_cell_widget_in_container(datasetItem.row(), datasetItem.column(), datasetWidget)
             self.setRowHeight(datasetItem.row(), DatasetItemWidget.CARD_HEIGHT+ self.VERTICAL_SPACING)
             datasetItem.setSizeHint(datasetWidget.sizeHint())
-        self.visible_count_changed.emit(self.rowCount() - (1 if self._load_more_item else 0))
 
     def _itemClicked(self, item):
         widget = self.cellWidget(item.row(), item.column())
@@ -334,8 +413,10 @@ class DatasetsBrowserWidget(QTableWidget):
             widget.showDetails()
 
     def load_more(self):
-        next_page = math.ceil(self.rowCount() / PAGE_SIZE)
-        self.removeRow(self._load_more_item.row())
+        next_page = math.ceil(len(self._datasets) / PAGE_SIZE) + 1
+        self.setCellWidget(self._load_more_item.row(), self._load_more_item.column(), None)
+        self.setItem(self._load_more_item.row(), self._load_more_item.column(), None)
+
         self._load_more_item = None
         self._create_temporary_items_for_page()
         self._fetch_records(page=next_page)
@@ -399,10 +480,10 @@ class DatasetItemWidgetBase(QFrame):
                border-radius: 10px; background: white;
             }"""
         )
-        self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
 
         self.labelMap = Label()
-        self.labelMap.setFixedSize(150, 150)
+        self.labelMap.setFixedHeight(150)
 
         self.labelName = QLabel()
         self.labelName.setFont(QFont("Arial", 10))
