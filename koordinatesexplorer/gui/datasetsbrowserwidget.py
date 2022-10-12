@@ -9,8 +9,7 @@ from qgis.PyQt import sip
 from qgis.PyQt.QtCore import (
     Qt,
     pyqtSignal,
-    QRect,
-    QSize
+    QRect
 )
 from qgis.PyQt.QtGui import (
     QColor,
@@ -37,7 +36,6 @@ from qgis.PyQt.QtWidgets import (
     QWidget,
     QAbstractItemView
 )
-from qgis.core import Qgis
 from qgis.core import (
     QgsProject,
     QgsGeometry,
@@ -53,8 +51,12 @@ from qgis.utils import iface
 
 from koordinatesexplorer.gui.datasetdialog import DatasetDialog
 from koordinatesexplorer.gui.thumbnails import downloadThumbnail
-from koordinatesexplorer.utils import cloneKartRepo, KartNotInstalledException
 from .gui_utils import GuiUtils
+from .star_button import StarButton
+from .action_button import (
+    CloneButton,
+    AddButton
+)
 from ..api import (
     KoordinatesClient,
     PAGE_SIZE,
@@ -62,8 +64,6 @@ from ..api import (
 )
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
-
-COLOR_INDEX = 0
 
 
 class Label(QLabel):
@@ -647,61 +647,12 @@ class EmptyDatasetItemWidget(DatasetItemWidgetBase):
         self.vlayout.addStretch()
 
 
-class StarButton(QLabel):
-
-    def __init__(self, checked: bool, dataset_id, parent=None):
-        super().__init__(parent)
-        self.setMouseTracking(True)
-        self._dataset_id = dataset_id
-        self._checked = checked
-        self._hover = False
-        self._update_icon()
-
-    def enterEvent(self, event):
-        if not self._checked:
-            self._hover = True
-        self._update_icon()
-
-    def leaveEvent(self, event):
-        self._hover = False
-        self._update_icon()
-
-    def _update_icon(self):
-        if self._checked:
-            icon = GuiUtils.get_svg_as_image('star_filled.svg', 24, 24)
-        elif self._hover:
-            icon = GuiUtils.get_svg_as_image('star_not-starred-hover.svg', 24, 24)
-        else:
-            icon = GuiUtils.get_svg_as_image('star_not-starred.svg', 24, 24)
-
-        self.setPixmap(QPixmap.fromImage(icon))
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            to_star = not self._checked
-            KoordinatesClient.instance().star(self._dataset_id, is_starred=to_star)
-            self._checked = to_star
-            self._update_icon()
-        else:
-            super().mousePressEvent(event)
-
-
 class DatasetItemWidget(DatasetItemWidgetBase):
     """
     Shows details for a dataset item
     """
 
     CARD_HEIGHT = DatasetItemWidgetBase.THUMBNAIL_SIZE + 2  # +2 for 2x1px border
-    BUTTON_HEIGHT = 32
-    BUTTON_COLOR_CLONE = "#f5f5f7"
-    BUTTON_OUTLINE_CLONE = "#c4c4c6"
-    BUTTON_TEXT_CLONE = "#323233"
-    BUTTON_HOVER_CLONE = "#e4e4e6"
-
-    BUTTON_COLOR_ADD = "#0a9b46"
-    BUTTON_OUTLINE_ADD = "#076d31"
-    BUTTON_TEXT_ADD = "#ffffff"
-    BUTTON_HOVER_ADD = "#077936"
 
     def __init__(self, dataset):
         super().__init__()
@@ -794,37 +745,11 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.buttonsLayout.addStretch()
 
         if self.dataset.get("repository") is not None:
-            self.btnClone = QToolButton()
-            self.btnClone.setText("Clone")
-            self.btnClone.setToolButtonStyle(Qt.ToolButtonIconOnly)
-            icon = GuiUtils.get_icon('clone_button.svg')
-            self.btnClone.setIcon(icon)
-            self.btnClone.setIconSize(QSize(63, 11))
-            self.btnClone.setStyleSheet(style.format(
-                self.BUTTON_COLOR_CLONE,
-                self.BUTTON_OUTLINE_CLONE,
-                self.BUTTON_TEXT_CLONE,
-                self.BUTTON_HOVER_CLONE))
-            self.btnClone.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
-            self.btnClone.clicked.connect(self.cloneRepository)
-            self.btnClone.setFixedSize(88, self.BUTTON_HEIGHT)
+            self.btnClone = CloneButton(self.dataset)
             self.buttonsLayout.addWidget(self.btnClone)
 
         if self.dataset.get("kind") in ["raster", "vector"]:
-            self.btnAdd = QToolButton()
-            self.btnAdd.setText("+Add")
-            self.btnAdd.setToolButtonStyle(Qt.ToolButtonIconOnly)
-
-            icon = GuiUtils.get_icon('add_button.svg')
-            self.btnAdd.setIcon(icon)
-            self.btnAdd.setIconSize(QSize(53, 11))
-            self.btnAdd.setStyleSheet(style.format(self.BUTTON_COLOR_ADD,
-                                                   self.BUTTON_OUTLINE_ADD,
-                                                   self.BUTTON_TEXT_ADD,
-                                                   self.BUTTON_HOVER_ADD))
-            self.btnAdd.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
-            self.btnAdd.clicked.connect(self.addLayer)
-            self.btnAdd.setFixedSize(72, self.BUTTON_HEIGHT)
+            self.btnAdd = AddButton(self.dataset)
             self.buttonsLayout.addWidget(self.btnAdd)
 
         self.bbox = self._geomFromGeoJson(self.dataset["data"].get("extent"))
@@ -985,52 +910,6 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             self.labelMap.hide()
         else:
             self.labelMap.show()
-
-    def cloneRepository(self):
-        url = self.dataset["repository"]["clone_location_https"]
-        try:
-            if cloneKartRepo(
-                    url, "kart", KoordinatesClient.instance().apiKey, iface.mainWindow()
-            ):
-                iface.messageBar().pushMessage(
-                    "Repository correctly cloned", Qgis.Info, duration=5
-                )
-        except KartNotInstalledException:
-            iface.messageBar().pushMessage(
-                "Kart plugin must be installed to clone repositories",
-                Qgis.Warning,
-                duration=5,
-            )
-
-    def addLayer(self):
-        MAP_LAYER_COLORS = (
-            "003399",
-            "ff0000",
-            "009e00",
-            "ff7b00",
-            "ff0090",
-            "9900ff",
-            "6b6b6b",
-            "ff7e7e",
-            "d4c021",
-            "00cf9f",
-            "81331f",
-            "7ca6ff",
-            "82d138",
-            "32c8db",
-        )
-
-        global COLOR_INDEX
-        color = MAP_LAYER_COLORS[COLOR_INDEX % len(MAP_LAYER_COLORS)]
-        COLOR_INDEX += 1
-
-        apikey = KoordinatesClient.instance().apiKey
-        uri = (
-            f"type=xyz&url=https://tiles-a.koordinates.com/services;key%3D{apikey}/tiles/v4/"
-            f"layer={self.dataset['id']},color={color}/EPSG:3857/"
-            "%7BZ%7D/%7BX%7D/%7BY%7D.png&zmax=19&zmin=0&crs=EPSG3857"
-        )
-        iface.addRasterLayer(uri, self.dataset["title"], "wms")
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
