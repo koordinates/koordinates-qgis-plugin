@@ -523,9 +523,8 @@ class DatasetItemWidgetBase(QFrame):
 
         self.setLayout(layout)
 
-    def setThumbnail(self, img: Optional[QImage]):
-
-        target = QPixmap(self.labelMap.size())
+    def process_thumbnail(self, img: Optional[QImage]) -> QImage:
+        target = QImage(self.labelMap.size(), QImage.Format_ARGB32)
         target.fill(Qt.transparent)
 
         painter = QPainter(target)
@@ -575,7 +574,11 @@ class DatasetItemWidgetBase(QFrame):
 
         painter.end()
 
-        self.labelMap.setPixmap(target)
+        return target
+
+    def setThumbnail(self, img: Optional[QImage]):
+        thumbnail = self.process_thumbnail(img)
+        self.labelMap.setPixmap(QPixmap.fromImage(thumbnail))
 
 
 class EmptyDatasetItemWidget(DatasetItemWidgetBase):
@@ -826,6 +829,51 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.footprint.setFillColor(QColor(255, 0, 0, 40))
 
         self.setCursor(QCursor(Qt.PointingHandCursor))
+
+    def get_icon_for_dataset(self) -> Optional[str]:
+        if self.dataset.get('type') == 'layer':
+            if self.dataset.get('kind') == 'vector':
+                if self.dataset.get('data', {}).get('geometry_type') in ('polygon', 'multipolygon'):
+                    return 'polygon-light.svg'
+                elif self.dataset.get('data', {}).get('geometry_type') in ('point', 'multipoint'):
+                    return 'point-light.svg'
+                elif self.dataset.get('data', {}).get('geometry_type') in ('linestring', 'multilinestring'):
+                    return 'line-light.svg'
+            elif self.dataset.get('kind') == 'raster':
+                return 'raster-light.svg'
+            elif self.dataset.get('kind') == 'grid':
+                return 'grid-light.svg'
+        elif self.dataset.get('type') == 'table':
+            return 'table-light.svg'
+        elif self.dataset.get('type') == 'document':
+            return 'document-light.svg'
+        elif self.dataset.get('type') == 'set':
+            return 'set-light.svg'
+        elif self.dataset.get('type') == 'repo':
+            return 'repo-light.svg'
+
+        return None
+
+    def process_thumbnail(self, img: Optional[QImage]) -> QImage:
+        base = super().process_thumbnail(img)
+
+        painter = QPainter(base)
+        painter.setRenderHint(QPainter.Antialiasing, True)
+
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(QBrush(QColor(0,0,0,150)))
+        painter.drawRoundedRect(15,100,117,32, 4, 4)
+
+        icon = self.get_icon_for_dataset()
+        if icon:
+            painter.drawImage(21,106,GuiUtils.get_svg_as_image(icon, 20,20))
+
+        # self.dataset["data"]["feature_count"]
+
+        painter.end()
+
+
+        return base
 
     def cloneRepository(self):
         url = self.dataset["repository"]["clone_location_https"]
