@@ -87,7 +87,7 @@ class DatasetsBrowserWidget(QTableWidget):
         self.setObjectName('DatasetsBrowserWidget')
         self.setStyleSheet("""
         #DatasetsBrowserWidget {{ border: none; }}
-        QTableWidget::item {{ padding-top: {}px; padding-right: {}px }}
+        QTableWidget::item {{ padding-bottom: {}px; padding-right: {}px }}
         """.format(self.VERTICAL_SPACING, self.HORIZONTAL_SPACING))
         self.viewport().setStyleSheet("#qt_scrollarea_viewport{ background: transparent; }")
 
