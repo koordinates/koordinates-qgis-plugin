@@ -54,7 +54,10 @@ from .action_button import (
     CloneButton,
     AddButton
 )
-from .dataset_utils import DatasetGuiUtils
+from .dataset_utils import (
+    DatasetGuiUtils,
+    IconStyle
+)
 from .gui_utils import GuiUtils
 from .star_button import StarButton
 from ..api import (
@@ -770,7 +773,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         painter.setBrush(QBrush(QColor(0, 0, 0, 150)))
         painter.drawRoundedRect(15, 100, 117, 32, 4, 4)
 
-        icon = DatasetGuiUtils.get_icon_for_dataset(self.dataset)
+        icon = DatasetGuiUtils.get_icon_for_dataset(self.dataset, IconStyle.Light)
         if icon:
             painter.drawImage(21, 106, GuiUtils.get_svg_as_image(icon, 20, 20))
 
