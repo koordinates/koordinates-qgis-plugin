@@ -3,34 +3,46 @@ from typing import (
     Dict
 )
 
+from enum import Enum
+
 from qgis.core import QgsFileUtils
+
+class IconStyle(Enum):
+    Dark = 0
+    Light = 1
+
 
 class DatasetGuiUtils:
     
     @staticmethod
-    def get_icon_for_dataset(dataset: Dict) -> Optional[str]:
+    def get_icon_for_dataset(dataset: Dict, style: IconStyle) -> Optional[str]:
+        if style == IconStyle.Light:
+            suffix = 'light'
+        else:
+            suffix = 'dark'
+
         if dataset.get('type') == 'layer':
             if dataset.get('kind') == 'vector':
                 if dataset.get('data', {}).get('geometry_type') in (
                         'polygon', 'multipolygon'):
-                    return 'polygon-light.svg'
+                    return 'polygon-{}.svg'.format(suffix)
                 elif dataset.get('data', {}).get('geometry_type') in ('point', 'multipoint'):
-                    return 'point-light.svg'
+                    return 'point-{}.svg'.format(suffix)
                 elif dataset.get('data', {}).get('geometry_type') in (
                         'linestring', 'multilinestring'):
-                    return 'line-light.svg'
+                    return 'line-{}.svg'.format(suffix)
             elif dataset.get('kind') == 'raster':
-                return 'raster-light.svg'
+                return 'raster-{}.svg'.format(suffix)
             elif dataset.get('kind') == 'grid':
-                return 'grid-light.svg'
+                return 'grid-{}.svg'.format(suffix)
         elif dataset.get('type') == 'table':
-            return 'table-light.svg'
+            return 'table-{}.svg'.format(suffix)
         elif dataset.get('type') == 'document':
-            return 'document-light.svg'
+            return 'document-{}.svg'.format(suffix)
         elif dataset.get('type') == 'set':
-            return 'set-light.svg'
+            return 'set-{}.svg'.format(suffix)
         elif dataset.get('type') == 'repo':
-            return 'repo-light.svg'
+            return 'repo-{}.svg'.format(suffix)
     
         return None
     
