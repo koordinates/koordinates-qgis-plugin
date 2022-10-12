@@ -6,7 +6,12 @@ from typing import Optional, Tuple
 
 from dateutil import parser
 from qgis.PyQt import sip
-from qgis.PyQt.QtCore import Qt, pyqtSignal, QRect
+from qgis.PyQt.QtCore import (
+    Qt,
+    pyqtSignal,
+    QRect,
+    QSize
+)
 from qgis.PyQt.QtGui import (
     QColor,
     QPixmap,
@@ -52,6 +57,7 @@ from ..api import (
     PAGE_SIZE,
     DataBrowserQuery
 )
+from .gui_utils import GuiUtils
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
@@ -494,24 +500,31 @@ class DatasetItemWidgetBase(QFrame):
         self.labelMap.setFixedHeight(150)
 
         self.labelName = QLabel()
-        self.labelName.setFont(QFont("Arial", 10))
         self.labelName.setWordWrap(True)
+        self.labelName.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
         self.stats_hlayout = QHBoxLayout()
 
         self.vlayout = QVBoxLayout()
-        self.vlayout.addWidget(self.labelName)
-        self.vlayout.addLayout(self.stats_hlayout)
+        self.vlayout.setContentsMargins(11,17,15,15)
+
+        hl = QHBoxLayout()
+        hl.setContentsMargins(0,0,0,0)
+        hl.addWidget(self.labelName, 1)
+
+        self.vlayout.addLayout(hl)
+
+        self.buttonsLayout = QHBoxLayout()
+        self.buttonsLayout.setContentsMargins(0,0,0,0)
+
+        self.vlayout.addLayout(self.buttonsLayout)
+
+        #self.vlayout.addLayout(self.stats_hlayout)
 
         layout = QHBoxLayout()
         layout.setMargin(0)
         layout.addWidget(self.labelMap)
         layout.addLayout(self.vlayout)
-
-        self.buttonsLayout = QVBoxLayout()
-
-        layout.addLayout(self.buttonsLayout)
-        layout.addSpacing(20)
 
         self.setLayout(layout)
 
@@ -638,7 +651,17 @@ class DatasetItemWidget(DatasetItemWidgetBase):
     Shows details for a dataset item
     """
 
-    CARD_HEIGHT = 152
+    CARD_HEIGHT = DatasetItemWidgetBase.THUMBNAIL_SIZE + 2  # +2 for 2x1px border
+    BUTTON_HEIGHT = 32
+    BUTTON_COLOR_CLONE = "#f5f5f7"
+    BUTTON_OUTLINE_CLONE = "#c4c4c6"
+    BUTTON_TEXT_CLONE = "#323233"
+    BUTTON_HOVER_CLONE = "#e4e4e6"
+
+    BUTTON_COLOR_ADD = "#0a9b46"
+    BUTTON_OUTLINE_ADD = "#076d31"
+    BUTTON_TEXT_ADD = "#ffffff"
+    BUTTON_HOVER_ADD = "#077936"
 
     def __init__(self, dataset):
         super().__init__()
@@ -650,14 +673,9 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         date = parser.parse(self.dataset["published_at"])
 
-        def mousePressed(event):
-            self.showDetails()
-
-        self.labelName.mousePressEvent = mousePressed
-
         self.labelName.setText(
-            f'<b>{self.dataset["title"]}</b><br>'
-            f'{self.dataset["publisher"]["name"]}<br>'
+            f'<p style="line-height: 130%; font-size: 11pt; font-family: Arial, Sans"><b>{self.dataset["title"]}</b><br>'
+            f'<span style="color: #868889; font-size: 10pt; font-family: Arial, Sans">{self.dataset["publisher"]["name"]}</span></p>'
         )
 
         def pixmap(name):
@@ -670,28 +688,10 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         self.labelUpdated = QLabel()
 
-        self.labelViewsIcon = QLabel()
-        self.labelViewsIcon.setPixmap(pixmap("eye.png"))
-
-        self.labelViews = QLabel()
-
-        self.labelExportsIcon = QLabel()
-        self.labelExportsIcon.setPixmap(pixmap("download.png"))
-
-        self.labelExports = QLabel()
-
         self.labelUpdated.setText(f'{date.strftime("%d %b %Y")}')
-
-        self.labelViews.setText(str(self.dataset["num_views"]))
-
-        self.labelExports.setText(str(self.dataset["num_downloads"]))
 
         self.stats_hlayout.addWidget(self.labelUpdatedIcon)
         self.stats_hlayout.addWidget(self.labelUpdated)
-        self.stats_hlayout.addWidget(self.labelViewsIcon)
-        self.stats_hlayout.addWidget(self.labelViews)
-        self.stats_hlayout.addWidget(self.labelExportsIcon)
-        self.stats_hlayout.addWidget(self.labelExports)
         self.stats_hlayout.addStretch()
 
         base_style = self.styleSheet()
@@ -703,19 +703,19 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.setStyleSheet(base_style)
 
         style = """
-                QToolButton{
-                background-color: #1b9a4b;
-                border-style: outset;
+                QToolButton{{
+                background-color: {};
+                border-style: solid;
                 border-width: 1px;
                 border-radius: 4px;
-                border-color: rgb(150, 150, 150);
+                border-color: {};
                 font: bold 14px;
-                color: white;
-                padding: 5px 0px 5px 0px;
-                }
-                QToolButton:hover{
-                    background-color: #119141;
-                }
+                color: {};
+                padding: 2px 0px 2px 0px;
+                }}
+                QToolButton:hover{{
+                    background-color: {};
+                }}
                 """
 
         self.buttonsLayout.addStretch()
@@ -723,22 +723,36 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         if self.dataset.get("repository") is not None:
             self.btnClone = QToolButton()
             self.btnClone.setText("Clone")
-            self.btnClone.setStyleSheet(style)
+            self.btnClone.setToolButtonStyle(Qt.ToolButtonIconOnly)
+            icon = GuiUtils.get_icon('clone_button.svg')
+            self.btnClone.setIcon(icon)
+            self.btnClone.setIconSize(QSize(63, 11))
+            self.btnClone.setStyleSheet(style.format(
+                self.BUTTON_COLOR_CLONE,
+                           self.BUTTON_OUTLINE_CLONE,
+            self.BUTTON_TEXT_CLONE,
+            self.BUTTON_HOVER_CLONE))
             self.btnClone.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
             self.btnClone.clicked.connect(self.cloneRepository)
-            self.btnClone.setFixedSize(80, 40)
+            self.btnClone.setFixedSize(88, self.BUTTON_HEIGHT)
             self.buttonsLayout.addWidget(self.btnClone)
 
         if self.dataset.get("kind") in ["raster", "vector"]:
             self.btnAdd = QToolButton()
             self.btnAdd.setText("+Add")
-            self.btnAdd.setStyleSheet(style)
+            self.btnAdd.setToolButtonStyle(Qt.ToolButtonIconOnly)
+
+            icon = GuiUtils.get_icon('add_button.svg')
+            self.btnAdd.setIcon(icon)
+            self.btnAdd.setIconSize(QSize(53, 11))
+            self.btnAdd.setStyleSheet(style.format(self.BUTTON_COLOR_ADD,
+                           self.BUTTON_OUTLINE_ADD,
+                                                   self.BUTTON_TEXT_ADD,
+                                                   self.BUTTON_HOVER_ADD))
             self.btnAdd.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
             self.btnAdd.clicked.connect(self.addLayer)
-            self.btnAdd.setFixedSize(80, 40)
+            self.btnAdd.setFixedSize(72, self.BUTTON_HEIGHT)
             self.buttonsLayout.addWidget(self.btnAdd)
-
-        self.buttonsLayout.addSpacing(10)
 
         self.bbox = self._geomFromGeoJson(self.dataset["data"].get("extent"))
         self.footprint = QgsRubberBand(iface.mapCanvas(), QgsWkbTypes.PolygonGeometry)
@@ -793,6 +807,12 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             "%7BZ%7D/%7BX%7D/%7BY%7D.png&zmax=19&zmin=0&crs=EPSG3857"
         )
         iface.addRasterLayer(uri, self.dataset["title"], "wms")
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.showDetails()
+        else:
+            super().mousePressEvent(event)
 
     def showDetails(self):
         dataset = (
