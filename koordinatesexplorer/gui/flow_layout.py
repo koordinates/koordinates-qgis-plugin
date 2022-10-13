@@ -125,7 +125,12 @@ class FlowLayout(QLayout):
         assigned_lines = []
         current_line_items = []
 
-        for item in self.itemList:
+        visible_items = [i for i in self.itemList if i.widget().isVisible()]
+
+        if not visible_items:
+            return 0
+
+        for item in visible_items:
             wid = item.widget()
             space_x = self.horizontalSpacing()
             if space_x == -1:
@@ -175,11 +180,11 @@ class FlowLayout(QLayout):
             # OOO  OOO
             # !
 
-            widgets_per_line = math.ceil(len(self.itemList) / min_required_lines)
+            widgets_per_line = math.ceil(len(visible_items) / min_required_lines)
 
             new_assigned_lines = []
             current_row = []
-            for item in self.itemList:
+            for item in visible_items:
                 if len(current_row) < widgets_per_line:
                     current_row.append(item)
                 else:
