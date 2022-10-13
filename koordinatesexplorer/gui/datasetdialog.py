@@ -1,5 +1,6 @@
+import locale
 import os
-from typing import Dict
+from typing import Dict, List, Tuple
 
 from dateutil import parser
 from qgis.PyQt import uic
@@ -220,6 +221,55 @@ class HeaderWidget(QFrame):
         QApplication.clipboard().setText(url)
 
 
+class DetailsTable(QGridLayout):
+
+    def __init__(self, title: str, parent=None):
+        super().__init__(parent)
+        self.setVerticalSpacing(13)
+
+        heading = QLabel(
+            """<b style="font-family: Arial, sans; font-size: 10pt; color: black">{}</b>""".format(
+                title))
+        self.addWidget(heading, 0, 0, 1, 2)
+        self.setColumnStretch(1, 1)
+
+    def push_row(self, title: str, value: str):
+        if self.rowCount() > 1:
+            self.addWidget(HorizontalLine(), self.rowCount(), 0, 1, 2)
+
+        is_monospace = title.startswith('_')
+        if is_monospace:
+            title = title[1:]
+
+        row = self.rowCount()
+        title_label = QLabel(
+            """<span style="font-family: Arial, sans;
+            font-size: 10pt;
+            color: #868889">{}</span>""".format(
+                title))
+        title_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
+        title_label.setFixedWidth(110)
+        title_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+        self.addWidget(title_label, row, 0, 1, 1)
+        font_family = "Arial, sans" if not is_monospace else 'monospace'
+        value_label = QLabel(
+            """<span style="font-family: {}; font-size: 10pt; color: black">{}</span>""".format(
+                font_family,
+                value))
+        value_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
+        value_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+        value_label.setWordWrap(True)
+        self.addWidget(value_label, row, 1, 1, 1)
+
+    def finalize(self):
+        self.addWidget(HorizontalLine(), self.rowCount(), 0, 1, 2)
+
+    def set_details(self, details: List[Tuple]):
+        for title, value in details:
+            self.push_row(title, value)
+        self.finalize()
+
+
 class DatasetDialog(QDialog):
     def __init__(self, dataset):
         super().__init__(iface.mainWindow())
@@ -343,6 +393,19 @@ class DatasetDialog(QDialog):
         self.description_label.setText(self.dataset["description_html"])
 
         contents_layout.addWidget(self.description_label, 1)
+
+        contents_layout.addSpacing(40)
+
+        tech_details_grid = DetailsTable('Technical Details')
+        tech_details_grid.set_details(self.get_technical_details())
+        contents_layout.addLayout(tech_details_grid)
+
+        contents_layout.addSpacing(40)
+
+        history_grid = DetailsTable('History')
+        history_grid.set_details(self.get_history_details())
+        contents_layout.addLayout(history_grid)
+
         contents_layout.addStretch()
 
         # contents_layout.addStretch(1)
@@ -360,47 +423,35 @@ class DatasetDialog(QDialog):
 
         self.setLayout(layout)
 
-    def _html(self):
-        if self.dataset["data"].get("fields") is not None:
-            extra = f"""
-                </tr><tr>
-                <td>Data type</td> <td>{self.dataset["data"]["geometry_type"]}</td>
-                </tr><tr>
-                <td> Feature count </td><td> {self.dataset["data"]["feature_count"]} </td>
-                </tr><tr>
-                  <td> Attributes </td><td>{", ".join(
-                [f["name"] for f in self.dataset["data"]["fields"]]
-            )}</td>
-            """
+    def format_number(self, value):
+        return locale.format_string("%d", value, grouping=True)
 
-        elif "feature_count" in self.dataset["data"]:
-            extra = f"""
-                </tr><tr>
-                <td> Tile count </td><td> {self.dataset["data"]["feature_count"]} </td>
-            """
-        else:
-            extra = ""
-        html = f"""
-            <p>{self.dataset["description_html"]}</p>
-            <h3>Koordinates categories</h3>
-            {"<br>".join([cat["name"] for cat in self.dataset["categories"]])}
-            <h3>Tags</h3>
-            {" | ".join(self.dataset["tags"])}
-            <h3>Details</h3>
-            <p>
-            <table>
-              <tbody>
-                <tr>
-                  <td> Layer ID </td><td> {self.dataset["id"]}</td>
-                  {extra}
-                </tr><tr>
-                  <td> Stored CRS </td><td>{self.dataset["data"]["crs_display"]}</td>
-                </tr>
-              </tbody>
-            </table>
-            </p>
-        """
-        return html
+    def format_date(self, value):
+        return parser.parse(value).strftime("%d %b %Y")
+
+    def get_technical_details(self) -> List[Tuple]:
+        feature_count = self.dataset["data"]["feature_count"]
+        empty_count = self.dataset["data"].get('empty_geometry_count', 0)
+        feature_count_label = self.format_number(feature_count)
+        if empty_count:
+            feature_count_label += ' • {} with empty or null geometries'.format(
+                self.format_number(empty_count))
+        return [
+            ('Data type', DatasetGuiUtils.get_data_type(self.dataset)),
+            ('CRS', '{} • {}'.format(self.dataset["data"]["crs_display"],
+                                     self.dataset["data"]["crs"]
+                                     )),
+            ('Feature count', feature_count_label),
+            ('_Attributes', ", ".join(
+                [f["name"] for f in self.dataset["data"]["fields"]])),
+            ('_Primary key', ", ".join(self.dataset["data"]["primary_key_fields"]))]
+
+    def get_history_details(self) -> List[Tuple]:
+        return [
+            ('Added', self.format_date(self.dataset["first_published_at"])),
+            ('Last updated', self.format_date(self.dataset["published_at"])),
+            ('Revisions', 'xxx')
+        ]
 
     def setThumbnail(self, img):
         target = QImage(self.thumbnail_label.size(), QImage.Format_ARGB32)
