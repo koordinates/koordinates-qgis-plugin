@@ -292,7 +292,9 @@ class DatasetDialog(QDialog):
         description = DatasetGuiUtils.get_type_description(self.dataset)
         subtitle = DatasetGuiUtils.get_subtitle(self.dataset)
 
-        summary_label.setText("""<p style="line-height: 130%; font-family: Arial, Sans; font-size: 10pt"><b>Data type</b><br>
+        summary_label.setText("""<p style="line-height: 130%;
+        font-family: Arial, Sans;
+        font-size: 10pt"><b>Data type</b><br>
         {},<br>{}</p>""".format(description, subtitle))
 
         base_details_right_pane_layout.addSpacing(10)
