@@ -47,6 +47,37 @@ class DatasetGuiUtils:
         return None
 
     @staticmethod
+    def get_data_type(dataset: Dict) -> Optional[str]:
+        if dataset.get('type') == 'layer':
+            if dataset.get('kind') == 'vector':
+                if dataset.get('data', {}).get('geometry_type') == 'polygon':
+                    return 'Vector polygon'
+                elif dataset.get('data', {}).get('geometry_type') == 'multipolygon':
+                    return 'Vector multipolygon'
+                elif dataset.get('data', {}).get('geometry_type') == 'point':
+                    return 'Vector point'
+                elif dataset.get('data', {}).get('geometry_type') == 'multipoint':
+                    return 'Vector multipoint'
+                elif dataset.get('data', {}).get('geometry_type') == 'linestring':
+                    return 'Vector line'
+                elif dataset.get('data', {}).get('geometry_type') == 'multilinestring':
+                    return 'Vector multiline'
+            elif dataset.get('kind') == 'raster':
+                return 'Raster'
+            elif dataset.get('kind') == 'grid':
+                return 'Grid'
+        elif dataset.get('type') == 'table':
+            return 'Table'
+        elif dataset.get('type') == 'document':
+            return 'Document'
+        elif dataset.get('type') == 'set':
+            return 'Set'
+        elif dataset.get('type') == 'repo':
+            return 'Repository'
+
+        return None
+
+    @staticmethod
     def get_type_description(dataset: Dict) -> Optional[str]:
         if dataset.get('type') == 'layer':
             if dataset.get('kind') == 'vector':
