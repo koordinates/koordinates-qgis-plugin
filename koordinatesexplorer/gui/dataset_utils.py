@@ -1,11 +1,11 @@
+from enum import Enum
 from typing import (
     Optional,
     Dict
 )
 
-from enum import Enum
-
 from qgis.core import QgsFileUtils
+
 
 class IconStyle(Enum):
     Dark = 0
@@ -13,7 +13,7 @@ class IconStyle(Enum):
 
 
 class DatasetGuiUtils:
-    
+
     @staticmethod
     def get_icon_for_dataset(dataset: Dict, style: IconStyle) -> Optional[str]:
         if style == IconStyle.Light:
@@ -43,9 +43,9 @@ class DatasetGuiUtils:
             return 'set-{}.svg'.format(suffix)
         elif dataset.get('type') == 'repo':
             return 'repo-{}.svg'.format(suffix)
-    
+
         return None
-    
+
     @staticmethod
     def get_type_description(dataset: Dict) -> Optional[str]:
         if dataset.get('type') == 'layer':
@@ -70,7 +70,7 @@ class DatasetGuiUtils:
             return 'Set'
         elif dataset.get('type') == 'repo':
             return 'Repository'
-    
+
         return None
 
     @staticmethod
@@ -102,9 +102,9 @@ class DatasetGuiUtils:
             return None
         elif dataset.get('type') == 'repo':
             return None
-    
+
         return None
-    
+
     @staticmethod
     def format_count(count: int) -> str:
         """
@@ -114,14 +114,14 @@ class DatasetGuiUtils:
             rounded = ((count * 10) // 1000000) / 10
             if int(rounded) == rounded:
                 rounded = int(rounded)
-    
+
             return str(rounded) + 'M'
-    
+
         if count >= 1000:
             rounded = ((count * 10) // 1000) / 10
             if int(rounded) == rounded:
                 rounded = int(rounded)
-    
+
             return str(rounded) + 'K'
-    
+
         return str(count)

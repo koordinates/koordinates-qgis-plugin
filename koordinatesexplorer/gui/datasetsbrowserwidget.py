@@ -729,22 +729,6 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         """
         self.setStyleSheet(base_style)
 
-        style = """
-                QToolButton{{
-                background-color: {};
-                border-style: solid;
-                border-width: 1px;
-                border-radius: 4px;
-                border-color: {};
-                font: bold 14px;
-                color: {};
-                padding: 2px 0px 2px 0px;
-                }}
-                QToolButton:hover{{
-                    background-color: {};
-                }}
-                """
-
         self.buttonsLayout.addStretch()
 
         if self.dataset.get("repository") is not None:

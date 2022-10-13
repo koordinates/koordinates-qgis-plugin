@@ -2,19 +2,16 @@ from qgis.PyQt.QtCore import (
     QTimer,
     pyqtSignal
 )
+from qgis.PyQt.QtGui import (
+    QFontMetrics
+)
 from qgis.PyQt.QtWidgets import (
     QWidget,
-    QGridLayout,
     QVBoxLayout,
     QHBoxLayout,
     QToolButton,
     QSizePolicy,
-    QStackedWidget,
-    QSpacerItem,
     QLabel
-)
-from qgis.PyQt.QtGui import (
-    QFontMetrics
 )
 from qgis.gui import (
     QgsFilterLineEdit
@@ -24,6 +21,7 @@ from .access_filter_widget import AccessFilterWidget
 #  from .category_filter_widget import CategoryFilterWidget
 from .data_type_filter_widget import DataTypeFilterWidget
 from .date_filter_widget import DateFilterWidget
+from .flow_layout import FlowLayout
 from .gui_utils import GuiUtils
 from .license_filter_widget import LicenseFilterWidget
 from .resolution_filter_widget import ResolutionFilterWidget
@@ -32,7 +30,7 @@ from ..api import (
     DataType,
     SortOrder
 )
-from .flow_layout import FlowLayout
+
 
 class FilterWidget(QWidget):
     filters_changed = pyqtSignal()
@@ -90,7 +88,7 @@ class FilterWidget(QWidget):
         self.license_widget = LicenseFilterWidget(self)
         self.access_widget = AccessFilterWidget(self)
 
-        min_filter_widget_width = QFontMetrics(self.font()).width('x')*20
+        min_filter_widget_width = QFontMetrics(self.font()).width('x') * 20
         # self.category_filter_widget.setMinimumWidth(min_filter_widget_width)
         self.data_type_filter_widget.setMinimumWidth(min_filter_widget_width)
         self.resolution_widget.setMinimumWidth(min_filter_widget_width)
@@ -171,7 +169,6 @@ class FilterWidget(QWidget):
             self.resolution_widget.setVisible(False)
 
         self.filter_widget_page.layout().update()
-
 
     def build_query(self) -> DataBrowserQuery:
         """

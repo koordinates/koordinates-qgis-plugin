@@ -86,8 +86,6 @@ class FlowLayout(QLayout):
     def _doLayout(self, rect, testOnly):
 
         def max_widget_width_for_line(items, effective_rect):
-            _x = effective_rect.x()
-
             spacing = []
             for _item in items:
                 _space_x = self.horizontalSpacing()
@@ -170,7 +168,8 @@ class FlowLayout(QLayout):
         if not testOnly:
 
             min_required_lines = len(assigned_lines)
-            # now that we now the absolute MINIMUM number of lines required for the widgets, let's evenly
+            # now that we now the absolute MINIMUM number of
+            # lines required for the widgets, let's evenly
             # space them out over the required rows
             # we don't want:
             # OO OO OO
