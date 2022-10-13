@@ -83,76 +83,38 @@ class FilterWidget(QWidget):
 
         vl.addLayout(hl)
 
-        # Warning: we can't create a dynamic QLayout for these widgets, as it is NOT possible
-        # to re-parent a QgsFloatingWidget without risk of crashing.
-        # Accordingly, we instead use a stacked widget with two different layouts
-        # (one for grid/raster and one for all other types), and have multiple filter
-        # widgets shown on the different stacked widget pages
-        # self.category_filter_widget_1 = CategoryFilterWidget(self)
-        # self.category_filter_widget_2 = CategoryFilterWidget(self)
-        self.data_type_filter_widget_1 = DataTypeFilterWidget(self)
-        self.data_type_filter_widget_2 = DataTypeFilterWidget(self)
+        # self.category_filter_widget = CategoryFilterWidget(self)
+        self.data_type_filter_widget = DataTypeFilterWidget(self)
         self.resolution_widget = ResolutionFilterWidget(self)
-        self.date_filter_widget_1 = DateFilterWidget(self)
-        self.date_filter_widget_2 = DateFilterWidget(self)
-        self.license_widget_1 = LicenseFilterWidget(self)
-        self.license_widget_2 = LicenseFilterWidget(self)
-        self.access_widget_1 = AccessFilterWidget(self)
-        self.access_widget_2 = AccessFilterWidget(self)
+        self.date_filter_widget = DateFilterWidget(self)
+        self.license_widget = LicenseFilterWidget(self)
+        self.access_widget = AccessFilterWidget(self)
 
-        self.advanced_stacked_widget = QStackedWidget()
-        self.advanced_stacked_widget.setVisible(False)
-        self.advanced_stacked_widget.setSizePolicy(
-            self.advanced_stacked_widget.sizePolicy().horizontalPolicy(),
-            QSizePolicy.Maximum
-        )
+        min_filter_widget_width = QFontMetrics(self.font()).width('x')*20
+        # self.category_filter_widget.setMinimumWidth(min_filter_widget_width)
+        self.data_type_filter_widget.setMinimumWidth(min_filter_widget_width)
+        self.resolution_widget.setMinimumWidth(min_filter_widget_width)
+        self.date_filter_widget.setMinimumWidth(min_filter_widget_width)
+        self.license_widget.setMinimumWidth(min_filter_widget_width)
+        self.access_widget.setMinimumWidth(min_filter_widget_width)
 
-        self.filter_widget_page_non_grid = QWidget()
-        filter_widget_layout_1 = FlowLayout()
-        filter_widget_layout_1.setContentsMargins(0, 0, 0, 0)
-        #filter_widget_layout_1.addWidget(self.category_filter_widget_1)
-        filter_widget_layout_1.addWidget(self.data_type_filter_widget_1)
+        self.filter_widget_page = QWidget()
+        filter_widget_layout = FlowLayout()
+        filter_widget_layout.setContentsMargins(0, 0, 0, 0)
+        # filter_widget_layout.addWidget(self.category_filter_widget)
+        filter_widget_layout.addWidget(self.data_type_filter_widget)
+        filter_widget_layout.addWidget(self.resolution_widget)
+        filter_widget_layout.addWidget(self.date_filter_widget)
+        filter_widget_layout.addWidget(self.license_widget)
+        filter_widget_layout.addWidget(self.access_widget)
+        self.filter_widget_page.setLayout(filter_widget_layout)
 
-        min_filter_widget = QFontMetrics(self.font()).width('x')*20
-        self.data_type_filter_widget_1.setMinimumWidth(min_filter_widget)
-        filter_widget_layout_1.addWidget(self.date_filter_widget_1)
-        self.date_filter_widget_1.setMinimumWidth(min_filter_widget)
-        filter_widget_layout_1.addWidget(self.license_widget_1)
-        self.license_widget_1.setMinimumWidth(min_filter_widget)
-        filter_widget_layout_1.addWidget(self.access_widget_1)
-        self.access_widget_1.setMinimumWidth(min_filter_widget)
-        self.filter_widget_page_non_grid.setLayout(filter_widget_layout_1)
-        self.advanced_stacked_widget.addWidget(self.filter_widget_page_non_grid)
-
-        self.filter_widget_page_grid = QWidget()
-        filter_widget_layout_2 = FlowLayout()
-        filter_widget_layout_2.setContentsMargins(0, 0, 0, 0)
-        # filter_widget_layout_2.addWidget(self.category_filter_widget_2, 0, 0)
-        filter_widget_layout_2.addWidget(self.data_type_filter_widget_2)
-        self.data_type_filter_widget_2.setMinimumWidth(min_filter_widget)
-        filter_widget_layout_2.addWidget(self.resolution_widget)
-        self.resolution_widget.setMinimumWidth(min_filter_widget)
-        filter_widget_layout_2.addWidget(self.date_filter_widget_2)
-        self.date_filter_widget_2.setMinimumWidth(min_filter_widget)
-        filter_widget_layout_2.addWidget(self.license_widget_2)
-        self.license_widget_2.setMinimumWidth(min_filter_widget)
-        filter_widget_layout_2.addWidget(self.access_widget_2)
-        self.access_widget_2.setMinimumWidth(min_filter_widget)
-        self.filter_widget_page_grid.setLayout(filter_widget_layout_2)
-        self.advanced_stacked_widget.addWidget(self.filter_widget_page_grid)
-        self.advanced_stacked_widget.setCurrentWidget(self.filter_widget_page_grid)
-
-        self.filter_widgets = (  # self.category_filter_widget_1,
-            # self.category_filter_widget_2,
-            self.data_type_filter_widget_1,
-            self.data_type_filter_widget_2,
+        self.filter_widgets = (  # self.category_filter_widget,
+            self.data_type_filter_widget,
             self.resolution_widget,
-            self.date_filter_widget_1,
-            self.date_filter_widget_2,
-            self.license_widget_1,
-            self.license_widget_2,
-            self.access_widget_1,
-            self.access_widget_2)
+            self.date_filter_widget,
+            self.license_widget,
+            self.access_widget,)
 
         # changes to filter parameters are deferred to a small timeout, to avoid
         # starting lots of queries while a user is mid-operation (such as dragging a slider)
@@ -164,24 +126,9 @@ class FilterWidget(QWidget):
             w.changed.connect(self._filter_widget_changed)
         self.search_line_edit.textChanged.connect(self._filter_widget_changed)
 
-        vl.addWidget(self.advanced_stacked_widget)
+        vl.addWidget(self.filter_widget_page)
 
         self.setLayout(vl)
-
-    def _current_filter_widgets(self):
-        if self.advanced_stacked_widget.currentWidget() == self.filter_widget_page_non_grid:
-            return (  # self.category_filter_widget_1,
-                self.data_type_filter_widget_1,
-                self.license_widget_1,
-                self.date_filter_widget_1,
-                self.access_widget_1)
-        else:
-            return (  # self.category_filter_widget_2,
-                self.data_type_filter_widget_2,
-                self.resolution_widget,
-                self.date_filter_widget_2,
-                self.license_widget_2,
-                self.access_widget_2)
 
     def _clear_all(self):
         for w in self.filter_widgets:
@@ -210,63 +157,21 @@ class FilterWidget(QWidget):
         self.advanced_stacked_widget.setMinimumWidth(0)
         self.adjustSize()
 
-    def data_type_filter_widget(self):
-        if self.advanced_stacked_widget.currentWidget() == self.filter_widget_page_non_grid:
-            return self.data_type_filter_widget_1
-        else:
-            return self.data_type_filter_widget_2
-
     def _filter_widget_changed(self):
         # changes to filter parameters are deferred to a small timeout, to avoid
         # starting lots of queries while a user is mid-operation (such as dragging a slider)
         self._update_query_timeout.start(500)
 
-        data_type_popup_previously_open = self.data_type_filter_widget().is_expanded()
-        widget_to_expand = None
-
-        selected_data_types = self.data_type_filter_widget().data_types()
+        selected_data_types = self.data_type_filter_widget.data_types()
 
         if DataType.Rasters in selected_data_types or DataType.Grids in selected_data_types:
-            if self.advanced_stacked_widget.currentWidget() != self.filter_widget_page_grid:
-                current_query = self.build_query()
-                self.advanced_stacked_widget.setCurrentWidget(self.filter_widget_page_grid)
-                for w in (self.data_type_filter_widget_2,
-                          # self.category_filter_widget_2,
-                          self.resolution_widget,
-                          self.date_filter_widget_2,
-                          self.license_widget_2,
-                          self.access_widget_2):
-                    w.set_from_query(current_query)
-                if data_type_popup_previously_open:
-                    widget_to_expand = self.data_type_filter_widget_2
-                for w in (self.data_type_filter_widget_1,
-                          # self.category_filter_widget_1,
-                          self.date_filter_widget_1,
-                          self.license_widget_1,
-                          self.access_widget_1):
-                    w.collapse()
+            # show resolution
+            self.resolution_widget.setVisible(True)
         else:
-            if self.advanced_stacked_widget.currentWidget() != self.filter_widget_page_non_grid:
-                current_query = self.build_query()
-                self.advanced_stacked_widget.setCurrentWidget(self.filter_widget_page_non_grid)
-                for w in (self.data_type_filter_widget_1,
-                          # self.category_filter_widget_1,
-                          self.license_widget_1,
-                          self.date_filter_widget_1,
-                          self.access_widget_1):
-                    w.set_from_query(current_query)
-                if data_type_popup_previously_open:
-                    widget_to_expand = self.data_type_filter_widget_1
-                for w in (self.data_type_filter_widget_2,
-                          # self.category_filter_widget_2,
-                          self.resolution_widget,
-                          self.date_filter_widget_2,
-                          self.license_widget_2,
-                          self.access_widget_2):
-                    w.collapse()
+            self.resolution_widget.setVisible(False)
 
-        if widget_to_expand:
-            widget_to_expand.expand()
+        self.filter_widget_page.layout().update()
+
 
     def build_query(self) -> DataBrowserQuery:
         """
@@ -279,7 +184,7 @@ class FilterWidget(QWidget):
         if self.search_line_edit.text().strip():
             query.search = self.search_line_edit.text().strip()
 
-        for w in self._current_filter_widgets():
+        for w in self.filter_widgets:
             w.apply_constraints_to_query(query)
 
         return query
