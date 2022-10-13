@@ -247,7 +247,18 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
             self._block_geometry_type_constraint_update -= 1
 
     def clear(self):
+        self._block_changes += 1
         self.layers_radio.setChecked(True)
+        self.raster_radio.setChecked(False)
+        self.aerial_radio.setChecked(False)
+        self.not_aerial_radio.setChecked(False)
+        self.rgb_radio.setChecked(False)
+        self.band_radio.setChecked(False)
+        self.grayscale_radio.setChecked(False)
+        self.vector_radio.setChecked(False)
+        self.grid_radio.setChecked(False)
+        self._block_changes -= 1
+
         self._update_visible_frames()
         self._update_value()
 
