@@ -186,9 +186,11 @@ class HeaderWidget(QFrame):
 
         url_layout.addWidget(url_label, 1)
 
-        url_copy = SvgFramedButton('copy.svg', 19, 19, 11, 14,
-                                   border_color='rgba(255,255,255,0.3)' if background_color else None,
-                                   hover_border_color='rgba(255,255,255,0.5)' if background_color else None)
+        url_copy = SvgFramedButton(
+            'copy.svg', 19, 19, 11, 14,
+            border_color='rgba(255,255,255,0.3)' if background_color else None,
+            hover_border_color='rgba(255,255,255,0.5)' if background_color else None
+        )
 
         url_copy.clicked.connect(self._copy_url)
         url_layout.addWidget(url_copy)
@@ -205,7 +207,8 @@ class HeaderWidget(QFrame):
             font-family: Arial, Sans"><b>{self.dataset.get('publisher', {}).get('name')}</b><br>"""
             f"""<span style="
         font-size: 10pt;
-        font-family: Arial, Sans">via {self.dataset.get("publisher").get('site', {}).get("name")}</span></p>"""
+        font-family: Arial, Sans"
+        >via {self.dataset.get("publisher").get('site', {}).get("name")}</span></p>"""
         )
 
         hl.addWidget(org_details_label)
@@ -239,7 +242,9 @@ class DatasetDialog(QDialog):
 
         self.label_title = QLabel()
         self.label_title.setText(
-            '<span style="font-family: Arial, Sans; font-weight: bold; font-size: 18pt;">{}</span>'.format(
+            """<span style="font-family: Arial, Sans;
+            font-weight: bold;
+            font-size: 18pt;">{}</span>""".format(
                 dataset['title']))
         title_hl.addWidget(self.label_title, 1)
 
