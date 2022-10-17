@@ -25,6 +25,8 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
     Custom widget for data type filtering
     """
 
+    WITH_SETS = False
+
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -136,8 +138,12 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
 
         vl.addWidget(self.table_frame)
 
-        self.set_radio = QRadioButton('Sets')
-        vl.addWidget(self.set_radio)
+        if self.WITH_SETS:
+            self.set_radio = QRadioButton('Sets')
+            vl.addWidget(self.set_radio)
+        else:
+            self.set_radio = None
+
         self.data_repository_radio = QRadioButton('Data Repositories')
         vl.addWidget(self.data_repository_radio)
         self.document_radio = QRadioButton('Documents')
@@ -147,7 +153,7 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
 
         self.set_contents_widget(self.drop_down_widget)
 
-        self.type_radios = (
+        self.type_radios = [
             self.layers_radio,
             self.vector_radio,
             self.raster_radio,
@@ -158,10 +164,11 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
             self.grayscale_radio,
             self.grid_radio,
             self.table_radio,
-            self.set_radio,
             self.data_repository_radio,
             self.document_radio
-        )
+        ]
+        if self.WITH_SETS:
+            self.type_radios.append(self.set_radio)
 
         self.data_type_group = QButtonGroup(self)
         for radio in self.type_radios:
@@ -332,7 +339,7 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
                 text = 'Tables: Primary key'
             else:
                 text = 'Tables'
-        elif self.set_radio.isChecked():
+        elif self.WITH_SETS and self.set_radio.isChecked():
             text = 'Sets'
         elif self.data_repository_radio.isChecked():
             text = 'Data repositories'
@@ -361,7 +368,7 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
             types = {DataType.Grids}
         elif self.table_radio.isChecked():
             types = {DataType.Tables}
-        elif self.set_radio.isChecked():
+        elif self.WITH_SETS and self.set_radio.isChecked():
             types = {DataType.Sets}
         elif self.data_repository_radio.isChecked():
             types = {DataType.Repositories}
@@ -416,7 +423,7 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
             query.data_types = {DataType.Tables}
             if self.table_has_pk_checkbox.isChecked():
                 query.vector_filters.add(VectorFilter.HasPrimaryKey)
-        elif self.set_radio.isChecked():
+        elif self.WITH_SETS and self.set_radio.isChecked():
             query.data_types = {DataType.Sets}
         elif self.data_repository_radio.isChecked():
             query.data_types = {DataType.Repositories}
@@ -468,7 +475,7 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
             self.table_has_pk_checkbox.setChecked(
                 VectorFilter.HasPrimaryKey in query.vector_filters
             )
-        elif query.data_types == {DataType.Sets}:
+        elif self.WITH_SETS and query.data_types == {DataType.Sets}:
             type_radio = self.set_radio
         elif query.data_types == {DataType.Repositories}:
             type_radio = self.data_repository_radio
