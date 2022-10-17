@@ -74,7 +74,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         hl.addWidget(self.context_widget)
         self.context_frame.setLayout(hl)
 
-        self.button_starred.setIcon(GuiUtils.get_icon('star_filled.svg'))
+        self.button_starred.setIcon(GuiUtils.get_icon('star_starred.svg'))
         self.button_starred.setToolTip('Starred')
         self.button_starred.setCheckable(True)
 
