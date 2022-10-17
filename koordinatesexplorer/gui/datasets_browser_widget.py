@@ -63,7 +63,10 @@ from .star_button import StarButton
 from ..api import (
     KoordinatesClient,
     PAGE_SIZE,
-    DataBrowserQuery
+    DataBrowserQuery,
+    ApiUtils,
+    DataType,
+    Capability
 )
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
@@ -662,6 +665,8 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.setMouseTracking(True)
         self.dataset = dataset
 
+        self.dataset_type: DataType = ApiUtils.data_type_from_dataset_response(self.dataset)
+
         self.setFixedHeight(self.CARD_HEIGHT)
 
         if self.dataset.get('thumbnail_url'):
@@ -734,11 +739,13 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         self.buttonsLayout.addStretch()
 
-        if self.dataset.get("repository") is not None:
+        capabilities = DataType.capabilities(self.dataset_type)
+
+        if Capability.Clone in capabilities and self.dataset.get("repository") is not None:
             self.btnClone = CloneButton(self.dataset)
             self.buttonsLayout.addWidget(self.btnClone)
 
-        if self.dataset.get("kind") in ["raster", "vector"]:
+        if Capability.Add in capabilities:
             self.btnAdd = AddButton(self.dataset)
             self.buttonsLayout.addWidget(self.btnAdd)
 

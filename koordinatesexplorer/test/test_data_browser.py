@@ -31,7 +31,8 @@ from ..api import (
     GridFilterOptions,
     CreativeCommonLicenseVersions,
     AccessType,
-    SortOrder
+    SortOrder,
+    Capability
 )
 
 
@@ -73,22 +74,34 @@ class TestDataBrowser(unittest.TestCase):
                           'kind': ['layer', 'table', 'set', 'document']})
 
     def test_data_type_to_string(self):
-        self.assertEqual(DataBrowserQuery.data_type_to_string(DataType.Vectors),
+        self.assertEqual(DataType.to_filter_strings(DataType.Vectors),
                          ['vector'])
-        self.assertEqual(DataBrowserQuery.data_type_to_string(DataType.Rasters),
+        self.assertEqual(DataType.to_filter_strings(DataType.Rasters),
                          ['raster'])
-        self.assertEqual(DataBrowserQuery.data_type_to_string(DataType.Grids),
+        self.assertEqual(DataType.to_filter_strings(DataType.Grids),
                          ['grid', 'attribute-grid'])
-        self.assertEqual(DataBrowserQuery.data_type_to_string(DataType.Tables),
+        self.assertEqual(DataType.to_filter_strings(DataType.Tables),
                          ['table'])
-        self.assertEqual(DataBrowserQuery.data_type_to_string(DataType.PointClouds),
+        self.assertEqual(DataType.to_filter_strings(DataType.PointClouds),
                          ['pointcloud'])
-        self.assertEqual(DataBrowserQuery.data_type_to_string(DataType.Sets),
+        self.assertEqual(DataType.to_filter_strings(DataType.Sets),
                          ['set'])
-        self.assertEqual(DataBrowserQuery.data_type_to_string(DataType.Repositories),
+        self.assertEqual(DataType.to_filter_strings(DataType.Repositories),
                          ['repo'])
-        self.assertEqual(DataBrowserQuery.data_type_to_string(DataType.Documents),
+        self.assertEqual(DataType.to_filter_strings(DataType.Documents),
                          ['document'])
+
+    def test_data_from_string(self):
+        self.assertEqual(DataType.from_string('vector'), DataType.Vectors)
+        self.assertEqual(DataType.from_string('raster'), DataType.Rasters)
+        self.assertEqual(DataType.from_string('grid'), DataType.Grids)
+        self.assertEqual(DataType.from_string('attribute-grid'),
+                         DataType.Grids)
+        self.assertEqual(DataType.from_string('table'), DataType.Tables)
+        self.assertEqual(DataType.from_string('pointcloud'), DataType.PointClouds)
+        self.assertEqual(DataType.from_string('set'), DataType.Sets)
+        self.assertEqual(DataType.from_string('repo'), DataType.Repositories)
+        self.assertEqual(DataType.from_string('document'), DataType.Documents)
 
     def test_kind(self):
         query = DataBrowserQuery()
@@ -331,6 +344,27 @@ class TestDataBrowser(unittest.TestCase):
         self.assertEqual(SortOrder.to_text(SortOrder.AlphabeticalAZ), 'Alphabetical (A-Z)')
         self.assertEqual(SortOrder.to_text(SortOrder.AlphabeticalZA), 'Alphabetical (Z-A)')
         self.assertEqual(SortOrder.to_text(SortOrder.Oldest), 'Oldest')
+
+    def test_capabilities(self):
+        """
+        Test capabilities for different data types
+        """
+        self.assertEqual(DataType.capabilities(DataType.Vectors),
+                         {Capability.Clone, Capability.Add})
+        self.assertEqual(DataType.capabilities(DataType.Rasters),
+                         {Capability.Clone, Capability.Add})
+        self.assertEqual(DataType.capabilities(DataType.Grids),
+                         {Capability.Clone})
+        self.assertEqual(DataType.capabilities(DataType.Sets),
+                         {Capability.Clone})
+        self.assertEqual(DataType.capabilities(DataType.Tables),
+                         {Capability.Clone})
+        self.assertEqual(DataType.capabilities(DataType.Documents),
+                         {Capability.Clone})
+        self.assertEqual(DataType.capabilities(DataType.Repositories),
+                         {Capability.Clone})
+        self.assertEqual(DataType.capabilities(DataType.PointClouds),
+                         {Capability.Clone})
 
 
 if __name__ == '__main__':

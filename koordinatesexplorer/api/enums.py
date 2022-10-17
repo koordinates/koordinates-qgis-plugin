@@ -1,4 +1,8 @@
 from enum import Enum
+from typing import (
+    Set,
+    List
+)
 
 
 class AccessType(Enum):
@@ -7,6 +11,14 @@ class AccessType(Enum):
     """
     Public = 1
     Private = 2
+
+
+class Capability(Enum):
+    """
+    Dataset capabilities
+    """
+    Clone = 0
+    Add = 1
 
 
 class DataType(Enum):
@@ -21,6 +33,49 @@ class DataType(Enum):
     Sets = 6
     Repositories = 7
     Documents = 8
+
+    @staticmethod
+    def capabilities(data_type: 'DataType') -> Set[Capability]:
+        """
+        Returns capabilities for a data type
+        """
+        if data_type in (DataType.Vectors, DataType.Rasters):
+            return {Capability.Add, Capability.Clone}
+
+        return {Capability.Clone}
+
+    @staticmethod
+    def to_filter_strings(data_type: 'DataType') -> List[str]:
+        """
+        Converts a data type to a string list of matching filter strings
+        """
+        return {
+            DataType.Vectors: ['vector'],
+            DataType.Rasters: ['raster'],
+            DataType.Grids: ['grid', 'attribute-grid'],
+            DataType.PointClouds: ['pointcloud'],
+            DataType.Tables: ['table'],
+            DataType.Sets: ['set'],
+            DataType.Repositories: ['repo'],
+            DataType.Documents: ['document'],
+        }[data_type]
+
+    @staticmethod
+    def from_string(string: str) -> 'DataType':
+        """
+        Returns a data type from a response string
+        """
+        return {
+            'vector': DataType.Vectors,
+            'raster': DataType.Rasters,
+            'grid': DataType.Grids,
+            'attribute-grid': DataType.Grids,
+            'pointcloud': DataType.PointClouds,
+            'table': DataType.Tables,
+            'set': DataType.Sets,
+            'repo': DataType.Repositories,
+            'document': DataType.Documents,
+        }[string]
 
 
 class VectorFilter(Enum):
