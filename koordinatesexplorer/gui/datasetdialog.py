@@ -436,15 +436,20 @@ class DatasetDialog(QDialog):
         if empty_count:
             feature_count_label += ' • {} with empty or null geometries'.format(
                 self.format_number(empty_count))
-        return [
+        res = [
             ('Data type', DatasetGuiUtils.get_data_type(self.dataset)),
             ('CRS', '{} • {}'.format(self.dataset["data"]["crs_display"],
                                      self.dataset["data"]["crs"]
                                      )),
-            ('Feature count', feature_count_label),
-            ('_Attributes', ", ".join(
-                [f["name"] for f in self.dataset["data"]["fields"]])),
-            ('_Primary key', ", ".join(self.dataset["data"]["primary_key_fields"]))]
+            ('Feature count', feature_count_label)]\
+
+        if self.dataset["data"].get("fields"):
+            res.append(('_Attributes', ", ".join(
+                [f["name"] for f in self.dataset["data"]["fields"]])))
+        if self.dataset["data"].get("primary_key_fields"):
+            res.append(('_Primary key', ", ".join(self.dataset["data"]["primary_key_fields"])))
+
+        return res
 
     def get_history_details(self) -> List[Tuple]:
         return [
