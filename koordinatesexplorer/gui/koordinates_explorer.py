@@ -33,7 +33,7 @@ from qgis.gui import QgsDockWidget
 from qgis.utils import iface
 
 from koordinatesexplorer.auth import OAuthWorkflow
-from koordinatesexplorer.gui.datasetsbrowserwidget import DatasetsBrowserWidget
+from koordinatesexplorer.gui.datasets_browser_widget import DatasetsBrowserWidget
 from .context_widget import ContextWidget
 from .country_widget import CountryWidgetAction
 from .filter_widget import FilterWidget

@@ -10,7 +10,7 @@ from qgis.PyQt.QtCore import (
     QEvent
 )
 
-from koordinatesexplorer.gui.koordinatesexplorer import KoordinatesExplorer
+from koordinatesexplorer.gui.koordinates_explorer import KoordinatesExplorer
 
 pluginPath = os.path.dirname(__file__)
 
