@@ -667,8 +667,6 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         if self.dataset.get('thumbnail_url'):
             downloadThumbnail(self.dataset["thumbnail_url"], self)
 
-        date = parser.parse(self.dataset["published_at"])
-
         self.labelName.setText(
             f"""<p style="line-height: 130%;
                 font-size: 11pt;
@@ -699,11 +697,16 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.labelUpdatedIcon.setPixmap(
             QPixmap.fromImage(GuiUtils.get_svg_as_image("history_gray.svg", 13, 12)))
         self.labelUpdated = QLabel()
-        self.labelUpdated.setText(
-            f"""<span style="color: #868889;
-                font-family: Arial, Sans;
-                font-size: 9pt">{date.strftime("%d %b %Y")}</span>"""
-        )
+
+        published_at_date_str: Optional[str] = self.dataset.get("published_at")
+        if published_at_date_str:
+            date = parser.parse(published_at_date_str)
+            self.labelUpdated.setText(
+                f"""<span style="color: #868889;
+                    font-family: Arial, Sans;
+                    font-size: 9pt">{date.strftime("%d %b %Y")}</span>"""
+            )
+
         updated_layout.addWidget(self.labelUpdatedIcon)
         updated_layout.addWidget(self.labelUpdated)
         details_layout.addLayout(updated_layout)
