@@ -33,7 +33,7 @@ class StarButton(QLabel):
 
     def _update_icon(self):
         if self._checked:
-            icon = GuiUtils.get_svg_as_image('star_filled.svg', 24, 24)
+            icon = GuiUtils.get_svg_as_image('star_starred.svg', 24, 24)
         elif self._hover:
             icon = GuiUtils.get_svg_as_image('star_not-starred-hover.svg', 24, 24)
         else:
