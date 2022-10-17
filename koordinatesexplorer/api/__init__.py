@@ -13,7 +13,8 @@ from .enums import (  # NOQA
     GridFilterOptions,
     CreativeCommonLicenseVersions,
     AccessType,
-    SortOrder
+    SortOrder,
+    Capability
 )
 
 from .utils import ApiUtils  # NOQA

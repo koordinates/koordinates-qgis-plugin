@@ -1,4 +1,4 @@
-from typing import Dict, List, Set, Optional
+from typing import Dict, Set, Optional
 
 from qgis.PyQt.QtCore import QDateTime, Qt
 
@@ -49,22 +49,6 @@ class DataBrowserQuery:
         self.cc_license_allow_commercial: Optional[bool] = None
         self.cc_license_changes_must_be_shared: Optional[bool] = None
 
-    @staticmethod
-    def data_type_to_string(data_type: DataType) -> List[str]:
-        """
-        Converts a data type to a string list of matching filter strings
-        """
-        return {
-            DataType.Vectors: ['vector'],
-            DataType.Rasters: ['raster'],
-            DataType.Grids: ['grid', 'attribute-grid'],
-            DataType.PointClouds: ['pointcloud'],
-            DataType.Tables: ['table'],
-            DataType.Sets: ['set'],
-            DataType.Repositories: ['repo'],
-            DataType.Documents: ['document'],
-        }[data_type]
-
     def build_query(self) -> Dict[str, object]:
         """
         Builds the filter parameters into a query
@@ -96,7 +80,7 @@ class DataBrowserQuery:
                 kind_params.append('attribute-grid')
                 continue
 
-            kind_params.extend(DataBrowserQuery.data_type_to_string(data_type))
+            kind_params.extend(DataType.to_filter_strings(data_type))
 
         if len(kind_params) > 1:
             params["kind"] = sorted(kind_params)
