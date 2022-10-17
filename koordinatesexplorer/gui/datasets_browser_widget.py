@@ -48,7 +48,7 @@ from qgis.core import (
 from qgis.gui import QgsRubberBand
 from qgis.utils import iface
 
-from koordinatesexplorer.gui.datasetdialog import DatasetDialog
+from koordinatesexplorer.gui.dataset_dialog import DatasetDialog
 from koordinatesexplorer.gui.thumbnails import downloadThumbnail
 from .action_button import (
     CloneButton,
