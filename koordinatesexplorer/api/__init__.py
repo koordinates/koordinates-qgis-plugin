@@ -2,8 +2,9 @@ from .client import (  # NOQA
     KoordinatesClient,
     PAGE_SIZE
 )
-from .data_browser import (  # NOQA
-    DataBrowserQuery,
+from .data_browser import DataBrowserQuery  # NOQA
+
+from .enums import (  # NOQA
     DataType,
     VectorFilter,
     RasterFilter,
@@ -14,4 +15,5 @@ from .data_browser import (  # NOQA
     AccessType,
     SortOrder
 )
+
 from .utils import ApiUtils  # NOQA
