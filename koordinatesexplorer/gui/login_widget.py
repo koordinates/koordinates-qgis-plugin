@@ -147,7 +147,7 @@ class LoginWidget(QFrame):
         tos_label.setText(
             """<style>
             a {color: #868889; text-decoration: none}
-            </style><span 
+            </style><span
             style="color: #868889;"><a
             href="https://koordinates.com/privacy-policy/">Privacy Policy</a> • <a
             href="https://koordinates.com/terms-of-use/">Terms of Use</a></span>""")
