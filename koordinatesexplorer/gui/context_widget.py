@@ -105,8 +105,10 @@ class ContextItem(QFrame):
                     ContextIcon.SIZE,
                     QColor(0, 0, 0)
                 ))
-        else:
+        elif self._details.get('org') and self._details['org'].get('logo_square_url'):
             downloadThumbnail(self._details["org"]["logo_square_url"], self.icon_label)
+        elif self._details.get('logo'):
+            downloadThumbnail(self._details["logo"], self.icon_label)
 
         hl.addWidget(self.icon_label)
         self.name_label = QLabel(self._details['name'])
