@@ -65,7 +65,7 @@ class CloneButton(ActionButton):
         self.clicked.connect(self.cloneRepository)
         self.setFixedSize(88, self.BUTTON_HEIGHT)
 
-        self._close_parent_on_clone=close_parent_on_clone
+        self._close_parent_on_clone = close_parent_on_clone
 
     def cloneRepository(self):
         if self._close_parent_on_clone:
