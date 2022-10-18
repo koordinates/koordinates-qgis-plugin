@@ -43,6 +43,8 @@ def cloneKartRepo(title: str, url, username, password, parent):
         CURRENT_CLONE_DIALOG = CloneDialog(parent)
         CURRENT_CLONE_DIALOG.setWindowTitle('Clone — {}'.format(title))
         CURRENT_CLONE_DIALOG.show()
+        CURRENT_CLONE_DIALOG.activateWindow()
+        CURRENT_CLONE_DIALOG.raise_()
         el = QEventLoop()
 
         cloneKartRepo.was_accepted = False
