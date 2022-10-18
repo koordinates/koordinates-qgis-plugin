@@ -45,7 +45,8 @@ class ContextIcon(QLabel):
     def setThumbnail(self, image: QImage):
         image = image.convertToFormat(QImage.Format_ARGB32)
         if image.width() != ContextIcon.SIZE or image.height() != ContextIcon.SIZE:
-            image = image.scaled(ContextIcon.SIZE, ContextIcon.SIZE)
+            image = image.scaled(ContextIcon.SIZE, ContextIcon.SIZE,
+                                 transformMode=Qt.SmoothTransformation)
 
         # round corners of image
         rounded_image = QImage(ContextIcon.SIZE, ContextIcon.SIZE, QImage.Format_ARGB32)

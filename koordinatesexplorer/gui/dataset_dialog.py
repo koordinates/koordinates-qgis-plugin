@@ -74,11 +74,15 @@ class ThumbnailLabel(QLabel):
     def setThumbnail(self, image: QImage):
         image = image.convertToFormat(QImage.Format_ARGB32)
         if image.width() > self.width():
-            image = image.scaled(self.width(), int(image.height() * self.width() / image.width()))
+            image = image.scaled(self.width(), int(image.height() * self.width() / image.width()),
+                                 transformMode=Qt.SmoothTransformation)
+            self.setFixedHeight(image.height())
 
         if image.height() > self.height():
             image = image.scaled(int(image.width() * self.height() / image.height()),
-                                 self.height())
+                                 self.height(),
+                                 transformMode=Qt.SmoothTransformation)
+            self.setFixedWidth(image.width())
 
         self.setPixmap(QPixmap.fromImage(image))
 
@@ -169,7 +173,7 @@ class HeaderWidget(QFrame):
         logo = self.dataset.get('publisher', {}).get('theme', {}).get('logo')
         if logo:
             logo = 'https:{}'.format(logo)
-            logo_widget = ThumbnailLabel(logo, 145, 70)
+            logo_widget = ThumbnailLabel(logo, 145, 35)
             hl.addWidget(logo_widget)
 
         url_frame = QFrame()
