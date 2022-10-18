@@ -17,6 +17,7 @@ from qgis.PyQt.QtGui import (
     QBrush,
     QColor
 )
+from qgis.PyQt.QtSvg import QSvgWidget
 from qgis.PyQt.QtWidgets import (
     QFrame,
     QLabel,
@@ -29,7 +30,6 @@ from qgis.PyQt.QtWidgets import (
     QGridLayout,
     QWidget
 )
-from qgis.PyQt.QtSvg import QSvgWidget
 
 from .action_button import (
     AddButton,
@@ -125,10 +125,10 @@ class SvgFramedButton(QFrame):
 
         svg_label = SvgLabel(icon_name, icon_width, icon_height)
         vl = QVBoxLayout()
-        vl.setContentsMargins(0,0,0,0)
+        vl.setContentsMargins(0, 0, 0, 0)
         vl.addStretch()
         hl = QHBoxLayout()
-        hl.setContentsMargins(0,0,0,0)
+        hl.setContentsMargins(0, 0, 0, 0)
         hl.addStretch()
         hl.addWidget(svg_label)
         hl.addStretch()
