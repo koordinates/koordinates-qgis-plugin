@@ -315,6 +315,9 @@ class ContextWidget(QWidget):
             self._floating_widget.show()
             self._floating_widget.raise_()
 
+        if self.parent() and self.parent().parent():
+            self.parent().parent().update()
+
     def resizeEvent(self, event):
         super().resizeEvent(event)
         # self._floating_widget.setFixedWidth(event.size().width())
