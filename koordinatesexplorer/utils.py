@@ -38,7 +38,7 @@ def cloneKartRepo(title: str, url, username, password, parent):
 
     try:
         from .gui.clonedialog import CloneDialog
-        from kart.kartapi import Repository
+        from kart.kartapi import Repository, KartException
 
         CURRENT_CLONE_DIALOG = CloneDialog(parent)
         CURRENT_CLONE_DIALOG.setWindowTitle('Clone — {}'.format(title))
@@ -66,15 +66,19 @@ def cloneKartRepo(title: str, url, username, password, parent):
             CURRENT_CLONE_DIALOG.deleteLater()
             CURRENT_CLONE_DIALOG = None
 
-            repo = Repository.clone(
-                url,
-                destination,
-                location=location,
-                extent=extent,
-                username=username,
-                password=password,
-            )
-            kart_plugin.dock.reposItem.addRepoToUI(repo)
+            try:
+                repo = Repository.clone(
+                    url,
+                    destination,
+                    location=location,
+                    extent=extent,
+                    username=username,
+                    password=password,
+                )
+                kart_plugin.dock.reposItem.addRepoToUI(repo)
+            except KartException:
+                raise KartNotInstalledException()
+
             return True
         else:
             if CURRENT_CLONE_DIALOG:
