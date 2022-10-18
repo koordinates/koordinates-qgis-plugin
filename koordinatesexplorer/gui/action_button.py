@@ -67,9 +67,14 @@ class CloneButton(ActionButton):
 
     def cloneRepository(self):
         url = self.dataset["repository"]["clone_location_https"]
+        title = self.dataset['title']
         try:
             if cloneKartRepo(
-                    url, "kart", KoordinatesClient.instance().apiKey, iface.mainWindow()
+                    title=title,
+                    url=url,
+                    username="kart",
+                    password=KoordinatesClient.instance().apiKey,
+                    parent=iface.mainWindow()
             ):
                 iface.messageBar().pushMessage(
                     "Repository correctly cloned", Qgis.Info, duration=5

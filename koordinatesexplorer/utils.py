@@ -19,7 +19,7 @@ class KartNotInstalledException(Exception):
     pass
 
 
-def cloneKartRepo(url, username, password, parent):
+def cloneKartRepo(title: str, url, username, password, parent):
     import qgis
 
     if "kart" not in qgis.utils.plugins:
@@ -31,6 +31,7 @@ def cloneKartRepo(url, username, password, parent):
         from kart.kartapi import Repository
 
         dialog = CloneDialog(parent)
+        dialog.setWindowTitle('Clone — {}'.format(title))
         dialog.show()
         el = QEventLoop()
 
