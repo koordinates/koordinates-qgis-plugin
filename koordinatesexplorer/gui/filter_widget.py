@@ -98,7 +98,7 @@ class FilterWidget(QWidget):
 
         self.resolution_widget.hide()
 
-        self.filter_widget_page = QWidget()
+        self.advanced_filter_page = QWidget()
         filter_widget_layout = FlowLayout()
         filter_widget_layout.setContentsMargins(0, 0, 0, 0)
         # filter_widget_layout.addWidget(self.category_filter_widget)
@@ -107,7 +107,7 @@ class FilterWidget(QWidget):
         filter_widget_layout.addWidget(self.date_filter_widget)
         filter_widget_layout.addWidget(self.license_widget)
         filter_widget_layout.addWidget(self.access_widget)
-        self.filter_widget_page.setLayout(filter_widget_layout)
+        self.advanced_filter_page.setLayout(filter_widget_layout)
 
         self.filter_widgets = (  # self.category_filter_widget,
             self.data_type_filter_widget,
@@ -126,9 +126,11 @@ class FilterWidget(QWidget):
             w.changed.connect(self._filter_widget_changed)
         self.search_line_edit.textChanged.connect(self._filter_widget_changed)
 
-        vl.addWidget(self.filter_widget_page)
+        vl.addWidget(self.advanced_filter_page)
 
         self.setLayout(vl)
+
+        self._show_advanced(False)
 
     def _clear_all(self):
         for w in self.filter_widgets:
@@ -150,11 +152,11 @@ class FilterWidget(QWidget):
         if not show:
             for w in self.filter_widgets:
                 w.collapse()
-        self.advanced_stacked_widget.setVisible(show)
+        self.advanced_filter_page.setVisible(show)
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
-        self.advanced_stacked_widget.adjustSize()
-        self.advanced_stacked_widget.setMinimumWidth(self.width())
-        self.advanced_stacked_widget.setMinimumWidth(0)
+        self.advanced_filter_page.adjustSize()
+        self.advanced_filter_page.setMinimumWidth(self.width())
+        self.advanced_filter_page.setMinimumWidth(0)
         self.adjustSize()
 
     def _filter_widget_changed(self):
@@ -171,7 +173,7 @@ class FilterWidget(QWidget):
         else:
             self.resolution_widget.setVisible(False)
 
-        self.filter_widget_page.layout().update()
+        self.advanced_filter_page.layout().update()
 
     def build_query(self) -> DataBrowserQuery:
         """
