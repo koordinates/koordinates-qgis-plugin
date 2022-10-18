@@ -71,8 +71,8 @@ class CloneButton(ActionButton):
         if self._close_parent_on_clone:
             self.parent().close()
 
-        url = self.dataset["repository"]["clone_location_https"]
-        title = self.dataset['title']
+        url = self.dataset.get("repository", {}).get("clone_location_https")
+        title = self.dataset.get('title')
         try:
             if cloneKartRepo(
                     title=title,
@@ -143,4 +143,4 @@ class AddButton(ActionButton):
             f"layer={self.dataset['id']},color={color}/EPSG:3857/"
             "%7BZ%7D/%7BX%7D/%7BY%7D.png&zmax=19&zmin=0&crs=EPSG3857"
         )
-        iface.addRasterLayer(uri, self.dataset["title"], "wms")
+        iface.addRasterLayer(uri, self.dataset.get("title", 'Layer'), "wms")

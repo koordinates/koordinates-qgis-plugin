@@ -114,7 +114,9 @@ class DatasetGuiUtils:
     def get_subtitle(dataset: Dict) -> Optional[str]:
         data_type = ApiUtils.data_type_from_dataset_response(dataset)
         if data_type == DataType.Vectors:
-            count = dataset["data"]["feature_count"]
+
+            count = dataset.get("data", {}).get("feature_count", 0)
+
             if dataset.get('data', {}).get('geometry_type') in (
                     'polygon', 'multipolygon'):
                 return '{} Polygons'.format(DatasetGuiUtils.format_count(count))
@@ -124,17 +126,19 @@ class DatasetGuiUtils:
                     'linestring', 'multilinestring'):
                 return '{} Lines'.format(DatasetGuiUtils.format_count(count))
         elif data_type in (DataType.Rasters, DataType.Grids):
-            count = dataset["data"]["feature_count"]
-            res = dataset["data"]["raster_resolution"]
+            count = dataset.get("data", {}).get("feature_count", 0)
+            res = dataset.get("data", {}).get("raster_resolution", 0)
             return '{}m, {} Tiles'.format(res,
                                           DatasetGuiUtils.format_count(count))
         elif data_type == DataType.Tables:
-            count = dataset["data"]["feature_count"]
+            count = dataset.get("data", {}).get("feature_count", 0)
             return '{} Rows'.format(DatasetGuiUtils.format_count(count))
         elif data_type == DataType.Documents:
-            ext = dataset['extension'].upper()
-            file_size = dataset['file_size']
-            return '{} {}'.format(ext, QgsFileUtils.representFileSize(file_size))
+            ext = dataset.get('extension', '').upper()
+            file_size = dataset.get('file_size')
+            if file_size:
+                return '{} {}'.format(ext, QgsFileUtils.representFileSize(file_size))
+            return ext
         elif data_type == DataType.Sets:
             return None
         elif data_type == DataType.Repositories:
