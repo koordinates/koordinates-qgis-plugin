@@ -7,7 +7,8 @@ from qgis.PyQt.QtCore import (
 from qgis.PyQt.QtWidgets import (
     QDialog,
     QSizePolicy,
-    QVBoxLayout
+    QVBoxLayout,
+    QLayout
 )
 from qgis.core import (
     Qgis,
@@ -92,6 +93,8 @@ class CloneDialog(QDialog, WIDGET):
         location_layout.addWidget(self.locationPanel)
         self.location_widget_frame.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         self.location_widget_frame.setLayout(location_layout)
+
+        self.window().layout().setSizeConstraint(QLayout.SetFixedSize)
 
     def reject(self):
         self.was_canceled.emit()
