@@ -38,6 +38,7 @@ class ActionButton(QToolButton):
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setToolButtonStyle(Qt.ToolButtonIconOnly)
         self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
 
