@@ -24,6 +24,7 @@ from qgis.PyQt.QtGui import (
     QPen
 )
 from qgis.PyQt.QtNetwork import QNetworkReply
+from qgis.PyQt.QtSvg import QSvgWidget
 from qgis.PyQt.QtWidgets import (
     QTableWidget,
     QTableWidgetItem,
@@ -700,9 +701,8 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         updated_layout = QHBoxLayout()
         updated_layout.setContentsMargins(0, 0, 0, 0)
-        self.labelUpdatedIcon = QLabel()
-        self.labelUpdatedIcon.setPixmap(
-            QPixmap.fromImage(GuiUtils.get_svg_as_image("history_gray.svg", 13, 12)))
+        self.labelUpdatedIcon = QSvgWidget(GuiUtils.get_icon_svg("history_gray.svg"))
+        self.labelUpdatedIcon.setFixedSize(13, 12)
         self.labelUpdated = QLabel()
 
         published_at_date_str: Optional[str] = self.dataset.get("published_at")
