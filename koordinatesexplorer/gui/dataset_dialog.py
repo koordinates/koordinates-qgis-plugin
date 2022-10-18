@@ -31,12 +31,6 @@ from qgis.PyQt.QtWidgets import (
 )
 from qgis.utils import iface
 
-from ..api import (
-    ApiUtils,
-    DataType,
-    Capability
-)
-from .thumbnails import downloadThumbnail
 from .action_button import (
     AddButton,
     CloneButton
@@ -47,6 +41,12 @@ from .dataset_utils import (
 )
 from .gui_utils import GuiUtils
 from .star_button import StarButton
+from .thumbnails import downloadThumbnail
+from ..api import (
+    ApiUtils,
+    DataType,
+    Capability
+)
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
@@ -404,7 +404,7 @@ class DatasetDialog(QDialog):
         self.description_label.setTextInteractionFlags(
             Qt.TextInteractionFlag.TextBrowserInteraction)
         self.description_label.setOpenExternalLinks(True)
-        self.description_label.setText(self.dataset["description_html"])
+        self.description_label.setText(self.dialog_css() + self.dataset["description_html"])
 
         contents_layout.addWidget(self.description_label, 1)
 
@@ -436,6 +436,24 @@ class DatasetDialog(QDialog):
         layout.addLayout(scroll_area_layout, 1)
 
         self.setLayout(layout)
+
+    @staticmethod
+    def dialog_css() -> str:
+        return """
+            <style>
+            p {
+            font-family: KxMetric, -apple-system, BlinkMacSystemFont,
+                "avenir next", avenir, helvetica, "helvetica neue", ubuntu,
+                 roboto, noto, "segoe ui", arial, sans-serif;
+            color: rgb(50, 50, 50);
+            letter-spacing: 0.1px;
+            line-height: 1.5;
+            }
+            a {
+            color: rgb(50, 50, 50);
+            }
+            </style>
+        """
 
     def format_number(self, value):
         return locale.format_string("%d", value, grouping=True)
