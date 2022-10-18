@@ -207,7 +207,7 @@ class CustomComboBox(QWidget):
         self.update()
 
     def clear(self):
-        print('clear')
+        pass
 
     def _show_drop_down(self):
         if self._floating_widget.isVisible():
@@ -223,9 +223,15 @@ class CustomComboBox(QWidget):
         if self._floating_widget.isVisible():
             self._floating_widget.hide()
 
+        if self.parent() and self.parent().parent():
+            self.parent().parent().update()
+
     def expand(self):
         if not self._floating_widget.isVisible():
             self._show_drop_down()
+
+        if self.parent() and self.parent().parent():
+            self.parent().parent().update()
 
     def set_current_text(self, text):
         self._current_text = text
