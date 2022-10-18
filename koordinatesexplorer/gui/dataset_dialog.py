@@ -29,7 +29,6 @@ from qgis.PyQt.QtWidgets import (
     QGridLayout,
     QWidget
 )
-from qgis.utils import iface
 
 from .action_button import (
     AddButton,
