@@ -7,12 +7,15 @@ from qgis.PyQt.QtGui import (
 from qgis.PyQt.QtWidgets import (
     QLabel
 )
+from qgis.PyQt.QtSvg import (
+    QSvgWidget
+)
 
 from .gui_utils import GuiUtils
 from ..api import KoordinatesClient
 
 
-class StarButton(QLabel):
+class StarButton(QSvgWidget):
 
     def __init__(self, checked: bool, dataset_id, parent=None):
         super().__init__(parent)
@@ -20,6 +23,7 @@ class StarButton(QLabel):
         self._dataset_id = dataset_id
         self._checked = checked
         self._hover = False
+        self.setFixedSize(24, 24)
         self._update_icon()
 
     def enterEvent(self, event):
@@ -33,13 +37,13 @@ class StarButton(QLabel):
 
     def _update_icon(self):
         if self._checked:
-            icon = GuiUtils.get_svg_as_image('star_starred.svg', 24, 24)
+            icon = GuiUtils.get_icon_svg('star_starred.svg')
         elif self._hover:
-            icon = GuiUtils.get_svg_as_image('star_not-starred-hover.svg', 24, 24)
+            icon = GuiUtils.get_icon_svg('star_not-starred-hover.svg')
         else:
-            icon = GuiUtils.get_svg_as_image('star_not-starred.svg', 24, 24)
+            icon = GuiUtils.get_icon_svg('star_not-starred.svg')
 
-        self.setPixmap(QPixmap.fromImage(icon))
+        self.load(icon)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
