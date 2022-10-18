@@ -280,9 +280,8 @@ class DetailsTable(QGridLayout):
 
 
 class DatasetDialog(QDialog):
-    def __init__(self, dataset):
-        super().__init__(iface.mainWindow())
-        # self.setupUi(self)
+    def __init__(self, parent, dataset):
+        super().__init__(parent)
 
         self.dataset = dataset
         self.dataset_type: DataType = ApiUtils.data_type_from_dataset_response(self.dataset)
@@ -315,7 +314,7 @@ class DatasetDialog(QDialog):
         capabilities = ApiUtils.capabilities_from_dataset_response(self.dataset)
 
         if Capability.Clone in capabilities:
-            self.clone_button = CloneButton(dataset)
+            self.clone_button = CloneButton(dataset, close_parent_on_clone=True)
             title_hl.addWidget(self.clone_button)
         else:
             self.clone_button = None

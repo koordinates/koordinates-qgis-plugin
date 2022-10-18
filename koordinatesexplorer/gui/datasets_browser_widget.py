@@ -814,7 +814,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         dataset = (
             self.dataset
         )  # KoordinatesClient.instance().dataset(self.dataset["id"])
-        dlg = DatasetDialog(dataset)
+        dlg = DatasetDialog(self, dataset)
         dlg.exec()
 
     def _geomFromGeoJson(self, geojson):

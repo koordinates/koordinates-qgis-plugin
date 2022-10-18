@@ -48,7 +48,7 @@ class CloneButton(ActionButton):
     BUTTON_TEXT_CLONE = "#323233"
     BUTTON_HOVER_CLONE = "#e4e4e6"
 
-    def __init__(self, dataset, parent=None):
+    def __init__(self, dataset, parent=None, close_parent_on_clone=False):
         super().__init__(parent)
 
         self.dataset = dataset
@@ -65,7 +65,12 @@ class CloneButton(ActionButton):
         self.clicked.connect(self.cloneRepository)
         self.setFixedSize(88, self.BUTTON_HEIGHT)
 
+        self._close_parent_on_clone=close_parent_on_clone
+
     def cloneRepository(self):
+        if self._close_parent_on_clone:
+            self.parent().close()
+
         url = self.dataset["repository"]["clone_location_https"]
         title = self.dataset['title']
         try:
