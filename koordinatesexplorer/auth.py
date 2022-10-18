@@ -1,5 +1,7 @@
 import json
 import urllib
+from enum import Enum
+
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from random import choice
 from string import ascii_lowercase
@@ -44,6 +46,15 @@ SCOPE_KX = (
     "query tiles catalog users:read sets:read layers:read repos:read viewers:read"
     " viewers:write wxs:wfs exports:write notifications:read"
 )
+
+
+class AuthState(Enum):
+    """
+    Authentication states
+    """
+    LoggedOut = 0
+    LoggingIn = 1
+    LoggedIn = 2
 
 
 class _Handler(BaseHTTPRequestHandler):

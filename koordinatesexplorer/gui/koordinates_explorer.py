@@ -1,55 +1,47 @@
 import json
-import os
 import locale
+import os
 from functools import partial
 from typing import Optional, Dict
 
 from qgis.PyQt import sip
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import (
-    QThread,
     QUrl
 )
 from qgis.PyQt.QtGui import (
-    QPixmap,
     QDesktopServices,
     QPalette
 )
 from qgis.PyQt.QtNetwork import QNetworkReply
 from qgis.PyQt.QtWidgets import (
     QVBoxLayout,
-    QApplication,
     QAction,
     QMenu,
     QLabel,
     QHBoxLayout,
     QComboBox
 )
-from qgis.core import (
-    QgsApplication,
-    Qgis,
-)
 from qgis.gui import QgsDockWidget
-from qgis.utils import iface
 
-from koordinatesexplorer.auth import OAuthWorkflow
-from koordinatesexplorer.gui.datasets_browser_widget import DatasetsBrowserWidget
 from .context_widget import ContextWidget
 from .country_widget import CountryWidgetAction
+from .datasets_browser_widget import DatasetsBrowserWidget
 from .filter_widget import FilterWidget
 from .gui_utils import GuiUtils
+from .login_widget import LoginWidget
 from ..api import (
     KoordinatesClient,
     SortOrder,
     DataBrowserQuery
 )
+from ..auth import OAuthWorkflow
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
 WIDGET, _ = uic.loadUiType(GuiUtils.get_ui_file_path('koordinatesexplorer.ui'))
 
 SETTINGS_NAMESPACE = "Koordinates"
-AUTH_CONFIG_ID = "koordinates_auth_id"
 
 
 class KoordinatesExplorer(QgsDockWidget, WIDGET):
@@ -108,15 +100,16 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         self.browser.total_count_changed.connect(self._total_count_changed)
         self.oauth: Optional[OAuthWorkflow] = None
 
+        self.login_widget = LoginWidget()
+        vl = QVBoxLayout()
+        vl.setContentsMargins(0, 0, 0, 0)
+        vl.addWidget(self.login_widget)
+        self.pageAuth.setLayout(vl)
+
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.browser)
         self.browserFrame.setLayout(layout)
-
-        pixmap = QPixmap(os.path.join(pluginPath, "img", "koordinates.png"))
-        self.labelHeader.setPixmap(pixmap)
-
-        self.btnLogin.clicked.connect(self.loginClicked)
 
         self.filter_widget = FilterWidget(self)
         filter_layout = QVBoxLayout()
@@ -179,9 +172,8 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         self.context_widget.context_changed.connect(self._context_changed)
 
         KoordinatesClient.instance().loginChanged.connect(self._loginChanged)
-        KoordinatesClient.instance().error_occurred.connect(self._client_error_occurred)
 
-        self.setForLogin(False)
+        self._loginChanged(False)
 
     def cancel_active_requests(self):
         """
@@ -258,9 +250,6 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
             '{} {}'.format(user.get('first_name'), user.get('last_name')).strip()
         )
 
-    def backToBrowser(self):
-        self.stackedWidget.setCurrentWidget(self.pageBrowser)
-
     def search(self):
         browser_query = self.filter_widget.build_query()
 
@@ -331,13 +320,8 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         self.update()
         self.search()
 
-    def _loginChanged(self, loggedIn):
-        if not loggedIn:
-            self.removeApiKey()
-        self.setForLogin(loggedIn)
-
-    def setForLogin(self, loggedIn):
-        if loggedIn:
+    def _loginChanged(self, logged_in: bool):
+        if logged_in:
             self.stackedWidget.setCurrentWidget(self.pageBrowser)
 
             user = KoordinatesClient.instance().user_details()
@@ -350,106 +334,13 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
             self.search()
         else:
-            self.labelWaiting.setVisible(False)
-            self.btnLogin.setEnabled(True)
             self.stackedWidget.setCurrentWidget(self.pageAuth)
-
-    def loginClicked(self):
-        key = self.retrieve_api_key()
-        if key is not None:
-            self._authFinished(key)
-        else:
-            self.labelWaiting.setText("Waiting for OAuth authentication response...")
-            self.labelWaiting.setVisible(True)
-            self.btnLogin.setEnabled(False)
-            QApplication.processEvents()
-            self.oauth = OAuthWorkflow()
-
-            self.objThread = QThread()
-            self.oauth.moveToThread(self.objThread)
-            self.oauth.finished.connect(self._authFinished)
-            self.oauth.error_occurred.connect(self._auth_error_occurred)
-            self.oauth.finished.connect(self.objThread.quit)
-            self.objThread.started.connect(self.oauth.doAuth)
-            self.objThread.start()
-
-    def _authFinished(self, apiKey):
-        if not apiKey:
-            return
-
-        self.labelWaiting.setText("Logging in and retrieving datasets...")
-        self.labelWaiting.setVisible(True)
-        self.btnLogin.setEnabled(False)
-        QApplication.processEvents()
-        try:
-            KoordinatesClient.instance().login(apiKey)
-            self.store_api_key()
-            self.labelWaiting.setVisible(False)
-            self.btnLogin.setEnabled(True)
-        except FileExistsError:
-            iface.messageBar().pushMessage(
-                "Could not log in. Check your connection and your API Key value",
-                Qgis.Warning,
-                duration=5,
-            )
-            self.labelWaiting.setVisible(False)
-            self.btnLogin.setEnabled(True)
-
-    def _auth_error_occurred(self, error: str):
-        self.labelWaiting.setVisible(False)
-        self.btnLogin.setEnabled(True)
-        iface.messageBar().pushMessage(
-            "Authorization failed: {}".format(error),
-            Qgis.Warning,
-            duration=5,
-        )
-
-    def _client_error_occurred(self, error: str):
-        self.labelWaiting.setVisible(False)
-        self.btnLogin.setEnabled(True)
-        iface.messageBar().pushMessage(
-            "Request failed: {}".format(error),
-            Qgis.Warning,
-            duration=5,
-        )
 
     def logout(self):
         """
         Logs the user out
         """
         KoordinatesClient.instance().logout()
-
-    def store_api_key(self) -> bool:
-        """
-        Stores the API key in the secure QGIS password store, IF available
-
-        Returns True if the key could be stored
-        """
-        if not QgsApplication.authManager().masterPasswordHashInDatabase():
-            return False
-
-        key = KoordinatesClient.instance().apiKey
-        QgsApplication.authManager().storeAuthSetting(AUTH_CONFIG_ID, key, True)
-
-    def retrieve_api_key(self) -> Optional[str]:
-        """
-        Retrieves a previously stored API key, if available
-
-        Returns None if no stored key is available
-        """
-        if not QgsApplication.authManager().masterPasswordHashInDatabase():
-            return None
-
-        api_key = (
-                QgsApplication.authManager().authSetting(
-                    AUTH_CONFIG_ID, defaultValue="", decrypt=True
-                )
-                or None
-        )
-        return api_key
-
-    def removeApiKey(self):
-        QgsApplication.authManager().removeAuthSetting(AUTH_CONFIG_ID)
 
     def _edit_profile(self):
         """
