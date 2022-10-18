@@ -301,7 +301,7 @@ class ContextWidget(QWidget):
         else:
             image = GuiUtils.get_svg_as_image(
                 'koordinates_logo.svg',
-                122,
+                110,
                 ContextLogo.LOGO_HEIGHT
             )
 
