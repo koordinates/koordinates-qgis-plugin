@@ -29,6 +29,7 @@ from qgis.PyQt.QtWidgets import (
     QGridLayout,
     QWidget
 )
+from qgis.PyQt.QtSvg import QSvgWidget
 
 from .action_button import (
     AddButton,
@@ -86,26 +87,25 @@ class ThumbnailLabel(QLabel):
         self.setPixmap(QPixmap.fromImage(image))
 
 
-class SvgLabel(QLabel):
+class SvgLabel(QSvgWidget):
 
-    def __init__(self, icon_name: str, width, height,
-                 icon_width, icon_height, parent=None):
+    def __init__(self, icon_name: str,
+                 icon_width: int, icon_height: int, parent=None):
         super().__init__(parent)
 
-        self.setFixedSize(QSize(width, height))
-        icon = GuiUtils.get_svg_as_image(icon_name, icon_width, icon_height)
-        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.setPixmap(QPixmap.fromImage(icon))
+        self.setFixedSize(QSize(icon_width, icon_height))
+        self.load(GuiUtils.get_icon_svg(icon_name))
 
 
-class SvgFramedButton(SvgLabel):
+class SvgFramedButton(QFrame):
     clicked = pyqtSignal()
 
-    def __init__(self, icon_name: str, width, height,
-                 icon_width, icon_height, parent=None,
+    def __init__(self, icon_name: str, width: int, height: int,
+                 icon_width: int, icon_height: int, parent=None,
                  border_color=None, hover_border_color=None):
-        super().__init__(icon_name, width, height,
-                         icon_width, icon_height, parent)
+        super().__init__(parent)
+
+        self.setFixedSize(width, height)
 
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
@@ -122,6 +122,19 @@ class SvgFramedButton(SvgLabel):
                     hover_border_color if hover_border_color else border_color
                 )
             )
+
+        svg_label = SvgLabel(icon_name, icon_width, icon_height)
+        vl = QVBoxLayout()
+        vl.setContentsMargins(0,0,0,0)
+        vl.addStretch()
+        hl = QHBoxLayout()
+        hl.setContentsMargins(0,0,0,0)
+        hl.addStretch()
+        hl.addWidget(svg_label)
+        hl.addStretch()
+        vl.addLayout(hl)
+        vl.addStretch()
+        self.setLayout(vl)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
@@ -142,7 +155,7 @@ class StatisticWidget(QWidget):
             '<b style="font-family: Arial, Sans; font-size: 9pt">{}</b>'.format(title))
         gl.addWidget(title_label, 0, 0, 1, 2)
 
-        icon = SvgLabel(icon_name, 16, 16, 16, 16)
+        icon = SvgLabel(icon_name, 16, 16)
         gl.addWidget(icon, 1, 0, 1, 1)
 
         value_label = QLabel(
@@ -351,7 +364,7 @@ class DatasetDialog(QDialog):
         base_details_right_pane_layout = QHBoxLayout()
         base_details_right_pane_layout.setContentsMargins(12, 0, 0, 0)
         icon_name = DatasetGuiUtils.get_icon_for_dataset(self.dataset, IconStyle.Dark)
-        icon_label = SvgLabel(icon_name, 24, 44, 24, 24)
+        icon_label = SvgLabel(icon_name, 24, 24)
         base_details_right_pane_layout.addWidget(icon_label)
 
         summary_label = QLabel()
