@@ -96,6 +96,8 @@ class FilterWidget(QWidget):
         self.license_widget.setMinimumWidth(min_filter_widget_width)
         self.access_widget.setMinimumWidth(min_filter_widget_width)
 
+        self.resolution_widget.hide()
+
         self.filter_widget_page = QWidget()
         filter_widget_layout = FlowLayout()
         filter_widget_layout.setContentsMargins(0, 0, 0, 0)
@@ -162,7 +164,8 @@ class FilterWidget(QWidget):
 
         selected_data_types = self.data_type_filter_widget.data_types()
 
-        if DataType.Rasters in selected_data_types or DataType.Grids in selected_data_types:
+        if selected_data_types == {DataType.Rasters} or \
+                selected_data_types == {DataType.Grids}:
             # show resolution
             self.resolution_widget.setVisible(True)
         else:
