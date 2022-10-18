@@ -31,7 +31,12 @@ from qgis.PyQt.QtWidgets import (
 )
 from qgis.utils import iface
 
-from koordinatesexplorer.gui.thumbnails import downloadThumbnail
+from ..api import (
+    ApiUtils,
+    DataType,
+    Capability
+)
+from .thumbnails import downloadThumbnail
 from .action_button import (
     AddButton,
     CloneButton
@@ -276,6 +281,7 @@ class DatasetDialog(QDialog):
         # self.setupUi(self)
 
         self.dataset = dataset
+        self.dataset_type: DataType = ApiUtils.data_type_from_dataset_response(self.dataset)
 
         self.setWindowTitle('Dataset Details - {}'.format(dataset['title']))
 
@@ -302,11 +308,19 @@ class DatasetDialog(QDialog):
         self.star_button = StarButton(dataset_id=self.dataset['id'], checked=is_starred)
         title_hl.addWidget(self.star_button)
 
-        self.clone_button = CloneButton(dataset)
-        title_hl.addWidget(self.clone_button)
+        capabilities = ApiUtils.capabilities_from_dataset_response(self.dataset)
 
-        self.add_button = AddButton(dataset)
-        title_hl.addWidget(self.add_button)
+        if Capability.Clone in capabilities:
+            self.clone_button = CloneButton(dataset)
+            title_hl.addWidget(self.clone_button)
+        else:
+            self.clone_button = None
+
+        if Capability.Add in capabilities:
+            self.add_button = AddButton(dataset)
+            title_hl.addWidget(self.add_button)
+        else:
+            self.add_button = None
 
         layout.addLayout(title_hl)
 
