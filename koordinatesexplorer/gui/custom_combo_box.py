@@ -11,7 +11,8 @@ from qgis.PyQt.QtCore import (
 from qgis.PyQt.QtGui import (
     QPalette,
     QIcon,
-    QPainter
+    QPainter,
+    QFontMetrics
 )
 from qgis.PyQt.QtWidgets import (
     QWidget,
@@ -245,7 +246,17 @@ class CustomComboBox(QWidget):
         option = QStyleOptionComboBox()
         option.initFrom(self)
         option.rect = event.rect()
-        option.currentText = self._current_text
+        available_space = option.rect.width() - 60
+
+        fm = QFontMetrics(self.font())
+        text = self._current_text
+        while len(text) > 5 and fm.width(text) > available_space:
+            text = text[:-1]
+
+        if text != self._current_text:
+            text += "…"
+
+        option.currentText = text
         option.editable = True
 
         if self._hover_state == CustomComboBox.BoxComponent.DropDownButton:
