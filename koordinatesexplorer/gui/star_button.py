@@ -1,12 +1,6 @@
 from qgis.PyQt.QtCore import (
     Qt
 )
-from qgis.PyQt.QtGui import (
-    QPixmap
-)
-from qgis.PyQt.QtWidgets import (
-    QLabel
-)
 from qgis.PyQt.QtSvg import (
     QSvgWidget
 )
