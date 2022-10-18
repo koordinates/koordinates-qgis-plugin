@@ -1,3 +1,5 @@
+from typing import Optional
+
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import (
     QDir,
@@ -12,6 +14,7 @@ from qgis.PyQt.QtWidgets import (
 )
 from qgis.core import (
     Qgis,
+    QgsReferencedRectangle,
     QgsSettings
 )
 from qgis.gui import (
@@ -135,7 +138,7 @@ class CloneDialog(QDialog, WIDGET):
         """
         return self.locationPanel.location()
 
-    def extent(self):
+    def extent(self) -> Optional[QgsReferencedRectangle]:
         """
         Returns the output extent
         """

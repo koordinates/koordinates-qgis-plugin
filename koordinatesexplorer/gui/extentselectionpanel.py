@@ -6,6 +6,7 @@ from qgis.PyQt.QtWidgets import (
     QWidget,
 )
 from qgis.core import (
+    QgsProject,
     QgsRectangle,
     QgsReferencedRectangle,
 )
@@ -98,8 +99,11 @@ class ExtentSelectionPanel(QWidget, WIDGET):
             iface.mapCanvas().mapSettings().destinationCrs(),
         )
 
-    def getExtent(self) -> QgsReferencedRectangle:
+    def getExtent(self) -> Optional[QgsReferencedRectangle]:
         if self.combo_mode.currentData() == ExtentSelectionPanel.MODE_CANVAS:
+            if not QgsProject.instance().mapLayers():
+                # empty project, canvas extent will not be valid
+                return None
             return self.canvas_extent()
         elif self.combo_mode.currentData() == ExtentSelectionPanel.MODE_SELECT:
             return self._custom_extent
