@@ -1,8 +1,11 @@
-from typing import Dict
+from typing import Dict, Set
 
 from qgis.PyQt.QtCore import QUrlQuery
 
-from .enums import DataType
+from .enums import (
+    DataType,
+    Capability
+)
 
 
 class ApiUtils:
@@ -44,3 +47,13 @@ class ApiUtils:
             return DataType.Sets
         elif dataset.get('type') == 'repo':
             return DataType.Repositories
+
+    @staticmethod
+    def capabilities_from_dataset_response(dataset: dict) -> Set[Capability]:
+        datatype = ApiUtils.data_type_from_dataset_response(dataset)
+        capabilities = DataType.capabilities(datatype)
+
+        if not dataset.get("repository"):
+            capabilities.remove(Capability.Clone)
+
+        return capabilities

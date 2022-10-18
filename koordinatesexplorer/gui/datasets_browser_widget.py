@@ -739,9 +739,9 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         self.buttonsLayout.addStretch()
 
-        capabilities = DataType.capabilities(self.dataset_type)
+        capabilities = ApiUtils.capabilities_from_dataset_response(self.dataset)
 
-        if Capability.Clone in capabilities and self.dataset.get("repository") is not None:
+        if Capability.Clone in capabilities:
             self.btnClone = CloneButton(self.dataset)
             self.buttonsLayout.addWidget(self.btnClone)
 
