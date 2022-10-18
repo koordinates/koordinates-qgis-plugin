@@ -26,6 +26,8 @@ from qgis.PyQt.QtWidgets import (
     QToolButton,
     QHBoxLayout,
 )
+from qgis.PyQt.QtSvg import QSvgWidget
+
 from qgis.gui import (
     QgsFloatingWidget
 )
@@ -114,7 +116,8 @@ class ContextItem(QFrame):
         hl.addWidget(self.icon_label)
         self.name_label = QLabel(self._details['name'])
         hl.addWidget(self.name_label, 1)
-        self.checked_label = QLabel()
+        self.checked_label = QSvgWidget()
+        self.checked_label.setFixedSize(16,16)
         hl.addWidget(self.checked_label)
 
         self.set_selected(False)
@@ -129,14 +132,13 @@ class ContextItem(QFrame):
         back_color = '#ffffff'
         if self._selected:
             back_color = '#f5f5f7'
-            self.checked_label.setPixmap(
-                QPixmap.fromImage(
-                    GuiUtils.get_svg_as_image(
-                        'tick.svg', 16, 16
-                    ))
+            self.checked_label.load(
+                    GuiUtils.get_icon_svg(
+                        'tick.svg'
+                    )
             )
         else:
-            self.checked_label.setPixmap(QPixmap())
+            self.checked_label.load(None)
 
         self.setStyleSheet(
             """
