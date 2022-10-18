@@ -669,30 +669,32 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         self.setFixedHeight(self.CARD_HEIGHT)
 
-        if self.dataset.get('thumbnail_url'):
-            downloadThumbnail(self.dataset["thumbnail_url"], self)
+        thumbnail_url = self.dataset.get('thumbnail_url')
+        if thumbnail_url:
+            downloadThumbnail(thumbnail_url, self)
 
         self.labelName.setText(
             f"""<p style="line-height: 130%;
                 font-size: 11pt;
-                font-family: Arial, Sans"><b>{self.dataset["title"]}</b><br>"""
+                font-family: Arial, Sans"><b>{self.dataset.get("title", 'Layer')}</b><br>"""
             f"""<span style="color: #868889;
             font-size: 10pt;
-            font-family: Arial, Sans">{self.dataset["publisher"]["name"]}</span></p>"""
+            font-family: Arial, Sans">{self.dataset.get("publisher", {}).get("name")}</span></p>"""
         )
 
         details_layout = QVBoxLayout()
         details_layout.setContentsMargins(0, 0, 0, 0)
 
-        if self.dataset.get('license'):
-            license = self.dataset['license'].get('type')
-            if license:
-                license = license.upper()
+        license = self.dataset.get('license')
+        if license:
+            license_type = license.get('type')
+            if license_type:
+                license_type = license_type.upper()
                 self.license_label = QLabel()
                 self.license_label.setText(
                     f"""<span style="color: #868889;
                         font-family: Arial, Sans;
-                        font-size: 9pt">{license}</span>"""
+                        font-size: 9pt">{license_type}</span>"""
                 )
                 details_layout.addWidget(self.license_label)
 
@@ -813,7 +815,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
     def showDetails(self):
         dataset = (
             self.dataset
-        )  # KoordinatesClient.instance().dataset(self.dataset["id"])
+        )
         dlg = DatasetDialog(self, dataset)
         dlg.exec()
 

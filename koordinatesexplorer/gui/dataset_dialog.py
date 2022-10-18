@@ -285,7 +285,7 @@ class DatasetDialog(QDialog):
         self.dataset = dataset
         self.dataset_type: DataType = ApiUtils.data_type_from_dataset_response(self.dataset)
 
-        self.setWindowTitle('Dataset Details - {}'.format(dataset['title']))
+        self.setWindowTitle('Dataset Details - {}'.format(dataset.get('title', 'layer')))
 
         self.setStyleSheet('DatasetDialog {background-color: white; }')
 
@@ -303,7 +303,7 @@ class DatasetDialog(QDialog):
             """<span style="font-family: Arial, Sans;
             font-weight: bold;
             font-size: 18pt;">{}</span>""".format(
-                dataset['title']))
+                dataset.get('title', '')))
         title_hl.addWidget(self.label_title, 1)
 
         is_starred = self.dataset.get('is_starred', False)
@@ -337,7 +337,9 @@ class DatasetDialog(QDialog):
 
         self.thumbnail_label = QLabel()
         self.thumbnail_label.setFixedSize(256, 195)
-        downloadThumbnail(dataset["thumbnail_url"], self)
+        thumbnail_url = dataset.get('thumbnail_url')
+        if thumbnail_url:
+            downloadThumbnail(thumbnail_url, self)
 
         contents_layout = QVBoxLayout()
         contents_layout.setContentsMargins(0, 0, 15, 15)
@@ -382,17 +384,26 @@ class DatasetDialog(QDialog):
         statistics_layout = QHBoxLayout()
         statistics_layout.setContentsMargins(0, 0, 0, 0)
 
-        statistics_layout.addWidget(StatisticWidget('Date Added', 'add.svg', parser.parse(
-            dataset["first_published_at"]).strftime("%d %b %Y")))
-        statistics_layout.addWidget(StatisticWidget('Last Updated', 'history.svg',
-                                                    parser.parse(dataset["published_at"]).strftime(
-                                                        "%d %b %Y")))
+        first_published = dataset.get('first_published_at')
+        if first_published:
+            statistics_layout.addWidget(StatisticWidget('Date Added', 'add.svg', parser.parse(
+                first_published).strftime("%d %b %Y")))
+
+        last_updated = dataset.get("published_at")
+        if last_updated:
+            statistics_layout.addWidget(StatisticWidget('Last Updated', 'history.svg',
+                                                        parser.parse(last_updated).strftime(
+                                                            "%d %b %Y")))
+
+        num_downloads = dataset.get("num_downloads", 0)
         statistics_layout.addWidget(StatisticWidget('Exports', 'arrow-down.svg',
                                                     DatasetGuiUtils.format_count(
-                                                        dataset["num_downloads"])))
+                                                        num_downloads)))
+
+        num_views = dataset.get('num_views', 0)
         statistics_layout.addWidget(StatisticWidget('Views', 'eye.svg',
                                                     DatasetGuiUtils.format_count(
-                                                        dataset["num_views"])))
+                                                        num_views)))
         statistics_layout.addWidget(StatisticWidget('Layer ID', 'layers.svg', str(dataset["id"])))
 
         contents_layout.addLayout(statistics_layout)
@@ -406,7 +417,8 @@ class DatasetDialog(QDialog):
         self.description_label.setTextInteractionFlags(
             Qt.TextInteractionFlag.TextBrowserInteraction)
         self.description_label.setOpenExternalLinks(True)
-        self.description_label.setText(self.dialog_css() + self.dataset["description_html"])
+        self.description_label.setText(
+            self.dialog_css() + self.dataset.get("description_html", ''))
 
         contents_layout.addWidget(self.description_label, 1)
 
@@ -464,33 +476,49 @@ class DatasetDialog(QDialog):
         return parser.parse(value).strftime("%d %b %Y")
 
     def get_technical_details(self) -> List[Tuple]:
-        feature_count = self.dataset["data"]["feature_count"]
-        empty_count = self.dataset["data"].get('empty_geometry_count', 0)
+        res = [
+            ('Data type', DatasetGuiUtils.get_data_type(self.dataset))
+        ]
+
+        crs_display = self.dataset.get('data', {}).get('crs_display')
+        crs = self.dataset.get('data', {}).get('crs')
+        if crs_display:
+            res.append(('CRS', '{} • {}'.format(crs_display,
+                                                crs
+                                                )))
+
+        feature_count = self.dataset.get("data", {}).get("feature_count", 0)
+        empty_count = self.dataset.get("data", {}).get('empty_geometry_count', 0)
         feature_count_label = self.format_number(feature_count)
         if empty_count:
             feature_count_label += ' • {} with empty or null geometries'.format(
                 self.format_number(empty_count))
-        res = [
-            ('Data type', DatasetGuiUtils.get_data_type(self.dataset)),
-            ('CRS', '{} • {}'.format(self.dataset["data"]["crs_display"],
-                                     self.dataset["data"]["crs"]
-                                     )),
-            ('Feature count', feature_count_label)]\
+            res.append(('Feature count', feature_count_label))
 
-        if self.dataset["data"].get("fields"):
+        fields = self.dataset.get('data', {}).get('fields', [])
+        if fields:
             res.append(('_Attributes', ", ".join(
-                [f["name"] for f in self.dataset["data"]["fields"]])))
-        if self.dataset["data"].get("primary_key_fields"):
-            res.append(('_Primary key', ", ".join(self.dataset["data"]["primary_key_fields"])))
+                [f.get("name", '') for f in fields])))
+
+        primary_key_fields = self.dataset.get('data', {}).get('primary_key_fields', [])
+        if primary_key_fields:
+            res.append(('_Primary key', ", ".join(primary_key_fields)))
 
         return res
 
     def get_history_details(self) -> List[Tuple]:
-        return [
-            ('Added', self.format_date(self.dataset["first_published_at"])),
-            ('Last updated', self.format_date(self.dataset["published_at"])),
-            ('Revisions', 'xxx')
-        ]
+        res = []
+
+        first_published = self.dataset.get("first_published_at")
+        if first_published:
+            res.append(('Added', self.format_date(first_published)))
+
+        last_updated = self.dataset.get("published_at")
+        if last_updated:
+            res.append(('Last updated', self.format_date(last_updated)))
+
+        res.append(('Revisions', 'xxx'))
+        return res
 
     def setThumbnail(self, img):
         target = QImage(self.thumbnail_label.size(), QImage.Format_ARGB32)
