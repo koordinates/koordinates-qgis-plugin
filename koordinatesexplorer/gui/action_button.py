@@ -11,7 +11,10 @@ from qgis.utils import iface
 
 from koordinatesexplorer.utils import cloneKartRepo, KartNotInstalledException
 from .gui_utils import GuiUtils
-from ..api import KoordinatesClient
+from ..api import (
+    KoordinatesClient,
+    UserCapability
+)
 
 COLOR_INDEX = 0
 
@@ -35,19 +38,29 @@ class ActionButton(QToolButton):
             }}
             """
 
+    BUTTON_COLOR = "#0a9b46"
+    BUTTON_OUTLINE = "#076d31"
+    BUTTON_TEXT = "#ffffff"
+    BUTTON_HOVER = "#077936"
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setToolButtonStyle(Qt.ToolButtonIconOnly)
         self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+        self.setStyleSheet(self.BASE_STYLE.format(
+            self.BUTTON_COLOR,
+            self.BUTTON_OUTLINE,
+            self.BUTTON_TEXT,
+            self.BUTTON_HOVER))
 
 
 class CloneButton(ActionButton):
-    BUTTON_COLOR_CLONE = "#f5f5f7"
-    BUTTON_OUTLINE_CLONE = "#c4c4c6"
-    BUTTON_TEXT_CLONE = "#323233"
-    BUTTON_HOVER_CLONE = "#e4e4e6"
+    BUTTON_COLOR = "#f5f5f7"
+    BUTTON_OUTLINE = "#c4c4c6"
+    BUTTON_TEXT = "#323233"
+    BUTTON_HOVER = "#e4e4e6"
 
     def __init__(self, dataset, parent=None, close_parent_on_clone=False):
         super().__init__(parent)
@@ -58,11 +71,6 @@ class CloneButton(ActionButton):
         icon = GuiUtils.get_icon('clone_button.svg')
         self.setIcon(icon)
         self.setIconSize(QSize(63, 11))
-        self.setStyleSheet(self.BASE_STYLE.format(
-            self.BUTTON_COLOR_CLONE,
-            self.BUTTON_OUTLINE_CLONE,
-            self.BUTTON_TEXT_CLONE,
-            self.BUTTON_HOVER_CLONE))
         self.clicked.connect(self.cloneRepository)
         self.setFixedSize(88, self.BUTTON_HEIGHT)
 
@@ -71,9 +79,19 @@ class CloneButton(ActionButton):
     def cloneRepository(self):
         if self._close_parent_on_clone:
             self.parent().close()
-
         url = self.dataset.get("repository", {}).get("clone_location_https")
         title = self.dataset.get('title')
+
+        from .action_dialog import ActionDialog
+        if UserCapability.EnableKartClone not in KoordinatesClient.instance().user_capabilities():
+            dlg = ActionDialog(
+                title='Clone — {}'.format(title),
+                message='To clone cloud-hosted data to your local drive, please request access.',
+                action='Request access',
+                url='https://m.koordinates.com/beta-karthub-request')
+            dlg.exec_()
+            return
+
         try:
             if cloneKartRepo(
                     title=title,
@@ -94,10 +112,6 @@ class CloneButton(ActionButton):
 
 
 class AddButton(ActionButton):
-    BUTTON_COLOR_ADD = "#0a9b46"
-    BUTTON_OUTLINE_ADD = "#076d31"
-    BUTTON_TEXT_ADD = "#ffffff"
-    BUTTON_HOVER_ADD = "#077936"
 
     def __init__(self, dataset, parent=None):
         super().__init__(parent)
@@ -109,10 +123,6 @@ class AddButton(ActionButton):
         icon = GuiUtils.get_icon('add_button.svg')
         self.setIcon(icon)
         self.setIconSize(QSize(53, 11))
-        self.setStyleSheet(self.BASE_STYLE.format(self.BUTTON_COLOR_ADD,
-                                                  self.BUTTON_OUTLINE_ADD,
-                                                  self.BUTTON_TEXT_ADD,
-                                                  self.BUTTON_HOVER_ADD))
         self.clicked.connect(self.addLayer)
         self.setFixedSize(72, self.BUTTON_HEIGHT)
 
