@@ -1,8 +1,10 @@
+from enum import Enum
 import json
 from typing import (
     Optional,
     Tuple,
-    Dict
+    Dict,
+    Set
 )
 
 from qgis.PyQt.QtCore import (
@@ -28,6 +30,10 @@ PAGE_SIZE = 20
 
 class LoginException(Exception):
     pass
+
+
+class UserCapability(Enum):
+    EnableKartClone = 0
 
 
 class KoordinatesClient(QObject):
@@ -156,6 +162,16 @@ class KoordinatesClient(QObject):
         Returns a diction of user details
         """
         return self._user_details
+
+    def user_capabilities(self) -> Set[UserCapability]:
+        """
+        Returns the user capabilities
+        """
+        res = set()
+        if self._user_details.get('capabilities', {}).get('enable_kart_clone', False):
+            res.add(UserCapability.EnableKartClone)
+
+        return res
 
     def dataset(self, datasetid):
         if str(datasetid) not in self.layers:
