@@ -10,6 +10,7 @@ from qgis.PyQt.QtSvg import (
 from qgis.PyQt.QtWidgets import (
     QFrame,
     QVBoxLayout,
+    QHBoxLayout,
     QLabel,
     QWidget
 )
@@ -79,6 +80,8 @@ class LoginWidget(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        self.oauth = None
+
         self.setFrameShape(QFrame.NoFrame)
 
         self.setStyleSheet("""LoginWidget {
@@ -125,7 +128,20 @@ class LoginWidget(QFrame):
         contents_layout.addSpacing(18)
 
         self.login_button = LoginButton()
-        contents_layout.addWidget(self.login_button)
+
+        hl = QHBoxLayout()
+        hl.setContentsMargins(0, 0, 0, 0)
+        hl.addWidget(self.login_button)
+
+        self.open_login_window_label = QLabel()
+        self.open_login_window_label.setFont(font)
+        self.open_login_window_label.setOpenExternalLinks(True)
+        hl.addSpacing(10)
+        hl.addWidget(self.open_login_window_label)
+        self.open_login_window_label.hide()
+        hl.addStretch(1)
+
+        contents_layout.addLayout(hl)
 
         contents_layout.addSpacing(21)
         signup_label = QLabel()
@@ -174,7 +190,15 @@ class LoginWidget(QFrame):
             self._auth_finished(key)
         else:
             self.login_button.set_state(AuthState.LoggingIn)
+
             self.oauth = OAuthWorkflow()
+
+            self.open_login_window_label.setText(
+                '<a href="{}" style="color: black;">Open the login window</a>'.format(
+                    self.oauth.authorization_url
+                )
+            )
+            self.open_login_window_label.show()
 
             self.objThread = QThread()
             self.oauth.moveToThread(self.objThread)
@@ -188,6 +212,7 @@ class LoginWidget(QFrame):
         if not logged_in:
             self.remove_api_key()
             self.login_button.set_state(AuthState.LoggedOut)
+            self.open_login_window_label.hide()
 
     def _auth_finished(self, key):
         if not key:
@@ -197,6 +222,7 @@ class LoginWidget(QFrame):
             KoordinatesClient.instance().login(key)
             self.store_api_key()
             self.login_button.set_state(AuthState.LoggedIn)
+            self.open_login_window_label.hide()
         except FileExistsError:
             iface.messageBar().pushMessage(
                 "Could not log in. Check your connection and your API Key value",
@@ -204,9 +230,11 @@ class LoginWidget(QFrame):
                 duration=5,
             )
             self.login_button.set_state(AuthState.LoggedOut)
+            self.open_login_window_label.hide()
 
     def _auth_error_occurred(self, error: str):
         self.login_button.set_state(AuthState.LoggedOut)
+        self.open_login_window_label.hide()
         iface.messageBar().pushMessage(
             "Authorization failed: {}".format(error),
             Qgis.Warning,
@@ -215,6 +243,8 @@ class LoginWidget(QFrame):
 
     def _client_error_occurred(self, error: str):
         self.login_button.set_state(AuthState.LoggedOut)
+        self.open_login_window_label.hide()
+        self.open_login_window_label.hide()
         iface.messageBar().pushMessage(
             "Request failed: {}".format(error),
             Qgis.Warning,
