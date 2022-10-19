@@ -8,7 +8,8 @@ from qgis.PyQt.QtCore import (
 from qgis.PyQt.QtGui import (
     QFontMetrics,
     QPainter,
-    QFont
+    QFont,
+    QFontDatabase
 )
 from qgis.PyQt.QtWidgets import (
     QWidget,
@@ -152,12 +153,16 @@ class CountryWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        families = set(QFontDatabase().families())
+
+        found = False
         for candidate in STANDARD_EMOJI_FONTS:
-            self._emoji_font = QFont(candidate)
-            if self._emoji_font.exactMatch():
+            if candidate in families:
+                self._emoji_font = QFont(candidate)
+                found = True
                 break
 
-        if not self._emoji_font.exactMatch():
+        if not found:
             # load from the embedded Noto Emoji subset, which doesn't always work cross-platform...
             self._emoji_font = GuiUtils.get_embedded_font('NotoEmojiSubset.ttf')
 
