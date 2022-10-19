@@ -79,7 +79,11 @@ class CustomComboBox(QWidget):
             self.frame.layout().addWidget(widget)
 
         def reflow(self):
-            self.frame.setFixedWidth(self.anchorWidget().size().width())
+            if self.anchorWidget().width() > self.frame.sizeHint().width():
+                self.frame.setFixedWidth(self.anchorWidget().width())
+            else:
+                self.frame.setFixedWidth(self.frame.sizeHint().width())
+
             self.frame.updateGeometry()
             self.frame.adjustSize()
             self.updateGeometry()
@@ -165,7 +169,6 @@ class CustomComboBox(QWidget):
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        self._floating_widget.setFixedWidth(event.size().width())
         self._floating_widget.reflow()
 
     def mouseMoveEvent(self, event):
@@ -216,6 +219,9 @@ class CustomComboBox(QWidget):
         else:
             self._floating_widget.show()
             self._floating_widget.raise_()
+
+        if self.parent() and self.parent().parent():
+            self.parent().parent().update()
 
     def is_expanded(self):
         return self._floating_widget.isVisible()
