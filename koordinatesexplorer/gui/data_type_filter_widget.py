@@ -144,7 +144,7 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
         else:
             self.set_radio = None
 
-        self.data_repository_radio = QRadioButton('Data Repositories')
+        self.data_repository_radio = QRadioButton('Repositories')
         vl.addWidget(self.data_repository_radio)
         self.document_radio = QRadioButton('Documents')
         vl.addWidget(self.document_radio)
