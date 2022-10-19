@@ -146,11 +146,13 @@ class OAuthWorkflow(QObject):
     finished = pyqtSignal(str)
     error_occurred = pyqtSignal(str)
 
-    def doAuth(self):
+    def __init__(self):
+        super().__init__()
+
         code_verifier, code_challenge = generate_pkce_pair()
 
         state = "".join(choice(ascii_lowercase) for i in range(10))
-        authorization_url = (
+        self.authorization_url = (
             f"{AUTH_URL}?"
             f"scope={SCOPE}&"
             f"response_type=code&"
@@ -161,14 +163,16 @@ class OAuthWorkflow(QObject):
             f"code_challenge_method=S256&"
             f"redirect_uri={REDIRECT_URL}"
         )
-        code_verifier, code_challenge = generate_pkce_pair()
-        authorization_url = f"{authorization_url}&code_challenge={code_challenge}&code_challenge_method=S256"  # noqa: E501
+        self.code_verifier, self.code_challenge = generate_pkce_pair()
+        self.authorization_url = f"{self.authorization_url}&code_challenge={self.code_challenge}&code_challenge_method=S256"  # noqa: E501
+
+    def doAuth(self):
 
         server = HTTPServer(("127.0.0.1", REDIRECT_PORT), _Handler)
-        server.code_verifier = code_verifier
+        server.code_verifier = self.code_verifier
         server.apikey = None
         server.error = None
-        web_open(authorization_url)
+        web_open(self.authorization_url)
 
         server.handle_request()
 
