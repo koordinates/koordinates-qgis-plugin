@@ -139,9 +139,9 @@ COUNTRY_NAMES = {'AF': 'Afghanistan',
                  'AX': 'Åland Islands'}
 
 STANDARD_EMOJI_FONTS = (
+    'Apple Color Emoji',
     'Segoe UI Emoji',
     'Noto Color Emoji',
-    'Apple Color Emoji'
 )
 
 
