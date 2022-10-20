@@ -1,3 +1,5 @@
+import math
+
 from qgis.PyQt.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -40,22 +42,61 @@ class ResolutionFilterWidget(FilterWidgetComboBase):
 
         self.slider.rangeChanged.connect(self._update_labels)
 
-        self.set_range(0, 1000)
+        self._range = (0.03, 2000)
+        self.slider.setRangeLimits(0, 100000)
         self.clear()
 
     def set_range(self, minimum, maximum):
+        assert False
         self.slider.setRangeLimits(minimum, maximum)
         self._update_labels()
 
+    @staticmethod
+    def scale(value, domain, range):
+        exp = 6.5
+        return ((range[1] - range[0]) / math.pow(domain[1] - domain[0], exp)) * math.pow(
+            value - domain[0], exp) + range[0]
+
+    @staticmethod
+    def unscale(value, domain, range):
+        if range[1] == range[0]:
+            return 0
+
+        exp = 6.5
+
+        return domain[0] + math.pow(
+            (value - range[0]) * math.pow(domain[1] - domain[0], exp) / (range[1] - range[0])
+            , 1 / exp
+        )
+
+    def map_slider_value_to_resolution(self, value):
+        return round(self.scale(
+            value,
+            (0, 100000),
+            self._range), 2)
+
+    def map_value_to_slider(self, value):
+        if self.map_slider_value_to_resolution(0) == value:
+            return 0
+
+        vv = int(self.unscale(value, (0, 100000), self._range))
+
+        return vv
+
+    def current_range(self):
+        return (self.map_slider_value_to_resolution(self.slider.lowerValue()),
+                self.map_slider_value_to_resolution(self.slider.upperValue()))
+
     def _update_labels(self):
-        self.min_label.setText('{} m'.format(self.slider.lowerValue()))
-        self.max_label.setText('{} m'.format(self.slider.upperValue()))
+        lower, upper = self.current_range()
+        self.min_label.setText('{} m'.format(lower))
+        self.max_label.setText('{} m'.format(upper))
         if self.slider.lowerValue() == self.slider.minimum() and \
                 self.slider.upperValue() == self.slider.maximum():
             self.set_current_text('Resolution')
         else:
-            self.set_current_text('Resolution {} m - {} m'.format(self.slider.lowerValue(),
-                                                                  self.slider.upperValue()))
+            self.set_current_text('Resolution {} m - {} m'.format(lower,
+                                                                  upper))
         if not self._block_changes:
             self.changed.emit()
 
@@ -72,9 +113,13 @@ class ResolutionFilterWidget(FilterWidgetComboBase):
 
     def apply_constraints_to_query(self, query: DataBrowserQuery):
         if self.slider.lowerValue() != self.slider.minimum():
-            query.minimum_resolution = self.slider.lowerValue()
+            query.minimum_resolution = self.map_slider_value_to_resolution(
+                self.slider.lowerValue()
+            )
         if self.slider.upperValue() != self.slider.maximum():
-            query.maximum_resolution = self.slider.upperValue()
+            query.maximum_resolution = self.map_slider_value_to_resolution(
+                self.slider.upperValue()
+            )
 
     def set_from_query(self, query: DataBrowserQuery):
         self._block_changes += 1
@@ -88,5 +133,24 @@ class ResolutionFilterWidget(FilterWidgetComboBase):
         else:
             self.slider.setUpperValue(self.slider.maximum())
 
+        self._update_labels()
+        self._block_changes -= 1
+
+    def set_facets(self, facets: dict):
+        min_res = facets.get('raster_resolution', {}).get('min')
+        max_res = facets.get('raster_resolution', {}).get('max')
+
+        prev_range = self.current_range()
+
+        if min_res is not None and max_res is not None:
+            self._range = (min_res, max_res)
+            new_range = (max(prev_range[0], min_res), min(prev_range[1], max_res))
+        else:
+            self._range = (0.03, 2000)
+            new_range = self._range
+
+        self._block_changes += 1
+        self.slider.setRange(self.map_value_to_slider(new_range[0]),
+                             self.map_value_to_slider(new_range[1]))
         self._update_labels()
         self._block_changes -= 1
