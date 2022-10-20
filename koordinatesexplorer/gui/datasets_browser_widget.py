@@ -9,7 +9,9 @@ from qgis.PyQt import sip
 from qgis.PyQt.QtCore import (
     Qt,
     pyqtSignal,
-    QRect
+    QPointF,
+    QRect,
+    QRectF
 )
 from qgis.PyQt.QtGui import (
     QColor,
@@ -762,38 +764,53 @@ class DatasetItemWidget(DatasetItemWidgetBase):
     def process_thumbnail(self, img: Optional[QImage]) -> QImage:
         base = super().process_thumbnail(img)
 
+        scale_factor = self.screen().devicePixelRatio()
+
+        scaled_image = base.scaled(int(scale_factor * base.width()),
+                                   int(scale_factor * base.height()))
+
+        scaled_image.setDevicePixelRatio(self.screen().devicePixelRatio())
+        scaled_image.setDotsPerMeterX(
+            int(scaled_image.dotsPerMeterX() * scale_factor))
+        scaled_image.setDotsPerMeterY(int(
+            scaled_image.dotsPerMeterY() * scale_factor))
+        base = scaled_image
+
         painter = QPainter(base)
         painter.setRenderHint(QPainter.Antialiasing, True)
 
         painter.setPen(Qt.NoPen)
         painter.setBrush(QBrush(QColor(0, 0, 0, 150)))
-        painter.drawRoundedRect(15, 100, 117, 32, 4, 4)
+        painter.drawRoundedRect(QRectF(15, 100, 117, 32), 4, 4)
 
         icon = DatasetGuiUtils.get_icon_for_dataset(self.dataset, IconStyle.Light)
         if icon:
-            painter.drawImage(21, 106, GuiUtils.get_svg_as_image(icon, 20, 20))
+            painter.drawImage(QRectF(21, 106, 20, 20),
+                              GuiUtils.get_svg_as_image(icon,
+                                                        int(20 * scale_factor),
+                                                        int(20 * scale_factor)))
 
         description = DatasetGuiUtils.get_type_description(self.dataset)
         if description:
             font = QFont('Arial')
-            font.setPointSize(8)
+            font.setPointSizeF(8 / scale_factor)
             font.setBold(True)
             painter.setFont(font)
 
             painter.setBrush(Qt.NoBrush)
             painter.setPen(QPen(QColor(255, 255, 255)))
-            painter.drawText(47, 113, description)
+            painter.drawText(QPointF(47, 113), description)
 
         subtitle = DatasetGuiUtils.get_subtitle(self.dataset)
         if subtitle:
             font = QFont('Arial')
-            font.setPointSize(8)
+            font.setPointSizeF(8 / scale_factor)
             font.setBold(False)
             painter.setFont(font)
 
             painter.setBrush(Qt.NoBrush)
             painter.setPen(QPen(QColor(255, 255, 255)))
-            painter.drawText(47, 127, subtitle)
+            painter.drawText(QPointF(47, 127), subtitle)
 
         painter.end()
         return base
