@@ -1,18 +1,17 @@
 import json
 import urllib
 from enum import Enum
-
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from random import choice
 from string import ascii_lowercase
 from urllib.parse import parse_qs, urlsplit
-from webbrowser import open as web_open
 
 from qgis.PyQt.QtCore import (
     QObject,
     pyqtSignal,
     QUrl
 )
+from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtNetwork import QNetworkRequest
 from qgis.core import (
     QgsBlockingNetworkRequest
@@ -167,12 +166,11 @@ class OAuthWorkflow(QObject):
         self.authorization_url = f"{self.authorization_url}&code_challenge={self.code_challenge}&code_challenge_method=S256"  # noqa: E501
 
     def doAuth(self):
-
         server = HTTPServer(("127.0.0.1", REDIRECT_PORT), _Handler)
         server.code_verifier = self.code_verifier
         server.apikey = None
         server.error = None
-        web_open(self.authorization_url)
+        QDesktopServices.openUrl(QUrl(self.authorization_url))
 
         server.handle_request()
 
