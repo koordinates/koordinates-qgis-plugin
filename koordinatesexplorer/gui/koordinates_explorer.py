@@ -120,8 +120,6 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
         self.context_container.setLayout(context_layout)
 
-        self.context_tab.setFixedWidth(self.context_container.width())
-
         self.context_tab.show()
 
         self.context_tab.setTabText(self.TAB_BROWSE_INDEX, 'Browse')
@@ -221,6 +219,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         self.button_user.setMenu(self.user_menu)
 
         self._context_tab_changed(self.TAB_BROWSE_INDEX)
+        self.context_tab.setFixedWidth(self.context_container.width())
 
         KoordinatesClient.instance().loginChanged.connect(self._loginChanged)
 
