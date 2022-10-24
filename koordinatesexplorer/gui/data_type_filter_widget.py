@@ -342,7 +342,7 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
         elif self.WITH_SETS and self.set_radio.isChecked():
             text = 'Sets'
         elif self.data_repository_radio.isChecked():
-            text = 'Data repositories'
+            text = 'Repositories'
         elif self.document_radio.isChecked():
             text = 'Documents'
 
