@@ -6,8 +6,9 @@ from random import choice
 from string import ascii_lowercase
 from urllib.parse import parse_qs, urlsplit
 
+import requests
 from qgis.PyQt.QtCore import (
-    QObject,
+    QThread,
     pyqtSignal,
     QUrl
 )
@@ -141,7 +142,7 @@ class _Handler(BaseHTTPRequestHandler):
             self.wfile.write(AUTH_HANDLER_RESPONSE)
 
 
-class OAuthWorkflow(QObject):
+class OAuthWorkflow(QThread):
     finished = pyqtSignal(str)
     error_occurred = pyqtSignal(str)
 
@@ -165,7 +166,11 @@ class OAuthWorkflow(QObject):
         self.code_verifier, self.code_challenge = generate_pkce_pair()
         self.authorization_url = f"{self.authorization_url}&code_challenge={self.code_challenge}&code_challenge_method=S256"  # noqa: E501
 
-    def doAuth(self):
+    def force_stop(self):
+        # we have to dummy a dummy request in order to abort the blocking handle_request() loop
+        requests.get("http://127.0.0.1:{}".format(REDIRECT_PORT))
+
+    def run(self):
         server = HTTPServer(("127.0.0.1", REDIRECT_PORT), _Handler)
         server.code_verifier = self.code_verifier
         server.apikey = None

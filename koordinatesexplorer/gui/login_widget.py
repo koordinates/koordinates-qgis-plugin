@@ -2,7 +2,6 @@ from typing import Optional
 
 from qgis.PyQt import sip
 from qgis.PyQt.QtCore import (
-    QThread,
     QSize
 )
 from qgis.PyQt.QtSvg import (
@@ -82,7 +81,6 @@ class LoginWidget(QFrame):
         super().__init__(parent)
 
         self.oauth = None
-        self.auth_thread = None
 
         self.setFrameShape(QFrame.NoFrame)
 
@@ -186,6 +184,15 @@ class LoginWidget(QFrame):
         KoordinatesClient.instance().loginChanged.connect(self._login_changed)
         KoordinatesClient.instance().error_occurred.connect(self._client_error_occurred)
 
+    def cancel_active_requests(self):
+        if self.oauth and not sip.isdeleted(self.oauth):
+            self.oauth.force_stop()
+            self.oauth.quit()
+            self.oauth.wait()
+            self.oauth.deleteLater()
+
+        self.oauth = None
+
     def login_clicked(self):
         key = self.retrieve_api_key()
         if key is not None:
@@ -202,13 +209,9 @@ class LoginWidget(QFrame):
             )
             self.open_login_window_label.show()
 
-            self.auth_thread = QThread(self)
-            self.oauth.setParent(self.auth_thread)
-            self.oauth.moveToThread(self.auth_thread)
             self.oauth.finished.connect(self._auth_finished)
             self.oauth.error_occurred.connect(self._auth_error_occurred)
-            self.auth_thread.started.connect(self.oauth.doAuth)
-            self.auth_thread.start()
+            self.oauth.start()
 
     def _login_changed(self, logged_in: bool):
         if not logged_in:
@@ -219,10 +222,11 @@ class LoginWidget(QFrame):
     def _auth_finished(self, key):
         self.oauth = None
 
-        if self.auth_thread and not sip.isdeleted(self.auth_thread):
-            self.auth_thread.quit()
-            self.auth_thread.deleteLater()
-        self.auth_thread = None
+        if self.oauth and not sip.isdeleted(self.oauth):
+            self.oauth.quit()
+            self.oauth.wait()
+            self.oauth.deleteLater()
+        self.oauth = None
 
         if not key:
             return
