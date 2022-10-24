@@ -99,7 +99,6 @@ class KoordinatesClient(QObject):
         """
         Builds the parameters used for a datasets request
         """
-        context = context or {"type": "site", "domain": "all"}
         headers = {"Expand": "list,list.publisher,list.styles,list.data.source_summary"}
 
         if query:
@@ -111,6 +110,8 @@ class KoordinatesClient(QObject):
             params.update({"page_size": PAGE_SIZE, "page": page})
         else:
             params['facets'] = True
+
+        context = context or {"type": "site", "domain": "all"}
 
         if context["type"] == "site":
             endpoint = "data/"

@@ -146,7 +146,7 @@ class FilterWidget(QWidget):
             return
 
         self._starred = starred
-        self._filter_widget_changed()
+        self._update_query()
 
     def _show_advanced(self, show):
         if not show:
