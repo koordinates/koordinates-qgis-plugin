@@ -753,11 +753,15 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             self.btnAdd = AddButton(self.dataset)
             self.buttonsLayout.addWidget(self.btnAdd)
 
-        self.bbox = self._geomFromGeoJson(self.dataset["data"].get("extent"))
-        self.footprint = QgsRubberBand(iface.mapCanvas(), QgsWkbTypes.PolygonGeometry)
-        self.footprint.setWidth(2)
-        self.footprint.setColor(QColor(255, 0, 0, 200))
-        self.footprint.setFillColor(QColor(255, 0, 0, 40))
+        self.bbox: Optional[QgsGeometry] = self._geomFromGeoJson(
+            self.dataset.get("data", {}).get("extent"))
+        if self.bbox:
+            self.footprint = QgsRubberBand(iface.mapCanvas(), QgsWkbTypes.PolygonGeometry)
+            self.footprint.setWidth(2)
+            self.footprint.setColor(QColor(255, 0, 0, 200))
+            self.footprint.setFillColor(QColor(255, 0, 0, 40))
+        else:
+            self.footprint = None
 
         self.setCursor(QCursor(Qt.PointingHandCursor))
 
@@ -836,7 +840,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         dlg = DatasetDialog(self, dataset)
         dlg.exec()
 
-    def _geomFromGeoJson(self, geojson):
+    def _geomFromGeoJson(self, geojson) -> Optional[QgsGeometry]:
         try:
             feats = QgsJsonUtils.stringToFeatureList(
                 json.dumps(geojson), QgsFields(), None
@@ -845,13 +849,18 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         except Exception:
             geom = QgsGeometry()
 
+        if geom.isNull() or geom.isEmpty():
+            return None
+
         return geom
 
     def enterEvent(self, event):
-        self.showFootprint()
+        if self.footprint is not None:
+            self.showFootprint()
 
     def leaveEvent(self, event):
-        self.hideFootprint()
+        if self.footprint is not None:
+            self.hideFootprint()
 
     def _bboxInProjectCrs(self):
         geom = QgsGeometry(self.bbox)
@@ -864,8 +873,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         return geom
 
     def showFootprint(self):
-        if self.bbox is not None:
-            self.footprint.setToGeometry(self._bboxInProjectCrs())
+        self.footprint.setToGeometry(self._bboxInProjectCrs())
 
     def hideFootprint(self):
         self.footprint.reset(QgsWkbTypes.PolygonGeometry)
