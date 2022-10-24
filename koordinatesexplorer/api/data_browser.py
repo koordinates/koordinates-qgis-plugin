@@ -126,7 +126,7 @@ class DataBrowserQuery:
         elif raster_band_filters:
             params["raster_band"] = raster_band_filters[0]
 
-        if DataType.Rasters in self.data_types:
+        if self.data_types == {DataType.Rasters} or self.data_types == {DataType.Grids}:
             if self.maximum_resolution != self.minimum_resolution:
                 if self.minimum_resolution is not None:
                     params["raster_resolution.gt"] = self.minimum_resolution

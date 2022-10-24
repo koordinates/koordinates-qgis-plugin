@@ -46,11 +46,6 @@ class ResolutionFilterWidget(FilterWidgetComboBase):
         self.slider.setRangeLimits(0, 100000)
         self.clear()
 
-    def set_range(self, minimum, maximum):
-        assert False
-        self.slider.setRangeLimits(minimum, maximum)
-        self._update_labels()
-
     @staticmethod
     def scale(value, domain, range):
         exp = 6.5
@@ -115,11 +110,13 @@ class ResolutionFilterWidget(FilterWidgetComboBase):
         return super().should_show_clear()
 
     def apply_constraints_to_query(self, query: DataBrowserQuery):
-        if self.slider.lowerValue() != self.slider.minimum():
+        if self.map_slider_value_to_resolution(self.slider.lowerValue()) \
+                != self.map_slider_value_to_resolution(self.slider.minimum()):
             query.minimum_resolution = self.map_slider_value_to_resolution(
                 self.slider.lowerValue()
             )
-        if self.slider.upperValue() != self.slider.maximum():
+        if self.map_slider_value_to_resolution(self.slider.upperValue()) != \
+                self.map_slider_value_to_resolution(self.slider.maximum()):
             query.maximum_resolution = self.map_slider_value_to_resolution(
                 self.slider.upperValue()
             )
