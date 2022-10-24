@@ -64,10 +64,13 @@ class ResolutionFilterWidget(FilterWidgetComboBase):
 
         exp = 6.5
 
-        return domain[0] + math.pow(
-            (value - range[0]) * math.pow(domain[1] - domain[0], exp) / (range[1] - range[0])
-            , 1 / exp
-        )
+        try:
+            return domain[0] + math.pow(
+                (value - range[0]) * math.pow(domain[1] - domain[0], exp) / (range[1] - range[0])
+                , 1 / exp
+            )
+        except ValueError:
+            return 0
 
     def map_slider_value_to_resolution(self, value):
         return round(self.scale(
