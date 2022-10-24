@@ -1,6 +1,5 @@
 import json
 import urllib
-import warnings
 from enum import Enum
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from random import choice

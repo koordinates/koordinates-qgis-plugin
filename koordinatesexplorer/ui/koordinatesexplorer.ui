@@ -46,6 +46,9 @@
           <property name="rightMargin">
            <number>0</number>
           </property>
+          <property name="bottomMargin">
+           <number>6</number>
+          </property>
           <item>
            <widget class="QWidget" name="context_frame" native="true"/>
           </item>
@@ -61,27 +64,6 @@
              </size>
             </property>
            </spacer>
-          </item>
-          <item>
-           <widget class="QToolButton" name="button_starred">
-            <property name="text">
-             <string>...</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="button_browse">
-            <property name="text">
-             <string>...</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="Line" name="line">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-           </widget>
           </item>
           <item>
            <widget class="QToolButton" name="button_help">
@@ -101,6 +83,9 @@
            </widget>
           </item>
          </layout>
+        </item>
+        <item>
+         <widget class="QWidget" name="context_container" native="true"/>
         </item>
         <item>
          <widget class="QWidget" name="filter_frame" native="true"/>

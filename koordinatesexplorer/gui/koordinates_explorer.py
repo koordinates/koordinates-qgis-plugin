@@ -2,7 +2,7 @@ import json
 import locale
 import os
 from functools import partial
-from typing import Optional, Dict
+from typing import Optional, List
 
 from qgis.PyQt import sip
 from qgis.PyQt import uic
@@ -11,25 +11,34 @@ from qgis.PyQt.QtCore import (
 )
 from qgis.PyQt.QtGui import (
     QDesktopServices,
-    QPalette
+    QPalette,
+    QColor
 )
 from qgis.PyQt.QtNetwork import QNetworkReply
 from qgis.PyQt.QtWidgets import (
     QVBoxLayout,
     QAction,
     QMenu,
-    QLabel,
     QHBoxLayout,
-    QComboBox
+    QComboBox,
+    QSizePolicy,
+    QFrame,
+    QTabBar,
+    QWidget
 )
 from qgis.gui import QgsDockWidget
 
-from .context_widget import ContextWidget
+from .colored_frame import ColoredFrame
+from .context_widget import (
+    ContextWidget,
+    ContextLogo
+)
 from .country_widget import CountryWidgetAction
 from .datasets_browser_widget import DatasetsBrowserWidget
 from .filter_widget import FilterWidget
 from .gui_utils import GuiUtils
 from .login_widget import LoginWidget
+from .thumbnails import downloadThumbnail
 from ..api import (
     KoordinatesClient,
     SortOrder,
@@ -45,6 +54,9 @@ SETTINGS_NAMESPACE = "Koordinates"
 
 
 class KoordinatesExplorer(QgsDockWidget, WIDGET):
+    TAB_STARRED_INDEX = 0
+    TAB_BROWSE_INDEX = 1
+
     def __init__(self):
         super().__init__()
         self.setupUi(self)
@@ -53,12 +65,11 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         self._current_facets_reply = None
         self._visible_count = -1
         self._total_count = -1
+        self._contexts = []
+        self._current_context = None
 
         # self.button_home.setIcon(GuiUtils.get_icon('home.svg'))
         # self.button_home.setToolTip('Home')
-
-        label = QLabel()
-        default_font = label.font()
 
         self.context_widget = ContextWidget(self)
         hl = QHBoxLayout()
@@ -66,15 +77,58 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         hl.addWidget(self.context_widget)
         self.context_frame.setLayout(hl)
 
-        self.button_starred.setIcon(GuiUtils.get_icon('star_filled.svg'))
-        self.button_starred.setToolTip('Starred')
-        self.button_starred.setCheckable(True)
+        self.context_tab = QTabBar(self.context_container)
+        self.context_tab.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+        self.context_tab.setExpanding(False)
+        # self.context_tab.setFixedSize(100,100)
+        self.context_tab.addTab('')
+        self.context_tab.addTab('')
+        self.context_tab.setTabIcon(self.TAB_STARRED_INDEX, GuiUtils.get_icon('star_filled.svg'))
+        self.context_tab.setTabToolTip(self.TAB_STARRED_INDEX, 'Starred')
+        self.context_tab.setDrawBase(True)
 
-        self.button_browse.setText('Browse')
-        self.button_browse.setToolTip('Browse')
-        self.button_browse.setCheckable(True)
-        self.button_browse.setChecked(True)
-        self.button_browse.setFont(default_font)
+        self.context_frame = ColoredFrame()
+        context_frame_layout = QVBoxLayout()
+        context_frame_layout.setContentsMargins(0, 0, 0, 0)
+
+        context_layout = QVBoxLayout()
+        context_layout.setContentsMargins(0, self.context_tab.sizeHint().height() - 2, 0, 0)
+        context_layout.setSpacing(0)
+        self.context_header = QWidget()
+        hl = QHBoxLayout()
+        hl.setContentsMargins(0, 0, 0, 0)
+        self.context_logo_label = ContextLogo()
+        self.context_logo_label.setContentsMargins(0, 8, 0, 0)
+        hl.addWidget(self.context_logo_label)
+        self.context_header.setLayout(hl)
+
+        context_frame_layout.addWidget(self.context_header)
+
+        self.filter_top_frame = QFrame()
+        context_frame_layout.addWidget(self.filter_top_frame)
+
+        filter_layout = QVBoxLayout()
+        filter_layout.setContentsMargins(0, 16, 0, 0)
+
+        self.context_header.hide()
+
+        self.filter_top_frame.setLayout(filter_layout)
+
+        self.context_frame.setLayout(context_frame_layout)
+        context_layout.addWidget(self.context_frame)
+
+        self.context_container.setLayout(context_layout)
+
+        self.context_tab.setFixedWidth(self.context_container.width())
+
+        self.context_tab.show()
+
+        self.context_tab.setTabText(self.TAB_BROWSE_INDEX, 'Browse')
+        self.context_tab.setTabToolTip(self.TAB_BROWSE_INDEX, 'Browse')
+
+        self.context_tab.setCurrentIndex(self.TAB_BROWSE_INDEX)
+
+        # self.context_container.setFixedHeight(self.context_tab.sizeHint().height() + 100)
 
         self.button_help.setIcon(GuiUtils.get_icon('help.svg'))
         self.button_help.setToolTip('Help')
@@ -86,14 +140,11 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         # a QToolButton with an icon will appear smaller by default vs one with text, so
         # force the advanced button to match the Clear All button size
         temp_combo = QComboBox()
-        for b in (self.button_starred,
-                  self.button_help,
+        for b in (self.button_help,
                   # self.button_home,
                   self.button_user):
             b.setFixedHeight(temp_combo.sizeHint().height())
             b.setFixedWidth(b.height())
-
-        self.button_browse.setFixedHeight(temp_combo.sizeHint().height())
 
         self.browser = DatasetsBrowserWidget()
         self.browser.visible_count_changed.connect(self._visible_count_changed)
@@ -112,15 +163,14 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         self.browserFrame.setLayout(layout)
 
         self.filter_widget = FilterWidget(self)
-        filter_layout = QVBoxLayout()
-        filter_layout.setContentsMargins(0, 0, 0, 0)
         filter_layout.addWidget(self.filter_widget)
-        self.filter_frame.setLayout(filter_layout)
+
+        self.context_frame.color_height = int(self.filter_widget.height() / 2)
 
         self.filter_widget.filters_changed.connect(self.search)
 
-        self.button_starred.toggled.connect(self._set_starred)
-        self.button_browse.clicked.connect(self._browse)
+        self.context_tab.currentChanged.connect(self._context_tab_changed)
+
         self.filter_widget.clear_all.connect(self._clear_all_filters)
 
         self.sort_menu = QMenu(self.button_sort_order)
@@ -169,7 +219,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
         self.button_user.setMenu(self.user_menu)
 
-        self.context_widget.context_changed.connect(self._context_changed)
+        self._context_tab_changed(self.TAB_BROWSE_INDEX)
 
         KoordinatesClient.instance().loginChanged.connect(self._loginChanged)
 
@@ -191,7 +241,6 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         """
         Called when the filter widget Clear All action is triggered
         """
-        self.button_starred.setChecked(False)
         self.filter_widget.sort_order = SortOrder.Popularity
         self._set_sort_order_button_text()
 
@@ -224,22 +273,36 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
             'Sort by {}'.format(SortOrder.to_text(self.filter_widget.sort_order))
         )
 
-    def _set_starred(self, starred: bool):
+    def _context_tab_changed(self, current: int):
         """
-        Called when the starred button is checked
+        Called when the context tab is changed
         """
-        if starred:
-            self.button_browse.setChecked(False)
-        else:
-            self.button_browse.setChecked(True)
-        self.filter_widget.set_starred(starred)
+        self.context_header.setVisible(
+            current not in (self.TAB_BROWSE_INDEX, self.TAB_STARRED_INDEX))
+        if current in (self.TAB_BROWSE_INDEX, self.TAB_STARRED_INDEX):
+            self._current_context = {"type": "site", "domain": "all"}
+            self.filter_top_frame.layout().setContentsMargins(0, 16, 0, 0)
+            self.context_frame.set_color(QColor())
+            self.context_frame.color_height = int(self.filter_widget.height() / 2)
 
-    def _browse(self):
-        """
-        Switches back to browse mode
-        """
-        self.button_starred.setChecked(False)
-        self.button_browse.setChecked(True)
+        else:
+            self.filter_top_frame.layout().setContentsMargins(0, 0, 0, 0)
+            self._current_context = \
+                [c for c in self._contexts if c['name'] == self.context_tab.tabText(current)][0]
+            downloadThumbnail(self._current_context["org"]["logo_owner_url"],
+                              self.context_logo_label)
+            self.context_frame.color_height = int(
+                self.filter_widget.height() / 2) + ContextLogo.LOGO_HEIGHT + 15
+
+            background_color_text = self._current_context["org"].get("background_color")
+            background_color = QColor(background_color_text)
+            if not background_color.isValid():
+                background_color = QColor('#323233')
+
+            self.context_frame.set_color(background_color)
+
+        self.filter_widget.set_starred(current == self.TAB_STARRED_INDEX)
+        self.search()
 
     def _user_menu_about_to_show(self):
         """
@@ -252,10 +315,10 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
     def search(self):
         browser_query = self.filter_widget.build_query()
-
-        context = self.context_widget.current_context()
+        context = self._current_context
 
         self._fetch_facets(browser_query, context)
+
         self.browser.populate(browser_query, context)
 
     def _fetch_facets(self,
@@ -315,11 +378,6 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
                     locale.format_string("%d", self._total_count, grouping=True))
             )
 
-    def _context_changed(self, context: Dict):
-        self.filter_widget.update()
-        self.update()
-        self.search()
-
     def _loginChanged(self, logged_in: bool):
         if logged_in:
             self.stackedWidget.setCurrentWidget(self.pageBrowser)
@@ -327,14 +385,22 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
             user = KoordinatesClient.instance().user_details()
             self.user_country_action.set_country_code(user['country'])
 
-            self.context_widget.set_contexts(user.get('contexts', []))
-            self.context_widget.setVisible(self.context_widget.count() > 1)
+            self._create_context_tabs(user.get('contexts', []))
 
             self.filter_widget.set_logged_in(True)
 
             self.search()
         else:
             self.stackedWidget.setCurrentWidget(self.pageAuth)
+
+    def _create_context_tabs(self, contexts: List):
+        """
+        Sets the context information
+        """
+        self._contexts = contexts[:]
+
+        for c in self._contexts:
+            self.context_tab.addTab(c['name'])
 
     def logout(self):
         """
@@ -353,3 +419,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         Shows the help web page
         """
         QDesktopServices.openUrl(QUrl('https://help.koordinates.com/'))
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.context_tab.setFixedWidth(self.context_container.width())
