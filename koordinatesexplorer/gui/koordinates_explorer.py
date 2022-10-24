@@ -12,7 +12,8 @@ from qgis.PyQt.QtCore import (
 from qgis.PyQt.QtGui import (
     QDesktopServices,
     QPalette,
-    QColor
+    QColor,
+    QCursor
 )
 from qgis.PyQt.QtNetwork import QNetworkReply
 from qgis.PyQt.QtWidgets import (
@@ -30,7 +31,7 @@ from qgis.gui import QgsDockWidget
 
 from .colored_frame import ColoredFrame
 from .context_widget import (
-    ContextWidget,
+    ContextItemMenuAction,
     ContextLogo
 )
 from .country_widget import CountryWidgetAction
@@ -68,6 +69,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         self._total_count = -1
         self._contexts = []
         self._current_context = None
+        self._prev_tab = -1
 
         # self.button_home.setIcon(GuiUtils.get_icon('home.svg'))
         # self.button_home.setToolTip('Home')
@@ -169,6 +171,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         self.filter_widget.filters_changed.connect(self.search)
 
         self.context_tab.currentChanged.connect(self._context_tab_changed)
+        self.context_tab.tabBarClicked.connect(self._tab_bar_clicked)
 
         self.filter_widget.clear_all.connect(self._clear_all_filters)
 
@@ -273,18 +276,50 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
             'Sort by {}'.format(SortOrder.to_text(self.filter_widget.sort_order))
         )
 
+    def _show_context_switcher_menu(self):
+        menu = QMenu()
+
+        current_context_tab = self.context_tab.tabText(self.context_tab.count() - 2)
+
+        def on_selected(c):
+            menu.deleteLater()
+            self._set_visible_context(c)
+
+        for idx, c in enumerate(self._contexts):
+            w = ContextItemMenuAction(c, c['name'] == current_context_tab,
+                                      idx == 0, menu)
+            w.selected.connect(partial(on_selected, c))
+
+            menu.addAction(w)
+
+        menu.exec_(QCursor.pos())
+
+    def _set_visible_context(self, details):
+        self.context_tab.setTabText(self.context_tab.count() - 2, details['name'])
+        self._prev_tab = -1
+        self.context_tab.setCurrentIndex(self.context_tab.count() - 2)
+        self._context_tab_changed(self.context_tab.currentIndex())
+
+    def _tab_bar_clicked(self, target: int):
+        if self.context_tab.tabData(target) == 'CONTEXT_SWITCHER':
+            self._show_context_switcher_menu()
+
     def _context_tab_changed(self, current: int):
         """
         Called when the context tab is changed
         """
-        self.context_header.setVisible(
-            current not in (self.TAB_BROWSE_INDEX, self.TAB_STARRED_INDEX))
+        if current == self._prev_tab:
+            return
+
         if current in (self.TAB_BROWSE_INDEX, self.TAB_STARRED_INDEX):
             self._current_context = {"type": "site", "domain": "all"}
             self.filter_top_frame.layout().setContentsMargins(0, 16, 0, 0)
             self.context_frame.set_color(QColor())
             self.context_frame.color_height = int(self.filter_widget.height() / 2)
-
+            self.context_header.setVisible(False)
+        elif self.context_tab.tabData(current) == 'CONTEXT_SWITCHER':
+            self.context_tab.setCurrentIndex(self._prev_tab)
+            return
         else:
             self.filter_top_frame.layout().setContentsMargins(0, 0, 0, 0)
             self._current_context = \
@@ -300,7 +335,9 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
                 background_color = QColor('#323233')
 
             self.context_frame.set_color(background_color)
+            self.context_header.setVisible(True)
 
+        self._prev_tab = current
         self.filter_widget.set_starred(current == self.TAB_STARRED_INDEX)
         self.search()
 
@@ -399,8 +436,22 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         """
         self._contexts = contexts[:]
 
-        for c in self._contexts:
-            self.context_tab.addTab(c['name'])
+        for i in range(self.context_tab.count() - 1, 0, -1):
+            if i in (self.TAB_BROWSE_INDEX, self.TAB_STARRED_INDEX):
+                continue
+
+            self.context_tab.removeTab(i)
+
+        if self._contexts:
+            self.context_tab.addTab(self._contexts[0]['name'])
+            if len(self._contexts) > 1:
+                idx = self.context_tab.addTab('')
+                self.context_tab.setTabIcon(idx,  GuiUtils.get_icon('context_switcher.svg'))
+                self.context_tab.setTabData(idx, 'CONTEXT_SWITCHER')
+
+        else:
+            pass
+
 
     def logout(self):
         """

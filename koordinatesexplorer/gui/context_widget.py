@@ -26,6 +26,7 @@ from qgis.PyQt.QtWidgets import (
     QSizePolicy,
     QToolButton,
     QHBoxLayout,
+    QWidgetAction,
 )
 from qgis.gui import (
     QgsFloatingWidget
@@ -152,6 +153,30 @@ class ContextItem(QFrame):
             return
 
         self.selected.emit(self._details['name'])
+
+
+class ContextItemMenuAction(QWidgetAction):
+    selected = pyqtSignal(str)
+
+    def __init__(self, details: Dict, selected: bool, is_first_action = False, parent=None):
+        super().__init__(parent)
+
+        self.widget = ContextItem(details)
+        self.widget.set_selected(selected)
+        self.widget.selected.connect(self.selected)
+
+        padding_widget = QWidget()
+        hl = QHBoxLayout()
+        if is_first_action:
+            hl.setContentsMargins(8,8,8, 8)
+        else:
+            hl.setContentsMargins(8, 0, 8, 8)
+        hl.addWidget(self.widget)
+        padding_widget.setLayout(hl)
+
+        self.setDefaultWidget(padding_widget)
+
+
 
 
 class ContextWidget(QWidget):
