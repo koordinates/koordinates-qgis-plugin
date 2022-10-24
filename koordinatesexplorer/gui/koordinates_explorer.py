@@ -39,6 +39,7 @@ from .datasets_browser_widget import DatasetsBrowserWidget
 from .filter_widget import FilterWidget
 from .gui_utils import GuiUtils
 from .login_widget import LoginWidget
+from .svg_label import SvgLabel
 from .thumbnails import downloadThumbnail
 from ..api import (
     KoordinatesClient,
@@ -46,7 +47,6 @@ from ..api import (
     DataBrowserQuery
 )
 from ..auth import OAuthWorkflow
-from .svg_label import SvgLabel
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
@@ -446,12 +446,11 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
             self.context_tab.addTab(self._contexts[0]['name'])
             if len(self._contexts) > 1:
                 idx = self.context_tab.addTab('')
-                self.context_tab.setTabIcon(idx,  GuiUtils.get_icon('context_switcher.svg'))
+                self.context_tab.setTabIcon(idx, GuiUtils.get_icon('context_switcher.svg'))
                 self.context_tab.setTabData(idx, 'CONTEXT_SWITCHER')
 
         else:
             pass
-
 
     def logout(self):
         """
