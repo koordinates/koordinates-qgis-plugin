@@ -1,5 +1,6 @@
 import json
 import urllib
+import warnings
 from enum import Enum
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from random import choice
@@ -177,11 +178,11 @@ class OAuthWorkflow(QObject):
         err = server.error
         apikey = server.apikey
 
-        del server
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            del server
 
         if err:
             self.error_occurred.emit(err)
 
         self.finished.emit(apikey)
-
-
