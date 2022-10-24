@@ -17,7 +17,6 @@ from qgis.PyQt.QtGui import (
     QBrush,
     QColor
 )
-from qgis.PyQt.QtSvg import QSvgWidget
 from qgis.PyQt.QtWidgets import (
     QFrame,
     QLabel,
@@ -41,6 +40,7 @@ from .dataset_utils import (
 )
 from .gui_utils import GuiUtils
 from .star_button import StarButton
+from .svg_label import SvgLabel
 from .thumbnails import downloadThumbnail
 from ..api import (
     ApiUtils,
@@ -85,16 +85,6 @@ class ThumbnailLabel(QLabel):
             self.setFixedWidth(image.width())
 
         self.setPixmap(QPixmap.fromImage(image))
-
-
-class SvgLabel(QSvgWidget):
-
-    def __init__(self, icon_name: str,
-                 icon_width: int, icon_height: int, parent=None):
-        super().__init__(parent)
-
-        self.setFixedSize(QSize(icon_width, icon_height))
-        self.load(GuiUtils.get_icon_svg(icon_name))
 
 
 class SvgFramedButton(QFrame):

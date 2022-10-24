@@ -45,6 +45,7 @@ from ..api import (
     DataBrowserQuery
 )
 from ..auth import OAuthWorkflow
+from .svg_label import SvgLabel
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
@@ -71,11 +72,11 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         # self.button_home.setIcon(GuiUtils.get_icon('home.svg'))
         # self.button_home.setToolTip('Home')
 
-        self.context_widget = ContextWidget(self)
+        self.logo_widget = SvgLabel('koordinates_logo.svg', 110, ContextLogo.LOGO_HEIGHT)
         hl = QHBoxLayout()
         hl.setContentsMargins(0, 0, 0, 0)
-        hl.addWidget(self.context_widget)
-        self.context_frame.setLayout(hl)
+        hl.addWidget(self.logo_widget)
+        self.logo_frame.setLayout(hl)
 
         self.context_tab = QTabBar(self.context_container)
         self.context_tab.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
