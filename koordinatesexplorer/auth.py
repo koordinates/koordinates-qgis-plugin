@@ -174,7 +174,14 @@ class OAuthWorkflow(QObject):
 
         server.handle_request()
 
-        if server.error:
-            self.error_occurred.emit(server.error)
+        err = server.error
+        apikey = server.apikey
 
-        self.finished.emit(server.apikey)
+        del server
+
+        if err:
+            self.error_occurred.emit(err)
+
+        self.finished.emit(apikey)
+
+

@@ -1,5 +1,6 @@
 from typing import Optional
 
+from qgis.PyQt import sip
 from qgis.PyQt.QtCore import (
     QThread,
     QSize
@@ -81,6 +82,7 @@ class LoginWidget(QFrame):
         super().__init__(parent)
 
         self.oauth = None
+        self.auth_thread = None
 
         self.setFrameShape(QFrame.NoFrame)
 
@@ -200,13 +202,13 @@ class LoginWidget(QFrame):
             )
             self.open_login_window_label.show()
 
-            self.objThread = QThread()
-            self.oauth.moveToThread(self.objThread)
+            self.auth_thread = QThread(self)
+            self.oauth.setParent(self.auth_thread)
+            self.oauth.moveToThread(self.auth_thread)
             self.oauth.finished.connect(self._auth_finished)
             self.oauth.error_occurred.connect(self._auth_error_occurred)
-            self.oauth.finished.connect(self.objThread.quit)
-            self.objThread.started.connect(self.oauth.doAuth)
-            self.objThread.start()
+            self.auth_thread.started.connect(self.oauth.doAuth)
+            self.auth_thread.start()
 
     def _login_changed(self, logged_in: bool):
         if not logged_in:
@@ -215,6 +217,13 @@ class LoginWidget(QFrame):
             self.open_login_window_label.hide()
 
     def _auth_finished(self, key):
+        self.oauth = None
+
+        if self.auth_thread and not sip.isdeleted(self.auth_thread):
+            self.auth_thread.quit()
+            self.auth_thread.deleteLater()
+        self.auth_thread = None
+
         if not key:
             return
 
