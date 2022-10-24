@@ -178,9 +178,9 @@ class OAuthWorkflow(QObject):
         err = server.error
         apikey = server.apikey
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            del server
+        server.server_close()
+
+        del server
 
         if err:
             self.error_occurred.emit(err)
