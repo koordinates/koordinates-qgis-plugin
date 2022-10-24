@@ -59,8 +59,8 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
     TAB_STARRED_INDEX = 0
     TAB_BROWSE_INDEX = 1
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self.setupUi(self)
 
         self._facets = {}
@@ -152,7 +152,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         self.browser.total_count_changed.connect(self._total_count_changed)
         self.oauth: Optional[OAuthWorkflow] = None
 
-        self.login_widget = LoginWidget()
+        self.login_widget = LoginWidget(self)
         vl = QVBoxLayout()
         vl.setContentsMargins(0, 0, 0, 0)
         vl.addWidget(self.login_widget)
@@ -232,6 +232,8 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         """
         Cancels any active request
         """
+        self.login_widget.cancel_active_requests()
+
         if self._current_facets_reply is not None and \
                 not sip.isdeleted(self._current_facets_reply):
             self._current_facets_reply.abort()
