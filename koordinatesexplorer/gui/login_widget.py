@@ -3,7 +3,8 @@ import platform
 
 from qgis.PyQt import sip
 from qgis.PyQt.QtCore import (
-    QSize
+    QSize,
+    QTimer
 )
 from qgis.PyQt.QtSvg import (
     QSvgWidget
@@ -82,6 +83,7 @@ class LoginWidget(QFrame):
         super().__init__(parent)
 
         self.oauth = None
+        self.oauth_close_timer = None
 
         self.setFrameShape(QFrame.NoFrame)
 
@@ -186,13 +188,7 @@ class LoginWidget(QFrame):
         KoordinatesClient.instance().error_occurred.connect(self._client_error_occurred)
 
     def cancel_active_requests(self):
-        if self.oauth and not sip.isdeleted(self.oauth):
-            self.oauth.force_stop()
-            self.oauth.quit()
-            self.oauth.wait()
-            self.oauth.deleteLater()
-
-        self.oauth = None
+        self._close_auth_server(force_close=True)
 
     def login_clicked(self):
         key = self.retrieve_api_key()
@@ -200,6 +196,9 @@ class LoginWidget(QFrame):
             self._auth_finished(key)
         else:
             self.login_button.set_state(AuthState.LoggingIn)
+
+            if self.oauth is not None:
+                self._close_auth_server()
 
             self.oauth = OAuthWorkflow()
 
@@ -220,13 +219,30 @@ class LoginWidget(QFrame):
             self.login_button.set_state(AuthState.LoggedOut)
             self.open_login_window_label.hide()
 
-    def _auth_finished(self, key):
+    def _close_auth_server(self, force_close=False):
+        if self.oauth_close_timer and not sip.isdeleted(self.oauth_close_timer):
+            self.oauth_close_timer.timeout.disconnect(self._close_auth_server)
+            self.oauth_close_timer.deleteLater()
+        self.oauth_close_timer = None
+
         if self.oauth and not sip.isdeleted(self.oauth):
+            if force_close:
+                self.oauth.force_stop()
+
             self.oauth.close_server()
             self.oauth.quit()
             self.oauth.wait()
             self.oauth.deleteLater()
+
         self.oauth = None
+
+    def _auth_finished(self, key):
+        if self.oauth and not sip.isdeleted(self.oauth):
+            self.oauth_close_timer = QTimer(self)
+            self.oauth_close_timer.setSingleShot(True)
+            self.oauth_close_timer.setInterval(1000)
+            self.oauth_close_timer.timeout.connect(self._close_auth_server)
+            self.oauth_close_timer.start()
 
         if not key:
             return
