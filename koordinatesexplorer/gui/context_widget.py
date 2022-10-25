@@ -34,6 +34,7 @@ from qgis.gui import (
 
 from .gui_utils import GuiUtils
 from .thumbnails import downloadThumbnail
+from ..api import KoordinatesClient
 
 
 class ContextIcon(QLabel):
@@ -108,6 +109,9 @@ class ContextItem(QFrame):
                     ContextIcon.SIZE,
                     QColor(0, 0, 0)
                 ))
+        elif self._details.get('type') == 'user':
+            downloadThumbnail(KoordinatesClient.instance().user_details()["avatar_url"],
+                              self.icon_label)
         elif self._details.get('org') and self._details['org'].get('logo_square_url'):
             downloadThumbnail(self._details["org"]["logo_square_url"], self.icon_label)
         elif self._details.get('logo'):
