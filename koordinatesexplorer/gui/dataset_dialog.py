@@ -15,7 +15,9 @@ from qgis.PyQt.QtGui import (
     QImage,
     QPainter,
     QBrush,
-    QColor
+    QColor,
+    QFontMetrics,
+    QFont
 )
 from qgis.PyQt.QtWidgets import (
     QFrame,
@@ -259,7 +261,9 @@ class DetailsTable(QGridLayout):
             color: #868889">{}</span>""".format(
                 title))
         title_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
-        title_label.setFixedWidth(110)
+
+        fm = QFontMetrics(QFont())
+        title_label.setFixedWidth(fm.width('x') * 30)
         title_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         self.addWidget(title_label, row, 0, 1, 1)
         font_family = "Arial, sans" if not is_monospace else 'monospace'
@@ -463,6 +467,7 @@ class DatasetDialog(QDialog):
                 "avenir next", avenir, helvetica, "helvetica neue", ubuntu,
                  roboto, noto, "segoe ui", arial, sans-serif;
             color: rgb(50, 50, 50);
+            font-size: 11pt;
             letter-spacing: 0.1px;
             line-height: 1.5;
             }
