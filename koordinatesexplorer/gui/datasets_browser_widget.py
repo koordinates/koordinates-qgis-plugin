@@ -1,6 +1,8 @@
 import json
 import math
 import os
+import platform
+
 from functools import partial
 from typing import Optional, Tuple
 
@@ -674,12 +676,21 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         if thumbnail_url:
             downloadThumbnail(thumbnail_url, self)
 
+        title_font_size = 10
+        subtitle_font_size = 9
+        detail_font_size = 9
+        if platform.system() == 'Darwin':
+            # fonts looks smaller on a mac, where things "just work" :P
+            title_font_size = 12
+            subtitle_font_size = 11
+            detail_font_size = 10
+
         self.labelName.setText(
             f"""<p style="line-height: 130%;
                 font-size: 11pt;
                 font-family: Arial, Sans"><b>{self.dataset.get("title", 'Layer')}</b><br>"""
             f"""<span style="color: #868889;
-            font-size: 10pt;
+            font-size: {title_font_size}pt;
             font-family: Arial, Sans">{self.dataset.get("publisher", {}).get("name")}</span></p>"""
         )
 
@@ -695,7 +706,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
                 self.license_label.setText(
                     f"""<span style="color: #868889;
                         font-family: Arial, Sans;
-                        font-size: 9pt">{license_type}</span>"""
+                        font-size: {subtitle_font_size}pt">{license_type}</span>"""
                 )
                 details_layout.addWidget(self.license_label)
 
@@ -711,7 +722,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             self.labelUpdated.setText(
                 f"""<span style="color: #868889;
                     font-family: Arial, Sans;
-                    font-size: 9pt">{date.strftime("%d %b %Y")}</span>"""
+                    font-size: {detail_font_size}pt">{date.strftime("%d %b %Y")}</span>"""
             )
 
         updated_layout.addWidget(self.labelUpdatedIcon)

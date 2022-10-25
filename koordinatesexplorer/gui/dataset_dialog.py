@@ -1,5 +1,6 @@
 import locale
 import os
+import platform
 from typing import Dict, List, Tuple
 
 from dateutil import parser
@@ -143,15 +144,20 @@ class StatisticWidget(QWidget):
         gl = QGridLayout()
         gl.setContentsMargins(0, 0, 0, 0)
 
+        font_size = 9
+        if platform.system() == 'Darwin':
+            font_size = 10
+
         title_label = QLabel(
-            '<b style="font-family: Arial, Sans; font-size: 9pt">{}</b>'.format(title))
+            '<b style="font-family: Arial, Sans; font-size: {}pt">{}</b>'.format(font_size, title))
         gl.addWidget(title_label, 0, 0, 1, 2)
 
         icon = SvgLabel(icon_name, 16, 16)
         gl.addWidget(icon, 1, 0, 1, 1)
 
         value_label = QLabel(
-            '<span style="font-family: Arial, Sans; font-size: 9pt">{}</span>'.format(value))
+            '<span style="font-family: Arial, Sans; font-size: {}pt">{}</span>'.format(
+                font_size, value))
         gl.addWidget(value_label, 1, 1, 1, 1)
 
         self.setLayout(gl)
@@ -239,10 +245,13 @@ class DetailsTable(QGridLayout):
     def __init__(self, title: str, parent=None):
         super().__init__(parent)
         self.setVerticalSpacing(13)
+        self.font_size = 10
+        if platform.system() == 'Darwin':
+            self.font_size = 11
 
         heading = QLabel(
-            """<b style="font-family: Arial, sans; font-size: 10pt; color: black">{}</b>""".format(
-                title))
+            """<b style="font-family: Arial, sans; font-size: {}pt; color: black">{}</b>""".format(
+                self.font_size, title))
         self.addWidget(heading, 0, 0, 1, 2)
         self.setColumnStretch(1, 1)
 
@@ -257,9 +266,9 @@ class DetailsTable(QGridLayout):
         row = self.rowCount()
         title_label = QLabel(
             """<span style="font-family: Arial, sans;
-            font-size: 10pt;
-            color: #868889">{}</span>""".format(
-                title))
+            font-size: {}pt;
+            color: #868889">{}</span>""".format(self.font_size,
+                                                title))
         title_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
 
         fm = QFontMetrics(QFont())
@@ -268,8 +277,9 @@ class DetailsTable(QGridLayout):
         self.addWidget(title_label, row, 0, 1, 1)
         font_family = "Arial, sans" if not is_monospace else 'monospace'
         value_label = QLabel(
-            """<span style="font-family: {}; font-size: 10pt; color: black">{}</span>""".format(
+            """<span style="font-family: {}; font-size: {}pt; color: black">{}</span>""".format(
                 font_family,
+                self.font_size,
                 value))
         value_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
         value_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
@@ -305,11 +315,20 @@ class DatasetDialog(QDialog):
         title_hl = QHBoxLayout()
         title_hl.setContentsMargins(20, 25, 20, 25)
 
+        title_font_size = 18
+        base_font_size = 10
+        self.description_font_size = 11
+        if platform.system() == 'Darwin':
+            title_font_size = 20
+            base_font_size = 12
+            self.description_font_size = 12
+
         self.label_title = QLabel()
         self.label_title.setText(
             """<span style="font-family: Arial, Sans;
             font-weight: bold;
-            font-size: 18pt;">{}</span>""".format(
+            font-size: {}pt;">{}</span>""".format(
+                title_font_size,
                 dataset.get('title', '')))
         title_hl.addWidget(self.label_title, 1)
 
@@ -369,8 +388,8 @@ class DatasetDialog(QDialog):
 
         summary_label.setText("""<p style="line-height: 130%;
         font-family: Arial, Sans;
-        font-size: 10pt"><b>Data type</b><br>
-        {},<br>{}</p>""".format(description, subtitle))
+        font-size: {}pt"><b>Data type</b><br>
+        {},<br>{}</p>""".format(base_font_size, description, subtitle))
 
         base_details_right_pane_layout.addSpacing(10)
         base_details_right_pane_layout.addWidget(summary_label, 1)
@@ -458,24 +477,23 @@ class DatasetDialog(QDialog):
 
         self.setLayout(layout)
 
-    @staticmethod
-    def dialog_css() -> str:
+    def dialog_css(self) -> str:
         return """
             <style>
-            p {
+            p {{
             font-family: KxMetric, -apple-system, BlinkMacSystemFont,
                 "avenir next", avenir, helvetica, "helvetica neue", ubuntu,
                  roboto, noto, "segoe ui", arial, sans-serif;
             color: rgb(50, 50, 50);
-            font-size: 11pt;
+            font-size: {}pt;
             letter-spacing: 0.1px;
             line-height: 1.5;
-            }
-            a {
+            }}
+            a {{
             color: rgb(50, 50, 50);
-            }
+            }}
             </style>
-        """
+        """.format(self.description_font_size)
 
     def format_number(self, value):
         return locale.format_string("%d", value, grouping=True)
