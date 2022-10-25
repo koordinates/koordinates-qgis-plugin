@@ -25,7 +25,8 @@ from qgis.PyQt.QtWidgets import (
     QSizePolicy,
     QFrame,
     QTabBar,
-    QWidget
+    QWidget,
+    QLabel
 )
 from qgis.gui import QgsDockWidget
 
@@ -112,6 +113,11 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         self.context_logo_label = ContextLogo()
         self.context_logo_label.setContentsMargins(0, 8, 0, 0)
         hl.addWidget(self.context_logo_label)
+        self.context_name_label = QLabel()
+        self.context_name_label.setContentsMargins(11, 14, 11, 10)
+        hl.addWidget(self.context_name_label)
+        hl.addStretch(1)
+
         self.context_header.setLayout(hl)
 
         context_frame_layout.addWidget(self.context_header)
@@ -341,18 +347,26 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
                 [c for c in self._contexts if c['name'] == self.context_tab.tabData(current)][0]
 
             if self._current_context['type'] == 'user':
-                downloadThumbnail(KoordinatesClient.instance().user_details()["avatar_url"],
+                if KoordinatesClient.instance().user_details()["avatar_url"]:
+                    downloadThumbnail(  KoordinatesClient.instance().user_details()["avatar_url"],
                                   self.context_logo_label)
+                    self.context_logo_label.show()
+                else:
+                    self.context_logo_label.hide()
                 self.context_frame.color_height = int(
                     self.filter_widget.height() / 2) + ContextLogo.LOGO_HEIGHT + 15
 
+                self.context_name_label.setText('<b style="color: white; font-size: 10pt">{}</b>'.format(self._current_context['name']))
+                self.context_name_label.show()
                 self.context_frame.set_color(QColor('#323233'))
                 self.context_header.setVisible(True)
             else:
                 downloadThumbnail(self._current_context["org"]["logo_owner_url"],
                                   self.context_logo_label)
+                self.context_logo_label.show()
                 self.context_frame.color_height = int(
                     self.filter_widget.height() / 2) + ContextLogo.LOGO_HEIGHT + 15
+
 
                 background_color_text = self._current_context["org"].get("background_color")
                 background_color = QColor(background_color_text)
@@ -360,6 +374,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
                     background_color = QColor('#323233')
 
                 self.context_frame.set_color(background_color)
+                self.context_name_label.hide()
                 self.context_header.setVisible(True)
 
         self._prev_tab = current

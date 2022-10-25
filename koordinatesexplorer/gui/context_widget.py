@@ -81,6 +81,8 @@ class ContextLogo(QLabel):
                 transformMode=Qt.SmoothTransformation
             )
 
+        self.setFixedWidth(image.width())
+
         self.setPixmap(QPixmap.fromImage(image))
 
 
