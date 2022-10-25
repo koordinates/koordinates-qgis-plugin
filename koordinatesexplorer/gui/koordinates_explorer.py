@@ -83,7 +83,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
         self.context_tab_container = QWidget(self.context_container)
         hl = QHBoxLayout()
-        hl.setContentsMargins(0,0,0,0)
+        hl.setContentsMargins(0, 0, 0, 0)
         hl.addSpacing(11)
 
         self.context_tab = QTabBar()
@@ -348,15 +348,17 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
             if self._current_context['type'] == 'user':
                 if KoordinatesClient.instance().user_details()["avatar_url"]:
-                    downloadThumbnail(  KoordinatesClient.instance().user_details()["avatar_url"],
-                                  self.context_logo_label)
+                    downloadThumbnail(KoordinatesClient.instance().user_details()["avatar_url"],
+                                      self.context_logo_label)
                     self.context_logo_label.show()
                 else:
                     self.context_logo_label.hide()
                 self.context_frame.color_height = int(
                     self.filter_widget.height() / 2) + ContextLogo.LOGO_HEIGHT + 15
 
-                self.context_name_label.setText('<b style="color: white; font-size: 10pt">{}</b>'.format(self._current_context['name']))
+                self.context_name_label.setText(
+                    '<b style="color: white; font-size: 10pt">{}</b>'.format(
+                        self._current_context['name']))
                 self.context_name_label.show()
                 self.context_frame.set_color(QColor('#323233'))
                 self.context_header.setVisible(True)
@@ -366,7 +368,6 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
                 self.context_logo_label.show()
                 self.context_frame.color_height = int(
                     self.filter_widget.height() / 2) + ContextLogo.LOGO_HEIGHT + 15
-
 
                 background_color_text = self._current_context["org"].get("background_color")
                 background_color = QColor(background_color_text)
@@ -483,7 +484,8 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
             self.context_tab.removeTab(i)
 
         if self._contexts:
-            tab_text = self._contexts[0]['name'] if self._contexts[0]['type'] != 'user' else 'My data'
+            tab_text = self._contexts[0]['name'] if self._contexts[0][
+                                                        'type'] != 'user' else 'My data'
             idx = self.context_tab.addTab(tab_text)
             self.context_tab.setTabData(idx, self._contexts[0]['name'])
             if len(self._contexts) > 1:
