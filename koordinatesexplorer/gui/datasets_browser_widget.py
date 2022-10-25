@@ -42,13 +42,11 @@ from qgis.PyQt.QtWidgets import (
 from qgis.core import (
     QgsProject,
     QgsGeometry,
-    QgsWkbTypes,
     QgsCoordinateTransform,
     QgsCoordinateReferenceSystem,
     QgsFields,
     QgsJsonUtils
 )
-from qgis.gui import QgsRubberBand
 from qgis.utils import iface
 
 from koordinatesexplorer.gui.dataset_dialog import DatasetDialog
@@ -755,13 +753,13 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         self.bbox: Optional[QgsGeometry] = self._geomFromGeoJson(
             self.dataset.get("data", {}).get("extent"))
-        if self.bbox:
-            self.footprint = QgsRubberBand(iface.mapCanvas(), QgsWkbTypes.PolygonGeometry)
-            self.footprint.setWidth(2)
-            self.footprint.setColor(QColor(255, 0, 0, 200))
-            self.footprint.setFillColor(QColor(255, 0, 0, 40))
-        else:
-            self.footprint = None
+        # if self.bbox:
+        #     self.footprint = QgsRubberBand(iface.mapCanvas(), QgsWkbTypes.PolygonGeometry)
+        #     self.footprint.setWidth(2)
+        #     self.footprint.setColor(QColor(255, 0, 0, 200))
+        #     self.footprint.setFillColor(QColor(255, 0, 0, 40))
+        # else:
+        #     self.footprint = None
 
         self.setCursor(QCursor(Qt.PointingHandCursor))
 
@@ -856,13 +854,13 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         return geom
 
-    def enterEvent(self, event):
-        if self.footprint is not None:
-            self.showFootprint()
+    # def enterEvent(self, event):
+    #     if self.footprint is not None:
+    #         self.showFootprint()
 
-    def leaveEvent(self, event):
-        if self.footprint is not None:
-            self.hideFootprint()
+    # def leaveEvent(self, event):
+    #     if self.footprint is not None:
+    #         self.hideFootprint()
 
     def _bboxInProjectCrs(self):
         geom = QgsGeometry(self.bbox)
@@ -874,11 +872,11 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         geom.transform(transform)
         return geom
 
-    def showFootprint(self):
-        self.footprint.setToGeometry(self._bboxInProjectCrs())
+    # def showFootprint(self):
+    #     self.footprint.setToGeometry(self._bboxInProjectCrs())
 
-    def hideFootprint(self):
-        self.footprint.reset(QgsWkbTypes.PolygonGeometry)
+    # def hideFootprint(self):
+    #     self.footprint.reset(QgsWkbTypes.PolygonGeometry)
 
     def zoomToBoundingBox(self):
         rect = self.bbox.boundingBox()
