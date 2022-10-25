@@ -109,7 +109,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         context_layout.setSpacing(0)
         self.context_header = QWidget()
         hl = QHBoxLayout()
-        hl.setContentsMargins(0, 0, 0, 0)
+        hl.setContentsMargins(11, 0, 0, 0)
         self.context_logo_label = ContextLogo()
         self.context_logo_label.setContentsMargins(0, 8, 0, 0)
         hl.addWidget(self.context_logo_label)
@@ -367,7 +367,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
                 self.context_frame.set_color(QColor('#323233'))
                 self.context_header.setVisible(True)
             else:
-                downloadThumbnail(self._current_context["org"]["logo_owner_url"],
+                downloadThumbnail(self._current_context["logo"],
                                   self.context_logo_label)
                 self.context_logo_label.show()
                 self.context_frame.color_height = int(
