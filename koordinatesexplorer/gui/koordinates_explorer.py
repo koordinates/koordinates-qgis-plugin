@@ -80,8 +80,17 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         hl.addWidget(self.logo_widget)
         self.logo_frame.setLayout(hl)
 
-        self.context_tab = QTabBar(self.context_container)
-        self.context_tab.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+        self.context_tab_container = QWidget(self.context_container)
+        hl = QHBoxLayout()
+        hl.setContentsMargins(0,0,0,0)
+        hl.addSpacing(11)
+
+        self.context_tab = QTabBar()
+        hl.addWidget(self.context_tab)
+        hl.addSpacing(11)
+        self.context_tab_container.setLayout(hl)
+
+        self.context_tab_container.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         self.context_tab.setExpanding(False)
         # self.context_tab.setFixedSize(100,100)
         self.context_tab.addTab('')
@@ -110,7 +119,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         self.filter_top_frame = QFrame()
         context_frame_layout.addWidget(self.filter_top_frame)
 
-        filter_layout = QVBoxLayout()
+        filter_layout = QHBoxLayout()
         filter_layout.setContentsMargins(0, 16, 0, 0)
 
         self.context_header.hide()
@@ -159,12 +168,14 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         self.pageAuth.setLayout(vl)
 
         layout = QVBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(11, 0, 11, 0)
         layout.addWidget(self.browser)
         self.browserFrame.setLayout(layout)
 
         self.filter_widget = FilterWidget(self)
+        filter_layout.addSpacing(11)
         filter_layout.addWidget(self.filter_widget)
+        filter_layout.addSpacing(11)
 
         self.context_frame.color_height = int(self.filter_widget.height() / 2)
 
@@ -222,7 +233,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         self.button_user.setMenu(self.user_menu)
 
         self._context_tab_changed(self.TAB_BROWSE_INDEX)
-        self.context_tab.setFixedWidth(self.context_container.width())
+        self.context_tab_container.setFixedWidth(self.context_container.width())
 
         KoordinatesClient.instance().loginChanged.connect(self._loginChanged)
 
@@ -281,7 +292,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
     def _show_context_switcher_menu(self):
         menu = QMenu()
 
-        current_context_tab = self.context_tab.tabText(self.context_tab.count() - 2)
+        current_context_tab = self.context_tab.tabData(self.context_tab.count() - 2)
 
         def on_selected(c):
             menu.deleteLater()
@@ -297,7 +308,9 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         menu.exec_(QCursor.pos())
 
     def _set_visible_context(self, details):
-        self.context_tab.setTabText(self.context_tab.count() - 2, details['name'])
+        self.context_tab.setTabText(self.context_tab.count() - 2,
+                                    'My data' if details['type'] == 'user' else details['name'])
+        self.context_tab.setTabData(self.context_tab.count() - 2, details['name'])
         self._prev_tab = -1
         self.context_tab.setCurrentIndex(self.context_tab.count() - 2)
         self._context_tab_changed(self.context_tab.currentIndex())
@@ -325,19 +338,29 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         else:
             self.filter_top_frame.layout().setContentsMargins(0, 0, 0, 0)
             self._current_context = \
-                [c for c in self._contexts if c['name'] == self.context_tab.tabText(current)][0]
-            downloadThumbnail(self._current_context["org"]["logo_owner_url"],
-                              self.context_logo_label)
-            self.context_frame.color_height = int(
-                self.filter_widget.height() / 2) + ContextLogo.LOGO_HEIGHT + 15
+                [c for c in self._contexts if c['name'] == self.context_tab.tabData(current)][0]
 
-            background_color_text = self._current_context["org"].get("background_color")
-            background_color = QColor(background_color_text)
-            if not background_color.isValid():
-                background_color = QColor('#323233')
+            if self._current_context['type'] == 'user':
+                downloadThumbnail(KoordinatesClient.instance().user_details()["avatar_url"],
+                                  self.context_logo_label)
+                self.context_frame.color_height = int(
+                    self.filter_widget.height() / 2) + ContextLogo.LOGO_HEIGHT + 15
 
-            self.context_frame.set_color(background_color)
-            self.context_header.setVisible(True)
+                self.context_frame.set_color(QColor('#323233'))
+                self.context_header.setVisible(True)
+            else:
+                downloadThumbnail(self._current_context["org"]["logo_owner_url"],
+                                  self.context_logo_label)
+                self.context_frame.color_height = int(
+                    self.filter_widget.height() / 2) + ContextLogo.LOGO_HEIGHT + 15
+
+                background_color_text = self._current_context["org"].get("background_color")
+                background_color = QColor(background_color_text)
+                if not background_color.isValid():
+                    background_color = QColor('#323233')
+
+                self.context_frame.set_color(background_color)
+                self.context_header.setVisible(True)
 
         self._prev_tab = current
         self.filter_widget.set_starred(current == self.TAB_STARRED_INDEX)
@@ -445,12 +468,13 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
             self.context_tab.removeTab(i)
 
         if self._contexts:
-            self.context_tab.addTab(self._contexts[0]['name'])
+            tab_text = self._contexts[0]['name'] if self._contexts[0]['type'] != 'user' else 'My data'
+            idx = self.context_tab.addTab(tab_text)
+            self.context_tab.setTabData(idx, self._contexts[0]['name'])
             if len(self._contexts) > 1:
                 idx = self.context_tab.addTab('')
                 self.context_tab.setTabIcon(idx, GuiUtils.get_icon('context_switcher.svg'))
                 self.context_tab.setTabData(idx, 'CONTEXT_SWITCHER')
-
         else:
             pass
 
@@ -474,4 +498,4 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        self.context_tab.setFixedWidth(self.context_container.width())
+        self.context_tab_container.setFixedWidth(self.context_container.width())
