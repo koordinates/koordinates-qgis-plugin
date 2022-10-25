@@ -192,6 +192,10 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
         self.filter_widget.clear_all.connect(self._clear_all_filters)
 
+        if os.name == 'nt':
+            self.button_sort_order.setStyleSheet(
+                'QToolButton { padding-right: 30px; padding-left: 0px; }'
+            )
         self.sort_menu = QMenu(self.button_sort_order)
         for order in (
                 SortOrder.Popularity,
