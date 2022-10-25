@@ -782,6 +782,8 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         painter = QPainter(base)
         painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
+        painter.setRenderHint(QPainter.TextAntialiasing, True)
 
         painter.setPen(Qt.NoPen)
         painter.setBrush(QBrush(QColor(0, 0, 0, 150)))
@@ -797,7 +799,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         description = DatasetGuiUtils.get_type_description(self.dataset)
         if description:
             font = QFont('Arial')
-            font.setPointSizeF(8 / scale_factor)
+            font.setPixelSize(int(10 / scale_factor))
             font.setBold(True)
             painter.setFont(font)
 
@@ -808,7 +810,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         subtitle = DatasetGuiUtils.get_subtitle(self.dataset)
         if subtitle:
             font = QFont('Arial')
-            font.setPointSizeF(8 / scale_factor)
+            font.setPixelSize(int(10 / scale_factor))
             font.setBold(False)
             painter.setFont(font)
 
