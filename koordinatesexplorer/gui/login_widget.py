@@ -220,9 +220,8 @@ class LoginWidget(QFrame):
             self.open_login_window_label.hide()
 
     def _auth_finished(self, key):
-        self.oauth = None
-
         if self.oauth and not sip.isdeleted(self.oauth):
+            self.oauth.close_server()
             self.oauth.quit()
             self.oauth.wait()
             self.oauth.deleteLater()
