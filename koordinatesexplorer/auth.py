@@ -149,6 +149,8 @@ class OAuthWorkflow(QThread):
     def __init__(self):
         super().__init__()
 
+        self.server = None
+
         code_verifier, code_challenge = generate_pkce_pair()
 
         state = "".join(choice(ascii_lowercase) for i in range(10))
@@ -170,21 +172,23 @@ class OAuthWorkflow(QThread):
         # we have to dummy a dummy request in order to abort the blocking handle_request() loop
         requests.get("http://127.0.0.1:{}".format(REDIRECT_PORT))
 
+    def close_server(self):
+        self.server.server_close()
+
+        del self.server
+        self.server = None
+
     def run(self):
-        server = HTTPServer(("127.0.0.1", REDIRECT_PORT), _Handler)
-        server.code_verifier = self.code_verifier
-        server.apikey = None
-        server.error = None
+        self.server = HTTPServer(("127.0.0.1", REDIRECT_PORT), _Handler)
+        self.server.code_verifier = self.code_verifier
+        self.server.apikey = None
+        self.server.error = None
         QDesktopServices.openUrl(QUrl(self.authorization_url))
 
-        server.handle_request()
+        self.server.handle_request()
 
-        err = server.error
-        apikey = server.apikey
-
-        server.server_close()
-
-        del server
+        err = self.server.error
+        apikey = self.server.apikey
 
         if err:
             self.error_occurred.emit(err)
