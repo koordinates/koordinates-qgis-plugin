@@ -1,4 +1,5 @@
 from typing import Optional
+import platform
 
 from qgis.PyQt import sip
 from qgis.PyQt.QtCore import (
@@ -272,7 +273,7 @@ class LoginWidget(QFrame):
 
         Returns True if the key could be stored
         """
-        if not QgsApplication.authManager().masterPasswordHashInDatabase():
+        if platform.system() == 'Darwin':
             return False
 
         key = KoordinatesClient.instance().apiKey
@@ -284,7 +285,7 @@ class LoginWidget(QFrame):
 
         Returns None if no stored key is available
         """
-        if not QgsApplication.authManager().masterPasswordHashInDatabase():
+        if platform.system() == 'Darwin':
             return None
 
         api_key = (
