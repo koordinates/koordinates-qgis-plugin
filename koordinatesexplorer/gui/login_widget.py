@@ -18,7 +18,8 @@ from qgis.PyQt.QtWidgets import (
 )
 from qgis.core import (
     Qgis,
-    QgsApplication
+    QgsApplication,
+    QgsSettings
 )
 from qgis.utils import iface
 
@@ -289,11 +290,13 @@ class LoginWidget(QFrame):
 
         Returns True if the key could be stored
         """
-        if platform.system() == 'Darwin':
-            return False
-
         key = KoordinatesClient.instance().apiKey
-        QgsApplication.authManager().storeAuthSetting(AUTH_CONFIG_ID, key, True)
+        if platform.system() == 'Darwin':
+            # store tokens in plain text on MacOS as keychain isn't available due to MacOS security
+            QgsSettings().setValue("koordinates/token", key, QgsSettings.Plugins)
+        else:
+            QgsApplication.authManager().storeAuthSetting(AUTH_CONFIG_ID, key, True)
+        return True
 
     def retrieve_api_key(self) -> Optional[str]:
         """
@@ -302,12 +305,14 @@ class LoginWidget(QFrame):
         Returns None if no stored key is available
         """
         if platform.system() == 'Darwin':
-            return None
-
-        api_key = (
-                QgsApplication.authManager().authSetting(
-                    AUTH_CONFIG_ID, defaultValue="", decrypt=True
-                )
-                or None
-        )
+            api_key = QgsSettings().value("koordinates/token", None, str, QgsSettings.Plugins)
+            if not api_key:
+                api_key = None
+        else:
+            api_key = (
+                    QgsApplication.authManager().authSetting(
+                        AUTH_CONFIG_ID, defaultValue="", decrypt=True
+                    )
+                    or None
+            )
         return api_key
