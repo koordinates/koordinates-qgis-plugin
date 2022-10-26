@@ -58,6 +58,8 @@ WIDGET, BASE = uic.loadUiType(GuiUtils.get_ui_file_path("datasetdialog.ui"))
 FONT_FAMILIES = "KxMetric, -apple-system, BlinkMacSystemFont," \
                 "'avenir next', avenir, helvetica, 'helvetica neue', ubuntu," \
                 "roboto, noto, 'segoe ui', arial, sans-serif"
+MONOSPACE_FONT_FAMILIES = "SFMono-Regular, Menlo, Monaco, Consolas, " \
+                          "'Liberation Mono', 'Courier New', monospace"
 
 
 class HorizontalLine(QFrame):
@@ -286,7 +288,7 @@ class DetailsTable(QGridLayout):
         title_label.setFixedWidth(fm.width('x') * 30)
         title_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         self.addWidget(title_label, row, 0, 1, 1)
-        font_family = FONT_FAMILIES if not is_monospace else 'monospace'
+        font_family = FONT_FAMILIES if not is_monospace else MONOSPACE_FONT_FAMILIES
         value_label = QLabel(
             """<span style="font-family: {}; font-size: {}pt; color: black">{}</span>""".format(
                 font_family,
