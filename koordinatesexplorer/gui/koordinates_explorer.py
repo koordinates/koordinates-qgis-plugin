@@ -374,6 +374,9 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
                     self.filter_widget.height() / 2) + ContextLogo.LOGO_HEIGHT + 15
 
                 background_color_text = self._current_context["org"].get("background_color")
+                if background_color_text and not background_color_text.startswith('#'):
+                    background_color_text = '#' + background_color_text
+
                 background_color = QColor(background_color_text)
                 if not background_color.isValid():
                     background_color = QColor('#323233')
