@@ -681,8 +681,8 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         detail_font_size = 9
         if platform.system() == 'Darwin':
             # fonts looks smaller on a mac, where things "just work" :P
-            title_font_size = 12
-            subtitle_font_size = 11
+            title_font_size = 14
+            subtitle_font_size = 12
             detail_font_size = 10
 
         self.labelName.setText(

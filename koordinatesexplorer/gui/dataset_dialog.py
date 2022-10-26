@@ -146,7 +146,7 @@ class StatisticWidget(QWidget):
 
         font_size = 9
         if platform.system() == 'Darwin':
-            font_size = 10
+            font_size = 11
 
         title_label = QLabel(
             '<b style="font-family: Arial, Sans; font-size: {}pt">{}</b>'.format(font_size, title))
@@ -247,7 +247,7 @@ class DetailsTable(QGridLayout):
         self.setVerticalSpacing(13)
         self.font_size = 10
         if platform.system() == 'Darwin':
-            self.font_size = 11
+            self.font_size = 14
 
         heading = QLabel(
             """<b style="font-family: Arial, sans; font-size: {}pt; color: black">{}</b>""".format(
@@ -321,7 +321,7 @@ class DatasetDialog(QDialog):
         if platform.system() == 'Darwin':
             title_font_size = 20
             base_font_size = 12
-            self.description_font_size = 12
+            self.description_font_size = 14
 
         self.label_title = QLabel()
         self.label_title.setText(
