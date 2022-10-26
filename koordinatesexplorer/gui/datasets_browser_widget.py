@@ -676,18 +676,18 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         if thumbnail_url:
             downloadThumbnail(thumbnail_url, self)
 
-        title_font_size = 10
-        subtitle_font_size = 9
+        main_title_size = 11
+        title_font_size = 11
         detail_font_size = 9
         if platform.system() == 'Darwin':
             # fonts looks smaller on a mac, where things "just work" :P
+            main_title_size = 14
             title_font_size = 14
-            subtitle_font_size = 12
             detail_font_size = 10
 
         self.labelName.setText(
             f"""<p style="line-height: 130%;
-                font-size: 11pt;
+                font-size: {main_title_size}pt;
                 font-family: Arial, Sans"><b>{self.dataset.get("title", 'Layer')}</b><br>"""
             f"""<span style="color: #868889;
             font-size: {title_font_size}pt;
@@ -706,7 +706,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
                 self.license_label.setText(
                     f"""<span style="color: #868889;
                         font-family: Arial, Sans;
-                        font-size: {subtitle_font_size}pt">{license_type}</span>"""
+                        font-size: {detail_font_size}pt">{license_type}</span>"""
                 )
                 details_layout.addWidget(self.license_label)
 
