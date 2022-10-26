@@ -55,6 +55,10 @@ pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
 WIDGET, BASE = uic.loadUiType(GuiUtils.get_ui_file_path("datasetdialog.ui"))
 
+FONT_FAMILIES = "KxMetric, -apple-system, BlinkMacSystemFont," \
+                "'avenir next', avenir, helvetica, 'helvetica neue', ubuntu," \
+                "roboto, noto, 'segoe ui', arial, sans-serif"
+
 
 class HorizontalLine(QFrame):
 
@@ -149,14 +153,18 @@ class StatisticWidget(QWidget):
             font_size = 11
 
         title_label = QLabel(
-            '<b style="font-family: Arial, Sans; font-size: {}pt">{}</b>'.format(font_size, title))
+            '<b style="font-family: {}; font-size: {}pt">{}</b>'.format(
+                FONT_FAMILIES,
+                font_size,
+                title))
         gl.addWidget(title_label, 0, 0, 1, 2)
 
         icon = SvgLabel(icon_name, 16, 16)
         gl.addWidget(icon, 1, 0, 1, 1)
 
         value_label = QLabel(
-            '<span style="font-family: Arial, Sans; font-size: {}pt">{}</span>'.format(
+            '<span style="font-family: {}; font-size: {}pt">{}</span>'.format(
+                FONT_FAMILIES,
                 font_size, value))
         gl.addWidget(value_label, 1, 1, 1, 1)
 
@@ -224,10 +232,10 @@ class HeaderWidget(QFrame):
             f"""<p style="line-height: 130%;
             font-size: 10pt;
             color: rgba(255,255,255,0.7);
-            font-family: Arial, Sans"><b>{self.dataset.get('publisher', {}).get('name')}</b><br>"""
+            font-family: {FONT_FAMILIES}"><b>{self.dataset.get('publisher', {}).get('name')}</b><br>"""
             f"""<span style="
         font-size: 10pt;
-        font-family: Arial, Sans"
+        font-family: {FONT_FAMILIES}"
         >via {self.dataset.get("publisher").get('site', {}).get("name")}</span></p>"""
         )
 
@@ -250,8 +258,10 @@ class DetailsTable(QGridLayout):
             self.font_size = 14
 
         heading = QLabel(
-            """<b style="font-family: Arial, sans; font-size: {}pt; color: black">{}</b>""".format(
-                self.font_size, title))
+            """<b style="font-family: {}; font-size: {}pt; color: black">{}</b>""".format(
+                FONT_FAMILIES,
+                self.font_size,
+                title))
         self.addWidget(heading, 0, 0, 1, 2)
         self.setColumnStretch(1, 1)
 
@@ -265,9 +275,10 @@ class DetailsTable(QGridLayout):
 
         row = self.rowCount()
         title_label = QLabel(
-            """<span style="font-family: Arial, sans;
+            """<span style="font-family: {};
             font-size: {}pt;
-            color: #868889">{}</span>""".format(self.font_size,
+            color: #868889">{}</span>""".format(FONT_FAMILIES,
+                                                self.font_size,
                                                 title))
         title_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
 
@@ -275,7 +286,7 @@ class DetailsTable(QGridLayout):
         title_label.setFixedWidth(fm.width('x') * 30)
         title_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         self.addWidget(title_label, row, 0, 1, 1)
-        font_family = "Arial, sans" if not is_monospace else 'monospace'
+        font_family = FONT_FAMILIES if not is_monospace else 'monospace'
         value_label = QLabel(
             """<span style="font-family: {}; font-size: {}pt; color: black">{}</span>""".format(
                 font_family,
@@ -325,11 +336,10 @@ class DatasetDialog(QDialog):
 
         self.label_title = QLabel()
         self.label_title.setText(
-            """<span style="font-family: Arial, Sans;
+            f"""<span style="font-family: {FONT_FAMILIES};
             font-weight: bold;
-            font-size: {}pt;">{}</span>""".format(
-                title_font_size,
-                dataset.get('title', '')))
+            font-size: {title_font_size}pt;">{dataset.get('title', '')}</span>"""
+        )
         title_hl.addWidget(self.label_title, 1)
 
         is_starred = self.dataset.get('is_starred', False)
@@ -387,9 +397,13 @@ class DatasetDialog(QDialog):
         subtitle = DatasetGuiUtils.get_subtitle(self.dataset)
 
         summary_label.setText("""<p style="line-height: 130%;
-        font-family: Arial, Sans;
+        font-family: {};
         font-size: {}pt"><b>Data type</b><br>
-        {},<br>{}</p>""".format(base_font_size, description, subtitle))
+        {},<br>{}</p>""".format(
+            FONT_FAMILIES,
+            base_font_size,
+            description,
+            subtitle))
 
         base_details_right_pane_layout.addSpacing(10)
         base_details_right_pane_layout.addWidget(summary_label, 1)
@@ -481,9 +495,7 @@ class DatasetDialog(QDialog):
         return """
             <style>
             p {{
-            font-family: KxMetric, -apple-system, BlinkMacSystemFont,
-                "avenir next", avenir, helvetica, "helvetica neue", ubuntu,
-                 roboto, noto, "segoe ui", arial, sans-serif;
+            font-family: {};
             color: rgb(50, 50, 50);
             font-size: {}pt;
             letter-spacing: 0.1px;
@@ -493,7 +505,7 @@ class DatasetDialog(QDialog):
             color: rgb(50, 50, 50);
             }}
             </style>
-        """.format(self.description_font_size)
+        """.format(FONT_FAMILIES, self.description_font_size)
 
     def format_number(self, value):
         return locale.format_string("%d", value, grouping=True)
