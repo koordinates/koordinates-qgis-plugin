@@ -7,7 +7,8 @@ from typing import Optional, List
 from qgis.PyQt import sip
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import (
-    QUrl
+    QUrl,
+    QRect
 )
 from qgis.PyQt.QtGui import (
     QDesktopServices,
@@ -26,7 +27,11 @@ from qgis.PyQt.QtWidgets import (
     QFrame,
     QTabBar,
     QWidget,
-    QLabel
+    QLabel,
+    QStylePainter,
+    QStyleOptionTabV4,
+    QStyleOptionTabBarBase,
+    QStyle
 )
 from qgis.gui import QgsDockWidget
 
@@ -54,6 +59,33 @@ pluginPath = os.path.split(os.path.dirname(__file__))[0]
 WIDGET, _ = uic.loadUiType(GuiUtils.get_ui_file_path('koordinatesexplorer.ui'))
 
 SETTINGS_NAMESPACE = "Koordinates"
+
+
+class CustomTab(QTabBar):
+
+    def paintEvent(self, event):
+
+        painter = QStylePainter(self)
+        tab_overlap = QStyleOptionTabV4()
+        tab_overlap.shape = self.shape()
+
+        option = QStyleOptionTabBarBase()
+        option.initFrom(self)
+        option.shape = self.shape()
+        option.documentMode = self.documentMode()
+        option.rect = QRect(0, self.height() - 2, self.width(), 2)
+        painter.drawPrimitive(QStyle.PE_FrameTabBarBase, option)
+
+        for i in range(4):
+            option = QStyleOptionTabV4()
+            self.initStyleOption(option, i)
+
+            if i > 0:
+                painter.drawControl(QStyle.CE_TabBarTab, option)
+            else:
+                painter.drawControl(QStyle.CE_TabBarTabShape, option)
+                painter.drawPixmap(option.rect.center().x() - 7, option.rect.center().y() - 8,
+                                   GuiUtils.get_icon_pixmap('star_filled.svg'))
 
 
 class KoordinatesExplorer(QgsDockWidget, WIDGET):
@@ -86,7 +118,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         hl.setContentsMargins(0, 0, 0, 0)
         hl.addSpacing(11)
 
-        self.context_tab = QTabBar()
+        self.context_tab = CustomTab()
         hl.addWidget(self.context_tab)
         hl.addSpacing(11)
         self.context_tab_container.setLayout(hl)
