@@ -165,8 +165,6 @@ class ResponsiveTableLayout(QLayout):
 
                 x = effective_rect.left()
                 for item in line:
-                    _wid = item.widget()
-
                     item.setGeometry(
                         QRect(x, y_offset, col_width, item.sizeHint().height())
                     )

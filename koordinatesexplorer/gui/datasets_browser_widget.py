@@ -2,7 +2,7 @@ import json
 import math
 import os
 from functools import partial
-from typing import Optional, Tuple
+from typing import Optional
 
 from qgis.PyQt import sip
 from qgis.PyQt.QtCore import (
@@ -14,7 +14,6 @@ from qgis.PyQt.QtGui import (
 )
 from qgis.PyQt.QtNetwork import QNetworkReply
 from qgis.PyQt.QtWidgets import (
-    QTableWidgetItem,
     QHBoxLayout,
     QFrame,
     QLabel,
@@ -76,29 +75,6 @@ class DatasetsBrowserWidget(QWidget):
             self._current_reply.abort()
 
         self._current_reply = None
-
-    def get_next_blank_dataset_cell(self) -> Optional[Tuple[int, int]]:
-        """
-        Gets the next cell containing a blank dataset item, or None if no remaining
-        blank dataset items are available
-        """
-        current_row = 0
-        current_col = 0
-
-        while True:
-            w = self.cellWidget(current_row, current_col)
-            if w and isinstance(w.layout().itemAt(0).widget(), EmptyDatasetItemWidget):
-                return current_row, current_col
-
-            current_col += 1
-            if current_col == self.columnCount():
-                current_col = 0
-                current_row += 1
-
-            if current_row >= self.rowCount():
-                break
-
-        return None
 
     def _create_temporary_items_for_page(self):
         for i in range(PAGE_SIZE):
