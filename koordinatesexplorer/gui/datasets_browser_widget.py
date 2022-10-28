@@ -1,38 +1,19 @@
 import json
 import math
 import os
-import platform
-
 from functools import partial
 from typing import Optional, Tuple
 
-from dateutil import parser
 from qgis.PyQt import sip
 from qgis.PyQt.QtCore import (
     Qt,
-    pyqtSignal,
-    QPointF,
-    QRect,
-    QRectF,
-    QTimer,
-    QSize
+    pyqtSignal
 )
 from qgis.PyQt.QtGui import (
-    QColor,
-    QPixmap,
-    QCursor,
-    QPainter,
-    QPainterPath,
-    QImage,
-    QBrush,
-    QFontMetrics,
-    QFont,
-    QPen
+    QFontMetrics
 )
 from qgis.PyQt.QtNetwork import QNetworkReply
-from qgis.PyQt.QtSvg import QSvgWidget
 from qgis.PyQt.QtWidgets import (
-    QTableWidget,
     QTableWidgetItem,
     QHBoxLayout,
     QFrame,
@@ -40,206 +21,51 @@ from qgis.PyQt.QtWidgets import (
     QToolButton,
     QVBoxLayout,
     QSizePolicy,
-    QWidget,
-    QAbstractItemView
+    QWidget
 )
-from qgis.core import (
-    QgsProject,
-    QgsGeometry,
-    QgsCoordinateTransform,
-    QgsCoordinateReferenceSystem,
-    QgsFields,
-    QgsJsonUtils
-)
-from qgis.utils import iface
+from qgis.gui import QgsScrollArea
 
-from koordinatesexplorer.gui.dataset_dialog import DatasetDialog
-from koordinatesexplorer.gui.thumbnails import downloadThumbnail
-from .action_button import (
-    CloneButton,
-    AddButton
-)
-from .dataset_utils import (
-    DatasetGuiUtils,
-    IconStyle
-)
-from .gui_utils import GuiUtils
-from .star_button import StarButton
+from .response_table_layout import ResponsiveTableWidget
 from ..api import (
     KoordinatesClient,
     PAGE_SIZE,
-    DataBrowserQuery,
-    ApiUtils,
-    DataType,
-    Capability
+    DataBrowserQuery
 )
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
 
-class Label(QLabel):
-    def __init__(self):
-        super(Label, self).__init__()
-        self.setMaximumSize(150, 200)
-        self.setMinimumSize(150, 200)
-
-
-class DatasetsBrowserWidget(QTableWidget):
+class DatasetsBrowserWidget(QWidget):
     datasetDetailsRequested = pyqtSignal(dict)
     total_count_changed = pyqtSignal(int)
     visible_count_changed = pyqtSignal(int)
 
-    VERTICAL_SPACING = 10
-    HORIZONTAL_SPACING = 10
-
     def __init__(self):
         super().__init__()
-        self.itemClicked.connect(self._itemClicked)
-        self.setSelectionMode(self.NoSelection)
-        self.setColumnCount(1)
-        self.horizontalHeader().hide()
-        self.verticalHeader().hide()
-        self.setColumnWidth(0, self.width())
-        self.setShowGrid(False)
-        self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
+
+        scroll_area = QgsScrollArea()
+        scroll_area.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll_area.setWidgetResizable(True)
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        self.table_widget = ResponsiveTableWidget()
+        scroll_area.setWidget(self.table_widget)
+
+        layout.addWidget(scroll_area)
+        self.setLayout(layout)
 
         self.setObjectName('DatasetsBrowserWidget')
-        self.setStyleSheet("""
-        #DatasetsBrowserWidget {{ border: none; }}
-        QTableWidget::item {{ padding-bottom: {}px; padding-right: {}px }}
-        """.format(self.VERTICAL_SPACING, self.HORIZONTAL_SPACING))
-        self.viewport().setStyleSheet("#qt_scrollarea_viewport{ background: transparent; }")
+        scroll_area.setFrameShape(QFrame.NoFrame)
+        scroll_area.setStyleSheet("#qt_scrollarea_viewport{ background: transparent; }")
 
         self._current_query: Optional[DataBrowserQuery] = None
         self._current_reply: Optional[QNetworkReply] = None
         self._current_context = None
-        self._load_more_item = None
-        self._no_records_item = None
+        self._load_more_widget = None
+        self._no_records_widget = None
         self._datasets = []
-        self._is_reflowing = False
-        self._resize_timer = QTimer()
-        self._resize_timer.setSingleShot(True)
-        self._resize_timer.setInterval(30)
-        self._resize_timer.timeout.connect(self.resizeTimeOut)
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-
-        if self._is_reflowing:
-            return
-
-        self._resize_timer.start()
-
-    def resizeTimeOut(self):
-        if self._is_reflowing:
-            return
-
-        width_without_scroll_bar = self.width() - self.verticalScrollBar().width()
-
-        if width_without_scroll_bar < 500:
-            col_count = 1
-        else:
-            col_count = int(width_without_scroll_bar / 270)
-
-        col_count = max(1, col_count)
-        self.reflow_cells(col_count)
-
-        col_width = int(width_without_scroll_bar / self.columnCount())
-        for i in range(self.columnCount()):
-            self.setColumnWidth(i, col_width)
-
-    def reflow_cells(self, col_count):
-        if col_count == self.columnCount():
-            return
-
-        self._is_reflowing = True
-
-        prev_columns = self.columnCount()
-        prev_rows = self.rowCount()
-        if col_count > self.columnCount():
-            target_row = 0
-            target_col = 0
-            required_rows = 0
-            self.setColumnCount(col_count)
-            for row in range(prev_rows):
-                for col in range(prev_columns):
-                    widget = self.cellWidget(row, col)
-                    if widget:
-                        new_container = QWidget()
-                        new_container.setLayout(widget.layout())
-                        item = self.takeItem(row, col)
-                        self.setItem(target_row, target_col, item)
-                        self.setCellWidget(target_row, target_col, new_container)
-                        required_rows = target_row
-                        target_col += 1
-                        if target_col == col_count:
-                            target_col = 0
-                            target_row += 1
-
-            self.setRowCount(required_rows + 1)
-        else:
-            # removing columns
-            target_row = 0
-            target_col = 0
-            widget_count = 0
-
-            items = []
-            widgets = []
-            remaps = {}
-            for row in range(prev_rows):
-                for col in range(prev_columns):
-                    if self.cellWidget(row, col) and self.cellWidget(row, col).layout():
-                        assert self.item(row, col)
-                        items.append(self.item(row, col))
-                        widgets.append(self.cellWidget(row, col))
-
-                        remaps[widget_count] = (target_row, target_col)
-
-                        widget_count += 1
-                        target_col += 1
-                        if target_col == col_count:
-                            target_col = 0
-                            target_row += 1
-
-            self.setRowCount(remaps[len(widgets) - 1][0] + 1)
-
-            for idx in range(len(widgets) - 1, -1, -1):
-                target_row, target_col = remaps[idx]
-                widget = widgets[idx]
-                item = items[idx]
-
-                if item.row() == target_row and item.column() == target_col:
-                    continue
-
-                new_container = QWidget()
-                new_container.setLayout(widget.layout())
-                item = self.takeItem(item.row(), item.column())
-                self.setItem(target_row, target_col, item)
-                self.setCellWidget(target_row, target_col, new_container)
-
-            self.setColumnCount(col_count)
-
-        self.setColumnCount(col_count)
-
-        for col in range(self.columnCount()):
-            for row in range(self.rowCount()):
-                widget = self.cellWidget(row, col)
-                if widget and widget.layout() and isinstance(widget.layout().itemAt(0).widget(), DatasetItemWidget):
-                    widget.layout().itemAt(0).widget().set_column_count(self.columnCount())
-
-        row_height = DatasetItemWidget.CARD_HEIGHT if self.columnCount() == 1 else DatasetItemWidget.CARD_HEIGHT_TALL
-        for row in range(self.rowCount()):
-            self.setRowHeight(row,
-                              row_height + self.VERTICAL_SPACING)
-
-        self._is_reflowing = False
-
-    def set_cell_widget_in_container(self, row, column, widget):
-        container = QWidget()
-        container_layout = QVBoxLayout(container)
-        container_layout.setContentsMargins(0, 0, 0, 0)
-        container_layout.addWidget(widget)
-        self.setCellWidget(row, column, container)
 
     def cancel_active_requests(self):
         """
@@ -250,24 +76,6 @@ class DatasetsBrowserWidget(QTableWidget):
             self._current_reply.abort()
 
         self._current_reply = None
-
-    def get_next_empty_cell(self) -> Tuple[int, int]:
-        """
-        Gets the next empty cell for inserting an item
-        """
-        if self.rowCount() == 0:
-            return 0, 0
-        current_row = self.rowCount() - 1
-        current_col = 0
-
-        while True:
-            if not self.cellWidget(current_row, current_col):
-                return current_row, current_col
-
-            current_col += 1
-            if current_col == self.columnCount():
-                current_col = 0
-                current_row += 1
 
     def get_next_blank_dataset_cell(self) -> Optional[Tuple[int, int]]:
         """
@@ -294,49 +102,19 @@ class DatasetsBrowserWidget(QTableWidget):
 
     def _create_temporary_items_for_page(self):
         for i in range(PAGE_SIZE):
-            datasetItem = QTableWidgetItem()
-            datasetItem.setFlags(Qt.ItemFlags())
-            datasetWidget = EmptyDatasetItemWidget()
-
-            new_row, new_col = self.get_next_empty_cell()
-            if self.rowCount() < new_row + 1:
-                self.setRowCount(new_row + 1)
-            self.setItem(new_row, new_col, datasetItem)
-            self.set_cell_widget_in_container(datasetItem.row(), datasetItem.column(),
-                                              datasetWidget)
-            row_height = DatasetItemWidget.CARD_HEIGHT if self.columnCount() == 1 else DatasetItemWidget.CARD_HEIGHT_TALL
-            self.setRowHeight(datasetItem.row(),
-                              row_height + self.VERTICAL_SPACING)
-            datasetItem.setSizeHint(datasetWidget.sizeHint())
+            self.table_widget.push_empty_widget()
 
     def _remove_temporary_empty_items(self):
-        current_row = 0
-        current_col = 0
-
-        while True:
-            w = self.cellWidget(current_row, current_col)
-            if w and isinstance(w.layout().itemAt(0).widget(), EmptyDatasetItemWidget):
-                self.setCellWidget(current_row, current_col, None)
-                self.setItem(current_row, current_col, None)
-
-            current_col += 1
-            if current_col == self.columnCount():
-                current_col = 0
-                current_row += 1
-
-            if current_row >= self.rowCount():
-                break
-
-        self.setRowCount(math.ceil(len(self._datasets) / self.columnCount()))
+        self.table_widget.remove_empty_widgets()
 
     def populate(self, query: DataBrowserQuery, context):
-        self.clear()
-        self.setRowCount(0)
+        self.table_widget.clear()
+
         self._datasets = []
         self._create_temporary_items_for_page()
 
-        self._load_more_item = None
-        self._no_records_item = None
+        self._load_more_widget = None
+        self._no_records_widget = None
 
         self.visible_count_changed.emit(-1)
         self._fetch_records(query, context)
@@ -394,80 +172,32 @@ class DatasetsBrowserWidget(QTableWidget):
         self.setCursor(Qt.ArrowCursor)
         self._remove_temporary_empty_items()
 
-        if not finished and not self._load_more_item:
-            self._load_more_item = QTableWidgetItem()
-            self._load_more_item.setFlags(Qt.ItemFlags())
-            loadMoreWidget = LoadMoreItemWidget()
-            loadMoreWidget.load_more.connect(self.load_more)
+        if not finished and not self._load_more_widget:
+            self._load_more_widget = LoadMoreItemWidget()
+            self._load_more_widget.load_more.connect(self.load_more)
 
-            new_row, new_col = self.get_next_empty_cell()
-            if self.rowCount() < new_row + 1:
-                self.setRowCount(new_row + 1)
+            self.table_widget.push_widget(self._load_more_widget)
 
-            self.setItem(new_row, new_col, self._load_more_item)
-            self.set_cell_widget_in_container(self._load_more_item.row(),
-                                              self._load_more_item.column(), loadMoreWidget)
-            if self._load_more_item.column() == 0:
-                self.setRowHeight(self._load_more_item.row(),
-                                  loadMoreWidget.sizeHint().height() + self.VERTICAL_SPACING)
-            self._load_more_item.setSizeHint(loadMoreWidget.sizeHint())
-        elif finished and self._load_more_item:
-            self.takeItem(self.row(self._load_more_item))
-            self._load_more_item = None
+        elif finished and self._load_more_widget:
+            self.table_widget.remove_widget(self._load_more_widget)
+            self._load_more_widget = None
 
-        if total == '0' and not self._no_records_item:
-            self._no_records_item = QTableWidgetItem()
-            self._no_records_item.setFlags(Qt.ItemFlags())
-            no_records_widget = NoRecordsItemWidget()
-            new_row, new_col = self.get_next_empty_cell()
-            if self.rowCount() < new_row + 1:
-                self.setRowCount(new_row + 1)
-
-            self.setItem(new_row, new_col, self._no_records_item)
-            self.set_cell_widget_in_container(self._no_records_item.row(),
-                                              self._no_records_item.column(), no_records_widget)
-            if self._no_records_item.column() == 0:
-                self.setRowHeight(self._no_records_item.row(),
-                                  no_records_widget.sizeHint().height() + self.VERTICAL_SPACING)
-        elif total != '0' and self._no_records_item:
-            self.takeItem(self.row(self._no_records_item))
-            self._no_records_item = None
+        if total == '0' and not self._no_records_widget:
+            self._no_records_widget = NoRecordsItemWidget()
+            self.table_widget.push_widget(self._no_records_widget)
+        elif total != '0' and self._no_records_widget:
+            self.table_widget.remove_widget(self._no_records_widget)
+            self._no_records_widget = None
 
     def _add_datasets(self, datasets):
         for i, dataset in enumerate(datasets):
-            datasetItem = QTableWidgetItem()
-            datasetItem.setFlags(Qt.ItemFlags())
-            datasetWidget = DatasetItemWidget(dataset, self.columnCount())
-
-            row_col = self.get_next_blank_dataset_cell()
-            if row_col is None:
-                new_row, new_col = self.get_next_empty_cell()
-            else:
-                new_row, new_col = row_col
-
-            if self.rowCount() < new_row + 1:
-                self.setRowCount(new_row + 1)
-
-            self.setItem(new_row, new_col, datasetItem)
-            self.set_cell_widget_in_container(datasetItem.row(), datasetItem.column(),
-                                              datasetWidget)
-
-            row_height = DatasetItemWidget.CARD_HEIGHT if self.columnCount() == 1 else DatasetItemWidget.CARD_HEIGHT_TALL
-            self.setRowHeight(datasetItem.row(),
-                              row_height + self.VERTICAL_SPACING)
-            datasetItem.setSizeHint(datasetWidget.sizeHint())
-
-    def _itemClicked(self, item):
-        widget = self.cellWidget(item.row(), item.column())
-        if isinstance(widget, DatasetItemWidget):
-            widget.showDetails()
+            self.table_widget.push_dataset(dataset)
 
     def load_more(self):
         next_page = math.ceil(len(self._datasets) / PAGE_SIZE) + 1
-        self.setCellWidget(self._load_more_item.row(), self._load_more_item.column(), None)
-        self.setItem(self._load_more_item.row(), self._load_more_item.column(), None)
 
-        self._load_more_item = None
+        self.table_widget.remove_widget(self._load_more_widget)
+        self._load_more_widget = None
         self._create_temporary_items_for_page()
         self._fetch_records(page=next_page)
 
@@ -515,537 +245,3 @@ class NoRecordsItemWidget(QFrame):
         layout.addStretch()
         vl.addLayout(layout)
         self.setLayout(vl)
-
-
-class DatasetItemWidgetBase(QFrame):
-    """
-    Base class for dataset items
-    """
-
-    THUMBNAIL_CORNER_RADIUS = 5
-    THUMBNAIL_SIZE = 150
-
-    def __init__(self):
-        super().__init__()
-        self.setStyleSheet(
-            """DatasetItemWidgetBase {{
-               border: 1px solid #dddddd;
-               border-radius: {}px; background: white;
-            }}""".format(self.THUMBNAIL_CORNER_RADIUS)
-        )
-        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
-
-
-class EmptyDatasetItemWidget(DatasetItemWidgetBase):
-    """
-    Shows an 'empty' dataset item
-    """
-
-    TOP_LABEL_HEIGHT = 40
-    TOP_LABEL_MARGIN = 15
-    TOP_LABEL_WIDTH = 300
-    BOTTOM_LABEL_HEIGHT = 20
-    BOTTOM_LABEL_MARGIN = 40
-    BOTTOM_LABEL_WIDTH = 130
-
-    def __init__(self):
-        super().__init__()
-
-        #self.setThumbnail(None)
-
-        self.labelMap = Label()
-        self.labelMap.setFixedHeight(150)
-
-        self.labelName = QLabel()
-        self.labelName.setWordWrap(True)
-        self.labelName.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-
-        self.vlayout = QVBoxLayout()
-        self.vlayout.setContentsMargins(11, 17, 15, 15)
-
-        self.top_layout = QHBoxLayout()
-        self.top_layout.setContentsMargins(0, 0, 0, 0)
-        self.top_layout.addWidget(self.labelName, 1)
-
-        self.vlayout.addLayout(self.top_layout)
-
-        self.buttonsLayout = QHBoxLayout()
-        self.buttonsLayout.setContentsMargins(0, 0, 0, 0)
-
-        self.vlayout.addLayout(self.buttonsLayout)
-
-        layout = QHBoxLayout()
-        layout.setMargin(0)
-        layout.addWidget(self.labelMap)
-        layout.addLayout(self.vlayout)
-
-        self.setLayout(layout)
-
-        target = QPixmap(self.TOP_LABEL_WIDTH,
-                         self.TOP_LABEL_HEIGHT + self.TOP_LABEL_MARGIN)
-        target.fill(Qt.transparent)
-
-        painter = QPainter(target)
-
-        painter.setRenderHint(QPainter.Antialiasing, True)
-        painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
-
-        painter.setBrush(QBrush(QColor('#e6e6e6')))
-        painter.setPen(Qt.NoPen)
-        painter.drawRoundedRect(0, self.TOP_LABEL_MARGIN,
-                                self.TOP_LABEL_WIDTH, self.TOP_LABEL_HEIGHT,
-                                4, 4)
-
-        painter.end()
-
-        self.labelName.setPixmap(target)
-        self.vlayout.addStretch()
-
-        target = QPixmap(self.BOTTOM_LABEL_WIDTH,
-                         self.BOTTOM_LABEL_HEIGHT + self.BOTTOM_LABEL_MARGIN)
-        target.fill(Qt.transparent)
-
-        painter = QPainter(target)
-
-        painter.setRenderHint(QPainter.Antialiasing, True)
-        painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
-
-        painter.setBrush(QBrush(QColor('#e6e6e6')))
-        painter.setPen(Qt.NoPen)
-        painter.drawRoundedRect(0,
-                                self.BOTTOM_LABEL_MARGIN,
-                                self.BOTTOM_LABEL_WIDTH,
-                                self.BOTTOM_LABEL_HEIGHT,
-                                4,
-                                4)
-
-        painter.end()
-
-        bottom_label = QLabel()
-        bottom_label.setPixmap(target)
-        self.vlayout.addWidget(bottom_label)
-        self.vlayout.addStretch()
-
-
-class DatasetItemWidget(DatasetItemWidgetBase):
-    """
-    Shows details for a dataset item
-    """
-
-    CARD_HEIGHT = DatasetItemWidgetBase.THUMBNAIL_SIZE + 2  # +2 for 2x1px border
-    CARD_HEIGHT_TALL = DatasetItemWidgetBase.THUMBNAIL_SIZE+ 170 + 2  # +2 for 2x1px border
-
-    def __init__(self, dataset, column_count):
-        super().__init__()
-        self.setMouseTracking(True)
-        self.dataset = dataset
-        self.raw_thumbnail = None
-
-        self.layout_widget = None
-        self._layout = QVBoxLayout()
-        self._layout.setContentsMargins(0,0,0,0)
-        self.setLayout(self._layout)
-
-        self.column_count = -1
-
-        self.dataset_type: DataType = ApiUtils.data_type_from_dataset_response(self.dataset)
-
-        self.setFixedHeight(self.CARD_HEIGHT)
-
-        self.labelMap = Label()
-        self.labelMap.setFixedHeight(150)
-
-        self.labelName = QLabel()
-        self.labelName.setWordWrap(True)
-        self.labelName.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-
-        thumbnail_url = self.dataset.get('thumbnail_url')
-        if thumbnail_url:
-            downloadThumbnail(thumbnail_url, self)
-
-        main_title_size = 11
-        title_font_size = 11
-        detail_font_size = 9
-        if platform.system() == 'Darwin':
-            # fonts looks smaller on a mac, where things "just work" :P
-            main_title_size = 14
-            title_font_size = 14
-            detail_font_size = 10
-
-        self.labelName.setText(
-            f"""<p style="line-height: 130%;
-                font-size: {main_title_size}pt;
-                font-family: Arial, Sans"><b>{self.dataset.get("title", 'Layer')}</b><br>"""
-            f"""<span style="color: #868889;
-            font-size: {title_font_size}pt;
-            font-family: Arial, Sans">{self.dataset.get("publisher", {}).get("name")}</span></p>"""
-        )
-
-        license = self.dataset.get('license')
-        self.license_label = None
-        if license:
-            license_type = license.get('type')
-            if license_type:
-                license_type = license_type.upper()
-                self.license_label = QLabel()
-                self.license_label.setText(
-                    f"""<span style="color: #868889;
-                        font-family: Arial, Sans;
-                        font-size: {detail_font_size}pt">{license_type}</span>"""
-                )
-
-        self.labelUpdatedIcon = QSvgWidget(GuiUtils.get_icon_svg("history_gray.svg"))
-        self.labelUpdatedIcon.setFixedSize(13, 12)
-        self.labelUpdated = QLabel()
-
-        published_at_date_str: Optional[str] = self.dataset.get("published_at")
-        if published_at_date_str:
-            date = parser.parse(published_at_date_str)
-            self.labelUpdated.setText(
-                f"""<span style="color: #868889;
-                    font-family: Arial, Sans;
-                    font-size: {detail_font_size}pt">{date.strftime("%d %b %Y")}</span>"""
-            )
-
-        is_starred = self.dataset.get('is_starred', False)
-        self.star_button = StarButton(dataset_id=self.dataset['id'], checked=is_starred)
-
-        base_style = self.styleSheet()
-        base_style += """
-            DatasetItemWidget:hover {
-                border: 1px solid rgb(180, 180, 180);
-                background: #fcfcfc;
-            }
-        """
-        self.setStyleSheet(base_style)
-
-        capabilities = ApiUtils.capabilities_from_dataset_response(self.dataset)
-
-        if Capability.Clone in capabilities:
-            self.btnClone = CloneButton(self.dataset)
-        else:
-            self.btnClone = None
-
-        if Capability.Add in capabilities:
-            self.btnAdd = AddButton(self.dataset)
-        else:
-            self.btnAdd = None
-
-        self.bbox: Optional[QgsGeometry] = self._geomFromGeoJson(
-            self.dataset.get("data", {}).get("extent"))
-        # if self.bbox:
-        #     self.footprint = QgsRubberBand(iface.mapCanvas(), QgsWkbTypes.PolygonGeometry)
-        #     self.footprint.setWidth(2)
-        #     self.footprint.setColor(QColor(255, 0, 0, 200))
-        #     self.footprint.setFillColor(QColor(255, 0, 0, 40))
-        # else:
-        #     self.footprint = None
-
-        self.setCursor(QCursor(Qt.PointingHandCursor))
-
-        self.set_column_count(column_count)
-
-    def set_column_count(self, count: int):
-        use_narrow_cards = count > 1
-        is_using_narrow_cards = self.column_count > 1
-
-        if self.column_count >= 1 and use_narrow_cards == is_using_narrow_cards:
-            return
-
-        self.column_count = count
-
-        if use_narrow_cards:
-            self.setFixedHeight(self.CARD_HEIGHT_TALL)
-
-            layout = QVBoxLayout()
-            layout.setContentsMargins(0,0,0,0)
-            layout.addWidget(self.labelMap)
-
-            details_layout = QVBoxLayout()
-            details_layout.setContentsMargins(16,12,16,16)
-            title_layout = QHBoxLayout()
-            title_layout.setContentsMargins(0,0,0,0)
-            title_layout.addWidget(self.labelName, 1)
-            title_layout.addWidget(self.star_button)
-            title_layout.addStretch()
-            details_layout.addLayout(title_layout)
-            details_layout.addStretch()
-
-            if self.license_label:
-                details_layout.addWidget(self.license_label)
-
-            updated_layout = QHBoxLayout()
-            updated_layout.setContentsMargins(0, 0, 0, 0)
-
-            updated_layout.addWidget(self.labelUpdatedIcon)
-            updated_layout.addWidget(self.labelUpdated)
-            details_layout.addLayout(updated_layout)
-
-            buttonsLayout = QHBoxLayout()
-            buttonsLayout.setContentsMargins(0, 0, 0, 0)
-            buttonsLayout.addStretch()
-
-            details_layout.addLayout(buttonsLayout)
-
-            if self.btnClone:
-                buttonsLayout.addWidget(self.btnClone)
-            if self.btnAdd:
-                buttonsLayout.addWidget(self.btnAdd)
-            layout.addLayout(details_layout)
-        else:
-            self.setFixedHeight(self.CARD_HEIGHT)
-
-            vlayout = QVBoxLayout()
-            vlayout.setContentsMargins(11, 17, 15, 15)
-
-            top_layout = QHBoxLayout()
-            top_layout.setContentsMargins(0, 0, 0, 0)
-            top_layout.addWidget(self.labelName, 1)
-
-            vlayout.addLayout(top_layout)
-
-            buttonsLayout = QHBoxLayout()
-            buttonsLayout.setContentsMargins(0, 0, 0, 0)
-
-            vlayout.addLayout(buttonsLayout)
-
-            layout = QHBoxLayout()
-            layout.setContentsMargins(0,0,0,0)
-            layout.addWidget(self.labelMap)
-            layout.addLayout(vlayout)
-
-            details_layout = QVBoxLayout()
-            details_layout.setContentsMargins(0, 0, 0, 0)
-            if self.license_label:
-                details_layout.addWidget(self.license_label)
-
-            updated_layout = QHBoxLayout()
-            updated_layout.setContentsMargins(0, 0, 0, 0)
-
-            updated_layout.addWidget(self.labelUpdatedIcon)
-            updated_layout.addWidget(self.labelUpdated)
-            details_layout.addLayout(updated_layout)
-
-            buttonsLayout.addLayout(details_layout)
-            buttonsLayout.addStretch()
-
-            star_layout = QVBoxLayout()
-            star_layout.setContentsMargins(0, 0, 0, 0)
-            star_layout.addWidget(self.star_button)
-            star_layout.addStretch()
-            top_layout.addLayout(star_layout)
-            buttonsLayout.addStretch()
-
-            if self.btnClone:
-                buttonsLayout.addWidget(self.btnClone)
-            if self.btnAdd:
-                buttonsLayout.addWidget(self.btnAdd)
-
-        self.layout_widget = QWidget()
-        self.layout_widget.setLayout(layout)
-        self._layout.takeAt(0)
-        self._layout.addWidget(self.layout_widget)
-        self.update_thumbnail()
-
-    def setThumbnail(self, img: Optional[QImage]):
-        self.raw_thumbnail = img
-        self.update_thumbnail()
-
-    def update_thumbnail(self):
-        thumbnail = self.process_thumbnail(self.raw_thumbnail)
-        self.labelMap.setFixedSize(thumbnail.size())
-        self.labelMap.setPixmap(QPixmap.fromImage(thumbnail))
-
-    def process_thumbnail(self, img: Optional[QImage]) -> QImage:
-        if self.column_count == 1:
-            size = QSize(self.THUMBNAIL_SIZE, self.THUMBNAIL_SIZE)
-        else:
-            size = QSize(self.width() - 2, self.THUMBNAIL_SIZE)
-
-        target = QImage(size, QImage.Format_ARGB32)
-        target.fill(Qt.transparent)
-
-        painter = QPainter(target)
-
-        painter.setRenderHint(QPainter.Antialiasing, True)
-        painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
-        painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
-
-        painter.setPen(Qt.NoPen)
-        painter.setBrush(QBrush(QColor(255, 0, 0)))
-
-        path = QPainterPath()
-        if self.column_count == 1:
-            path.moveTo(self.THUMBNAIL_CORNER_RADIUS, 0)
-            path.lineTo(size.width(), 0)
-            path.lineTo(size.width(), size.height())
-            path.lineTo(self.THUMBNAIL_CORNER_RADIUS, size.height())
-            path.arcTo(0,
-                       size.height() - self.THUMBNAIL_CORNER_RADIUS * 2,
-                       self.THUMBNAIL_CORNER_RADIUS * 2,
-                       self.THUMBNAIL_CORNER_RADIUS * 2,
-                       270, -90
-                       )
-            path.lineTo(0, self.THUMBNAIL_CORNER_RADIUS)
-            path.arcTo(0,
-                       0,
-                       self.THUMBNAIL_CORNER_RADIUS * 2,
-                       self.THUMBNAIL_CORNER_RADIUS * 2,
-                       180, -90
-                       )
-        else:
-            path.moveTo(self.THUMBNAIL_CORNER_RADIUS, 0)
-            path.lineTo(size.width() - self.THUMBNAIL_CORNER_RADIUS, 0)
-            path.arcTo(size.width() - self.THUMBNAIL_CORNER_RADIUS * 2,
-                       0,
-                       self.THUMBNAIL_CORNER_RADIUS * 2,
-                       self.THUMBNAIL_CORNER_RADIUS * 2,
-                       90, -90
-                       )
-            path.lineTo(size.width(), size.height())
-            path.lineTo(0, size.height())
-            path.lineTo(0, self.THUMBNAIL_CORNER_RADIUS)
-            path.arcTo(0,
-                       0,
-                       self.THUMBNAIL_CORNER_RADIUS * 2,
-                       self.THUMBNAIL_CORNER_RADIUS * 2,
-                       180, -90
-                       )
-
-        painter.drawPath(path)
-        painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
-
-        if img is not None:
-            rect = QRect(300, 15, 600, 600)
-            thumbnail = QPixmap(img)
-            cropped = thumbnail.copy(rect)
-
-            thumb = cropped.scaled(
-                size.width(), size.height(), Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation
-            )
-            painter.drawPixmap(0, 0, thumb)
-        else:
-            painter.setBrush(QBrush(QColor('#cccccc')))
-            painter.setPen(Qt.NoPen)
-            painter.drawRect(0, 0, 600, 600)
-
-        painter.end()
-
-        scale_factor = self.screen().devicePixelRatio()
-
-        scaled_image = target.scaled(int(scale_factor * target.width()),
-                                     int(scale_factor * target.height()))
-
-        scaled_image.setDevicePixelRatio(self.screen().devicePixelRatio())
-        scaled_image.setDotsPerMeterX(
-            int(scaled_image.dotsPerMeterX() * scale_factor))
-        scaled_image.setDotsPerMeterY(int(
-            scaled_image.dotsPerMeterY() * scale_factor))
-        base = scaled_image
-
-        painter = QPainter(base)
-        painter.setRenderHint(QPainter.Antialiasing, True)
-        painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
-        painter.setRenderHint(QPainter.TextAntialiasing, True)
-
-        painter.setPen(Qt.NoPen)
-        painter.setBrush(QBrush(QColor(0, 0, 0, 150)))
-        painter.drawRoundedRect(QRectF(15, 100, 117, 32), 4, 4)
-
-        icon = DatasetGuiUtils.get_icon_for_dataset(self.dataset, IconStyle.Light)
-        if icon:
-            painter.drawImage(QRectF(21, 106, 20, 20),
-                              GuiUtils.get_svg_as_image(icon,
-                                                        int(20 * scale_factor),
-                                                        int(20 * scale_factor)))
-
-        description = DatasetGuiUtils.get_type_description(self.dataset)
-        if description:
-            font = QFont('Arial')
-            font.setPixelSize(int(10 / scale_factor))
-            font.setBold(True)
-            painter.setFont(font)
-
-            painter.setBrush(Qt.NoBrush)
-            painter.setPen(QPen(QColor(255, 255, 255)))
-            painter.drawText(QPointF(47, 113), description)
-
-        subtitle = DatasetGuiUtils.get_subtitle(self.dataset)
-        if subtitle:
-            font = QFont('Arial')
-            font.setPixelSize(int(10 / scale_factor))
-            font.setBold(False)
-            painter.setFont(font)
-
-            painter.setBrush(Qt.NoBrush)
-            painter.setPen(QPen(QColor(255, 255, 255)))
-            painter.drawText(QPointF(47, 127), subtitle)
-
-        painter.end()
-        return base
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-
-        if self.width() < 440 and self.column_count == 1:
-            self.labelMap.hide()
-        else:
-            self.labelMap.show()
-            self.update_thumbnail()
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.showDetails()
-        else:
-            super().mousePressEvent(event)
-
-    def showDetails(self):
-        dataset = (
-            self.dataset
-        )
-        dlg = DatasetDialog(self, dataset)
-        dlg.exec()
-
-    def _geomFromGeoJson(self, geojson) -> Optional[QgsGeometry]:
-        try:
-            feats = QgsJsonUtils.stringToFeatureList(
-                json.dumps(geojson), QgsFields(), None
-            )
-            geom = feats[0].geometry()
-        except Exception:
-            geom = QgsGeometry()
-
-        if geom.isNull() or geom.isEmpty():
-            return None
-
-        return geom
-
-    # def enterEvent(self, event):
-    #     if self.footprint is not None:
-    #         self.showFootprint()
-
-    # def leaveEvent(self, event):
-    #     if self.footprint is not None:
-    #         self.hideFootprint()
-
-    def _bboxInProjectCrs(self):
-        geom = QgsGeometry(self.bbox)
-        transform = QgsCoordinateTransform(
-            QgsCoordinateReferenceSystem("EPSG:4326"),
-            QgsProject.instance().crs(),
-            QgsProject.instance(),
-        )
-        geom.transform(transform)
-        return geom
-
-    # def showFootprint(self):
-    #     self.footprint.setToGeometry(self._bboxInProjectCrs())
-
-    # def hideFootprint(self):
-    #     self.footprint.reset(QgsWkbTypes.PolygonGeometry)
-
-    def zoomToBoundingBox(self):
-        rect = self.bbox.boundingBox()
-        rect.scale(1.05)
-        iface.mapCanvas().setExtent(rect)
-        iface.mapCanvas().refresh()
