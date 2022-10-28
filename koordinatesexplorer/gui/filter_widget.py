@@ -2,9 +2,6 @@ from qgis.PyQt.QtCore import (
     QTimer,
     pyqtSignal
 )
-from qgis.PyQt.QtGui import (
-    QFontMetrics
-)
 from qgis.PyQt.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -17,23 +14,16 @@ from qgis.gui import (
     QgsFilterLineEdit
 )
 
-from .access_filter_widget import AccessFilterWidget
-#  from .category_filter_widget import CategoryFilterWidget
-from .data_type_filter_widget import DataTypeFilterWidget
-from .date_filter_widget import DateFilterWidget
-from .flow_layout import FlowLayout
 from .gui_utils import GuiUtils
-from .license_filter_widget import LicenseFilterWidget
-from .resolution_filter_widget import ResolutionFilterWidget
 from ..api import (
     DataBrowserQuery,
-    DataType,
     SortOrder
 )
 
 
 class FilterWidget(QWidget):
     filters_changed = pyqtSignal()
+    show_advanced = pyqtSignal(bool)
     clear_all = pyqtSignal()
 
     def __init__(self, parent=None):
@@ -64,7 +54,7 @@ class FilterWidget(QWidget):
         self.show_advanced_button.setToolTip('Advanced')
         self.show_advanced_button.setCheckable(True)
         hl.addWidget(self.show_advanced_button)
-        self.show_advanced_button.toggled.connect(self._show_advanced)
+        self.show_advanced_button.toggled.connect(self.show_advanced)
 
         self.clear_all_button = QToolButton()
         self.clear_all_button.setText('Clear All')
@@ -81,62 +71,22 @@ class FilterWidget(QWidget):
 
         vl.addLayout(hl)
 
-        # self.category_filter_widget = CategoryFilterWidget(self)
-        self.data_type_filter_widget = DataTypeFilterWidget(self)
-        self.resolution_widget = ResolutionFilterWidget(self)
-        self.date_filter_widget = DateFilterWidget(self)
-        self.license_widget = LicenseFilterWidget(self)
-        self.access_widget = AccessFilterWidget(self)
-
-        min_filter_widget_width = QFontMetrics(self.font()).width('x') * 20
-        # self.category_filter_widget.setMinimumWidth(min_filter_widget_width)
-        self.data_type_filter_widget.setMinimumWidth(min_filter_widget_width)
-        self.resolution_widget.setMinimumWidth(min_filter_widget_width)
-        self.date_filter_widget.setMinimumWidth(min_filter_widget_width)
-        self.license_widget.setMinimumWidth(min_filter_widget_width)
-        self.access_widget.setMinimumWidth(min_filter_widget_width)
-
-        self.resolution_widget.hide()
-
-        self.advanced_filter_page = QWidget()
-        filter_widget_layout = FlowLayout()
-        filter_widget_layout.setContentsMargins(0, 0, 0, 0)
-        # filter_widget_layout.addWidget(self.category_filter_widget)
-        filter_widget_layout.addWidget(self.data_type_filter_widget)
-        filter_widget_layout.addWidget(self.resolution_widget)
-        filter_widget_layout.addWidget(self.date_filter_widget)
-        filter_widget_layout.addWidget(self.license_widget)
-        filter_widget_layout.addWidget(self.access_widget)
-        self.advanced_filter_page.setLayout(filter_widget_layout)
-
-        self.filter_widgets = (  # self.category_filter_widget,
-            self.data_type_filter_widget,
-            self.resolution_widget,
-            self.date_filter_widget,
-            self.license_widget,
-            self.access_widget,)
-
         # changes to filter parameters are deferred to a small timeout, to avoid
         # starting lots of queries while a user is mid-operation (such as dragging a slider)
         self._update_query_timeout = QTimer(self)
         self._update_query_timeout.setSingleShot(True)
         self._update_query_timeout.timeout.connect(self._update_query)
 
-        for w in self.filter_widgets:
-            w.changed.connect(self._filter_widget_changed)
         self.search_line_edit.textChanged.connect(self._filter_widget_changed)
-
-        vl.addWidget(self.advanced_filter_page)
 
         self.setLayout(vl)
 
-        self._show_advanced(False)
-
     def _clear_all(self):
-        for w in self.filter_widgets:
-            w.clear()
         self.search_line_edit.clear()
         self.clear_all.emit()
+
+    def set_show_advanced_button(self, show):
+        self.show_advanced_button.setVisible(show)
 
     def set_starred(self, starred: bool):
         """
@@ -148,32 +98,10 @@ class FilterWidget(QWidget):
         self._starred = starred
         self._update_query()
 
-    def _show_advanced(self, show):
-        if not show:
-            for w in self.filter_widgets:
-                w.collapse()
-        self.advanced_filter_page.setVisible(show)
-        self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
-        self.advanced_filter_page.adjustSize()
-        self.advanced_filter_page.setMinimumWidth(self.width())
-        self.advanced_filter_page.setMinimumWidth(0)
-        self.adjustSize()
-
     def _filter_widget_changed(self):
         # changes to filter parameters are deferred to a small timeout, to avoid
         # starting lots of queries while a user is mid-operation (such as dragging a slider)
         self._update_query_timeout.start(500)
-
-        selected_data_types = self.data_type_filter_widget.data_types()
-
-        if selected_data_types == {DataType.Rasters} or \
-                selected_data_types == {DataType.Grids}:
-            # show resolution
-            self.resolution_widget.setVisible(True)
-        else:
-            self.resolution_widget.setVisible(False)
-
-        self.advanced_filter_page.layout().update()
 
     def build_query(self) -> DataBrowserQuery:
         """
@@ -186,21 +114,16 @@ class FilterWidget(QWidget):
         if self.search_line_edit.text().strip():
             query.search = self.search_line_edit.text().strip()
 
-        for w in self.filter_widgets:
-            w.apply_constraints_to_query(query)
-
         return query
 
     def _update_query(self):
         self.filters_changed.emit()
 
     def set_logged_in(self, logged_in: bool):
-        for w in self.filter_widgets:
-            w.set_logged_in(logged_in)
+        pass
 
     def set_facets(self, facets: dict):
         """
         Sets corresponding facets response for tweaking the widget choices
         """
-        for w in self.filter_widgets:
-            w.set_facets(facets)
+        pass
