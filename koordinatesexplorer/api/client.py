@@ -1,5 +1,5 @@
-from enum import Enum
 import json
+from enum import Enum
 from typing import (
     Optional,
     Tuple,
@@ -206,6 +206,9 @@ class KoordinatesClient(QObject):
 
         return res
 
+    def layer_details(self, datasetid):
+        return self._get(f"layers/{datasetid}/")['json']
+
     def dataset(self, datasetid):
         if str(datasetid) not in self.layers:
             self.layers[str(datasetid)] = self._get(f"data/{datasetid}/")['json']
@@ -275,3 +278,22 @@ class KoordinatesClient(QObject):
             'json': reply_json,
             'reply': request.reply()
         }
+
+    @waitcursor
+    def get_json(self, url: str):
+        url = QUrl(url)
+        network_request = QNetworkRequest(url)
+        headers = {}
+        headers.update(self.headers)
+        for header, value in headers.items():
+            network_request.setRawHeader(header.encode(),
+                                         value.encode())
+
+        request = QgsBlockingNetworkRequest()
+        if request.get(network_request) != QgsBlockingNetworkRequest.NoError:
+            self.error_occurred.emit(request.reply().errorString())
+            reply_json = {}
+        else:
+            reply_json = json.loads(request.reply().content().data().decode())
+
+        return reply_json

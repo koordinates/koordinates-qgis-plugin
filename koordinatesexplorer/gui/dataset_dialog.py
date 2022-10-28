@@ -8,6 +8,7 @@ from qgis.PyQt import uic
 from qgis.PyQt.QtCore import (
     Qt,
     QSize,
+    QUrl,
     QRect,
     pyqtSignal
 )
@@ -18,7 +19,8 @@ from qgis.PyQt.QtGui import (
     QBrush,
     QColor,
     QFontMetrics,
-    QFont
+    QFont,
+    QDesktopServices
 )
 from qgis.PyQt.QtWidgets import (
     QFrame,
@@ -310,11 +312,179 @@ class DetailsTable(QGridLayout):
         self.finalize()
 
 
+class AttachmentWidget(QFrame):
+
+    def __init__(self, attachment):
+        super().__init__()
+
+        self.setStyleSheet("""AttachmentWidget {
+        border: 1px solid #dddddd;
+        border-radius: 3px;
+         }
+         """)
+
+        self.attachment = attachment
+        label = QLabel()
+
+        base_font_size = 11
+        if platform.system() == 'Darwin':
+            base_font_size = 12
+
+        title = attachment.get('document', {}).get('title')
+
+        label.setText(
+            f"""<span style="font-family: {FONT_FAMILIES};
+            font-weight: bold;
+            font-size: {base_font_size}pt;">{title}</span>"""
+        )
+        hl = QHBoxLayout()
+        hl.addWidget(label, 1)
+
+        download_frame = QFrame()
+        download_frame.setStyleSheet("""QFrame {
+        border: 1px solid #dddddd;
+        border-radius: 3px;
+        }
+
+        QFrame:hover { background-color: #f8f8f8; }
+        """)
+
+        file_details = attachment.get('document', {}).get('extension', '').upper()
+        file_details += ' ' + attachment.get('document', {}).get('file_size_formatted', '')
+
+        download_label = QLabel()
+        download_label.setText(
+            f"""<span style="font-family: {FONT_FAMILIES};
+            font-size: {base_font_size}pt;">{file_details}</span>"""
+        )
+        download_label.setStyleSheet('border: none')
+
+        download_layout = QHBoxLayout()
+        download_layout.addWidget(download_label)
+
+        download_icon = SvgLabel('arrow-down.svg', 16, 16)
+        download_layout.addWidget(download_icon)
+
+        download_frame.setLayout(download_layout)
+        download_frame.setCursor(Qt.PointingHandCursor)
+
+        download_frame.mousePressEvent = self._download
+
+        hl.addWidget(download_frame)
+
+        self.setLayout(hl)
+
+    def _download(self, event):
+        url = self.attachment['url_download']
+        QDesktopServices.openUrl(QUrl(url))
+
+
+class MetadataWidget(QFrame):
+
+    def __init__(self, source, metadata):
+        super().__init__()
+
+        self.setStyleSheet("""MetadataWidget {
+        border: 1px solid #dddddd;
+        border-radius: 3px;
+         }
+         """)
+
+        self.metadata = metadata
+        label = QLabel()
+
+        base_font_size = 11
+        if platform.system() == 'Darwin':
+            base_font_size = 12
+
+        title = 'ISO 19115/19139 Metadata' if source == 'iso' else 'Dublin Core Metadata'
+
+        label.setText(
+            f"""<span style="font-family: {FONT_FAMILIES};
+            font-weight: bold;
+            font-size: {base_font_size}pt;">{title}</span>"""
+        )
+        hl = QHBoxLayout()
+        hl.addWidget(label, 1)
+
+        download_xml_frame = QFrame()
+        download_xml_frame.setStyleSheet("""QFrame {
+        border: 1px solid #dddddd;
+        border-radius: 3px;
+         }
+
+         QFrame:hover { background-color: #f8f8f8; }
+         """)
+
+        download_xml_label = QLabel()
+        download_xml_label.setText(
+            f"""<span style="font-family: {FONT_FAMILIES};
+            font-size: {base_font_size}pt;">XML</span>"""
+        )
+        download_xml_label.setStyleSheet('border: none')
+
+        download_xml_layout = QHBoxLayout()
+        download_xml_layout.addWidget(download_xml_label)
+
+        download_icon = SvgLabel('arrow-down.svg', 16, 16)
+        download_xml_layout.addWidget(download_icon)
+
+        download_xml_frame.setLayout(download_xml_layout)
+        download_xml_frame.setCursor(Qt.PointingHandCursor)
+
+        download_xml_frame.mousePressEvent = self._download_xml
+
+        hl.addWidget(download_xml_frame)
+
+        download_pdf_frame = QFrame()
+        download_pdf_frame.setStyleSheet("""QFrame {
+        border: 1px solid #dddddd;
+        border-radius: 3px;
+         }
+
+         QFrame:hover { background-color: #f8f8f8; }
+         """)
+
+        download_pdf_label = QLabel()
+        download_pdf_label.setText(
+            f"""<span style="font-family: {FONT_FAMILIES};
+            font-size: {base_font_size}pt;">PDF</span>"""
+        )
+        download_pdf_label.setStyleSheet('border: none')
+
+        download_pdf_layout = QHBoxLayout()
+        download_pdf_layout.addWidget(download_pdf_label)
+
+        download_icon = SvgLabel('arrow-down.svg', 16, 16)
+        download_pdf_layout.addWidget(download_icon)
+
+        download_pdf_frame.setLayout(download_pdf_layout)
+        download_pdf_frame.setCursor(Qt.PointingHandCursor)
+
+        download_pdf_frame.mousePressEvent = self._download_pdf
+
+        hl.addWidget(download_pdf_frame)
+
+        self.setLayout(hl)
+
+    def _download_xml(self, event):
+        QDesktopServices.openUrl(QUrl(self.metadata))
+
+    def _download_pdf(self, event):
+        QDesktopServices.openUrl(QUrl(self.metadata + '?format=pdf'))
+
+
 class DatasetDialog(QDialog):
     def __init__(self, parent, dataset):
         super().__init__(parent)
 
         self.dataset = dataset
+        self.details = KoordinatesClient.instance().layer_details(self.dataset["id"])
+        if self.details.get('attachments'):
+            self.attachments = KoordinatesClient.instance().get_json(self.details['attachments'])
+        else:
+            self.attachments = []
+
         self.dataset_type: DataType = ApiUtils.data_type_from_dataset_response(self.dataset)
 
         self.setWindowTitle('Dataset Details - {}'.format(dataset.get('title', 'layer')))
@@ -467,6 +637,35 @@ class DatasetDialog(QDialog):
         contents_layout.addWidget(self.description_label, 1)
 
         contents_layout.addSpacing(40)
+
+        if self.attachments:
+            heading = QLabel(
+                """<b style="font-family: {}; font-size: {}pt; color: black">{}</b>""".format(
+                    FONT_FAMILIES,
+                    self.description_font_size,
+                    'Attachments'))
+            contents_layout.addWidget(heading)
+
+            for attachment in self.attachments:
+                contents_layout.addWidget(AttachmentWidget(attachment))
+
+            contents_layout.addSpacing(40)
+
+        if self.details.get('metadata') and (self.details['metadata'].get('iso') or
+                                             self.details['metadata'].get('dc')):
+            heading = QLabel(
+                """<b style="font-family: {}; font-size: {}pt; color: black">{}</b>""".format(
+                    FONT_FAMILIES,
+                    self.description_font_size,
+                    'Metadata'))
+            contents_layout.addWidget(heading)
+
+            for source in ('iso', 'dc'):
+                if self.details['metadata'].get(source):
+                    contents_layout.addWidget(
+                        MetadataWidget(source, self.details['metadata'][source]))
+
+            contents_layout.addSpacing(40)
 
         tech_details_grid = DetailsTable('Technical Details')
         tech_details_grid.set_details(self.get_technical_details())
