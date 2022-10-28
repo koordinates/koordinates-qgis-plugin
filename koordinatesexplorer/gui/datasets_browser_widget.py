@@ -80,14 +80,13 @@ class DatasetsBrowserWidget(QWidget):
         for i in range(PAGE_SIZE):
             self.table_widget.push_empty_widget()
 
-    def _remove_temporary_empty_items(self):
-        self.table_widget.remove_empty_widgets()
-
     def populate(self, query: DataBrowserQuery, context):
+        self.table_widget.setUpdatesEnabled(False)
         self.table_widget.clear()
 
         self._datasets = []
         self._create_temporary_items_for_page()
+        self.table_widget.setUpdatesEnabled(True)
 
         self._load_more_widget = None
         self._no_records_widget = None
@@ -141,12 +140,13 @@ class DatasetsBrowserWidget(QWidget):
         last = tokens[0].split("-")[-1]
         finished = last == total
 
+        self.table_widget.setUpdatesEnabled(False)
         self._add_datasets(datasets)
         self._datasets.extend(datasets)
         self.visible_count_changed.emit(len(self._datasets))
 
         self.setCursor(Qt.ArrowCursor)
-        self._remove_temporary_empty_items()
+        self.table_widget.remove_empty_widgets()
 
         if not finished and not self._load_more_widget:
             self._load_more_widget = LoadMoreItemWidget()
@@ -164,6 +164,8 @@ class DatasetsBrowserWidget(QWidget):
         elif total != '0' and self._no_records_widget:
             self.table_widget.remove_widget(self._no_records_widget)
             self._no_records_widget = None
+
+        self.table_widget.setUpdatesEnabled(True)
 
     def _add_datasets(self, datasets):
         for i, dataset in enumerate(datasets):

@@ -249,12 +249,14 @@ class ResponsiveTableWidget(QWidget):
         self.layout().addWidget(widget)
 
     def remove_empty_widgets(self):
+        self.setUpdatesEnabled(False)
         for idx in range(len(self._widgets) - 1, -1, -1):
             if isinstance(self._widgets[idx], EmptyDatasetItemWidget):
                 self._widgets[idx].setParent(None)
                 self._widgets[idx].deleteLater()
                 self.layout().takeAt(idx)
                 del self._widgets[idx]
+        self.setUpdatesEnabled(True)
 
     def remove_widget(self, widget):
         idx = self._widgets.index(widget)
