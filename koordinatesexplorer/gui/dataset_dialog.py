@@ -48,7 +48,8 @@ from .thumbnails import downloadThumbnail
 from ..api import (
     ApiUtils,
     DataType,
-    Capability
+    Capability,
+    KoordinatesClient
 )
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
@@ -558,7 +559,15 @@ class DatasetDialog(QDialog):
         if last_updated:
             res.append(('Last updated', self.format_date(last_updated)))
 
-        res.append(('Revisions', 'xxx'))
+        data_revisions_count = KoordinatesClient.instance().data_revisions_count(
+            self.dataset["id"])
+        total_revisions_count = KoordinatesClient.instance().total_revisions_count(
+            self.dataset["id"])
+
+        res.append(('Revisions', '{} data revisions • {} total revisions'.format(
+            data_revisions_count,
+            total_revisions_count
+        )))
         return res
 
     def setThumbnail(self, img):

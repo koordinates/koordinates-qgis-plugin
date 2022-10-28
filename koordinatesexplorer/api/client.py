@@ -158,6 +158,38 @@ class KoordinatesClient(QObject):
         last = tokens[0].split("-")[-1]
         return ret['json'], last == total
 
+    def data_revisions_count(self, id) -> int:
+        """
+        Retrieve data revisions blocking
+        """
+        params = {}
+
+        endpoint = "layers/{}/versions/".format(id)
+        headers = {}
+        headers.update(self.headers)
+
+        ret = self._get(endpoint, headers, params)
+
+        tokens = ret['reply'].rawHeader(b"X-Resource-Range").data().decode().split("/")
+        total = int(tokens[-1])
+        return total
+
+    def total_revisions_count(self, id) -> int:
+        """
+        Retrieve total revisions blocking
+        """
+        params = {'data_import': True}
+
+        endpoint = "layers/{}/versions/".format(id)
+        headers = {}
+        headers.update(self.headers)
+
+        ret = self._get(endpoint, headers, params)
+
+        tokens = ret['reply'].rawHeader(b"X-Resource-Range").data().decode().split("/")
+        total = int(tokens[-1])
+        return total
+
     def user_details(self) -> dict:
         """
         Returns a diction of user details
