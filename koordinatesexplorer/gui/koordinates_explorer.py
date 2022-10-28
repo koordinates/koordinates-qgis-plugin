@@ -581,7 +581,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
                 self.context_header.setVisible(True)
             else:
                 self.context_logo_label.circle = False
-                downloadThumbnail(self._current_context["logo"],
+                downloadThumbnail(self._current_context.get("logo"),
                                   self.context_logo_label)
                 self.context_logo_label.show()
                 self.context_frame.color_height = int(
@@ -596,7 +596,17 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
                     background_color = QColor('#323233')
 
                 self.context_frame.set_color(background_color)
-                self.context_name_label.hide()
+
+                if not self._current_context.get("logo"):
+                    self.context_name_label.setText(
+                        '<b style="color: white; font-size: 10pt">{}</b>'.format(
+                            self._current_context['name']))
+                    self.context_name_label.show()
+                    self.context_logo_label.hide()
+                else:
+                    self.context_name_label.hide()
+                    self.context_logo_label.show()
+
                 self.context_header.setVisible(True)
 
         self._prev_tab = current
