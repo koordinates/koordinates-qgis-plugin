@@ -28,7 +28,8 @@ from qgis.PyQt.QtWidgets import (
     QLabel,
     QVBoxLayout,
     QSizePolicy,
-    QWidget
+    QWidgetItem,
+    QLayout
 )
 from qgis.core import (
     QgsProject,
@@ -59,6 +60,187 @@ from ..api import (
 )
 
 
+class DatasetItemLayout(QLayout):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.thumbnail_widget = None
+        self.thumbnail_item = None
+        self.title_container = None
+        self.details_container = None
+        self.button_container = None
+
+        self.use_narrow_cards = False
+
+    def set_thumbnail_widget(self, widget):
+        self.thumbnail_widget = widget
+        self.thumbnail_item = QWidgetItem(widget)
+        self.addChildWidget(widget)
+        self.invalidate()
+
+    def set_title_layout(self, layout):
+        self.title_container = layout
+        self.addChildLayout(layout)
+        self.invalidate()
+
+    def set_details_layout(self, layout):
+        self.details_container = layout
+        self.addChildLayout(layout)
+        self.invalidate()
+
+    def set_button_layout(self, layout):
+        self.button_container = layout
+        self.addChildLayout(layout)
+        self.invalidate()
+
+    def addItem(self, item):
+        pass
+
+    def count(self):
+        res = 0
+        if self.thumbnail_item:
+            res += 1
+        if self.title_container:
+            res += 1
+        if self.details_container:
+            res += 1
+        if self.button_container:
+            res += 1
+        return res
+
+    def itemAt(self, index):
+        if index == 0:
+            return self.thumbnail_item
+        elif index == 1:
+            return self.title_container
+        elif index == 2:
+            return self.details_container
+        elif index == 3:
+            return self.button_container
+
+    def takeAt(self, index: int):
+        if index == 0:
+            res = self.thumbnail_item
+            self.thumbnail_item = None
+            self.thumbnail_widget.deleteLater()
+            self.thumbnail_widget = None
+            return res
+        elif index == 1:
+            res = self.title_container
+            self.title_container = None
+            return res
+        elif index == 2:
+            res = self.details_container
+            self.details_container = None
+            return res
+        elif index == 3:
+            res = self.button_container
+            self.button_container = None
+            return res
+        return None
+
+    def expandingDirections(self):
+        return Qt.Orientations()  # Qt.Orientation.Horizontal)
+
+    def hasHeightForWidth(self):
+        return False
+
+    def set_use_narrow_cards(self, narrow):
+        self.use_narrow_cards = narrow
+
+    def sizeHint(self):
+        return self.minimumSize()
+
+    def minimumSize(self):
+        if self.use_narrow_cards:
+            return QSize(330, DatasetItemWidgetBase.CARD_HEIGHT_TALL)
+        else:
+            return QSize(330, DatasetItemWidgetBase.CARD_HEIGHT)
+
+    def setGeometry(self, rect):
+        super().setGeometry(rect)
+
+        if self.use_narrow_cards:
+            if self.thumbnail_item:
+                self.thumbnail_widget.show()
+                self.thumbnail_item.setGeometry(
+                    QRect(
+                        0, 0,
+                        rect.width() + 1, DatasetItemWidgetBase.THUMBNAIL_SIZE
+                    )
+                )
+            if self.title_container:
+                self.title_container.setGeometry(
+                    QRect(
+                        17, 155,
+                        rect.width() - 17 * 2,
+                        60
+                    )
+                )
+
+            if self.details_container:
+                self.details_container.setGeometry(
+                    QRect(
+                        17, 200,
+                        rect.width() - 17 * 2,
+                        56
+                    )
+                )
+
+            if self.button_container:
+                self.button_container.setGeometry(
+                    QRect(
+                        16, 280,
+                        rect.width() - 12 * 2,
+                        32
+                    )
+                )
+        else:
+            has_thumbnail = False
+            if self.thumbnail_item:
+                if rect.width() < 440:
+                    self.thumbnail_widget.hide()
+                else:
+                    self.thumbnail_widget.show()
+                    has_thumbnail = True
+                    self.thumbnail_item.setGeometry(
+                        QRect(
+                            0, 0,
+                            DatasetItemWidgetBase.THUMBNAIL_SIZE + 1,
+                            DatasetItemWidgetBase.THUMBNAIL_SIZE + 1
+                        )
+                    )
+
+            left = 160 if has_thumbnail else 16
+            if self.title_container:
+                self.title_container.setGeometry(
+                    QRect(
+                        left, 15,
+                        rect.width() - left - 10,
+                        60
+                    )
+                )
+
+            if self.details_container:
+                self.details_container.setGeometry(
+                    QRect(
+                        left, 80,
+                        120,
+                        61
+                    )
+                )
+
+            if self.button_container:
+                self.button_container.setGeometry(
+                    QRect(
+                        left + 128, 103,
+                        rect.width() - left - 128 - 10,
+                        38
+                    )
+                )
+
+
 class DatasetItemWidgetBase(QFrame):
     """
     Base class for dataset items
@@ -67,8 +249,12 @@ class DatasetItemWidgetBase(QFrame):
     THUMBNAIL_CORNER_RADIUS = 5
     THUMBNAIL_SIZE = 150
 
+    CARD_HEIGHT = THUMBNAIL_SIZE + 2  # +2 for 2x1px border
+    CARD_HEIGHT_TALL = THUMBNAIL_SIZE + 170 + 2  # +2 for 2x1px border
+
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.column_count = 1
         self.setStyleSheet(
             """DatasetItemWidgetBase {{
                border: 1px solid #dddddd;
@@ -76,9 +262,26 @@ class DatasetItemWidgetBase(QFrame):
             }}""".format(self.THUMBNAIL_CORNER_RADIUS)
         )
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        self.setFixedHeight(self.CARD_HEIGHT)
+        self.setLayout(DatasetItemLayout())
 
-    def set_column_count(self, count):
-        pass
+    def set_column_count(self, count: int):
+        use_narrow_cards = count > 1
+        is_using_narrow_cards = self.column_count > 1
+
+        if self.column_count >= 1 and use_narrow_cards == is_using_narrow_cards:
+            return
+
+        self.column_count = count
+
+        self.layout().set_use_narrow_cards(use_narrow_cards)
+
+        if use_narrow_cards:
+            self.setFixedHeight(self.CARD_HEIGHT_TALL)
+
+        else:
+            self.setFixedHeight(self.CARD_HEIGHT)
+            self.setMinimumWidth(1)
 
 
 class Label(QLabel):
@@ -93,99 +296,46 @@ class EmptyDatasetItemWidget(DatasetItemWidgetBase):
     Shows an 'empty' dataset item
     """
 
-    TOP_LABEL_HEIGHT = 40
-    TOP_LABEL_MARGIN = 15
-    TOP_LABEL_WIDTH = 300
-    BOTTOM_LABEL_HEIGHT = 20
-    BOTTOM_LABEL_MARGIN = 40
-    BOTTOM_LABEL_WIDTH = 130
-
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        # self.setThumbnail(None)
+        self.thumbnail = QFrame()
+        self.thumbnail.setStyleSheet(
+            """background: #e6e6e6; border-radius: {}px""".format(
+                self.THUMBNAIL_CORNER_RADIUS
+            )
+        )
+        self.layout().set_thumbnail_widget(self.thumbnail)
 
-        self.labelMap = Label()
-        self.labelMap.setFixedHeight(150)
+        self.title_layout = QHBoxLayout()
+        self.title_frame = QFrame()
+        self.title_frame.setStyleSheet(
+            """background: #f6f6f6; border-radius: {}px""".format(
+                self.THUMBNAIL_CORNER_RADIUS
+            )
+        )
+        self.title_layout.setContentsMargins(0, 0, 0, 0)
+        self.title_layout.addWidget(self.title_frame)
 
-        self.labelName = QLabel()
-        self.labelName.setWordWrap(True)
-        self.labelName.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.layout().set_title_layout(self.title_layout)
 
-        self.vlayout = QVBoxLayout()
-        self.vlayout.setContentsMargins(11, 17, 15, 15)
+        self.details_layout = QHBoxLayout()
+        self.details_frame = QFrame()
+        self.details_frame.setStyleSheet(
+            """background: #f6f6f6; border-radius: {}px""".format(
+                self.THUMBNAIL_CORNER_RADIUS
+            )
+        )
+        self.details_layout.setContentsMargins(0, 0, 0, 0)
+        self.details_layout.addWidget(self.details_frame)
 
-        self.top_layout = QHBoxLayout()
-        self.top_layout.setContentsMargins(0, 0, 0, 0)
-        self.top_layout.addWidget(self.labelName, 1)
-
-        self.vlayout.addLayout(self.top_layout)
-
-        self.buttonsLayout = QHBoxLayout()
-        self.buttonsLayout.setContentsMargins(0, 0, 0, 0)
-
-        self.vlayout.addLayout(self.buttonsLayout)
-
-        layout = QHBoxLayout()
-        layout.setMargin(0)
-        layout.addWidget(self.labelMap)
-        layout.addLayout(self.vlayout)
-
-        self.setLayout(layout)
-
-        target = QPixmap(self.TOP_LABEL_WIDTH,
-                         self.TOP_LABEL_HEIGHT + self.TOP_LABEL_MARGIN)
-        target.fill(Qt.transparent)
-
-        painter = QPainter(target)
-
-        painter.setRenderHint(QPainter.Antialiasing, True)
-        painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
-
-        painter.setBrush(QBrush(QColor('#e6e6e6')))
-        painter.setPen(Qt.NoPen)
-        painter.drawRoundedRect(0, self.TOP_LABEL_MARGIN,
-                                self.TOP_LABEL_WIDTH, self.TOP_LABEL_HEIGHT,
-                                4, 4)
-
-        painter.end()
-
-        self.labelName.setPixmap(target)
-        self.vlayout.addStretch()
-
-        target = QPixmap(self.BOTTOM_LABEL_WIDTH,
-                         self.BOTTOM_LABEL_HEIGHT + self.BOTTOM_LABEL_MARGIN)
-        target.fill(Qt.transparent)
-
-        painter = QPainter(target)
-
-        painter.setRenderHint(QPainter.Antialiasing, True)
-        painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
-
-        painter.setBrush(QBrush(QColor('#e6e6e6')))
-        painter.setPen(Qt.NoPen)
-        painter.drawRoundedRect(0,
-                                self.BOTTOM_LABEL_MARGIN,
-                                self.BOTTOM_LABEL_WIDTH,
-                                self.BOTTOM_LABEL_HEIGHT,
-                                4,
-                                4)
-
-        painter.end()
-
-        bottom_label = QLabel()
-        bottom_label.setPixmap(target)
-        self.vlayout.addWidget(bottom_label)
-        self.vlayout.addStretch()
+        self.layout().set_details_layout(self.details_layout)
 
 
 class DatasetItemWidget(DatasetItemWidgetBase):
     """
     Shows details for a dataset item
     """
-
-    CARD_HEIGHT = DatasetItemWidgetBase.THUMBNAIL_SIZE + 2  # +2 for 2x1px border
-    CARD_HEIGHT_TALL = DatasetItemWidgetBase.THUMBNAIL_SIZE + 170 + 2  # +2 for 2x1px border
 
     def __init__(self, dataset, column_count, parent):
         super().__init__(parent)
@@ -194,27 +344,28 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.dataset = dataset
         self.raw_thumbnail = None
 
-        self.layout_widget = None
-        self._layout = QVBoxLayout()
-        self._layout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(self._layout)
-
-        self.column_count = -1
-
         self.dataset_type: DataType = ApiUtils.data_type_from_dataset_response(self.dataset)
 
-        self.setFixedHeight(self.CARD_HEIGHT)
+        self.thumbnail_label = Label()
+        self.thumbnail_label.setFixedHeight(150)
+        self.layout().set_thumbnail_widget(self.thumbnail_label)
 
-        self.labelMap = Label()
-        self.labelMap.setFixedHeight(150)
-
-        self.labelName = QLabel()
-        self.labelName.setWordWrap(True)
-        self.labelName.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.title_label = QLabel()
+        self.title_label.setWordWrap(True)
+        self.title_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
         thumbnail_url = self.dataset.get('thumbnail_url')
         if thumbnail_url:
             downloadThumbnail(thumbnail_url, self)
+
+        is_starred = self.dataset.get('is_starred', False)
+        self.star_button = StarButton(dataset_id=self.dataset['id'], checked=is_starred)
+
+        title_layout = QHBoxLayout()
+        title_layout.setContentsMargins(0, 0, 0, 0)
+        title_layout.addWidget(self.title_label, 1)
+        title_layout.addWidget(self.star_button)
+        self.layout().set_title_layout(title_layout)
 
         main_title_size = 11
         title_font_size = 11
@@ -225,7 +376,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             title_font_size = 14
             detail_font_size = 10
 
-        self.labelName.setText(
+        self.title_label.setText(
             f"""<p style="line-height: 130%;
                 font-size: {main_title_size}pt;
                 font-family: Arial, Sans"><b>{self.dataset.get("title", 'Layer')}</b><br>"""
@@ -260,8 +411,24 @@ class DatasetItemWidget(DatasetItemWidgetBase):
                     font-size: {detail_font_size}pt">{date.strftime("%d %b %Y")}</span>"""
             )
 
-        is_starred = self.dataset.get('is_starred', False)
-        self.star_button = StarButton(dataset_id=self.dataset['id'], checked=is_starred)
+        details_layout = QVBoxLayout()
+        details_layout.addStretch()
+        details_layout.setContentsMargins(0, 0, 0, 0)
+        if self.license_label:
+            details_layout.addWidget(self.license_label)
+
+        updated_layout = QHBoxLayout()
+        updated_layout.setContentsMargins(0, 0, 0, 0)
+
+        updated_layout.addWidget(self.labelUpdatedIcon)
+        updated_layout.addWidget(self.labelUpdated)
+        details_layout.addLayout(updated_layout)
+
+        self.layout().set_details_layout(details_layout)
+
+        buttons_layout = QHBoxLayout()
+        buttons_layout.setContentsMargins(0, 0, 0, 0)
+        buttons_layout.addStretch()
 
         base_style = self.styleSheet()
         base_style += """
@@ -276,13 +443,17 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         if Capability.Clone in capabilities:
             self.btnClone = CloneButton(self.dataset)
+            buttons_layout.addWidget(self.btnClone)
         else:
             self.btnClone = None
 
         if Capability.Add in capabilities:
             self.btnAdd = AddButton(self.dataset)
+            buttons_layout.addWidget(self.btnAdd)
         else:
             self.btnAdd = None
+
+        self.layout().set_button_layout(buttons_layout)
 
         self.bbox: Optional[QgsGeometry] = self._geomFromGeoJson(
             self.dataset.get("data", {}).get("extent"))
@@ -305,100 +476,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         if self.column_count >= 1 and use_narrow_cards == is_using_narrow_cards:
             return
 
-        self.column_count = count
-
-        if use_narrow_cards:
-            self.setFixedHeight(self.CARD_HEIGHT_TALL)
-
-            layout = QVBoxLayout()
-            layout.setContentsMargins(0, 0, 0, 0)
-            layout.addWidget(self.labelMap)
-
-            details_layout = QVBoxLayout()
-            details_layout.setContentsMargins(16, 12, 16, 16)
-            title_layout = QHBoxLayout()
-            title_layout.setContentsMargins(0, 0, 0, 0)
-            title_layout.addWidget(self.labelName, 1)
-            title_layout.addWidget(self.star_button)
-            title_layout.addStretch()
-            details_layout.addLayout(title_layout)
-            details_layout.addStretch()
-
-            if self.license_label:
-                details_layout.addWidget(self.license_label)
-
-            updated_layout = QHBoxLayout()
-            updated_layout.setContentsMargins(0, 0, 0, 0)
-
-            updated_layout.addWidget(self.labelUpdatedIcon)
-            updated_layout.addWidget(self.labelUpdated)
-            details_layout.addLayout(updated_layout)
-
-            buttonsLayout = QHBoxLayout()
-            buttonsLayout.setContentsMargins(0, 0, 0, 0)
-            buttonsLayout.addStretch()
-
-            details_layout.addLayout(buttonsLayout)
-
-            if self.btnClone:
-                buttonsLayout.addWidget(self.btnClone)
-            if self.btnAdd:
-                buttonsLayout.addWidget(self.btnAdd)
-            layout.addLayout(details_layout)
-        else:
-            self.setFixedHeight(self.CARD_HEIGHT)
-            self.setMinimumWidth(1)
-
-            vlayout = QVBoxLayout()
-            vlayout.setContentsMargins(11, 17, 15, 15)
-
-            top_layout = QHBoxLayout()
-            top_layout.setContentsMargins(0, 0, 0, 0)
-            top_layout.addWidget(self.labelName, 1)
-
-            vlayout.addLayout(top_layout)
-
-            buttonsLayout = QHBoxLayout()
-            buttonsLayout.setContentsMargins(0, 0, 0, 0)
-
-            vlayout.addLayout(buttonsLayout)
-
-            layout = QHBoxLayout()
-            layout.setContentsMargins(0, 0, 0, 0)
-            layout.addWidget(self.labelMap)
-            layout.addLayout(vlayout)
-
-            details_layout = QVBoxLayout()
-            details_layout.setContentsMargins(0, 0, 0, 0)
-            if self.license_label:
-                details_layout.addWidget(self.license_label)
-
-            updated_layout = QHBoxLayout()
-            updated_layout.setContentsMargins(0, 0, 0, 0)
-
-            updated_layout.addWidget(self.labelUpdatedIcon)
-            updated_layout.addWidget(self.labelUpdated)
-            details_layout.addLayout(updated_layout)
-
-            buttonsLayout.addLayout(details_layout)
-            buttonsLayout.addStretch()
-
-            star_layout = QVBoxLayout()
-            star_layout.setContentsMargins(0, 0, 0, 0)
-            star_layout.addWidget(self.star_button)
-            star_layout.addStretch()
-            top_layout.addLayout(star_layout)
-            buttonsLayout.addStretch()
-
-            if self.btnClone:
-                buttonsLayout.addWidget(self.btnClone)
-            if self.btnAdd:
-                buttonsLayout.addWidget(self.btnAdd)
-
-        self.layout_widget = QWidget()
-        self.layout_widget.setLayout(layout)
-        self._layout.takeAt(0)
-        self._layout.addWidget(self.layout_widget)
+        super().set_column_count(count)
         self.update_thumbnail()
 
     def setThumbnail(self, img: Optional[QImage]):
@@ -407,8 +485,8 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
     def update_thumbnail(self):
         thumbnail = self.process_thumbnail(self.raw_thumbnail)
-        self.labelMap.setFixedSize(thumbnail.size())
-        self.labelMap.setPixmap(QPixmap.fromImage(thumbnail))
+        self.thumbnail_label.setFixedSize(thumbnail.size())
+        self.thumbnail_label.setPixmap(QPixmap.fromImage(thumbnail))
 
     def process_thumbnail(self, img: Optional[QImage]) -> QImage:
         if self.column_count == 1:
@@ -541,10 +619,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
     def resizeEvent(self, event):
         super().resizeEvent(event)
 
-        if self.width() < 440 and self.column_count == 1:
-            self.labelMap.hide()
-        else:
-            self.labelMap.show()
+        if self.column_count > 1:
             self.update_thumbnail()
 
     def mousePressEvent(self, event):
