@@ -564,6 +564,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
             if self._current_context['type'] == 'user':
                 if KoordinatesClient.instance().user_details()["avatar_url"]:
+                    self.context_logo_label.circle = True
                     downloadThumbnail(KoordinatesClient.instance().user_details()["avatar_url"],
                                       self.context_logo_label)
                     self.context_logo_label.show()
@@ -579,6 +580,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
                 self.context_frame.set_color(QColor('#323233'))
                 self.context_header.setVisible(True)
             else:
+                self.context_logo_label.circle = False
                 downloadThumbnail(self._current_context["logo"],
                                   self.context_logo_label)
                 self.context_logo_label.show()

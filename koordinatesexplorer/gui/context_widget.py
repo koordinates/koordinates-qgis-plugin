@@ -43,6 +43,7 @@ class ContextIcon(QLabel):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.circle = False
         self.setFixedSize(QSize(ContextIcon.SIZE, ContextIcon.SIZE))
 
     def setThumbnail(self, image: QImage):
@@ -57,7 +58,7 @@ class ContextIcon(QLabel):
         painter = QPainter(rounded_image)
         painter.setRenderHint(QPainter.Antialiasing, True)
         painter.setPen(Qt.NoPen)
-        painter.setBrush(Qt.black)
+        painter.setBrush(Qt.red)
         painter.drawRoundedRect(0, 0, ContextIcon.SIZE, ContextIcon.SIZE,
                                 ContextIcon.CORNER_RADIUS, ContextIcon.CORNER_RADIUS)
         painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
@@ -72,6 +73,7 @@ class ContextLogo(QLabel):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.circle = False
 
     def setThumbnail(self, image: QImage):
         if image.height() > ContextLogo.LOGO_HEIGHT:
@@ -83,7 +85,24 @@ class ContextLogo(QLabel):
 
         self.setFixedWidth(image.width())
 
-        self.setPixmap(QPixmap.fromImage(image))
+        if self.circle:
+            image = image.convertToFormat(QImage.Format_ARGB32)
+
+            # round corners of image
+            rounded_image = QImage(ContextIcon.SIZE, ContextIcon.SIZE, QImage.Format_ARGB32)
+            rounded_image.fill(Qt.transparent)
+            painter = QPainter(rounded_image)
+            painter.setRenderHint(QPainter.Antialiasing, True)
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(Qt.red)
+            painter.drawEllipse(0, 0, ContextIcon.SIZE, ContextIcon.SIZE)
+            painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
+            painter.drawImage(0, 0, image)
+            painter.end()
+
+            self.setPixmap(QPixmap.fromImage(rounded_image))
+        else:
+            self.setPixmap(QPixmap.fromImage(image))
 
 
 class ContextItem(QFrame):
@@ -112,6 +131,7 @@ class ContextItem(QFrame):
                     QColor(0, 0, 0)
                 ))
         elif self._details.get('type') == 'user':
+            self.icon_label.circle = True
             downloadThumbnail(KoordinatesClient.instance().user_details()["avatar_url"],
                               self.icon_label)
         elif self._details.get('org') and self._details['org'].get('logo_square_url'):
