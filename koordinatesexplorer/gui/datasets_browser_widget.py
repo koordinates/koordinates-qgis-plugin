@@ -65,6 +65,7 @@ class DatasetsBrowserWidget(QWidget):
         self._load_more_widget = None
         self._no_records_widget = None
         self._datasets = []
+        self.setMinimumWidth(370)
 
     def cancel_active_requests(self):
         """

@@ -226,7 +226,7 @@ class DatasetItemLayout(QLayout):
                 self.details_container.setGeometry(
                     QRect(
                         left, 80,
-                        120,
+                        105,
                         61
                     )
                 )
@@ -234,8 +234,8 @@ class DatasetItemLayout(QLayout):
             if self.button_container:
                 self.button_container.setGeometry(
                     QRect(
-                        left + 128, 103,
-                        rect.width() - left - 128 - 10,
+                        left + 103, 103,
+                        rect.width() - left - 103 - 10,
                         38
                     )
                 )
