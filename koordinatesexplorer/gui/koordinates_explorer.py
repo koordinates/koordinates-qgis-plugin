@@ -31,7 +31,7 @@ from qgis.PyQt.QtWidgets import (
     QWidget,
     QLabel,
     QStylePainter,
-    QStyleOptionTabV4,
+    QStyleOptionTab,
     QStyleOptionTabBarBase,
     QStyle,
     QLayout,
@@ -72,7 +72,7 @@ class CustomTab(QTabBar):
     def paintEvent(self, event):
 
         painter = QStylePainter(self)
-        tab_overlap = QStyleOptionTabV4()
+        tab_overlap = QStyleOptionTab()
         tab_overlap.shape = self.shape()
 
         option = QStyleOptionTabBarBase()
@@ -83,7 +83,7 @@ class CustomTab(QTabBar):
         painter.drawPrimitive(QStyle.PE_FrameTabBarBase, option)
 
         for i in range(4):
-            option = QStyleOptionTabV4()
+            option = QStyleOptionTab()
             self.initStyleOption(option, i)
 
             if i > 0:
