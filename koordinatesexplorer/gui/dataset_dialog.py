@@ -335,7 +335,7 @@ class AttachmentWidget(QFrame):
 
         label.setText(
             f"""<span style="font-family: {FONT_FAMILIES};
-            font-weight: bold;
+            font-weight: 500;
             font-size: {base_font_size}pt;">{title}</span>"""
         )
         hl = QHBoxLayout()
@@ -402,7 +402,7 @@ class MetadataWidget(QFrame):
 
         label.setText(
             f"""<span style="font-family: {FONT_FAMILIES};
-            font-weight: bold;
+            font-weight: 500;
             font-size: {base_font_size}pt;">{title}</span>"""
         )
         hl = QHBoxLayout()
@@ -512,7 +512,7 @@ class DatasetDialog(QDialog):
         self.label_title = QLabel()
         self.label_title.setText(
             f"""<span style="font-family: {FONT_FAMILIES};
-            font-weight: bold;
+            font-weight: 500;
             font-size: {title_font_size}pt;">{dataset.get('title', '')}</span>"""
         )
         title_hl.addWidget(self.label_title, 1)
@@ -707,6 +707,9 @@ class DatasetDialog(QDialog):
             }}
             a {{
             color: rgb(50, 50, 50);
+            }}
+            strong {{ 
+             font-weight: 500;
             }}
             </style>
         """.format(FONT_FAMILIES, self.description_font_size)
