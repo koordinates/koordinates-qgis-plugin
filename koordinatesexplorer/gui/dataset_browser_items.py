@@ -173,7 +173,7 @@ class DatasetItemLayout(QLayout):
             if self.title_container:
                 self.title_container.setGeometry(
                     QRect(
-                        17, 155,
+                        17, 165,
                         rect.width() - 17 * 2,
                         60
                     )
@@ -182,7 +182,7 @@ class DatasetItemLayout(QLayout):
             if self.details_container:
                 self.details_container.setGeometry(
                     QRect(
-                        17, 200,
+                        17, 213,
                         rect.width() - 17 * 2,
                         56
                     )
