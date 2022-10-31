@@ -70,6 +70,8 @@ class DatasetItemLayout(QLayout):
         self.title_container = None
         self.details_container = None
         self.button_container = None
+        self.star_button = None
+        self.star_button_item = None
 
         self.use_narrow_cards = False
 
@@ -94,6 +96,12 @@ class DatasetItemLayout(QLayout):
         self.addChildLayout(layout)
         self.invalidate()
 
+    def set_star_button(self, widget):
+        self.star_button = widget
+        self.star_button_item = QWidgetItem(widget)
+        self.addChildWidget(widget)
+        self.invalidate()
+
     def addItem(self, item):
         pass
 
@@ -107,6 +115,8 @@ class DatasetItemLayout(QLayout):
             res += 1
         if self.button_container:
             res += 1
+        if self.star_button:
+            res += 1
         return res
 
     def itemAt(self, index):
@@ -118,6 +128,8 @@ class DatasetItemLayout(QLayout):
             return self.details_container
         elif index == 3:
             return self.button_container
+        elif index == 4:
+            return self.star_button_item
 
     def takeAt(self, index: int):
         if index == 0:
@@ -137,6 +149,12 @@ class DatasetItemLayout(QLayout):
         elif index == 3:
             res = self.button_container
             self.button_container = None
+            return res
+        elif index == 4:
+            res = self.star_button_item
+            self.star_button_item = None
+            self.star_button.deleteLater()
+            self.star_button = None
             return res
         return None
 
@@ -174,8 +192,17 @@ class DatasetItemLayout(QLayout):
                 self.title_container.setGeometry(
                     QRect(
                         17, 165,
-                        rect.width() - 17 * 2,
+                        rect.width() - 17 * 2 - 20,
                         60
+                    )
+                )
+
+            if self.star_button_item:
+                self.star_button_item.setGeometry(
+                    QRect(
+                        rect.width() - 40, 162,
+                        30,
+                        20
                     )
                 )
 
@@ -219,6 +246,15 @@ class DatasetItemLayout(QLayout):
                         left, 15,
                         rect.width() - left - 10,
                         60
+                    )
+                )
+
+            if self.star_button_item:
+                self.star_button_item.setGeometry(
+                    QRect(
+                        rect.width() - 40, 12,
+                        30,
+                        20
                     )
                 )
 
@@ -360,11 +396,11 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         is_starred = self.dataset.get('is_starred', False)
         self.star_button = StarButton(dataset_id=self.dataset['id'], checked=is_starred)
+        self.layout().set_star_button(self.star_button)
 
         title_layout = QHBoxLayout()
         title_layout.setContentsMargins(0, 0, 0, 0)
         title_layout.addWidget(self.title_label, 1)
-        title_layout.addWidget(self.star_button)
         self.layout().set_title_layout(title_layout)
 
         main_title_size = 11
