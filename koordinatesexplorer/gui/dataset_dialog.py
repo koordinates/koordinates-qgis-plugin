@@ -708,7 +708,7 @@ class DatasetDialog(QDialog):
             a {{
             color: rgb(50, 50, 50);
             }}
-            strong {{ 
+            strong {{
              font-weight: 500;
             }}
             </style>
