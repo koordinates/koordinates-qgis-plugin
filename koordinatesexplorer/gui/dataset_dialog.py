@@ -237,11 +237,12 @@ class HeaderWidget(QFrame):
             f"""<p style="line-height: 130%;
             font-size: 10pt;
             color: rgba(255,255,255,0.7);
-            font-family: {FONT_FAMILIES}"""
-            """><b>{self.dataset.get('publisher', {}).get('name')}</b><br>"""
+            font-family: {FONT_FAMILIES}" """
+            f"""><b>{self.dataset.get('publisher', {}).get('name')}</b><br>"""
             f"""<span style="
         font-size: 10pt;
-        font-family: {FONT_FAMILIES}"
+        font-family: {FONT_FAMILIES};
+        color: rgba(255,255,255,0.8);"
         >via {self.dataset.get("publisher").get('site', {}).get("name")}</span></p>"""
         )
 
