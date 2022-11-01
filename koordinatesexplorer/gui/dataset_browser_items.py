@@ -631,26 +631,31 @@ class DatasetItemWidget(DatasetItemWidgetBase):
                                                         int(20 * scale_factor)))
 
         description = DatasetGuiUtils.get_type_description(self.dataset)
+
+        overlay_font_size = 7.5
+        if platform.system() == 'Darwin':
+            overlay_font_size = 9
+
         if description:
             font = QFont('Arial')
-            font.setPixelSize(int(10 / scale_factor))
+            font.setPointSizeF(overlay_font_size / scale_factor)
             font.setBold(True)
             painter.setFont(font)
 
             painter.setBrush(Qt.NoBrush)
             painter.setPen(QPen(QColor(255, 255, 255)))
-            painter.drawText(QPointF(47, 113), description)
+            painter.drawText(QPointF(47, 112), description)
 
         subtitle = DatasetGuiUtils.get_subtitle(self.dataset)
         if subtitle:
             font = QFont('Arial')
-            font.setPixelSize(int(10 / scale_factor))
+            font.setPointSizeF(overlay_font_size / scale_factor)
             font.setBold(False)
             painter.setFont(font)
 
             painter.setBrush(Qt.NoBrush)
             painter.setPen(QPen(QColor(255, 255, 255)))
-            painter.drawText(QPointF(47, 127), subtitle)
+            painter.drawText(QPointF(47, 126), subtitle)
 
         painter.end()
         return base
