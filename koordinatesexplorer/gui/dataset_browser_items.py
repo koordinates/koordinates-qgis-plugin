@@ -529,9 +529,10 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
     def process_thumbnail(self, img: Optional[QImage]) -> QImage:
         if self.column_count == 1:
-            size = QSize(self.THUMBNAIL_SIZE, self.THUMBNAIL_SIZE)
+            # sizes here account for borders, hence height is + 2
+            size = QSize(self.THUMBNAIL_SIZE, self.THUMBNAIL_SIZE + 2)
         else:
-            size = QSize(self.width() - 2, self.THUMBNAIL_SIZE)
+            size = QSize(self.width(), self.THUMBNAIL_SIZE)
 
         target = QImage(size, QImage.Format_ARGB32)
         target.fill(Qt.transparent)
