@@ -88,7 +88,7 @@ class CloneButton(ActionButton):
                 title='Clone — {}'.format(title),
                 message='To clone cloud-hosted data to your local drive, please request access.',
                 action='Request access',
-                url='https://m.koordinates.com/beta-karthub-request')
+                url='https://m.koordinates.com/request-kart-features')
             dlg.exec_()
             return
 
