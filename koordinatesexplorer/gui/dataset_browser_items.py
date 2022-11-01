@@ -244,7 +244,7 @@ class DatasetItemLayout(QLayout):
                 self.title_container.setGeometry(
                     QRect(
                         left, 15,
-                        rect.width() - left - 10,
+                        rect.width() - left - 40,
                         60
                     )
                 )
