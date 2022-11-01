@@ -398,7 +398,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         self.filter_widget.clear_all.connect(self._clear_all_filters)
         self.filter_widget.clear_all.connect(self.advanced_filter_widget.clear_all)
 
-        if os.name == 'nt':
+        if os.name == 'nt' or self.screen().devicePixelRatio() > 1:
             self.button_sort_order.setStyleSheet(
                 'QToolButton { padding-right: 30px; padding-left: 0px; }'
             )
