@@ -85,12 +85,16 @@ class CustomTab(QTabBar):
             option = QStyleOptionTab()
             self.initStyleOption(option, i)
 
-            if i > 0:
-                painter.drawControl(QStyle.CE_TabBarTab, option)
-            else:
+            if i == 0:
                 painter.drawControl(QStyle.CE_TabBarTabShape, option)
                 painter.drawPixmap(option.rect.center().x() - 7, option.rect.center().y() - 8,
                                    GuiUtils.get_icon_pixmap('star_filled.svg'))
+            elif i == 3:
+                painter.drawControl(QStyle.CE_TabBarTabShape, option)
+                painter.drawPixmap(option.rect.center().x() - 7, option.rect.center().y() - 8,
+                                   GuiUtils.get_icon_pixmap('context_switcher.svg'))
+            else:
+                painter.drawControl(QStyle.CE_TabBarTab, option)
 
 
 class NoMouseReleaseMenu(QMenu):
