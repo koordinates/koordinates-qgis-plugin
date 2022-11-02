@@ -293,6 +293,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
         self.context_tab.setTabIcon(self.TAB_STARRED_INDEX, GuiUtils.get_icon('star_filled.svg'))
         self.context_tab.setTabToolTip(self.TAB_STARRED_INDEX, 'Starred')
         self.context_tab.setDrawBase(True)
+        self.context_tab_container.setFixedHeight(self.context_tab.sizeHint().height())
 
         self.context_frame = ColoredFrame()
         context_frame_layout = QVBoxLayout()
