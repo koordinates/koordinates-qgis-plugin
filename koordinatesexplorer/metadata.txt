@@ -1,5 +1,5 @@
 [general]
-name=Koordinates Explorer
+name=Koordinates
 qgisMinimumVersion=3.16
 description=Work with the Koordinates catalog repositories directly from QGIS.
 about=
