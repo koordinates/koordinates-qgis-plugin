@@ -231,16 +231,21 @@ class HeaderWidget(QFrame):
 
         hl.addWidget(url_frame, 1)
 
+        font_scale = self.screen().logicalDotsPerInch() / 92
+        org_font_size = 10
+        if font_scale > 1:
+            org_font_size = int(12 / font_scale)
+
         org_details_label = QLabel()
         org_details_label.setStyleSheet('padding-left: 10px;')
         org_details_label.setText(
             f"""<p style="line-height: 130%;
-            font-size: 10pt;
+            font-size: {org_font_size}pt;
             color: rgba(255,255,255,0.7);
             font-family: {FONT_FAMILIES}" """
             f"""><b>{self.dataset.get('publisher', {}).get('name')}</b><br>"""
             f"""<span style="
-        font-size: 10pt;
+        font-size: {org_font_size}pt;
         font-family: {FONT_FAMILIES};
         color: rgba(255,255,255,0.8);"
         >via {self.dataset.get("publisher").get('site', {}).get("name")}</span></p>"""

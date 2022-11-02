@@ -430,7 +430,8 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
         self.button_sort_order.setMenu(self.sort_menu)
         smaller_font = self.button_sort_order.font()
-        smaller_font.setPointSize(smaller_font.pointSize() - 1)
+        smaller_font_size = max(smaller_font.pointSize() - 1, 7)
+        smaller_font.setPointSize(smaller_font_size)
         self.button_sort_order.setFont(smaller_font)
 
         self.label_count.setFont(smaller_font)

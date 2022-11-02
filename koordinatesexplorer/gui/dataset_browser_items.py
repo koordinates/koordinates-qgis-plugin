@@ -245,7 +245,7 @@ class DatasetItemLayout(QLayout):
                     QRect(
                         left, 15,
                         rect.width() - left - 40,
-                        60
+                        90
                     )
                 )
 
@@ -380,6 +380,8 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.dataset = dataset
         self.raw_thumbnail = None
 
+        font_scale = self.screen().logicalDotsPerInch() / 92
+
         self.dataset_type: DataType = ApiUtils.data_type_from_dataset_response(self.dataset)
 
         self.thumbnail_label = Label()
@@ -411,6 +413,10 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             main_title_size = 14
             title_font_size = 14
             detail_font_size = 10
+        elif font_scale > 1:
+            main_title_size = int(12 / font_scale)
+            title_font_size = int(12 / font_scale)
+            detail_font_size = int(10 / font_scale)
 
         self.title_label.setText(
             f"""<p style="line-height: 130%;
@@ -633,9 +639,13 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         description = DatasetGuiUtils.get_type_description(self.dataset)
 
+        font_scale = self.screen().logicalDotsPerInch() / 92
+
         overlay_font_size = 7.5
         if platform.system() == 'Darwin':
             overlay_font_size = 9
+        elif font_scale > 1:
+            overlay_font_size = 7.5 / font_scale
 
         if description:
             font = QFont('Arial')
