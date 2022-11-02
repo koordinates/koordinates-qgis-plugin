@@ -215,6 +215,11 @@ class TestDataBrowser(unittest.TestCase):
                          {'sort': 'popularity', 'is_imagery': False, 'kind': 'raster',
                           'raster_band': 'alpha'})
 
+        query.data_types = {DataType.Rasters, DataType.Grids}
+        self.assertEqual(query.build_query(),
+                         {'sort': 'popularity', 'is_imagery': False,
+                          'kind': ['attribute-grid', 'grid', 'raster']})
+
     def test_grid_filters(self):
         query = DataBrowserQuery()
         query.data_types = {DataType.Grids}

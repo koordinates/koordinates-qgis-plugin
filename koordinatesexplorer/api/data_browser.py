@@ -118,8 +118,11 @@ class DataBrowserQuery:
                     elif raster_band_filter == RasterBandFilter.BlackAndWhite:
                         raster_band_filters = ['gray']
 
-        if RasterFilterOptions.WithAlphaChannel in self.raster_filter_options:
+        if RasterFilterOptions.WithAlphaChannel in self.raster_filter_options \
+                and self.data_types == {DataType.Rasters}:
             raster_band_filters.append('alpha')
+
+
 
         if len(raster_band_filters) > 1:
             params["raster_band"] = sorted(raster_band_filters)
