@@ -115,7 +115,7 @@ class DatasetGuiUtils:
         data_type = ApiUtils.data_type_from_dataset_response(dataset)
         if data_type == DataType.Vectors:
 
-            count = dataset.get("data", {}).get("feature_count", 0)
+            count = dataset.get("data", {}).get("feature_count") or 0
 
             if dataset.get('data', {}).get('geometry_type') in (
                     'polygon', 'multipolygon'):
@@ -126,12 +126,12 @@ class DatasetGuiUtils:
                     'linestring', 'multilinestring'):
                 return '{} Lines'.format(DatasetGuiUtils.format_count(count))
         elif data_type in (DataType.Rasters, DataType.Grids):
-            count = dataset.get("data", {}).get("feature_count", 0)
-            res = dataset.get("data", {}).get("raster_resolution", 0)
+            count = dataset.get("data", {}).get("feature_count") or 0
+            res = dataset.get("data", {}).get("raster_resolution") or 0
             return '{}m, {} Tiles'.format(res,
                                           DatasetGuiUtils.format_count(count))
         elif data_type == DataType.Tables:
-            count = dataset.get("data", {}).get("feature_count", 0)
+            count = dataset.get("data", {}).get("feature_count") or 0
             return '{} Rows'.format(DatasetGuiUtils.format_count(count))
         elif data_type == DataType.Documents:
             ext = dataset.get('extension', '').upper()
