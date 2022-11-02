@@ -15,8 +15,7 @@ from qgis.PyQt.QtCore import (
 from qgis.PyQt.QtGui import (
     QDesktopServices,
     QPalette,
-    QColor,
-    QCursor
+    QColor
 )
 from qgis.PyQt.QtNetwork import QNetworkReply
 from qgis.PyQt.QtWidgets import (
@@ -92,6 +91,16 @@ class CustomTab(QTabBar):
                 painter.drawControl(QStyle.CE_TabBarTabShape, option)
                 painter.drawPixmap(option.rect.center().x() - 7, option.rect.center().y() - 8,
                                    GuiUtils.get_icon_pixmap('star_filled.svg'))
+
+
+class NoMouseReleaseMenu(QMenu):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def mouseReleaseEvent(self, event):
+        # don't dismiss menu on release events
+        event.accept()
 
 
 class ReponsiveLayout(QLayout):
@@ -512,7 +521,16 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
             self.responsive_layout.update()
 
     def _show_context_switcher_menu(self):
-        menu = QMenu()
+        # because this menu will be shown in a fix location (center of tab), we
+        # don't allow it to be dismissed via a mouse release event
+        # otherwise the menu may pop up under the mouse location and so the initial
+        # click to show will cause the menu to immediately get dismissed when the click
+        # is released
+        menu = NoMouseReleaseMenu()
+
+        tab_rect = self.context_tab.tabRect(3)
+
+        tab_center = self.context_tab.mapToGlobal(tab_rect.center())
 
         current_context_tab = self.context_tab.tabData(self.context_tab.count() - 2)
 
@@ -527,7 +545,7 @@ class KoordinatesExplorer(QgsDockWidget, WIDGET):
 
             menu.addAction(w)
 
-        menu.exec_(QCursor.pos())
+        menu.exec_(tab_center)
 
     def _set_visible_context(self, details):
         self.context_tab.setTabText(self.context_tab.count() - 2,

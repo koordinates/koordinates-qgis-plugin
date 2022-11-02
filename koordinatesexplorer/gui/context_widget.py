@@ -174,7 +174,7 @@ class ContextItem(QFrame):
 
         self.update()
 
-    def mouseReleaseEvent(self, event):
+    def mousePressEvent(self, event):
         if event.button() != Qt.LeftButton:
             return
 
