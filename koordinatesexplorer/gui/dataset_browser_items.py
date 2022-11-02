@@ -540,7 +540,12 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         else:
             size = QSize(self.width(), self.THUMBNAIL_SIZE)
 
-        target = QImage(size, QImage.Format_ARGB32)
+        image_size = size
+        scale_factor = self.screen().devicePixelRatio()
+        if scale_factor > 1:
+            image_size *= scale_factor
+
+        target = QImage(image_size, QImage.Format_ARGB32)
         target.fill(Qt.transparent)
 
         painter = QPainter(target)
@@ -594,14 +599,21 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
 
         if img is not None:
-            rect = QRect(300, 15, 600, 600)
-            thumbnail = QPixmap(img)
-            cropped = thumbnail.copy(rect)
+            resized = img.scaled(image_size.width(),
+                                 image_size.height(),
+                                 Qt.KeepAspectRatioByExpanding,
+                                 Qt.SmoothTransformation)
+            if resized.width() > image_size.width():
+                left = int((resized.width() - image_size.width())/2)
+            else:
+                left = 0
+            if resized.height() > image_size.height():
+                top = int((resized.height() - image_size.height()) / 2)
+            else:
+                top = 0
 
-            thumb = cropped.scaled(
-                size.width(), size.height(), Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation
-            )
-            painter.drawPixmap(0, 0, thumb)
+            cropped = resized.copy(QRect(left, top, image_size.width(), image_size.height()))
+            painter.drawImage(0, 0, cropped)
         else:
             painter.setBrush(QBrush(QColor('#cccccc')))
             painter.setPen(Qt.NoPen)
@@ -609,17 +621,12 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         painter.end()
 
-        scale_factor = self.screen().devicePixelRatio()
-
-        scaled_image = target.scaled(int(scale_factor * target.width()),
-                                     int(scale_factor * target.height()))
-
-        scaled_image.setDevicePixelRatio(self.screen().devicePixelRatio())
-        scaled_image.setDotsPerMeterX(
-            int(scaled_image.dotsPerMeterX() * scale_factor))
-        scaled_image.setDotsPerMeterY(int(
-            scaled_image.dotsPerMeterY() * scale_factor))
-        base = scaled_image
+        target.setDevicePixelRatio(scale_factor)
+        target.setDotsPerMeterX(
+            int(target.dotsPerMeterX() * scale_factor))
+        target.setDotsPerMeterY(int(
+            target.dotsPerMeterY() * scale_factor))
+        base = target
 
         painter = QPainter(base)
         painter.setRenderHint(QPainter.Antialiasing, True)

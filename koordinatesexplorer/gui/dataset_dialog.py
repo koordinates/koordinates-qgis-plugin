@@ -779,7 +779,12 @@ class DatasetDialog(QDialog):
         return res
 
     def setThumbnail(self, img):
-        target = QImage(self.thumbnail_label.size(), QImage.Format_ARGB32)
+        image_size = self.thumbnail_label.size()
+        scale_factor = self.screen().devicePixelRatio()
+        if scale_factor > 1:
+            image_size *= scale_factor
+
+        target = QImage(image_size, QImage.Format_ARGB32)
         target.fill(Qt.transparent)
 
         painter = QPainter(target)
@@ -790,20 +795,26 @@ class DatasetDialog(QDialog):
 
         painter.setPen(Qt.NoPen)
         painter.setBrush(QBrush(QColor(255, 0, 0)))
-        painter.drawRoundedRect(0, 0, target.width(), target.height(), 9, 9)
+        painter.drawRoundedRect(0, 0, image_size.width(), image_size.height(), 9, 9)
 
         painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
 
         if img is not None:
-            rect = QRect(300, 87, 600, 457)
-            thumbnail = QPixmap(img)
-            cropped = thumbnail.copy(rect)
+            resized = img.scaled(image_size.width(),
+                                 image_size.height(),
+                                 Qt.KeepAspectRatioByExpanding,
+                                 Qt.SmoothTransformation)
+            if resized.width() > image_size.width():
+                left = int((resized.width() - image_size.width()) / 2)
+            else:
+                left = 0
+            if resized.height() > image_size.height():
+                top = int((resized.height() - image_size.height()) / 2)
+            else:
+                top = 0
 
-            thumb = cropped.scaled(
-                target.width(), target.height(), Qt.KeepAspectRatioByExpanding,
-                Qt.SmoothTransformation
-            )
-            painter.drawPixmap(0, 0, thumb)
+            cropped = resized.copy(QRect(left, top, image_size.width(), image_size.height()))
+            painter.drawImage(0, 0, cropped)
         else:
             painter.setBrush(QBrush(QColor('#cccccc')))
             painter.setPen(Qt.NoPen)
@@ -812,4 +823,6 @@ class DatasetDialog(QDialog):
         painter.end()
 
         thumbnail = QPixmap.fromImage(target)
+        thumbnail.setDevicePixelRatio(scale_factor)
+
         self.thumbnail_label.setPixmap(thumbnail)
