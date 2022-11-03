@@ -58,6 +58,7 @@ def cloneKartRepo(title: str, url, username, password, parent):
 
         CURRENT_CLONE_DIALOG.clone.connect(on_accept)
         CURRENT_CLONE_DIALOG.was_canceled.connect(on_reject)
+        CURRENT_CLONE_DIALOG.destroyed.connect(on_reject)
 
         el.exec_()
 
