@@ -81,7 +81,7 @@ class CustomTab(QTabBar):
         option.rect = QRect(0, self.height() - 2, self.width(), 2)
         painter.drawPrimitive(QStyle.PE_FrameTabBarBase, option)
 
-        for i in range(4):
+        for i in range(self.count()):
             option = QStyleOptionTab()
             self.initStyleOption(option, i)
 
