@@ -1,4 +1,5 @@
 from typing import Optional
+import platform
 
 from qgis.PyQt.QtCore import (
     QSize,
@@ -185,18 +186,24 @@ class CountryWidget(QWidget):
 
         fm = QFontMetrics(self.font())
         left_space = int(fm.width('x') * 4.5)
-        icon_space = int(QFontMetrics(self._emoji_font).width(self._country) * 1.5)
+
+        if platform.system() != 'Windows':
+            icon_space = int(QFontMetrics(self._emoji_font).width(self._country) * 1.5)
+        else:
+            icon_space = 0
+
         bottom_pad = int(fm.height() * 0.5)
 
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setFont(self._emoji_font)
-        painter.drawText(
-            QRect(
-                left_space, 0,
-                icon_space, self.height() - bottom_pad
-            ), Qt.AlignLeft | Qt.AlignVCenter,
-            flag.flag(self._country))
+        if platform.system() != 'Windows':
+            painter.setFont(self._emoji_font)
+            painter.drawText(
+                QRect(
+                    left_space, 0,
+                    icon_space, self.height() - bottom_pad
+                ), Qt.AlignLeft | Qt.AlignVCenter,
+                flag.flag(self._country))
 
         name_font = self.font()
         name_font.setPointSizeF(10)
