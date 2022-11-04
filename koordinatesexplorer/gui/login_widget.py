@@ -2,34 +2,16 @@ from typing import Optional
 import platform
 
 from qgis.PyQt import sip
-from qgis.PyQt.QtCore import (
-    QSize,
-    QTimer
-)
-from qgis.PyQt.QtSvg import (
-    QSvgWidget
-)
-from qgis.PyQt.QtWidgets import (
-    QFrame,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
-    QWidget
-)
-from qgis.core import (
-    Qgis,
-    QgsApplication,
-    QgsSettings
-)
+from qgis.PyQt.QtCore import QSize, QTimer
+from qgis.PyQt.QtSvg import QSvgWidget
+from qgis.PyQt.QtWidgets import QFrame, QVBoxLayout, QHBoxLayout, QLabel, QWidget
+from qgis.core import Qgis, QgsApplication, QgsSettings
 from qgis.utils import iface
 
 from .action_button import ActionButton
 from .gui_utils import GuiUtils
 from ..api import KoordinatesClient
-from ..auth import (
-    OAuthWorkflow,
-    AuthState
-)
+from ..auth import OAuthWorkflow, AuthState
 
 AUTH_CONFIG_ID = "koordinates_auth_id"
 
@@ -56,30 +38,35 @@ class LoginButton(ActionButton):
         self._state = state
 
         if state == AuthState.LoggedOut:
-            self.setText('Login with your Koordinates ID')
+            self.setText("Login with your Koordinates ID")
         elif state == AuthState.LoggingIn:
-            self.setText('Authorizing')
+            self.setText("Authorizing")
         elif state == AuthState.LoggedIn:
-            self.setText('Login with your Koordinates ID')
+            self.setText("Login with your Koordinates ID")
 
         if state == AuthState.LoggedOut:
-            self.setStyleSheet(self.BASE_STYLE.format(
-                self.BUTTON_COLOR,
-                self.BUTTON_OUTLINE,
-                self.BUTTON_TEXT,
-                self.BUTTON_HOVER))
+            self.setStyleSheet(
+                self.BASE_STYLE.format(
+                    self.BUTTON_COLOR,
+                    self.BUTTON_OUTLINE,
+                    self.BUTTON_TEXT,
+                    self.BUTTON_HOVER,
+                )
+            )
             self.setEnabled(True)
         else:
-            self.setStyleSheet(self.BASE_STYLE.format(
-                self.BUTTON_DISABLED_COLOR,
-                self.BUTTON_DISABLED_OUTLINE,
-                self.BUTTON_DISABLED_TEXT,
-                self.BUTTON_DISABLED_HOVER))
+            self.setStyleSheet(
+                self.BASE_STYLE.format(
+                    self.BUTTON_DISABLED_COLOR,
+                    self.BUTTON_DISABLED_OUTLINE,
+                    self.BUTTON_DISABLED_TEXT,
+                    self.BUTTON_DISABLED_HOVER,
+                )
+            )
             self.setEnabled(False)
 
 
 class LoginWidget(QFrame):
-
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -88,25 +75,31 @@ class LoginWidget(QFrame):
 
         self.setFrameShape(QFrame.NoFrame)
 
-        self.setStyleSheet("""LoginWidget {
+        self.setStyleSheet(
+            """LoginWidget {
          background-color: white;
          border: 1px solid rgb(180, 180, 180);
-          }""")
+          }"""
+        )
 
         vl = QVBoxLayout()
         vl.setContentsMargins(0, 0, 0, 0)
 
         top_frame = QFrame()
         top_frame.setFrameShape(QFrame.NoFrame)
-        top_frame.setStyleSheet("""
+        top_frame.setStyleSheet(
+            """
          background-color: #323233;
-        """)
+        """
+        )
         top_frame.setFixedHeight(270)
 
         top_frame_layout = QVBoxLayout()
         top_frame_layout.setContentsMargins(38, 0, 0, 25)
         top_frame_layout.addStretch(1)
-        koordinates_logo_widget = QSvgWidget(GuiUtils.get_icon_svg('koordinates_logo_white.svg'))
+        koordinates_logo_widget = QSvgWidget(
+            GuiUtils.get_icon_svg("koordinates_logo_white.svg")
+        )
         koordinates_logo_widget.setFixedSize(QSize(182, 52))
 
         top_frame_layout.addWidget(koordinates_logo_widget)
@@ -122,11 +115,13 @@ class LoginWidget(QFrame):
         self.login_label.setWordWrap(True)
         font = self.font()
         font.setPointSize(10)
-        self.login_label.setText("""<style>
+        self.login_label.setText(
+            """<style>
         p { line-height: 1.3; }
         </style><p>Login to your Koordinates account to get started.</p>
         <p>The next step will open a web browser and might require you to sign in to your
-        Koordinates account.</p>""")
+        Koordinates account.</p>"""
+        )
         self.login_label.setFont(font)
         contents_layout.addWidget(self.login_label)
         contents_layout.addSpacing(18)
@@ -155,7 +150,8 @@ class LoginWidget(QFrame):
             a {color: #868889;}
             </style><span
             style="color: #868889;">Need to create a Koordinates ID? <a
-            href="https://id.koordinates.com/signup">Sign Up</a></span>""")
+            href="https://id.koordinates.com/signup">Sign Up</a></span>"""
+        )
         signup_label.setFont(font)
         signup_label.setOpenExternalLinks(True)
         contents_layout.addWidget(signup_label)
@@ -170,7 +166,8 @@ class LoginWidget(QFrame):
             </style><span
             style="color: #868889;"><a
             href="https://koordinates.com/privacy-policy/">Privacy Policy</a> • <a
-            href="https://koordinates.com/terms-of-use/">Terms of Use</a></span>""")
+            href="https://koordinates.com/terms-of-use/">Terms of Use</a></span>"""
+        )
         tos_label.setFont(font)
         tos_label.setOpenExternalLinks(True)
         contents_layout.addWidget(tos_label)
@@ -282,8 +279,8 @@ class LoginWidget(QFrame):
         )
 
     def remove_api_key(self):
-        if platform.system() == 'Darwin':
-            # remove stored plain text tokens on MacOS as keychain isn't available due to MacOS security
+        if platform.system() == "Darwin":
+            # remove stored plain text tokens on MacOS
             QgsSettings().remove("koordinates/token", QgsSettings.Plugins)
         else:
             QgsApplication.authManager().removeAuthSetting(AUTH_CONFIG_ID)
@@ -295,7 +292,7 @@ class LoginWidget(QFrame):
         Returns True if the key could be stored
         """
         key = KoordinatesClient.instance().apiKey
-        if platform.system() == 'Darwin':
+        if platform.system() == "Darwin":
             # store tokens in plain text on MacOS as keychain isn't available due to MacOS security
             QgsSettings().setValue("koordinates/token", key, QgsSettings.Plugins)
         else:
@@ -308,15 +305,17 @@ class LoginWidget(QFrame):
 
         Returns None if no stored key is available
         """
-        if platform.system() == 'Darwin':
-            api_key = QgsSettings().value("koordinates/token", None, str, QgsSettings.Plugins)
+        if platform.system() == "Darwin":
+            api_key = QgsSettings().value(
+                "koordinates/token", None, str, QgsSettings.Plugins
+            )
             if not api_key:
                 api_key = None
         else:
             api_key = (
-                    QgsApplication.authManager().authSetting(
-                        AUTH_CONFIG_ID, defaultValue="", decrypt=True
-                    )
-                    or None
+                QgsApplication.authManager().authSetting(
+                    AUTH_CONFIG_ID, defaultValue="", decrypt=True
+                )
+                or None
             )
         return api_key
