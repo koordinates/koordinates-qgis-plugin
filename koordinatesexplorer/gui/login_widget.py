@@ -282,7 +282,11 @@ class LoginWidget(QFrame):
         )
 
     def remove_api_key(self):
-        QgsApplication.authManager().removeAuthSetting(AUTH_CONFIG_ID)
+        if platform.system() == 'Darwin':
+            # remove stored plain text tokens on MacOS as keychain isn't available due to MacOS security
+            QgsSettings().remove("koordinates/token", QgsSettings.Plugins)
+        else:
+            QgsApplication.authManager().removeAuthSetting(AUTH_CONFIG_ID)
 
     def store_api_key(self) -> bool:
         """
