@@ -9,9 +9,9 @@ To install the latest version from this repository, follow these steps:
 - Clone this repository using `git clone`.
 
 ```console
-$ git clone https://github.com/koordinates/kart-qgis-plugin.git
+$ git clone https://github.com/koordinates/koordinates-qgis-plugin.git
 ```
-- Move to the `kart-qgis-plugin` folder and run the helper install task by running
+- Move to the `koordinates-qgis-plugin` folder and run the helper install task by running
 
 ```console
 $ python helper.py install
