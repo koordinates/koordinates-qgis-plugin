@@ -1,12 +1,21 @@
 [general]
 name=Koordinates
-qgisMinimumVersion=3.16
-description=Work with the Koordinates catalog repositories directly from QGIS.
-about=
+qgisMinimumVersion=3.22
+description=Discover, view and clone Koordinates hosted data directly from QGIS.
+about=<div style="max-width:33em">The <a href="https://koordinates.com/explore/">Koordiantes</a> plugin allows users to discover, view and clone Koordinates-hosted data directly from QGIS.
+
+    <ul><li><strong>Discover</strong><br/>
+    Browse thousands of open geospatial datasets along side your organisations private data</li>
+    <li><strong>View</strong><br/>
+    Add data to your current QGIS project with 1 click</li>
+    <li><strong>Clone</strong><br/>
+    Transfer authoritative data directly to your local drive for analysis and visualisation. Powered by <a href="https://kartproject.org">Kart</a></li>
+    </ul>
+    </div>
 version=1.0.0
 author=Koordinates
 email=support@koordinates.com
-tags=data
+tags=versioning, data, cloning, collections, access, discoverablity, open data
 homepage=https://koordinates.com
 repository=https://github.com/koordinates/koordinates-qgis-plugin
 tracker=https://github.com/koordinates/koordinates-qgis-plugin/issues
