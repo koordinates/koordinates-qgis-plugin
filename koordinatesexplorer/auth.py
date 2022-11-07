@@ -59,6 +59,9 @@ class AuthState(Enum):
 
 class _Handler(BaseHTTPRequestHandler):
 
+    def log_request(self, format, *args):
+        pass
+
     def do_GET(self):
         params = parse_qs(urlsplit(self.path).query)
         code = params.get("code")
