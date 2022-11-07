@@ -2,10 +2,10 @@
 name=Koordinates
 qgisMinimumVersion=3.22
 description=Discover, view and clone Koordinates hosted data directly from QGIS.
-about=<div style="max-width:33em">The <a href="https://koordinates.com/explore/">Koordiantes</a> plugin allows users to discover, view and clone Koordinates-hosted data directly from QGIS.
+about=<div style="max-width:33em">The <a href="https://koordinates.com/explore/">Koordinates</a> plugin allows users to discover, view and clone Koordinates-hosted data directly from QGIS.
 
     <ul><li><strong>Discover</strong><br/>
-    Browse thousands of open geospatial datasets along side your organisations private data</li>
+    Browse thousands of open geospatial datasets alongside your organisations private data</li>
     <li><strong>View</strong><br/>
     Add data to your current QGIS project with 1 click</li>
     <li><strong>Clone</strong><br/>
