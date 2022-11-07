@@ -20,6 +20,8 @@ from qgis.core import (
 
 from .pkce import generate_pkce_pair
 
+import platform
+
 AUTH_HANDLER_REDIRECT = "https://id-design.kx.gd/o/authorize/qgis/"
 
 AUTH_HANDLER_RESPONSE = """\
@@ -38,7 +40,12 @@ AUTH_HANDLER_RESPONSE = """\
 AUTH_URL = "https://id.koordinates.com/o/authorize/"
 TOKEN_URL = "https://id.koordinates.com/o/token/"
 API_TOKEN_URL = "https://koordinates.com/services/api/v1.x/tokens/"
-CLIENT_ID = "hqQUoglBFNlb5xJevSvGlqobqOasPsCZYOA5xeuh"
+
+if platform.system() == "Darwin":
+    CLIENT_ID = "AQDurhawOJKKmMcczxpwhFpMElUyz8FkxLHVsRse"
+else:
+    CLIENT_ID = "hqQUoglBFNlb5xJevSvGlqobqOasPsCZYOA5xeuh"
+
 REDIRECT_PORT = 8989
 REDIRECT_URL = f"http://127.0.0.1:{REDIRECT_PORT}/"
 SCOPE = "read"
