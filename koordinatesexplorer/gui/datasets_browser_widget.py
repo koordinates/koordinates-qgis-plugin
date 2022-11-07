@@ -42,22 +42,22 @@ class DatasetsBrowserWidget(QWidget):
     def __init__(self):
         super().__init__()
 
-        scroll_area = QgsScrollArea()
-        scroll_area.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
-        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        scroll_area.setWidgetResizable(True)
+        self.scroll_area = QgsScrollArea()
+        self.scroll_area.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.scroll_area.setWidgetResizable(True)
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
 
         self.table_widget = ResponsiveTableWidget()
-        scroll_area.setWidget(self.table_widget)
+        self.scroll_area.setWidget(self.table_widget)
 
-        layout.addWidget(scroll_area)
+        layout.addWidget(self.scroll_area)
         self.setLayout(layout)
 
         self.setObjectName('DatasetsBrowserWidget')
-        scroll_area.setFrameShape(QFrame.NoFrame)
-        scroll_area.setStyleSheet("#qt_scrollarea_viewport{ background: transparent; }")
+        self.scroll_area.setFrameShape(QFrame.NoFrame)
+        self.scroll_area.setStyleSheet("#qt_scrollarea_viewport{ background: transparent; }")
 
         self._current_query: Optional[DataBrowserQuery] = None
         self._current_reply: Optional[QNetworkReply] = None
@@ -102,6 +102,10 @@ class DatasetsBrowserWidget(QWidget):
         if self._current_reply is not None and not sip.isdeleted(self._current_reply):
             self._current_reply.abort()
             self._current_reply = None
+
+        if page == 1:
+            # scroll to top on new search
+            self.scroll_area.verticalScrollBar().setValue(0)
 
         if query is not None:
             self._current_query = query
