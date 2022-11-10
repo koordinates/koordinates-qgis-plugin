@@ -22,7 +22,7 @@ def package(version=None):
 
     with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as zipFile:
         excludes = {"test", "test", "*.pyc", ".git", "metadata.txt"}
-        src_dir = os.path.join(os.path.dirname(__file__), "koordinatesexplorer")
+        src_dir = os.path.join(os.path.dirname(__file__), "koordinates")
         exclude = lambda p: any([fnmatch.fnmatch(p, e) for e in excludes])
 
         cfg = ConfigParser()
@@ -34,7 +34,7 @@ def package(version=None):
 
         buf = StringIO()
         cfg.write(buf)
-        zipFile.writestr("koordinatesexplorer/metadata.txt", buf.getvalue())
+        zipFile.writestr("koordinates/metadata.txt", buf.getvalue())
 
         def filter_excludes(files):
             if not files:
@@ -56,7 +56,7 @@ def install(profile: str = None):
     if not profile:
         profile = 'default'
 
-    src = os.path.join(os.path.dirname(__file__), "koordinatesexplorer")
+    src = os.path.join(os.path.dirname(__file__), "koordinates")
     if os.name == "nt":
         default_profile_plugins = (
             f"~/AppData/Roaming/QGIS/QGIS3/profiles/{profile}/python/plugins"
@@ -72,7 +72,7 @@ def install(profile: str = None):
 
     dst_plugins = os.path.expanduser(default_profile_plugins)
     os.makedirs(dst_plugins, exist_ok=True)
-    dst = os.path.abspath(os.path.join(dst_plugins, "koordinatesexplorer"))
+    dst = os.path.abspath(os.path.join(dst_plugins, "koordinates"))
     print(f"Installing to {dst} ...")
     src = os.path.abspath(src)
     if os.path.exists(dst):
@@ -87,7 +87,7 @@ def install(profile: str = None):
 
 
 def setup():
-    extlibs = os.path.join(os.path.dirname(__file__), "koordinatesexplorer", "extlibs")
+    extlibs = os.path.join(os.path.dirname(__file__), "koordinates", "extlibs")
     os.makedirs(extlibs, exist_ok=True)
     reqs = open("requirements.txt").readlines()
     os.environ["PYTHONPATH"] = extlibs

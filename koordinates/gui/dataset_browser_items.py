@@ -41,8 +41,8 @@ from qgis.core import (
 )
 from qgis.utils import iface
 
-from koordinatesexplorer.gui.dataset_dialog import DatasetDialog
-from koordinatesexplorer.gui.thumbnails import downloadThumbnail
+from koordinates.gui.dataset_dialog import DatasetDialog
+from koordinates.gui.thumbnails import downloadThumbnail
 from .action_button import (
     CloneButton,
     AddButton

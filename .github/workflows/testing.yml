@@ -3,23 +3,23 @@ name: Testing
 on:
   push:
     paths:
-    - "koordinatesexplorer/**"
+    - "koordinates/**"
     - ".github/workflows/testing.yaml"
   pull_request:
     types: [opened, synchronize, edited]
 
 env:
   # plugin name/directory where the code for the plugin is stored
-  PLUGIN_NAME: koordinatesexplorer
+  PLUGIN_NAME: koordinates
   # python notation to test running inside plugin
-  TESTS_RUN_FUNCTION: koordinatesexplorer.test_suite.test_package
+  TESTS_RUN_FUNCTION: koordinates.test_suite.test_package
   # Docker settings
   DOCKER_IMAGE: qgis/qgis
 
 
 jobs:
 
-  Test-plugin-koordinatesexplorer:
+  Test-plugin-koordinates:
 
     runs-on: ubuntu-latest
 
