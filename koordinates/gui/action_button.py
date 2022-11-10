@@ -9,7 +9,7 @@ from qgis.PyQt.QtWidgets import (
 from qgis.core import Qgis
 from qgis.utils import iface
 
-from koordinatesexplorer.utils import cloneKartRepo, KartNotInstalledException
+from koordinates.utils import cloneKartRepo, KartNotInstalledException
 from .gui_utils import GuiUtils
 from ..api import (
     KoordinatesClient,

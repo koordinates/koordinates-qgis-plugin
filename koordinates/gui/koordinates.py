@@ -61,7 +61,7 @@ from ..auth import OAuthWorkflow
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
-WIDGET, _ = uic.loadUiType(GuiUtils.get_ui_file_path('koordinatesexplorer.ui'))
+WIDGET, _ = uic.loadUiType(GuiUtils.get_ui_file_path('koordinates.ui'))
 
 SETTINGS_NAMESPACE = "Koordinates"
 
@@ -250,7 +250,7 @@ class ReponsiveLayout(QLayout):
             self.advanced_filter_widget.layout().update()
 
 
-class KoordinatesExplorer(QgsDockWidget, WIDGET):
+class Koordinates(QgsDockWidget, WIDGET):
     TAB_STARRED_INDEX = 0
     TAB_BROWSE_INDEX = 1
 

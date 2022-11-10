@@ -10,7 +10,7 @@ from qgis.PyQt.QtCore import (
     QEvent
 )
 
-from koordinatesexplorer.gui.koordinates_explorer import KoordinatesExplorer
+from koordinates.gui.koordinates import Koordinates
 
 pluginPath = os.path.dirname(__file__)
 
@@ -22,11 +22,11 @@ def icon(f):
 class KoordinatesPlugin(object):
     def __init__(self, iface):
         self.iface = iface
-        self.dock: Optional[KoordinatesExplorer] = None
+        self.dock: Optional[Koordinates] = None
         self.explorerAction: Optional[QAction] = None
 
     def initGui(self):
-        self.dock = KoordinatesExplorer()
+        self.dock = Koordinates()
         self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dock)
 
         self.explorerAction = QAction("Show Data Browser", self.iface.mainWindow())

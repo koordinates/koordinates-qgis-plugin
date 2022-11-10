@@ -21,7 +21,7 @@ from qgis.core import (
     QgsNetworkAccessManager
 )
 
-from koordinatesexplorer.utils import waitcursor
+from koordinates.utils import waitcursor
 from .data_browser import DataBrowserQuery
 from .utils import ApiUtils
 

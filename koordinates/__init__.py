@@ -1,4 +1,4 @@
 def classFactory(iface):
-    from koordinatesexplorer.plugin import KoordinatesPlugin
+    from koordinates.plugin import KoordinatesPlugin
 
     return KoordinatesPlugin(iface)
