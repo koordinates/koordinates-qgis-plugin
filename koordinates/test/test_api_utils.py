@@ -104,13 +104,13 @@ class TestApiUtils(unittest.TestCase):
             {
                 'type': 'layer',
                 'kind': 'grid'
-            }), set())
+            }), {Capability.Add})
         self.assertEqual(ApiUtils.capabilities_from_dataset_response(
             {
                 'type': 'layer',
                 'kind': 'grid',
                 'repository': 'something'
-            }), {Capability.Clone})
+            }), {Capability.Clone, Capability.Add})
         self.assertEqual(ApiUtils.capabilities_from_dataset_response(
             {
                 'type': 'table'
