@@ -359,7 +359,7 @@ class TestDataBrowser(unittest.TestCase):
         self.assertEqual(DataType.capabilities(DataType.Rasters),
                          {Capability.Clone, Capability.Add})
         self.assertEqual(DataType.capabilities(DataType.Grids),
-                         {Capability.Clone})
+                         {Capability.Clone, Capability.Add})
         self.assertEqual(DataType.capabilities(DataType.Sets),
                          {Capability.Clone})
         self.assertEqual(DataType.capabilities(DataType.Tables),
