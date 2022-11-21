@@ -2,34 +2,38 @@ name: Release
 
 on:
   push:
-    tags: "*"
+    tags: ["v*"]
 
 jobs:
+  test:
+    uses: koordinates/koordinates-qgis-plugin/.github/workflows/testing.yml@main
+
   release:
     name: "Release on tag"
     runs-on: ubuntu-latest
-
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    needs: test
 
     steps:
-    - name: Get source code
-      uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
 
-    - name: Build package
-      env:
-        GITHUB_REF: ${{ github.ref }}
-      run: |
-        python build.py ${GITHUB_REF##*/}
+      - name: Build package
+        run: |
+          python helper.py package "${GITHUB_REF/refs\/tags\//}"
 
-    - name: Create/update release on GitHub
-      uses: ncipollo/release-action@v1.8.8
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        allowUpdates: true
-        omitNameDuringUpdate: true
-        artifacts: "koordinates-${GITHUB_REF##*/}.zip"
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        if: ${{ github.repository == 'koordinates/koordinates-qgis-plugin' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          draft: true
+          fail_on_unmatched_files: true
+          generate_release_notes: true
+          files: |
+            koordinates-*.zip
