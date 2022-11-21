@@ -6,7 +6,7 @@ on:
 
 jobs:
   test:
-    uses: koordinates/koordinates-qgis-plugin/.github/workflows/testing.yml@main
+    uses: koordinates/koordinates-qgis-plugin/.github/workflows/testing.yml@master
 
   release:
     name: "Release on tag"
