@@ -26,8 +26,7 @@ jobs:
 
     strategy:
       matrix:
-        # release-3_22 removed due to QGIS docker build issues
-        docker_tags: [release-3_28, latest]
+        docker_tags: [release-3_22, release-3_26, release-3_28, latest]
 
     steps:
 
