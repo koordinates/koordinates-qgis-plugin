@@ -91,6 +91,20 @@ class KoordinatesClient(QObject):
     def isLoggedIn(self):
         return self.apiKey is not None
 
+    def user_domain(self):
+        """
+        Return the domain that should be used for requests. The default of koordinates.com is
+        not appropriate for a user which has only a specific warehouse, i.e. they may not have
+        access to koordinates.com.
+
+        This will return the first context the user has which might not always be correct, we
+        should check to see if calling switching a context for search should change the domain
+        as well.
+        """
+        for context in (self._user_details or {}).get('contexts', []):
+            return context['domain']
+        return "koordinates.com"
+
     def _build_datasets_request(self,
                                 page=1,
                                 query: Optional[DataBrowserQuery] = None,
@@ -229,7 +243,7 @@ class KoordinatesClient(QObject):
         """
         Stars or unstars a dataset
         """
-        url = QUrl(f"https://koordinates.com/services/api/v1.x/layers/{dataset_id}/star/")
+        url = QUrl(f"https://{self.user_domain()}/services/api/v1.x/layers/{dataset_id}/star/")
         network_request = QNetworkRequest(url)
 
         for header, value in self.headers.items():
@@ -248,7 +262,7 @@ class KoordinatesClient(QObject):
         """
         Builds a network request
         """
-        url = QUrl(f"https://koordinates.com/services/api/v1.x/{endpoint}")
+        url = QUrl(f"https://{self.user_domain()}/services/api/v1.x/{endpoint}")
 
         if params:
             url.setQuery(ApiUtils.to_url_query(params))
