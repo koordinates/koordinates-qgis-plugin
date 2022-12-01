@@ -780,7 +780,7 @@ class DatasetDialog(QDialog):
 
     def setThumbnail(self, img):
         image_size = self.thumbnail_label.size()
-        scale_factor = self.screen().devicePixelRatio()
+        scale_factor = self.window().screen().devicePixelRatio()
         if scale_factor > 1:
             image_size *= scale_factor
 
