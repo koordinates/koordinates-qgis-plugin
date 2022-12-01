@@ -527,7 +527,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
     def update_thumbnail(self):
         thumbnail = self.process_thumbnail(self.raw_thumbnail)
-        dpi_ratio = self.screen().devicePixelRatio()
+        dpi_ratio = self.window().screen().devicePixelRatio()
         width = int(thumbnail.width() / dpi_ratio)
         height = int(thumbnail.height() / dpi_ratio)
         self.thumbnail_label.setFixedSize(QSize(width, height))
@@ -541,7 +541,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             size = QSize(self.width(), self.THUMBNAIL_SIZE)
 
         image_size = size
-        scale_factor = self.screen().devicePixelRatio()
+        scale_factor = self.window().screen().devicePixelRatio()
         if scale_factor > 1:
             image_size *= scale_factor
 
