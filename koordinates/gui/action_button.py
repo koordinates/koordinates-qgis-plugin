@@ -67,12 +67,12 @@ class CloneButton(ActionButton):
 
         self.dataset = dataset
 
-        self.setText("Clone")
+        self.setText("Get")
         icon = GuiUtils.get_icon('clone_button.svg')
         self.setIcon(icon)
-        self.setIconSize(QSize(63, 11))
+        self.setIconSize(QSize(46, 11))
         self.clicked.connect(self.cloneRepository)
-        self.setFixedSize(88, self.BUTTON_HEIGHT)
+        self.setFixedSize(67, self.BUTTON_HEIGHT)
 
         self._close_parent_on_clone = close_parent_on_clone
 
@@ -85,7 +85,7 @@ class CloneButton(ActionButton):
         from .action_dialog import ActionDialog
         if UserCapability.EnableKartClone not in KoordinatesClient.instance().user_capabilities():
             dlg = ActionDialog(
-                title='Clone — {}'.format(title),
+                title='Get Data Repository — {}'.format(title),
                 message='To clone cloud-hosted data to your local drive, please request access.',
                 action='Request access',
                 url='https://m.koordinates.com/request-kart-features')
