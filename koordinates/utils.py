@@ -41,7 +41,7 @@ def cloneKartRepo(title: str, url, username, password, parent):
         from kart.kartapi import Repository, KartException
 
         CURRENT_CLONE_DIALOG = CloneDialog(parent)
-        CURRENT_CLONE_DIALOG.setWindowTitle('Clone — {}'.format(title))
+        CURRENT_CLONE_DIALOG.setWindowTitle('Get Data Repository — {}'.format(title))
         CURRENT_CLONE_DIALOG.show()
         CURRENT_CLONE_DIALOG.activateWindow()
         CURRENT_CLONE_DIALOG.raise_()
