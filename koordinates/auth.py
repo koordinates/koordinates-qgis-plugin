@@ -1,4 +1,5 @@
 import json
+import platform
 import urllib
 from enum import Enum
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -19,8 +20,6 @@ from qgis.core import (
 )
 
 from .pkce import generate_pkce_pair
-
-import platform
 
 AUTH_HANDLER_REDIRECT = "https://id-design.kx.gd/o/authorize/qgis/"
 
@@ -159,7 +158,8 @@ class _Handler(BaseHTTPRequestHandler):
             self.send_header("Content-type", "text/html")
             self.end_headers()
             if self.server.error is not None:
-                self.wfile.write(AUTH_HANDLER_RESPONSE_ERROR.format(self.server.error).encode("utf-8"))
+                self.wfile.write(
+                    AUTH_HANDLER_RESPONSE_ERROR.format(self.server.error).encode("utf-8"))
             else:
                 self.wfile.write(AUTH_HANDLER_RESPONSE.encode("utf-8"))
 
