@@ -33,9 +33,18 @@ AUTH_HANDLER_RESPONSE = """\
     <p>The authentication flow has completed.</p>
   </body>
 </html>
-""".encode(
-    "utf-8"
-)
+"""
+
+AUTH_HANDLER_RESPONSE_ERROR = """\
+<html>
+  <head>
+    <title>Authentication Status</title>
+  </head>
+  <body>
+    <p>The authentication flow encountered an error: {}.</p>
+  </body>
+</html>
+"""
 
 AUTH_URL = "https://id.koordinates.com/o/authorize/"
 TOKEN_URL = "https://id.koordinates.com/o/token/"
@@ -141,7 +150,7 @@ class _Handler(BaseHTTPRequestHandler):
         self._send_response()
 
     def _send_response(self):
-        if AUTH_HANDLER_REDIRECT:
+        if AUTH_HANDLER_REDIRECT and self.server.error is None:
             self.send_response(302)
             self.send_header("Location", AUTH_HANDLER_REDIRECT)
             self.end_headers()
@@ -149,7 +158,10 @@ class _Handler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.end_headers()
-            self.wfile.write(AUTH_HANDLER_RESPONSE)
+            if self.server.error is not None:
+                self.wfile.write(AUTH_HANDLER_RESPONSE_ERROR.format(self.server.error).encode("utf-8"))
+            else:
+                self.wfile.write(AUTH_HANDLER_RESPONSE.encode("utf-8"))
 
 
 class OAuthWorkflow(QThread):
