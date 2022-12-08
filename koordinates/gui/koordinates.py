@@ -209,7 +209,8 @@ class ReponsiveLayout(QLayout):
                         effective_rect.width(),
                         height
                     )
-                    advanced_filter_item_rect_changed = new_geom != self.advanced_filter_item.geometry()
+                    advanced_filter_item_rect_changed = \
+                        new_geom != self.advanced_filter_item.geometry()
 
                     self.advanced_filter_item.setGeometry(
                         new_geom
