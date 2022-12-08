@@ -197,6 +197,7 @@ class CustomComboBox(QWidget):
 
         if not parent and new != self:
             self._floating_widget.hide()
+            self.parent().update()
 
     def mousePressEvent(self, event):
         component = self.component_for_pos(event.pos())
@@ -231,6 +232,7 @@ class CustomComboBox(QWidget):
             self._floating_widget.hide()
 
         if self.parent() and self.parent().parent():
+            self.parent().update()
             self.parent().parent().update()
 
     def expand(self):
