@@ -185,6 +185,8 @@ class ReponsiveLayout(QLayout):
 
         effective_rect = rect.adjusted(left, top, -right, -bottom)
 
+        advanced_filter_item_rect_changed = False
+
         if effective_rect.width() < 650:
             # show advanced filters on top
             self.is_wide_mode = False
@@ -202,12 +204,15 @@ class ReponsiveLayout(QLayout):
                     height = self.advanced_filter_widget.layout().heightForWidth(
                         effective_rect.width())
 
+                    new_geom = QRect(
+                        effective_rect.left(), top,
+                        effective_rect.width(),
+                        height
+                    )
+                    advanced_filter_item_rect_changed = new_geom != self.advanced_filter_item.geometry()
+
                     self.advanced_filter_item.setGeometry(
-                        QRect(
-                            effective_rect.left(), top,
-                            effective_rect.width(),
-                            height
-                        )
+                        new_geom
                     )
 
                     top += height + 6
@@ -246,8 +251,10 @@ class ReponsiveLayout(QLayout):
                     )
                 )
 
-        if self.advanced_filter_widget:
-            self.advanced_filter_widget.layout().update()
+        if self.advanced_filter_widget and advanced_filter_item_rect_changed:
+            self.advanced_filter_widget.layout().invalidate()
+        else:
+            self.advanced_filter_widget.update()
 
 
 class Koordinates(QgsDockWidget, WIDGET):
