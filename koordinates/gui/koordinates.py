@@ -351,7 +351,6 @@ class Koordinates(QgsDockWidget, WIDGET):
 
         self.button_help.setIcon(GuiUtils.get_icon('help.svg'))
         self.button_help.setToolTip('Help')
-        self.button_help.clicked.connect(self._show_help)
 
         self.button_user.setIcon(GuiUtils.get_icon('user.svg'))
         self.button_user.setToolTip('User')
@@ -454,6 +453,16 @@ class Koordinates(QgsDockWidget, WIDGET):
 
         self.sort_menu.aboutToShow.connect(self._sort_order_menu_about_to_show)
         self._set_sort_order_button_text()
+
+        self.help_menu = QMenu(self.button_help)
+        self.help_action = QAction('Koordinates Help', self.help_menu)
+        self.help_action.triggered.connect(self._show_help)
+        self.help_menu.addAction(self.help_action)
+        self.report_action = QAction('Report a Bug or Issue', self.help_menu)
+        self.report_action.triggered.connect(self._report_bug)
+        self.help_menu.addAction(self.report_action)
+
+        self.button_help.setMenu(self.help_menu)
 
         self.user_menu = QMenu(self.button_user)
         self.current_user_action = QAction('Current User', self.user_menu)
@@ -777,7 +786,13 @@ class Koordinates(QgsDockWidget, WIDGET):
         """
         Shows the help web page
         """
-        QDesktopServices.openUrl(QUrl('https://help.koordinates.com/'))
+        QDesktopServices.openUrl(QUrl('https://help.koordinates.com/plugins/qgis-koordinates-plugin/'))
+
+    def _report_bug(self):
+        """
+        Shows the report bug page
+        """
+        QDesktopServices.openUrl(QUrl('https://github.com/koordinates/koordinates-qgis-plugin/issues'))
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
