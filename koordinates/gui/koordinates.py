@@ -786,13 +786,21 @@ class Koordinates(QgsDockWidget, WIDGET):
         """
         Shows the help web page
         """
-        QDesktopServices.openUrl(QUrl('https://help.koordinates.com/plugins/qgis-koordinates-plugin/'))
+        QDesktopServices.openUrl(
+            QUrl(
+                'https://help.koordinates.com/plugins/qgis-koordinates-plugin/'
+            )
+        )
 
     def _report_bug(self):
         """
         Shows the report bug page
         """
-        QDesktopServices.openUrl(QUrl('https://github.com/koordinates/koordinates-qgis-plugin/issues'))
+        QDesktopServices.openUrl(
+            QUrl(
+                'https://github.com/koordinates/koordinates-qgis-plugin/issues'
+            )
+        )
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
