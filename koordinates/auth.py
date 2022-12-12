@@ -22,6 +22,7 @@ from qgis.core import (
 from .pkce import generate_pkce_pair
 
 AUTH_HANDLER_REDIRECT = "https://id-design.kx.gd/o/authorize/qgis/"
+AUTH_HANDLER_REDIRECT_CANCELLED = "https://id.koordinates.com/o/authorize/qgis/cancelled/"
 
 AUTH_HANDLER_RESPONSE = """\
 <html>
@@ -152,6 +153,10 @@ class _Handler(BaseHTTPRequestHandler):
         if AUTH_HANDLER_REDIRECT and self.server.error is None:
             self.send_response(302)
             self.send_header("Location", AUTH_HANDLER_REDIRECT)
+            self.end_headers()
+        elif AUTH_HANDLER_REDIRECT_CANCELLED and self.server.error:
+            self.send_response(302)
+            self.send_header("Location", AUTH_HANDLER_REDIRECT_CANCELLED)
             self.end_headers()
         else:
             self.send_response(200)
