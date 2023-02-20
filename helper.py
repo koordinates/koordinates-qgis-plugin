@@ -7,6 +7,8 @@ import subprocess
 import re
 import shutil
 import sys
+import urllib.parse
+import xmlrpc.client
 import zipfile
 from configparser import ConfigParser
 from io import StringIO
@@ -110,6 +112,22 @@ def setup():
             sys.exit(1)
 
 
+def publish(archive):
+    try:
+        creds = os.environ["QGIS_CREDENTIALS"]
+    except KeyError:
+        print("QGIS_CREDENTIALS not set")
+        sys.exit(2)
+
+    url = f"https://{creds}@plugins.qgis.org/plugins/RPC2/"
+    conn = xmlrpc.client.ServerProxy(url)
+    print(f"Uploading {archive} to https://plugins.qgis.org ...")
+    with open(archive, "rb") as fd:
+        blob = xmlrpc.client.Binary(fd.read())
+    conn.plugin.upload(blob)
+    print(f"Upload complete")
+
+
 def usage():
     print(
         (
@@ -128,5 +146,7 @@ elif len(sys.argv) == 2 and sys.argv[1] == "setup":
     setup()
 elif len(sys.argv) in [2, 3] and sys.argv[1] == "package":
     package(*sys.argv[2:])
+elif len(sys.argv) == 3 and sys.argv[1] == "publish":
+    publish(sys.argv[2])
 else:
     usage()
