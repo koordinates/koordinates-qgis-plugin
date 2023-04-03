@@ -150,8 +150,6 @@ class AddButton(ActionButton):
 
         apikey = KoordinatesClient.instance().apiKey
         uri = (
-            f"type=xyz&url=https://tiles-a.koordinates.com/services;key%3D{apikey}/tiles/v4/"
-            f"layer={self.dataset['id']},color={color}/EPSG:3857/"
-            "%7BZ%7D/%7BX%7D/%7BY%7D.png&zmax=19&zmin=0&crs=EPSG3857"
+            f"contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&format=image/png&layers=layer-{self.dataset['id']}&styles=style%3Dauto,color%3D000000&tileMatrixSet=EPSG:3857&tilePixelRatio=0&url=https://data.linz.govt.nz/services;key%3D{apikey}/wmts/1.0.0/layer/{self.dataset['id']}/WMTSCapabilities.xml"
         )
         iface.addRasterLayer(uri, self.dataset.get("title", 'Layer'), "wms")
