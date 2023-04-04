@@ -1,27 +1,19 @@
-import os
 from typing import Optional
 
 from qgis.PyQt import sip
-from qgis.PyQt.QtWidgets import QAction
-from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtCore import (
     Qt,
     QCoreApplication,
     QEvent
 )
-
+from qgis.PyQt.QtWidgets import QAction
 from qgis.core import (
     QgsApplication
 )
 
 from koordinates.gui.koordinates import Koordinates
-from koordinates.gui import KoordinatesDataItemProvider
-
-pluginPath = os.path.dirname(__file__)
-
-
-def icon(f):
-    return QIcon(os.path.join(pluginPath, "img", f))
+from .core import KartOperationManager
+from .gui import KoordinatesDataItemProvider
 
 
 class KoordinatesPlugin(object):
@@ -30,12 +22,17 @@ class KoordinatesPlugin(object):
         self.dock: Optional[Koordinates] = None
         self.explorerAction: Optional[QAction] = None
         self.data_item_provider: Optional[KoordinatesDataItemProvider] = None
+        self._kart_operation_manager: Optional[KartOperationManager] = None
 
     def initGui(self):
+        self._kart_operation_manager = KartOperationManager()
+        KartOperationManager._instance = self._kart_operation_manager
+
         self.dock = Koordinates()
         self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dock)
 
-        self.explorerAction = QAction("Show Data Browser", self.iface.mainWindow())
+        self.explorerAction = QAction("Show Data Browser",
+                                      self.iface.mainWindow())
         self.explorerAction.setCheckable(True)
         self.dock.setToggleVisibilityAction(self.explorerAction)
 
@@ -63,5 +60,11 @@ class KoordinatesPlugin(object):
                 self.data_item_provider
             )
         self.data_item_provider = None
+
+        if self._kart_operation_manager and \
+                not sip.isdeleted(self._kart_operation_manager):
+            self._kart_operation_manager.deleteLater()
+        self._kart_operation_manager = None
+        KartOperationManager._instance = None
 
         QCoreApplication.sendPostedEvents(None, QEvent.DeferredDelete)
