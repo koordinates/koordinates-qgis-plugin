@@ -53,10 +53,7 @@ class KartUtils:
 
         try:
             from ..gui.clonedialog import CloneDialog
-            from kart.kartapi import (
-                Repository,
-                KartException
-            )
+            from kart.kartapi import Repository  # NOQA
 
             KartUtils.CURRENT_CLONE_DIALOG = CloneDialog(parent)
             KartUtils.CURRENT_CLONE_DIALOG.setWindowTitle(
