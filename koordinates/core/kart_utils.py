@@ -1,4 +1,7 @@
-from typing import Optional
+from typing import (
+    Optional,
+    List
+)
 
 from qgis.PyQt import sip
 from qgis.PyQt.QtCore import QEventLoop
@@ -93,6 +96,18 @@ class KartUtils:
                     KartUtils.CURRENT_CLONE_DIALOG.deleteLater()
                 KartUtils.CURRENT_CLONE_DIALOG = None
                 return False
+
+        except ImportError:
+            raise KartNotInstalledException()
+
+    @staticmethod
+    def get_kart_repo_paths() -> List[str]:
+        """
+        Returns a list of the cloned kart repository paths
+        """
+        try:
+            from kart import kartapi
+            return [repo.path for repo in kartapi.repos()]
 
         except ImportError:
             raise KartNotInstalledException()
