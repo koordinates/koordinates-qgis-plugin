@@ -23,7 +23,11 @@ from .gui import (
 )
 
 
-class KoordinatesPlugin(object):
+class KoordinatesPlugin:
+    """
+    Main plugin interface
+    """
+
     def __init__(self, iface):
         self.iface = iface
         self.dock: Optional[Koordinates] = None
