@@ -123,8 +123,8 @@ class KartCloneTask(KartTask):
     def on_stdout(self, ba):
         val = ba.data().decode('UTF-8')
 
-        counting_regex = re.compile('.*Counting objects:?\s*(\d+)%.*')
-        receiving_regex = re.compile('.*Receiving objects:?\s*(\d+)%.*')
+        counting_regex = re.compile(r'.*Counting objects:?\s*(\d+)%.*')
+        receiving_regex = re.compile(r'.*Receiving objects:?\s*(\d+)%.*')
 
         counting_match = counting_regex.search(val)
         percent = None

@@ -49,7 +49,6 @@ class KartUtils:
 
         if "kart" not in qgis.utils.plugins:
             raise KartNotInstalledException()
-        kart_plugin = qgis.utils.plugins["kart"]
 
         try:
             from ..gui.clonedialog import CloneDialog
