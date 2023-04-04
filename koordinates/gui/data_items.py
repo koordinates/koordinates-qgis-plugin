@@ -10,6 +10,7 @@ from qgis.core import (
 )
 
 from ..core import KartUtils
+from .gui_utils import GuiUtils
 
 
 class KartRepositoryItem(QgsDirectoryItem):
@@ -42,7 +43,7 @@ class KoordinatesRootItem(QgsDataCollectionItem):
             )
         )
 
-        # self.setIcon('')
+        self.setIcon(GuiUtils.get_icon('browser_icon.svg'))
         self.populate()
 
         try:
