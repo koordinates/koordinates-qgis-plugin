@@ -103,7 +103,7 @@ class KartUtils:
 
                 def on_task_terminated(_task):
                     print('Boo failed')
-                    print(_task.errors())
+                    print(_task.output())
                     KartUtils.ONGOING_TASKS = [t for t in KartUtils.ONGOING_TASKS if t != _task]
 
                 task.taskCompleted.connect(partial(on_task_complete, task))

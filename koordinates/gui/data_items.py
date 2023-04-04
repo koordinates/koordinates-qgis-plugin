@@ -63,10 +63,6 @@ class KoordinatesDataItemProvider(QgsDataItemProvider):
 
     def __init__(self):
         super().__init__()
-        print('created')
-
-    def __del__(self):
-        print('deleted')
 
     def name(self):
         return 'koordinates'

@@ -1,3 +1,5 @@
+import re
+
 from typing import (
     List,
     Optional
@@ -30,20 +32,28 @@ class KartTask(QgsTask):
 
         self._arguments = arguments
         self._feedback: Optional[QgsFeedback] = None
-        self._errors = []
         self._output = []
 
-    def errors(self) -> List[str]:
-        """
-        Returns a list of encountered error messages
-        """
-        return self._errors
+        self._stdout_buffer = ''
 
     def output(self) -> List[str]:
         """
         Returns the command output
         """
         return self._output
+
+    def on_stdout(self, ba):
+        """
+        Called when the kart process emits messages on stdout
+        """
+        val = ba.data().decode('UTF-8')
+        self._stdout_buffer += val
+
+        if self._stdout_buffer.endswith('\n') or self._stdout_buffer.endswith(
+                '\r'):
+            # flush buffer
+            self._output.append(self._stdout_buffer.rstrip())
+            self._stdout_buffer = ''
 
     def run(self):
         if not self._kart_executable:
@@ -54,31 +64,12 @@ class KartTask(QgsTask):
         process = QgsBlockingProcess(self._kart_executable, self._arguments)
 
         def on_stdout(ba):
-            val = ba.data().decode('UTF-8')
-            on_stdout.buffer += val
+            self.on_stdout(ba)
 
-            if on_stdout.buffer.endswith('\n') or on_stdout.buffer.endswith(
-                    '\r'):
-                # flush buffer
-                self._output.append(on_stdout.buffer.rstrip())
-                on_stdout.buffer = ''
-
-        on_stdout.buffer = ''
-
-        def on_stderr(ba):
-            val = ba.data().decode('UTF-8')
-            on_stderr.buffer += val
-
-            if on_stderr.buffer.endswith('\n') or on_stderr.buffer.endswith(
-                    '\r'):
-                # flush buffer
-                self._errors.append(on_stderr.buffer.rstrip())
-                on_stderr.buffer = ''
-
-        on_stderr.buffer = ''
-
+        # kart executable throws all sorts of non-error output to stderr,
+        # so consider stdout and stderr as equivalent
         process.setStdOutHandler(on_stdout)
-        process.setStdErrHandler(on_stderr)
+        process.setStdErrHandler(on_stdout)
 
         res = process.run(self._feedback)
 
@@ -120,12 +111,32 @@ class KartCloneTask(KartTask):
         )
 
         super().__init__(
-            self.tr('Cloning {}').format(title),
+            'Cloning {}'.format(title),
             commands
         )
 
         self.destination = destination
         self.repo: Optional[Repository] = None
+
+    def on_stdout(self, ba):
+        val = ba.data().decode('UTF-8')
+
+        counting_regex = re.compile('.*Counting objects:?\s*(\d+)%.*')
+        receiving_regex = re.compile('.*Receiving objects:?\s*(\d+)%.*')
+
+        counting_match = counting_regex.search(val)
+        percent = None
+        if counting_match:
+            percent = int(counting_match.group(1)) / 2
+        else:
+            receiving_match = receiving_regex.search(val)
+            if receiving_match:
+                percent = int(receiving_match.group(1)) / 2 + 50
+
+        if percent is not None:
+            self.setProgress(percent)
+
+        super().on_stdout(ba)
 
     def run(self):
         self.repo = None
