@@ -2,10 +2,17 @@ from typing import (
     Optional,
     List
 )
+from functools import partial
 
 from qgis.PyQt import sip
 from qgis.PyQt.QtCore import QEventLoop
 from qgis.PyQt.QtWidgets import QWidget
+
+from qgis.core import (
+    QgsApplication
+)
+
+from .kart_task import KartCloneTask
 
 
 class KartNotInstalledException(Exception):
@@ -21,6 +28,7 @@ class KartUtils:
 
     CURRENT_CLONE_DIALOG: Optional['CloneDialog'] = None  # NOQA
     CLONE_KART_REPO_WAS_ACCEPTED: bool = False
+    ONGOING_TASKS = []
 
     @staticmethod
     def clone_kart_repo(title: str,
@@ -45,7 +53,10 @@ class KartUtils:
 
         try:
             from ..gui.clonedialog import CloneDialog
-            from kart.kartapi import Repository, KartException
+            from kart.kartapi import (
+                Repository,
+                KartException
+            )
 
             KartUtils.CURRENT_CLONE_DIALOG = CloneDialog(parent)
             KartUtils.CURRENT_CLONE_DIALOG.setWindowTitle(
@@ -77,18 +88,30 @@ class KartUtils:
                 KartUtils.CURRENT_CLONE_DIALOG.deleteLater()
                 KartUtils.CURRENT_CLONE_DIALOG = None
 
-                try:
-                    repo = Repository.clone(
-                        url,
-                        destination,
-                        location=location,
-                        extent=extent,
-                        username=username,
-                        password=password,
-                    )
+                task = KartCloneTask(
+                    url,
+                    destination,
+                    location=location,
+                    extent=extent,
+                    username=username,
+                    password=password,
+                )
+                KartUtils.ONGOING_TASKS.append(task)
+
+                def on_task_complete(_task):
+                    repo = _task.repo
                     kart_plugin.dock.reposItem.addRepoToUI(repo)
-                except KartException:
-                    raise KartNotInstalledException()
+                    KartUtils.ONGOING_TASKS = [t for t in KartUtils.ONGOING_TASKS if t != _task]
+
+                def on_task_terminated(_task):
+                    print('Boo failed')
+                    print(_task.errors())
+                    KartUtils.ONGOING_TASKS = [t for t in KartUtils.ONGOING_TASKS if t != _task]
+
+                task.taskCompleted.connect(partial(on_task_complete, task))
+                task.taskTerminated.connect(partial(on_task_terminated, task))
+
+                QgsApplication.taskManager().addTask(task)
 
                 return True
             else:
