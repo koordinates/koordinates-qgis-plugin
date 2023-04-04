@@ -1,5 +1,4 @@
 import re
-
 from typing import (
     List,
     Optional
@@ -89,6 +88,9 @@ class KartCloneTask(KartTask):
     A task for cloning a repo
     """
 
+    # let's say counting takes.... 5% of time.
+    COUNT_PERCENT_OF_TIME = 0.05
+
     def __init__(self,
                  title: str,
                  url: str,
@@ -126,12 +128,16 @@ class KartCloneTask(KartTask):
 
         counting_match = counting_regex.search(val)
         percent = None
+
         if counting_match:
-            percent = int(counting_match.group(1)) / 2
+            percent = int(counting_match.group(1)) * \
+                      KartCloneTask.COUNT_PERCENT_OF_TIME
         else:
             receiving_match = receiving_regex.search(val)
             if receiving_match:
-                percent = int(receiving_match.group(1)) / 2 + 50
+                percent = int(receiving_match.group(1)) * \
+                          (1 - KartCloneTask.COUNT_PERCENT_OF_TIME) \
+                          + KartCloneTask.COUNT_PERCENT_OF_TIME
 
         if percent is not None:
             self.setProgress(percent)
