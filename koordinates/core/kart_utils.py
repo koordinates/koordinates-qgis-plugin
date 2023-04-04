@@ -44,7 +44,7 @@ class KartUtils:
         kart_plugin = qgis.utils.plugins["kart"]
 
         try:
-            from .gui.clonedialog import CloneDialog
+            from ..gui.clonedialog import CloneDialog
             from kart.kartapi import Repository, KartException
 
             KartUtils.CURRENT_CLONE_DIALOG = CloneDialog(parent)
@@ -101,7 +101,7 @@ class KartUtils:
             raise KartNotInstalledException()
 
     @staticmethod
-    def get_kart_repos() -> List['kart.kartapi.Repository']:
+    def get_kart_repos() -> List['Repository']:
         """
         Returns a list of the cloned kart repositories
         """
