@@ -56,7 +56,8 @@ from .star_button import StarButton
 from ..api import (
     ApiUtils,
     DataType,
-    Capability
+    Capability,
+    PublicAccessType
 )
 
 
@@ -72,6 +73,9 @@ class DatasetItemLayout(QLayout):
         self.button_container = None
         self.star_button = None
         self.star_button_item = None
+
+        self.private_icon = None
+        self.private_icon_item = None
 
         self.use_narrow_cards = False
 
@@ -102,6 +106,12 @@ class DatasetItemLayout(QLayout):
         self.addChildWidget(widget)
         self.invalidate()
 
+    def set_private_icon(self, widget):
+        self.private_icon = widget
+        self.private_icon_item = QWidgetItem(widget)
+        self.addChildWidget(widget)
+        self.invalidate()
+
     def addItem(self, item):
         pass
 
@@ -117,6 +127,8 @@ class DatasetItemLayout(QLayout):
             res += 1
         if self.star_button:
             res += 1
+        if self.private_icon:
+            res += 1
         return res
 
     def itemAt(self, index):
@@ -130,6 +142,8 @@ class DatasetItemLayout(QLayout):
             return self.button_container
         elif index == 4:
             return self.star_button_item
+        elif index == 5:
+            return self.private_icon_item
 
     def takeAt(self, index: int):
         if index == 0:
@@ -155,6 +169,12 @@ class DatasetItemLayout(QLayout):
             self.star_button_item = None
             self.star_button.deleteLater()
             self.star_button = None
+            return res
+        elif index == 5:
+            res = self.private_icon_item
+            self.private_icon_item = None
+            self.private_icon.deleteLater()
+            self.private_icon = None
             return res
         return None
 
@@ -192,8 +212,18 @@ class DatasetItemLayout(QLayout):
                 self.title_container.setGeometry(
                     QRect(
                         17, 165,
-                        rect.width() - 17 * 2 - 20,
+                        rect.width() - 17 * 2 - 20 -
+                        (24 if self.private_icon_item else 0),
                         60
+                    )
+                )
+
+            if self.private_icon_item:
+                self.private_icon_item.setGeometry(
+                    QRect(
+                        rect.width() - 64, 162,
+                        30,
+                        20
                     )
                 )
 
@@ -244,8 +274,18 @@ class DatasetItemLayout(QLayout):
                 self.title_container.setGeometry(
                     QRect(
                         left, 15,
-                        rect.width() - left - 40,
+                        rect.width() - left - 40 -
+                        (24 if self.private_icon_item else 0),
                         90
+                    )
+                )
+
+            if self.private_icon_item:
+                self.private_icon_item.setGeometry(
+                    QRect(
+                        rect.width() - 64, 12,
+                        30,
+                        20
                     )
                 )
 
@@ -395,6 +435,13 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         thumbnail_url = self.dataset.get('thumbnail_url')
         if thumbnail_url:
             downloadThumbnail(thumbnail_url, self)
+
+        if ApiUtils.access_from_dataset_response(self.dataset) == \
+                PublicAccessType.none:
+            private_icon = QSvgWidget(GuiUtils.get_icon_svg('private.svg'))
+            private_icon.setFixedSize(QSize(24, 24))
+            private_icon.setToolTip(self.tr('Private'))
+            self.layout().set_private_icon(private_icon)
 
         is_starred = self.dataset.get('is_starred', False)
         self.star_button = StarButton(dataset_id=self.dataset['id'], checked=is_starred)
