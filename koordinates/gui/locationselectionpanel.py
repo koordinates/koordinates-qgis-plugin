@@ -1,5 +1,7 @@
 import os
 
+from typing import Optional
+
 from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import (
     QWidget,
@@ -35,7 +37,7 @@ class LocationSelectionPanel(QWidget, WIDGET):
         self.updateGeometry()
         self.adjustSize()
 
-    def location(self):
+    def location(self) -> Optional[str]:
         if self.comboStorageType.currentIndex() == 0:
             return None
         else:
