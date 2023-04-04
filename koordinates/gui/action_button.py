@@ -6,14 +6,18 @@ from qgis.PyQt.QtWidgets import (
     QToolButton,
     QSizePolicy
 )
-from qgis.core import Qgis
+from qgis.core import (
+    Qgis,
+    QgsApplication
+)
 from qgis.utils import iface
 
 from koordinates.utils import cloneKartRepo, KartNotInstalledException
 from .gui_utils import GuiUtils
 from ..api import (
     KoordinatesClient,
-    UserCapability
+    UserCapability,
+    LayerUtils
 )
 
 COLOR_INDEX = 0
@@ -123,33 +127,11 @@ class AddButton(ActionButton):
         icon = GuiUtils.get_icon('add_button.svg')
         self.setIcon(icon)
         self.setIconSize(QSize(53, 11))
-        self.clicked.connect(self.addLayer)
+        self.clicked.connect(self.add_layer)
         self.setFixedSize(72, self.BUTTON_HEIGHT)
 
-    def addLayer(self):
-        MAP_LAYER_COLORS = (
-            "003399",
-            "ff0000",
-            "009e00",
-            "ff7b00",
-            "ff0090",
-            "9900ff",
-            "6b6b6b",
-            "ff7e7e",
-            "d4c021",
-            "00cf9f",
-            "81331f",
-            "7ca6ff",
-            "82d138",
-            "32c8db",
-        )
-
-        global COLOR_INDEX
-        color = MAP_LAYER_COLORS[COLOR_INDEX % len(MAP_LAYER_COLORS)]
-        COLOR_INDEX += 1
-
-        apikey = KoordinatesClient.instance().apiKey
-        uri = (
-            f"contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&format=image/png&layers=layer-{self.dataset['id']}&styles=style%3Dauto,color%3D000000&tileMatrixSet=EPSG:3857&tilePixelRatio=0&url=https://data.linz.govt.nz/services;key%3D{apikey}/wmts/1.0.0/layer/{self.dataset['id']}/WMTSCapabilities.xml"
-        )
-        iface.addRasterLayer(uri, self.dataset.get("title", 'Layer'), "wms")
+    def add_layer(self):
+        """
+        Adds the layer to the current project
+        """
+        LayerUtils.add_layer_to_project(self.dataset)
