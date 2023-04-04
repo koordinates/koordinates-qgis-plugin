@@ -106,9 +106,6 @@ class CloneButton(ActionButton):
                     password=KoordinatesClient.instance().apiKey,
                     parent=iface.mainWindow()
             )
-           #     iface.messageBar().pushMessage(
-           #         "Repository correctly cloned", Qgis.Info, duration=5
-           #     )
         except KartNotInstalledException:
             iface.messageBar().pushMessage(
                 "Kart plugin must be installed to clone repositories",

@@ -7,20 +7,20 @@ from qgis.PyQt.QtCore import (
     QEvent
 )
 from qgis.PyQt.QtWidgets import (
-    QAction,
-    QPushButton
+    QAction
 )
 
 from qgis.core import (
-    Qgis,
-    QgsApplication,
-    QgsMessageOutput
+    QgsApplication
 )
 
 
 from koordinates.gui.koordinates import Koordinates
 from .core import KartOperationManager
-from .gui import KoordinatesDataItemProvider
+from .gui import (
+    KoordinatesDataItemProvider,
+    OperationManagerMessageBarBridge
+)
 
 
 class KoordinatesPlugin(object):
@@ -30,13 +30,16 @@ class KoordinatesPlugin(object):
         self.explorerAction: Optional[QAction] = None
         self.data_item_provider: Optional[KoordinatesDataItemProvider] = None
         self._kart_operation_manager: Optional[KartOperationManager] = None
+        self._operation_manager_bridge = \
+            Optional[OperationManagerMessageBarBridge] = None
 
     def initGui(self):
         self._kart_operation_manager = KartOperationManager()
         KartOperationManager._instance = self._kart_operation_manager
 
-        self._kart_operation_manager.error_occurred.connect(
-            self._report_operation_error
+        self._operation_manager_bridge = OperationManagerMessageBarBridge(
+                self._kart_operation_manager,
+                self.iface.messageBar()
         )
 
         self.dock = Koordinates()
@@ -72,6 +75,11 @@ class KoordinatesPlugin(object):
             )
         self.data_item_provider = None
 
+        if self._operation_manager_bridge and \
+                not sip.isdeleted(self._operation_manager_bridge):
+            self._operation_manager_bridge.deleteLater()
+        self._operation_manager_bridge = None
+
         if self._kart_operation_manager and \
                 not sip.isdeleted(self._kart_operation_manager):
             self._kart_operation_manager.deleteLater()
@@ -79,19 +87,3 @@ class KoordinatesPlugin(object):
         KartOperationManager._instance = None
 
         QCoreApplication.sendPostedEvents(None, QEvent.DeferredDelete)
-
-    def _report_operation_error(self, title: str, error: str):
-        def show_details(_):
-            dialog = QgsMessageOutput.createMessageOutput()
-            dialog.setTitle(title)
-            dialog.setMessage(error, QgsMessageOutput.MessageHtml)
-            dialog.showMessage()
-
-        message_widget = self.iface.messageBar().createMessage('',
-                                                               title)
-        details_button = QPushButton("View Details")
-        details_button.clicked.connect(show_details)
-        message_widget.layout().addWidget(details_button)
-        self.iface.messageBar().pushWidget(message_widget,
-                                           Qgis.MessageLevel.Critical,
-                                           0)

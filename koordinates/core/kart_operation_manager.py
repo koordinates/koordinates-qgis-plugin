@@ -24,8 +24,9 @@ class KartOperationManager(QObject):
     Keeps track of ongoing kart operations
     """
 
-    # emitted when an error occurs, with title and error message
-    error_occurred = pyqtSignal(str, str)
+    single_task_progress_changed = pyqtSignal(str, float)
+    single_task_completed = pyqtSignal(str)
+    single_task_failed = pyqtSignal(str, str)
 
     _instance: Optional['KartOperationManager'] = None
 
@@ -66,7 +67,7 @@ class KartOperationManager(QObject):
 
         if on_fail is not None:
 
-            def call_onfail_and_pop(_task: KartTask):
+            def call_on_fail_and_pop(_task: KartTask):
                 """
                 Ensure that the on_fail callback is always called
                 before cleaning up the task
@@ -74,9 +75,13 @@ class KartOperationManager(QObject):
                 on_fail(_task)
                 self._pop_task(_task)
 
-            task.taskTerminated.connect(partial(call_onfail_and_pop, task))
+            task.taskTerminated.connect(partial(call_on_fail_and_pop, task))
         else:
             task.taskTerminated.connect(partial(self._pop_task, task))
+
+        task.progressChanged.connect(
+            partial(self._task_progress_changed, task)
+        )
 
         QgsApplication.taskManager().addTask(task)
 
@@ -84,7 +89,33 @@ class KartOperationManager(QObject):
         """
         Removes a finished task from the manager
         """
+        result, short_description, detailed_description = task.result()
+
+        if result:
+            if len(self._ongoing_tasks) == 1:
+                self.single_task_completed.emit(short_description)
+            else:
+                assert False
+        else:
+            if len(self._ongoing_tasks) == 1:
+                self.single_task_failed.emit(short_description,
+                                             detailed_description)
+            else:
+                assert False
+
         self._ongoing_tasks = [t for t in self._ongoing_tasks if t != task]
+
+    def _task_progress_changed(self, task: KartTask, progress: float):
+        """
+        Called when a task's progress is changed
+        """
+        if len(self._ongoing_tasks) == 1:
+            self.single_task_progress_changed.emit(
+                task.description(),
+                progress
+            )
+        else:
+            assert False
 
     def start_clone(self,
                     title: str,
@@ -110,19 +141,10 @@ class KartOperationManager(QObject):
         )
 
         def on_task_complete(_task: KartTask):
-            repo = _task.repo
-
             # if kart plugin is not available then a KartNotInstalledException
             # will have been raised when creating the KartCloneTask
-            from kart.core import RepoManager
-            RepoManager.instance().add_repo(repo)
-
-        def on_task_terminated(_task: KartTask):
-            self.error_occurred.emit(
-                self.tr('Failed to clone ...'),
-                '\n'.join(_task.output())
-            )
+            from kart.core import RepoManager  # NOQA
+            RepoManager.instance().add_repo(_task.repo)
 
         self._push_task(task,
-                        on_complete=on_task_complete,
-                        on_fail=on_task_terminated)
+                        on_complete=on_task_complete)
