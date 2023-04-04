@@ -15,7 +15,8 @@ from .enums import (  # NOQA
     CreativeCommonLicenseVersions,
     AccessType,
     SortOrder,
-    Capability
+    Capability,
+    PublicAccessType
 )
 
 from .utils import ApiUtils  # NOQA

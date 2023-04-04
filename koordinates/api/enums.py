@@ -13,6 +13,14 @@ class AccessType(Enum):
     Private = 2
 
 
+class PublicAccessType(Enum):
+    """
+    Public access types
+    """
+    none = 1
+    Download = 2
+
+
 class Capability(Enum):
     """
     Dataset capabilities

@@ -34,6 +34,7 @@ from qgis.PyQt.QtWidgets import (
     QGridLayout,
     QWidget
 )
+from qgis.PyQt.QtSvg import QSvgWidget
 
 from .action_button import (
     AddButton,
@@ -50,6 +51,7 @@ from .thumbnails import downloadThumbnail
 from ..api import (
     ApiUtils,
     DataType,
+    PublicAccessType,
     Capability,
     KoordinatesClient
 )
@@ -481,6 +483,10 @@ class MetadataWidget(QFrame):
 
 
 class DatasetDialog(QDialog):
+    """
+    A dialog showing details of a dataset
+    """
+
     def __init__(self, parent, dataset):
         super().__init__(parent)
 
@@ -491,7 +497,12 @@ class DatasetDialog(QDialog):
         else:
             self.attachments = []
 
-        self.dataset_type: DataType = ApiUtils.data_type_from_dataset_response(self.dataset)
+        self.dataset_type: DataType = ApiUtils.data_type_from_dataset_response(
+            self.dataset
+        )
+        self.public_access_type = ApiUtils.access_from_dataset_response(
+            self.dataset
+        )
 
         self.setWindowTitle('Dataset Details - {}'.format(dataset.get('title', 'layer')))
 
@@ -520,7 +531,15 @@ class DatasetDialog(QDialog):
             font-weight: 500;
             font-size: {title_font_size}pt;">{dataset.get('title', '')}</span>"""
         )
-        title_hl.addWidget(self.label_title, 1)
+        title_hl.addWidget(self.label_title)
+
+        if self.public_access_type == PublicAccessType.none:
+            private_icon = QSvgWidget(GuiUtils.get_icon_svg('private.svg'))
+            private_icon.setFixedSize(QSize(24, 24))
+            private_icon.setToolTip(self.tr('Private'))
+            title_hl.addWidget(private_icon)
+
+        title_hl.addStretch()
 
         is_starred = self.dataset.get('is_starred', False)
         self.star_button = StarButton(dataset_id=self.dataset['id'], checked=is_starred)

@@ -4,6 +4,7 @@ from qgis.PyQt.QtCore import QUrlQuery
 
 from .enums import (
     DataType,
+    PublicAccessType,
     Capability
 )
 
@@ -49,7 +50,20 @@ class ApiUtils:
             return DataType.Repositories
 
     @staticmethod
+    def access_from_dataset_response(dataset: dict) -> PublicAccessType:
+        """
+        Returns the public access type for a dataset
+        """
+        if dataset.get('public_access') is None:
+            return PublicAccessType.none
+
+        return PublicAccessType.Download
+
+    @staticmethod
     def capabilities_from_dataset_response(dataset: dict) -> Set[Capability]:
+        """
+        Returns capabilities for a dataset
+        """
         datatype = ApiUtils.data_type_from_dataset_response(dataset)
         capabilities = DataType.capabilities(datatype)
 
