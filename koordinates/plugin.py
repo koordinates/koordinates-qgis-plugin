@@ -30,7 +30,7 @@ class KoordinatesPlugin(object):
         self.explorerAction: Optional[QAction] = None
         self.data_item_provider: Optional[KoordinatesDataItemProvider] = None
         self._kart_operation_manager: Optional[KartOperationManager] = None
-        self._operation_manager_bridge = \
+        self._operation_manager_bridge: \
             Optional[OperationManagerMessageBarBridge] = None
 
     def initGui(self):

@@ -1,3 +1,6 @@
+from typing import Optional
+
+from qgis.PyQt import sip
 from qgis.PyQt.QtCore import (
     QObject
 )
@@ -9,7 +12,8 @@ from qgis.core import (
     QgsMessageOutput
 )
 from qgis.gui import (
-    QgsMessageBar
+    QgsMessageBar,
+    QgsMessageBarItem
 )
 
 from ..core import (
@@ -32,12 +36,25 @@ class OperationManagerMessageBarBridge(QObject):
         self._manager = operations_manager
         self._bar = message_bar
 
+        self._current_item: Optional[QgsMessageBarItem] = None
+
         self._manager.single_task_completed.connect(
             self._report_operation_success
         )
         self._manager.single_task_failed.connect(
             self._report_operation_error
         )
+
+    def _create_new_item(self, title: str) -> QgsMessageBarItem:
+        """
+        Destroys the current message bar item, and creates a new one
+        with the given title
+        """
+        if self._current_item and not sip.isdeleted(self._current_item):
+            self._bar.popWidget(self._current_item)
+
+        self._current_item = self._bar.createMessage('', title)
+        return self._current_item
 
     def _report_operation_error(self, title: str, error: str):
         def show_details(_):
@@ -46,18 +63,20 @@ class OperationManagerMessageBarBridge(QObject):
             dialog.setMessage(error, QgsMessageOutput.MessageHtml)
             dialog.showMessage()
 
-        message_widget = self.iface.messageBar().createMessage('',
-                                                               title)
-        details_button = QPushButton("View Details")
+        item = self._create_new_item(title)
+        details_button = QPushButton(self.tr("View Details"))
         details_button.clicked.connect(show_details)
-        message_widget.layout().addWidget(details_button)
-        self._bar.pushWidget(message_widget,
-                             Qgis.MessageLevel.Critical,
-                             0)
+        item.layout().addWidget(details_button)
+        self._bar.pushWidget(
+            item,
+            Qgis.MessageLevel.Critical,
+            0
+        )
 
     def _report_operation_success(self, title: str):
-        message_widget = self.iface.messageBar().createMessage('',
-                                                               title)
-        self._bar.pushWidget(message_widget,
-                             Qgis.MessageLevel.Success,
-                             0)
+        item = self._create_new_item(title)
+        self._bar.pushWidget(
+            item,
+            Qgis.MessageLevel.Success,
+            0
+        )
