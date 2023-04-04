@@ -19,7 +19,7 @@ class KartUtils:
     Contains Kart integration support utilities
     """
 
-    CURRENT_CLONE_DIALOG: Optional['CloneDialog'] = None
+    CURRENT_CLONE_DIALOG: Optional['CloneDialog'] = None  # NOQA
     CLONE_KART_REPO_WAS_ACCEPTED: bool = False
 
     @staticmethod
@@ -101,7 +101,7 @@ class KartUtils:
             raise KartNotInstalledException()
 
     @staticmethod
-    def get_kart_repos() -> List['Repository']:
+    def get_kart_repos() -> List['Repository']:  # NOQA
         """
         Returns a list of the cloned kart repositories
         """

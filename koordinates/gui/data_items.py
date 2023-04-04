@@ -19,7 +19,7 @@ class KartRepositoryItem(QgsDirectoryItem):
 
     def __init__(self,
                  parent: QgsDataItem,
-                 repo: 'Repository'):
+                 repo: 'Repository'):  # NOQA
         path = repo.path
         title = repo.title()
         if not title:
