@@ -10,7 +10,12 @@ from qgis.PyQt.QtCore import (
     QEvent
 )
 
+from qgis.core import (
+    QgsApplication
+)
+
 from koordinates.gui.koordinates import Koordinates
+from koordinates.gui import KoordinatesDataItemProvider
 
 pluginPath = os.path.dirname(__file__)
 
@@ -24,6 +29,7 @@ class KoordinatesPlugin(object):
         self.iface = iface
         self.dock: Optional[Koordinates] = None
         self.explorerAction: Optional[QAction] = None
+        self.data_item_provider: Optional[KoordinatesDataItemProvider] = None
 
     def initGui(self):
         self.dock = Koordinates()
@@ -37,6 +43,11 @@ class KoordinatesPlugin(object):
 
         self.dock.hide()
 
+        self.data_item_provider = KoordinatesDataItemProvider()
+        QgsApplication.dataItemProviderRegistry().addProvider(
+            self.data_item_provider
+        )
+
     def unload(self):
         if not sip.isdeleted(self.dock):
             self.dock.cancel_active_requests()
@@ -45,5 +56,12 @@ class KoordinatesPlugin(object):
         self.dock = None
 
         self.iface.removePluginMenu("Koordinates", self.explorerAction)
+
+        if self.data_item_provider and \
+                not sip.isdeleted(self.data_item_provider):
+            QgsApplication.dataItemProviderRegistry().removeProvider(
+                self.data_item_provider
+            )
+        self.data_item_provider = None
 
         QCoreApplication.sendPostedEvents(None, QEvent.DeferredDelete)

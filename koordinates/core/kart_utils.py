@@ -101,6 +101,18 @@ class KartUtils:
             raise KartNotInstalledException()
 
     @staticmethod
+    def get_kart_repos() -> List['kart.kartapi.Repository']:
+        """
+        Returns a list of the cloned kart repositories
+        """
+        try:
+            from kart import kartapi
+            return kartapi.repos()[:]
+
+        except ImportError:
+            raise KartNotInstalledException()
+
+    @staticmethod
     def get_kart_repo_paths() -> List[str]:
         """
         Returns a list of the cloned kart repository paths
