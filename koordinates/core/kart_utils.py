@@ -13,12 +13,8 @@ from qgis.core import (
 )
 
 from .kart_task import KartCloneTask
-
-
-class KartNotInstalledException(Exception):
-    """
-    Raised when the Kart plugin is not installed
-    """
+from .exceptions import KartNotInstalledException
+from .kart_operation_manager import KartOperationManager
 
 
 class KartUtils:
@@ -28,16 +24,18 @@ class KartUtils:
 
     CURRENT_CLONE_DIALOG: Optional['CloneDialog'] = None  # NOQA
     CLONE_KART_REPO_WAS_ACCEPTED: bool = False
-    ONGOING_TASKS = []
 
     @staticmethod
     def clone_kart_repo(title: str,
                         url: str,
                         username: Optional[str],
                         password: Optional[str],
-                        parent: Optional[QWidget]):
+                        parent: Optional[QWidget]) -> bool:
         """
         Shows a dialog for cloning a kart repository
+
+        :raises: KartNotInstalledException if kart plugin
+        is not installed
         """
         import qgis
 
@@ -84,7 +82,7 @@ class KartUtils:
                 KartUtils.CURRENT_CLONE_DIALOG.deleteLater()
                 KartUtils.CURRENT_CLONE_DIALOG = None
 
-                task = KartCloneTask(
+                KartOperationManager.instance().start_clone(
                     title,
                     url,
                     destination,
@@ -93,25 +91,6 @@ class KartUtils:
                     username=username,
                     password=password,
                 )
-                KartUtils.ONGOING_TASKS.append(task)
-
-                def on_task_complete(_task):
-                    repo = _task.repo
-
-                    from kart.core import RepoManager
-                    RepoManager.instance().add_repo(repo)
-                    KartUtils.ONGOING_TASKS = [t for t in KartUtils.ONGOING_TASKS if t != _task]
-
-                def on_task_terminated(_task):
-                    print('Boo failed')
-                    print(_task.output())
-                    KartUtils.ONGOING_TASKS = [t for t in KartUtils.ONGOING_TASKS if t != _task]
-
-                task.taskCompleted.connect(partial(on_task_complete, task))
-                task.taskTerminated.connect(partial(on_task_terminated, task))
-
-                QgsApplication.taskManager().addTask(task)
-
                 return True
             else:
                 if KartUtils.CURRENT_CLONE_DIALOG:
