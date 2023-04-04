@@ -45,6 +45,15 @@ class KoordinatesRootItem(QgsDataCollectionItem):
         # self.setIcon('')
         self.populate()
 
+        try:
+            from kart.core import RepoManager
+            manager = RepoManager.instance()
+            manager.repo_added.connect(self.refresh)
+            manager.repo_removed.connect(self.refresh)
+
+        except ImportError:
+            pass
+
     def createChildren(self):
         res = []
 

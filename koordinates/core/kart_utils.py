@@ -98,7 +98,9 @@ class KartUtils:
 
                 def on_task_complete(_task):
                     repo = _task.repo
-                    kart_plugin.dock.reposItem.addRepoToUI(repo)
+
+                    from kart.core import RepoManager
+                    RepoManager.instance().add_repo(repo)
                     KartUtils.ONGOING_TASKS = [t for t in KartUtils.ONGOING_TASKS if t != _task]
 
                 def on_task_terminated(_task):
@@ -127,8 +129,8 @@ class KartUtils:
         Returns a list of the cloned kart repositories
         """
         try:
-            from kart import kartapi
-            return kartapi.repos()[:]
+            from kart.core import RepoManager
+            return RepoManager.instance().repos()[:]
 
         except ImportError:
             raise KartNotInstalledException()
@@ -139,8 +141,8 @@ class KartUtils:
         Returns a list of the cloned kart repository paths
         """
         try:
-            from kart import kartapi
-            return [repo.path for repo in kartapi.repos()]
+            from kart.core import RepoManager
+            return [repo.path for repo in RepoManager.instance().repos()]
 
         except ImportError:
             raise KartNotInstalledException()
