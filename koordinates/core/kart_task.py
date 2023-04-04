@@ -39,6 +39,7 @@ class KartTask(QgsTask):
         self._feedback: Optional[QgsFeedback] = None
         self._output = []
         self._result: bool = False
+        self._was_canceled: bool = False
 
         self._stdout_buffer = ''
 
@@ -47,6 +48,12 @@ class KartTask(QgsTask):
         Returns a short description of the task's result
         """
         return self.tr('Success')
+
+    def was_canceled(self) -> bool:
+        """
+        Returns True if the task was canceled
+        """
+        return self._was_canceled
 
     def result(self) -> Tuple[bool, str, str]:
         """
@@ -59,7 +66,7 @@ class KartTask(QgsTask):
         return (
             self._result,
             self.short_result_description(),
-            '\n'.join(self._output)
+            '<br>'.join(self._output)
         )
 
     def output(self) -> List[str]:
@@ -84,6 +91,8 @@ class KartTask(QgsTask):
     def run(self):
         self._feedback = QgsFeedback()
 
+        self.setProgress(1)
+
         process = QgsBlockingProcess(self._kart_executable, self._arguments)
 
         def on_stdout(ba):
@@ -100,11 +109,12 @@ class KartTask(QgsTask):
 
         self._result = bool(process.exitStatus() == QProcess.NormalExit
                             and res == 0)
-        return self._result
+        return self._was_canceled or self._result
 
     def cancel(self):
         if self._feedback:
             self._feedback.cancel()
+            self._was_canceled = True
 
         super().cancel()
 

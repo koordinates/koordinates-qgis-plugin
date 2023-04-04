@@ -27,6 +27,9 @@ class KartOperationManager(QObject):
     single_task_progress_changed = pyqtSignal(str, float)
     single_task_completed = pyqtSignal(str)
     single_task_failed = pyqtSignal(str, str)
+    single_task_canceled = pyqtSignal()
+
+    multiple_task_progress_changed = pyqtSignal(str, float)
 
     _instance: Optional['KartOperationManager'] = None
 
@@ -58,7 +61,8 @@ class KartOperationManager(QObject):
                 Ensure that the on_complete callback is always called
                 before cleaning up the task
                 """
-                on_complete(_task)
+                if not _task.was_canceled():
+                    on_complete(_task)
                 self._pop_task(_task)
 
             task.taskCompleted.connect(partial(call_on_complete_and_pop, task))
@@ -79,9 +83,7 @@ class KartOperationManager(QObject):
         else:
             task.taskTerminated.connect(partial(self._pop_task, task))
 
-        task.progressChanged.connect(
-            partial(self._task_progress_changed, task)
-        )
+        task.progressChanged.connect(self._emit_progress_message)
 
         QgsApplication.taskManager().addTask(task)
 
@@ -90,32 +92,55 @@ class KartOperationManager(QObject):
         Removes a finished task from the manager
         """
         result, short_description, detailed_description = task.result()
-
-        if result:
-            if len(self._ongoing_tasks) == 1:
-                self.single_task_completed.emit(short_description)
-            else:
-                assert False
-        else:
-            if len(self._ongoing_tasks) == 1:
-                self.single_task_failed.emit(short_description,
-                                             detailed_description)
-            else:
-                assert False
+        was_canceled = task.was_canceled()
 
         self._ongoing_tasks = [t for t in self._ongoing_tasks if t != task]
 
-    def _task_progress_changed(self, task: KartTask, progress: float):
+        if was_canceled:
+            if len(self._ongoing_tasks) == 0:
+                self.single_task_canceled.emit()
+            else:
+                self._emit_progress_message()
+        else:
+            if result:
+                if len(self._ongoing_tasks) == 0:
+                    self.single_task_completed.emit(short_description)
+                else:
+                    assert False
+            else:
+                if len(self._ongoing_tasks) == 0:
+                    self.single_task_failed.emit(short_description,
+                                                 detailed_description)
+                else:
+                    assert False
+
+    def _emit_progress_message(self):
         """
-        Called when a task's progress is changed
+        Emits progress report signals
         """
         if len(self._ongoing_tasks) == 1:
             self.single_task_progress_changed.emit(
-                task.description(),
-                progress
+                self._ongoing_tasks[0].description(),
+                self._ongoing_tasks[0].progress()
+            )
+        elif all(isinstance(t, KartCloneTask) for t in self._ongoing_tasks):
+            self.multiple_task_progress_changed.emit(
+                self.tr('Cloning {} datasets.').format(
+                    len(self._ongoing_tasks)
+                ),
+                100 * sum(t.progress() for t in self._ongoing_tasks) /
+                (100 * len(self._ongoing_tasks))
             )
         else:
+            # mixed task types, not handled yet
             assert False
+
+    def cancel(self):
+        """
+        Cancels all ongoing tasks
+        """
+        for t in self._ongoing_tasks:
+            t.cancel()
 
     def start_clone(self,
                     title: str,

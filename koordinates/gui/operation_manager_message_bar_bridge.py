@@ -5,7 +5,8 @@ from qgis.PyQt.QtCore import (
     QObject
 )
 from qgis.PyQt.QtWidgets import (
-    QPushButton
+    QPushButton,
+    QProgressBar
 )
 from qgis.core import (
     Qgis,
@@ -37,6 +38,18 @@ class OperationManagerMessageBarBridge(QObject):
         self._bar = message_bar
 
         self._current_item: Optional[QgsMessageBarItem] = None
+        self._progress_bar: Optional[QProgressBar] = None
+
+        self._manager.single_task_progress_changed.connect(
+            self._report_operation_progress
+        )
+        self._manager.multiple_task_progress_changed.connect(
+            self._report_operation_progress
+        )
+
+        self._manager.single_task_canceled.connect(
+            self._clear
+        )
 
         self._manager.single_task_completed.connect(
             self._report_operation_success
@@ -44,6 +57,14 @@ class OperationManagerMessageBarBridge(QObject):
         self._manager.single_task_failed.connect(
             self._report_operation_error
         )
+
+    def _clear(self):
+        """
+        Clears the existing message bar item
+        """
+        if self._current_item and not sip.isdeleted(self._current_item):
+            self._bar.popWidget(self._current_item)
+        self._current_item = None
 
     def _create_new_item(self, title: str) -> QgsMessageBarItem:
         """
@@ -55,6 +76,27 @@ class OperationManagerMessageBarBridge(QObject):
 
         self._current_item = self._bar.createMessage('', title)
         return self._current_item
+
+    def _report_operation_progress(self, title: str, progress: float):
+        """
+        Reports operation progress
+        """
+        item = self._create_new_item(title)
+        self._progress_bar = QProgressBar()
+        self._progress_bar.setRange(0, 100)
+        item.layout().addWidget(self._progress_bar)
+
+        cancel_button = QPushButton(self.tr('Cancel'))
+        item.layout().addWidget(cancel_button)
+        cancel_button.clicked.connect(self._manager.cancel)
+
+        self._progress_bar.setValue(int(progress))
+
+        self._bar.pushWidget(
+            item,
+            Qgis.MessageLevel.Info,
+            0
+        )
 
     def _report_operation_error(self, title: str, error: str):
         def show_details(_):
@@ -78,5 +120,5 @@ class OperationManagerMessageBarBridge(QObject):
         self._bar.pushWidget(
             item,
             Qgis.MessageLevel.Success,
-            0
+            QgsMessageBar.defaultMessageTimeout(Qgis.MessageLevel.Success)
         )
