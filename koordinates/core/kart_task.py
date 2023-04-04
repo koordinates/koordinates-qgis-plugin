@@ -99,6 +99,7 @@ class KartCloneTask(KartTask):
     """
 
     def __init__(self,
+                 title: str,
                  url: str,
                  destination: str,
                  location: Optional[str] = None,
@@ -118,8 +119,10 @@ class KartCloneTask(KartTask):
             password=password,
         )
 
-        super().__init__('Cloning /./////',
-                         commands)
+        super().__init__(
+            self.tr('Cloning {}').format(title),
+            commands
+        )
 
         self.destination = destination
         self.repo: Optional[Repository] = None

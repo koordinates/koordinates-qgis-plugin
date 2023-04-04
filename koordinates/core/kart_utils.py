@@ -86,6 +86,7 @@ class KartUtils:
                 KartUtils.CURRENT_CLONE_DIALOG = None
 
                 task = KartCloneTask(
+                    title,
                     url,
                     destination,
                     location=location,
