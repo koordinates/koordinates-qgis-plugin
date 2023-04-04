@@ -7,8 +7,7 @@ from qgis.PyQt.QtWidgets import (
     QSizePolicy
 )
 from qgis.core import (
-    Qgis,
-    QgsApplication
+    Qgis
 )
 from qgis.utils import iface
 

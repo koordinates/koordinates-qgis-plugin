@@ -13,6 +13,9 @@ class LayerUtils:
     Layer handling utility functions
     """
 
+    WMTS_URL_BASE = 'https://data.linz.govt.nz/services'
+    WMTS_ENDPOINT = 'wmts/1.0.0/layer'
+
     @staticmethod
     def get_random_color_string() -> str:
         """
@@ -31,6 +34,11 @@ class LayerUtils:
 
         apikey = KoordinatesClient.instance().apiKey
         uri = (
-            f"contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&format=image/png&layers=layer-{dataset['id']}&styles=style%3Dauto,color%3D{color_name}&tileMatrixSet=EPSG:3857&tilePixelRatio=0&url=https://data.linz.govt.nz/services;key%3D{apikey}/wmts/1.0.0/layer/{dataset['id']}/WMTSCapabilities.xml"
+            "contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&format=image/png"
+            f"&layers=layer-{dataset['id']}&styles=style%3Dauto,"
+            f"color%3D{color_name}&tileMatrixSet=EPSG:3857&"
+            f"tilePixelRatio=0&url={LayerUtils.WMTS_URL_BASE};"
+            f"key%3D{apikey}/{LayerUtils.WMTS_ENDPOINT}/"
+            f"{dataset['id']}/WMTSCapabilities.xml"
         )
         iface.addRasterLayer(uri, dataset.get("title", 'Layer'), "wms")
