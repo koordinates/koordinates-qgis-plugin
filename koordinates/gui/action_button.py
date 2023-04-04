@@ -11,7 +11,10 @@ from qgis.core import (
 )
 from qgis.utils import iface
 
-from koordinates.utils import cloneKartRepo, KartNotInstalledException
+from ..core import (
+    KartUtils,
+    KartNotInstalledException
+)
 from .gui_utils import GuiUtils
 from ..api import (
     KoordinatesClient,
@@ -96,7 +99,7 @@ class CloneButton(ActionButton):
             return
 
         try:
-            if cloneKartRepo(
+            if KartUtils.clone_kart_repo(
                     title=title,
                     url=url,
                     username="kart",

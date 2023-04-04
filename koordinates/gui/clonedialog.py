@@ -132,7 +132,7 @@ class CloneDialog(QDialog, WIDGET):
         """
         return self.dest_widget.filePath()
 
-    def location(self):
+    def location(self) -> Optional[str]:
         """
         Returns the destination location details
         """
