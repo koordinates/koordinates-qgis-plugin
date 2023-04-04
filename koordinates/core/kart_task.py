@@ -12,6 +12,8 @@ from qgis.core import (
     QgsReferencedRectangle
 )
 
+from .exceptions import KartNotInstalledException
+
 
 class KartTask(QgsTask):
     """
@@ -27,7 +29,10 @@ class KartTask(QgsTask):
             )
             self._kart_executable = kartExecutable()
         except ImportError:
-            self._kart_executable = None
+            raise KartNotInstalledException
+
+        if not self._kart_executable:
+            raise KartNotInstalledException
 
         self._arguments = arguments
         self._feedback: Optional[QgsFeedback] = None
@@ -55,9 +60,6 @@ class KartTask(QgsTask):
             self._stdout_buffer = ''
 
     def run(self):
-        if not self._kart_executable:
-            return False
-
         self._feedback = QgsFeedback()
 
         process = QgsBlockingProcess(self._kart_executable, self._arguments)
@@ -99,9 +101,12 @@ class KartCloneTask(KartTask):
                  extent: Optional[QgsReferencedRectangle] = None,
                  username: Optional[str] = None,
                  password: Optional[str] = None):
-        from kart.kartapi import (
-            Repository
-        )
+        try:
+            from kart.kartapi import (
+                Repository
+            )
+        except ImportError:
+            raise KartNotInstalledException()
 
         commands = Repository.generate_clone_arguments(
             url,

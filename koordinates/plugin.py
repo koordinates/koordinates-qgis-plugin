@@ -6,10 +6,17 @@ from qgis.PyQt.QtCore import (
     QCoreApplication,
     QEvent
 )
-from qgis.PyQt.QtWidgets import QAction
-from qgis.core import (
-    QgsApplication
+from qgis.PyQt.QtWidgets import (
+    QAction,
+    QPushButton
 )
+
+from qgis.core import (
+    Qgis,
+    QgsApplication,
+    QgsMessageOutput
+)
+
 
 from koordinates.gui.koordinates import Koordinates
 from .core import KartOperationManager
@@ -27,6 +34,10 @@ class KoordinatesPlugin(object):
     def initGui(self):
         self._kart_operation_manager = KartOperationManager()
         KartOperationManager._instance = self._kart_operation_manager
+
+        self._kart_operation_manager.error_occurred.connect(
+            self._report_operation_error
+        )
 
         self.dock = Koordinates()
         self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dock)
@@ -68,3 +79,19 @@ class KoordinatesPlugin(object):
         KartOperationManager._instance = None
 
         QCoreApplication.sendPostedEvents(None, QEvent.DeferredDelete)
+
+    def _report_operation_error(self, title: str, error: str):
+        def show_details(_):
+            dialog = QgsMessageOutput.createMessageOutput()
+            dialog.setTitle(title)
+            dialog.setMessage(error, QgsMessageOutput.MessageHtml)
+            dialog.showMessage()
+
+        message_widget = self.iface.messageBar().createMessage('',
+                                                               title)
+        details_button = QPushButton("View Details")
+        details_button.clicked.connect(show_details)
+        message_widget.layout().addWidget(details_button)
+        self.iface.messageBar().pushWidget(message_widget,
+                                           Qgis.MessageLevel.Critical,
+                                           0)

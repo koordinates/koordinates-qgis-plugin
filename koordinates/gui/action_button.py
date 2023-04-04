@@ -99,16 +99,16 @@ class CloneButton(ActionButton):
             return
 
         try:
-            if KartUtils.clone_kart_repo(
+            KartUtils.clone_kart_repo(
                     title=title,
                     url=url,
                     username="kart",
                     password=KoordinatesClient.instance().apiKey,
                     parent=iface.mainWindow()
-            ):
-                iface.messageBar().pushMessage(
-                    "Repository correctly cloned", Qgis.Info, duration=5
-                )
+            )
+           #     iface.messageBar().pushMessage(
+           #         "Repository correctly cloned", Qgis.Info, duration=5
+           #     )
         except KartNotInstalledException:
             iface.messageBar().pushMessage(
                 "Kart plugin must be installed to clone repositories",
