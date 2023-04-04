@@ -1,7 +1,8 @@
 import re
 from typing import (
     List,
-    Optional
+    Optional,
+    Tuple
 )
 
 from qgis.PyQt.QtCore import QProcess
@@ -37,8 +38,29 @@ class KartTask(QgsTask):
         self._arguments = arguments
         self._feedback: Optional[QgsFeedback] = None
         self._output = []
+        self._result: bool = False
 
         self._stdout_buffer = ''
+
+    def short_result_description(self) -> str:
+        """
+        Returns a short description of the task's result
+        """
+        return self.tr('Success')
+
+    def result(self) -> Tuple[bool, str, str]:
+        """
+        Returns the task's result, as a tuple of:
+
+        - True for success
+        - Short description of result
+        - Detailed description of result
+        """
+        return (
+            self._result,
+            self.short_result_description(),
+            '\n'.join(self._output)
+        )
 
     def output(self) -> List[str]:
         """
@@ -76,7 +98,9 @@ class KartTask(QgsTask):
 
         self._feedback = None
 
-        return process.exitStatus() == QProcess.NormalExit and res == 0
+        self._result = bool(process.exitStatus() == QProcess.NormalExit
+                            and res == 0)
+        return self._result
 
     def cancel(self):
         if self._feedback:
@@ -122,8 +146,15 @@ class KartCloneTask(KartTask):
             commands
         )
 
+        self._title = title
         self.destination = destination
         self.repo: Optional[Repository] = None
+
+    def short_result_description(self) -> str:
+        return (
+            self.tr('Cloned {}') if self._result
+            else self.tr('Failed to clone {}')
+        ).format(self._title)
 
     def on_stdout(self, ba):
         val = ba.data().decode('UTF-8')
