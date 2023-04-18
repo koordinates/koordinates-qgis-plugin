@@ -9,6 +9,17 @@ class KartOperation(Enum):
     Unknown = auto()
     Clone = auto()
 
+    def to_verb(self) -> str:
+        """
+        Returns a verb representing the operation
+        """
+
+        # must be lowercase!
+        return {
+            KartOperation.Unknown: 'unknown',
+            KartOperation.Clone: 'clone'
+        }[self]
+
     def to_present_tense_string(self) -> str:
         """
         Returns a present tense string representing the operation
