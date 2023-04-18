@@ -13,6 +13,7 @@ from qgis.core import (
     QgsReferencedRectangle
 )
 
+from .enums import KartOperation
 from .kart_task import (
     KartCloneTask,
     KartTask
@@ -24,12 +25,16 @@ class KartOperationManager(QObject):
     Keeps track of ongoing kart operations
     """
 
-    single_task_progress_changed = pyqtSignal(str, float)
-    single_task_completed = pyqtSignal(str)
+    # description, remaining tasks, overall remaining progress
+    task_completed = pyqtSignal(KartOperation, str, int, float)
+
     single_task_failed = pyqtSignal(str, str)
     single_task_canceled = pyqtSignal()
 
-    multiple_task_progress_changed = pyqtSignal(str, float)
+    # operation, count ongoing tasks, overall progress
+    task_progress_changed = pyqtSignal(str, int, float)
+
+    task_completed_multiple_remain = pyqtSignal(int)
 
     _instance: Optional['KartOperationManager'] = None
 
@@ -96,6 +101,8 @@ class KartOperationManager(QObject):
 
         self._ongoing_tasks = [t for t in self._ongoing_tasks if t != task]
 
+        remaining_progress = self.calculate_remaining_progress()
+
         if was_canceled:
             if len(self._ongoing_tasks) == 0:
                 self.single_task_canceled.emit()
@@ -103,10 +110,10 @@ class KartOperationManager(QObject):
                 self._emit_progress_message()
         else:
             if result:
-                if len(self._ongoing_tasks) == 0:
-                    self.single_task_completed.emit(short_description)
-                else:
-                    assert False
+                self.task_completed.emit(task.operation(),
+                                         short_description,
+                                         len(self._ongoing_tasks),
+                                         remaining_progress)
             else:
                 if len(self._ongoing_tasks) == 0:
                     self.single_task_failed.emit(short_description,
@@ -114,22 +121,31 @@ class KartOperationManager(QObject):
                 else:
                     assert False
 
+    def calculate_remaining_progress(self) -> Optional[float]:
+        """
+        Returns the overall progress of remaining tasks
+        """
+        if not self._ongoing_tasks:
+            return None
+
+        return 100 * sum(t.progress() for t in self._ongoing_tasks) / \
+            (100 * len(self._ongoing_tasks))
+
     def _emit_progress_message(self):
         """
         Emits progress report signals
         """
         if len(self._ongoing_tasks) == 1:
-            self.single_task_progress_changed.emit(
+            self.task_progress_changed.emit(
                 self._ongoing_tasks[0].description(),
+                1,
                 self._ongoing_tasks[0].progress()
             )
         elif all(isinstance(t, KartCloneTask) for t in self._ongoing_tasks):
-            self.multiple_task_progress_changed.emit(
-                self.tr('Cloning {} datasets.').format(
-                    len(self._ongoing_tasks)
-                ),
-                100 * sum(t.progress() for t in self._ongoing_tasks) /
-                (100 * len(self._ongoing_tasks))
+            self.task_progress_changed.emit(
+                self.tr('Cloning'),
+                len(self._ongoing_tasks),
+                self.calculate_remaining_progress()
             )
         else:
             # mixed task types, not handled yet
