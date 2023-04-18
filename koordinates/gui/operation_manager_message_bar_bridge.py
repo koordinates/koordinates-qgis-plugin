@@ -93,7 +93,11 @@ class OperationManagerMessageBarBridge(QObject):
 
         if self._current_item and not sip.isdeleted(self._current_item):
             if self._current_item.level() != level:
+                # this sometimes fails to correctly update the message bar
+                # appearance...
                 self._current_item.setLevel(level)
+            self._bar.setStyleSheet(self._current_item.getStyleSheet())
+
             self._current_item.setDuration(0)
             self._current_item.setText(title)
         else:
