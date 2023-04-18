@@ -36,6 +36,14 @@ class KartOperationManager(QObject):
     # operation, description, count ongoing tasks, overall progress
     task_progress_changed = pyqtSignal(KartOperation, str, int, float)
 
+    # emitted when a clone operation starts.
+    # argument is clone URL
+    clone_started = pyqtSignal(str)
+
+    # emitted regardless of whether the clone was successful or not
+    # argument is clone URL
+    clone_finished = pyqtSignal(str)
+
     _instance: Optional['KartOperationManager'] = None
 
     @classmethod
@@ -183,11 +191,15 @@ class KartOperationManager(QObject):
             password=password,
         )
 
-        def on_task_complete(_task: KartTask):
+        def on_task_complete(_task: KartCloneTask):
             # if kart plugin is not available then a KartNotInstalledException
             # will have been raised when creating the KartCloneTask
             from kart.core import RepoManager  # NOQA
             RepoManager.instance().add_repo(_task.repo)
+            self.clone_finished.emit(_task.url)
 
         self._push_task(task,
                         on_complete=on_task_complete)
+
+        self.clone_started.emit(url)
+
