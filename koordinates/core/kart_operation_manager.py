@@ -212,7 +212,7 @@ class KartOperationManager(QObject):
                         on_complete=on_task_complete,
                         on_fail=on_task_failed_or_cancel,
                         on_cancel=on_task_failed_or_cancel
-        )
+                        )
 
         self.clone_started.emit(url)
 
