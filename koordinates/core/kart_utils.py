@@ -2,17 +2,11 @@ from typing import (
     Optional,
     List
 )
-from functools import partial
 
 from qgis.PyQt import sip
 from qgis.PyQt.QtCore import QEventLoop
 from qgis.PyQt.QtWidgets import QWidget
 
-from qgis.core import (
-    QgsApplication
-)
-
-from .kart_task import KartCloneTask
 from .exceptions import KartNotInstalledException
 from .kart_operation_manager import KartOperationManager
 
