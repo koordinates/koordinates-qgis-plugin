@@ -78,11 +78,7 @@ class CloneButton(ActionButton):
         self.clone_url = \
             self.dataset.get("repository", {}).get("clone_location_https")
 
-        icon = GuiUtils.get_icon('clone_button.svg')
-        self.setIcon(icon)
-        self.setIconSize(QSize(46, 11))
         self.clicked.connect(self.cloneRepository)
-        self.setFixedSize(67, self.BUTTON_HEIGHT)
 
         self._close_parent_on_clone = close_parent_on_clone
 
@@ -106,8 +102,18 @@ class CloneButton(ActionButton):
         )
         self.setEnabled(not is_cloning)
         if is_cloning:
+            icon = GuiUtils.get_icon('cloning_button.svg')
+            self.setIcon(icon)
+            self.setIconSize(QSize(65, 17))
+            self.setFixedSize(99, self.BUTTON_HEIGHT)
+
             self.setText(self.tr('Cloning'))
         else:
+            icon = GuiUtils.get_icon('clone_button.svg')
+            self.setIcon(icon)
+            self.setIconSize(QSize(60, 11))
+            self.setFixedSize(77, self.BUTTON_HEIGHT)
+
             self.setText(self.tr('Clone'))
 
     def cloneRepository(self):
