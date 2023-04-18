@@ -21,6 +21,9 @@ from ..api import (
     UserCapability,
     LayerUtils
 )
+from ..core import (
+    KartOperationManager
+)
 
 COLOR_INDEX = 0
 
@@ -72,8 +75,9 @@ class CloneButton(ActionButton):
         super().__init__(parent)
 
         self.dataset = dataset
+        self.clone_url = \
+            self.dataset.get("repository", {}).get("clone_location_https")
 
-        self.setText("Get")
         icon = GuiUtils.get_icon('clone_button.svg')
         self.setIcon(icon)
         self.setIconSize(QSize(46, 11))
@@ -82,10 +86,34 @@ class CloneButton(ActionButton):
 
         self._close_parent_on_clone = close_parent_on_clone
 
+        KartOperationManager.instance().clone_started.connect(
+            self._update_state,
+            Qt.QueuedConnection
+        )
+        KartOperationManager.instance().clone_finished.connect(
+            self._update_state,
+            Qt.QueuedConnection
+        )
+
+        self._update_state()
+
+    def _update_state(self):
+        """
+        Updates button state based on current operations
+        """
+        is_cloning = KartOperationManager.instance().is_cloning(
+            self.clone_url
+        )
+        self.setEnabled(not is_cloning)
+        if is_cloning:
+            self.setText(self.tr('Cloning'))
+        else:
+            self.setText(self.tr('Clone'))
+
     def cloneRepository(self):
         if self._close_parent_on_clone:
             self.parent().close()
-        url = self.dataset.get("repository", {}).get("clone_location_https")
+        url = self.clone_url
         title = self.dataset.get('title')
 
         from .action_dialog import ActionDialog
