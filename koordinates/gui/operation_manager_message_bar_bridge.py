@@ -18,7 +18,8 @@ from qgis.gui import (
 )
 
 from ..core import (
-    KartOperationManager
+    KartOperationManager,
+    KartOperation
 )
 
 
@@ -40,10 +41,9 @@ class OperationManagerMessageBarBridge(QObject):
         self._current_item: Optional[QgsMessageBarItem] = None
         self._progress_bar: Optional[QProgressBar] = None
 
-        self._manager.single_task_progress_changed.connect(
-            self._report_operation_progress
-        )
-        self._manager.multiple_task_progress_changed.connect(
+        self._completed_count = 0
+
+        self._manager.task_progress_changed.connect(
             self._report_operation_progress
         )
 
@@ -51,7 +51,7 @@ class OperationManagerMessageBarBridge(QObject):
             self._clear
         )
 
-        self._manager.single_task_completed.connect(
+        self._manager.task_completed.connect(
             self._report_operation_success
         )
         self._manager.single_task_failed.connect(
@@ -65,23 +65,56 @@ class OperationManagerMessageBarBridge(QObject):
         if self._current_item and not sip.isdeleted(self._current_item):
             self._bar.popWidget(self._current_item)
         self._current_item = None
+        self._completed_count = 0
 
     def _create_new_item(self, title: str) -> QgsMessageBarItem:
         """
         Destroys the current message bar item, and creates a new one
         with the given title
         """
+        if not self._current_item or sip.isdeleted(self._current_item):
+            self._completed_count = 0
+
         if self._current_item and not sip.isdeleted(self._current_item):
             self._bar.popWidget(self._current_item)
 
         self._current_item = self._bar.createMessage('', title)
         return self._current_item
 
-    def _report_operation_progress(self, title: str, progress: float):
+    def _report_operation_progress(self,
+                                   operation: str,
+                                   tasks_in_progress: int,
+                                   progress: float):
         """
         Reports operation progress
         """
-        item = self._create_new_item(title)
+        if tasks_in_progress == 1:
+            if self._completed_count:
+                title = self.tr('{} {} dataset. {} completed').format(
+                     operation,
+                     tasks_in_progress,
+                    self._completed_count
+                    )
+            else:
+                title = operation
+        elif tasks_in_progress > 1:
+            if self._completed_count:
+                title = self.tr('{} {} datasets. {} completed').format(
+                     operation,
+                     tasks_in_progress,
+                    self._completed_count
+                    )
+            else:
+                title = self.tr('{} {} datasets.').format(
+                     operation,
+                     tasks_in_progress
+                    )
+        else:
+            title = operation
+
+        item = self._create_new_item(
+            title
+        )
         self._progress_bar = QProgressBar()
         self._progress_bar.setRange(0, 100)
         item.layout().addWidget(self._progress_bar)
@@ -115,10 +148,43 @@ class OperationManagerMessageBarBridge(QObject):
             0
         )
 
-    def _report_operation_success(self, title: str):
-        item = self._create_new_item(title)
-        self._bar.pushWidget(
-            item,
-            Qgis.MessageLevel.Success,
-            QgsMessageBar.defaultMessageTimeout(Qgis.MessageLevel.Success)
-        )
+    def _report_operation_success(self,
+                                  operation: KartOperation,
+                                  message: str,
+                                  remaining_tasks: int,
+                                  remaining_progress: Optional[float]):
+        self._completed_count += 1
+        if remaining_tasks == 0:
+            if self._completed_count == 1:
+                title = message
+            else:
+                title = self.tr('{} {} datasets.').format(
+                    operation.to_present_tense_string(),
+                    self._completed_count
+                )
+
+            item = self._create_new_item(title)
+            self._bar.pushWidget(
+                item,
+                Qgis.MessageLevel.Success,
+                QgsMessageBar.defaultMessageTimeout(Qgis.MessageLevel.Success)
+            )
+        else:
+            if remaining_tasks == 1:
+                title = self.tr('{} 1 dataset. {} completed.').format(
+                    operation.to_past_tense_string(),
+                    self._completed_count
+                )
+            else:
+                title = self.tr('{} {} datasets. {} completed.').format(
+                    operation.to_past_tense_string(),
+                    remaining_tasks,
+                    self._completed_count
+                )
+
+            item = self._create_new_item(title)
+            self._bar.pushWidget(
+                item,
+                Qgis.MessageLevel.Info,
+                0
+            )

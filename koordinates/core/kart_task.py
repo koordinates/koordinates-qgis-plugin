@@ -13,6 +13,7 @@ from qgis.core import (
     QgsReferencedRectangle
 )
 
+from .enums import KartOperation
 from .exceptions import KartNotInstalledException
 
 
@@ -42,6 +43,12 @@ class KartTask(QgsTask):
         self._was_canceled: bool = False
 
         self._stdout_buffer = ''
+
+    def operation(self) -> KartOperation:
+        """
+        Returns the associated kart operation
+        """
+        return KartOperation.Unknown
 
     def short_result_description(self) -> str:
         """
@@ -159,6 +166,9 @@ class KartCloneTask(KartTask):
         self._title = title
         self.destination = destination
         self.repo: Optional[Repository] = None
+
+    def operation(self):
+        return KartOperation.Clone
 
     def short_result_description(self) -> str:
         return (
