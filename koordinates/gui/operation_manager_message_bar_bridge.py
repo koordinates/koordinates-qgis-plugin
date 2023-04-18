@@ -43,6 +43,7 @@ class OperationManagerMessageBarBridge(QObject):
         self._cancel_button: Optional[QPushButton] = None
 
         self._completed_count = 0
+        self._failed_count = 0
 
         self._manager.task_progress_changed.connect(
             self._report_operation_progress
@@ -55,7 +56,7 @@ class OperationManagerMessageBarBridge(QObject):
         self._manager.task_completed.connect(
             self._report_operation_success
         )
-        self._manager.single_task_failed.connect(
+        self._manager.task_failed.connect(
             self._report_operation_error
         )
 
@@ -67,12 +68,14 @@ class OperationManagerMessageBarBridge(QObject):
             self._bar.popWidget(self._current_item)
         self._current_item = None
         self._completed_count = 0
+        self._failed_count = 0
 
     def _item_destroyed(self):
         """
         Called when the message bar item is destroyed
         """
         self._completed_count = 0
+        self._failed_count = 0
         self._current_item = None
 
     def _set_item_state(self,
@@ -86,6 +89,7 @@ class OperationManagerMessageBarBridge(QObject):
         """
         if not self._current_item or sip.isdeleted(self._current_item):
             self._completed_count = 0
+            self._failed_count = 0
 
         if self._current_item and not sip.isdeleted(self._current_item):
             if self._current_item.level() != level:
@@ -132,48 +136,41 @@ class OperationManagerMessageBarBridge(QObject):
         """
         Reports operation progress
         """
-        if tasks_in_progress == 1:
-            if self._completed_count:
-                title = self.tr('{} {} dataset. {} completed').format(
-                     operation.to_present_tense_string(),
-                     tasks_in_progress,
-                     self._completed_count
-                    )
-            else:
-                title = message
-        elif tasks_in_progress > 1:
-            if self._completed_count:
-                title = self.tr('{} {} datasets. {} completed').format(
-                     operation.to_present_tense_string(),
-                     tasks_in_progress,
-                    self._completed_count
-                    )
-            else:
-                title = self.tr('{} {} datasets.').format(
-                     operation.to_present_tense_string(),
-                     tasks_in_progress
-                    )
-        else:
-            title = message
-
-        self._set_item_state(
-            title,
-            Qgis.MessageLevel.Info,
-            progress,
-            show_cancel_button=True
+        self._update_message(
+            operation,
+            message,
+            tasks_in_progress,
+            progress
         )
 
-    def _report_operation_error(self, title: str, error: str):
+    def _report_operation_error(self,
+                                operation: KartOperation,
+                                message: str,
+                                error: str,
+                                remaining_tasks: int,
+                                remaining_progress: float):
+        if remaining_progress < 0:
+            remaining_progress = None
+
         def show_details(_):
             dialog = QgsMessageOutput.createMessageOutput()
-            dialog.setTitle(title)
+            dialog.setTitle(message)
             dialog.setMessage(error, QgsMessageOutput.MessageHtml)
             dialog.showMessage()
 
-        item = self._set_item_state(title, Qgis.MessageLevel.Critical)
-        details_button = QPushButton(self.tr("View Details"))
-        details_button.clicked.connect(show_details)
-        item.layout().addWidget(details_button)
+        self._failed_count += 1
+
+        self._update_message(
+            operation,
+            message,
+            remaining_tasks,
+            remaining_progress
+        )
+
+       # item = self._set_item_state(title, Qgis.MessageLevel.Critical)
+      #  details_button = QPushButton(self.tr("View Details"))
+      #  details_button.clicked.connect(show_details)
+      #  item.layout().addWidget(details_button)
 
     def _report_operation_success(self,
                                   operation: KartOperation,
@@ -184,32 +181,113 @@ class OperationManagerMessageBarBridge(QObject):
             remaining_progress = None
 
         self._completed_count += 1
+        self._update_message(
+            operation,
+            message,
+            remaining_tasks,
+            remaining_progress
+        )
+
+    def _update_message(self,
+                        operation: KartOperation,
+                        message: str,
+                        remaining_tasks: int,
+                        remaining_progress: float):
+
         if remaining_tasks == 0:
-            if self._completed_count == 1:
+            # all tasks complete
+            if self._failed_count == 1 and self._completed_count == 0:
                 title = message
-            else:
+                level = Qgis.MessageLevel.Critical
+            elif self._failed_count == 0 and self._completed_count == 1:
+                title = message
+                level = Qgis.MessageLevel.Success
+            elif self._failed_count == 0:
                 title = self.tr('{} {} datasets.').format(
                     operation.to_past_tense_string(),
                     self._completed_count
                 )
+                level = Qgis.MessageLevel.Success
+            elif self._completed_count == 0:
+                title = self.tr('Failed to {} {} datasets.').format(
+                    operation.to_verb(),
+                    self._failed_count
+                )
+                level = Qgis.MessageLevel.Critical
+            else:
+                # mixed results
+                if self._completed_count == 1:
+                    title = self.tr('{} 1 dataset. {} failed.').format(
+                        operation.to_past_tense_string(),
+                        self._failed_count
+                    )
+                else:
+                    title = self.tr('{} {} datasets. {} failed.').format(
+                        operation.to_present_tense_string(),
+                        self._completed_count,
+                        self._failed_count
+                    )
+
+                level = Qgis.MessageLevel.Warning
 
             self._set_item_state(title,
-                                 Qgis.MessageLevel.Success,
+                                 level,
                                  show_cancel_button=False)
         else:
-            if remaining_tasks == 1:
-                title = self.tr('{} 1 dataset. {} completed.').format(
-                    operation.to_present_tense_string(),
-                    self._completed_count
-                )
+            if self._failed_count == 0 and self._completed_count == 0:
+                if remaining_tasks == 1:
+                    title = message
+                else:
+                    title = self.tr('{} {} datasets.').format(
+                        operation.to_present_tense_string(),
+                        remaining_tasks
+                    )
+                level = Qgis.MessageLevel.Info
+            elif self._failed_count == 0:
+                if remaining_tasks == 1:
+                    title = self.tr('{} 1 dataset. {} completed.').format(
+                        operation.to_present_tense_string(),
+                        self._completed_count
+                    )
+                else:
+                    title = self.tr('{} {} datasets. {} completed.').format(
+                        operation.to_present_tense_string(),
+                        remaining_tasks,
+                        self._completed_count
+                    )
+                level = Qgis.MessageLevel.Info
+            elif self._completed_count == 0:
+                if remaining_tasks == 1:
+                    title = self.tr('{} 1 dataset. {} failed.').format(
+                        operation.to_present_tense_string(),
+                        self._failed_count
+                    )
+                else:
+                    title = self.tr('{} {} datasets. {} failed.').format(
+                        operation.to_present_tense_string(),
+                        remaining_tasks,
+                        self._failed_count
+                    )
+                level = Qgis.MessageLevel.Warning
             else:
-                title = self.tr('{} {} datasets. {} completed.').format(
-                    operation.to_present_tense_string(),
-                    remaining_tasks,
-                    self._completed_count
-                )
+                if remaining_tasks == 1:
+                    title = self.tr(
+                        '{} 1 dataset. {} failed. {} completed.').format(
+                        operation.to_present_tense_string(),
+                        self._failed_count,
+                        self._completed_count
+                    )
+                else:
+                    title = self.tr(
+                        '{} {} datasets. {} failed. {} completed.').format(
+                        operation.to_present_tense_string(),
+                        remaining_tasks,
+                        self._failed_count,
+                        self._completed_count
+                    )
+                level = Qgis.MessageLevel.Warning
 
             self._set_item_state(title,
-                                 Qgis.MessageLevel.Info,
+                                 level,
                                  remaining_progress,
                                  show_cancel_button=True)

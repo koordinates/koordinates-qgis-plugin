@@ -28,7 +28,9 @@ class KartOperationManager(QObject):
     # operation, description, remaining tasks, overall remaining progress
     task_completed = pyqtSignal(KartOperation, str, int, float)
 
-    single_task_failed = pyqtSignal(str, str)
+    # operation, description, error message, remaining tasks, overall remaining progress
+    task_failed = pyqtSignal(KartOperation, str, str, int, float)
+
     single_task_canceled = pyqtSignal()
 
     # operation, description, count ongoing tasks, overall progress
@@ -115,11 +117,11 @@ class KartOperationManager(QObject):
                                          len(self._ongoing_tasks),
                                          remaining_progress)
             else:
-                if len(self._ongoing_tasks) == 0:
-                    self.single_task_failed.emit(short_description,
-                                                 detailed_description)
-                else:
-                    assert False
+                self.task_failed.emit(task.operation(),
+                                      short_description,
+                                      detailed_description,
+                                      len(self._ongoing_tasks),
+                                      remaining_progress)
 
     def calculate_remaining_progress(self) -> float:
         """
