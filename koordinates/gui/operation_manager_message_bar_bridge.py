@@ -40,6 +40,7 @@ class OperationManagerMessageBarBridge(QObject):
 
         self._current_item: Optional[QgsMessageBarItem] = None
         self._progress_bar: Optional[QProgressBar] = None
+        self._cancel_button: Optional[QPushButton] = None
 
         self._completed_count = 0
 
@@ -67,22 +68,65 @@ class OperationManagerMessageBarBridge(QObject):
         self._current_item = None
         self._completed_count = 0
 
-    def _create_new_item(self, title: str) -> QgsMessageBarItem:
+    def _item_destroyed(self):
         """
-        Destroys the current message bar item, and creates a new one
-        with the given title
+        Called when the message bar item is destroyed
+        """
+        self._completed_count = 0
+        self._current_item = None
+
+    def _set_item_state(self,
+                        title: str,
+                        level: Qgis.MessageLevel,
+                        progress: Optional[float] = None,
+                        show_cancel_button: bool = False) -> QgsMessageBarItem:
+        """
+        Ensures that there is a current message bar item, and that it matches
+        the specified information level and title
         """
         if not self._current_item or sip.isdeleted(self._current_item):
             self._completed_count = 0
 
         if self._current_item and not sip.isdeleted(self._current_item):
-            self._bar.popWidget(self._current_item)
+            if self._current_item.level() != level:
+                self._current_item.setLevel(level)
+            self._current_item.setDuration(0)
+            self._current_item.setText(title)
+        else:
+            self._current_item = self._bar.createMessage('', title)
+            self._current_item.destroyed.connect(self._item_destroyed)
+            self._current_item.setLevel(level)
+            self._current_item.setDuration(0)
+            self._bar.pushItem(
+                self._current_item
+            )
 
-        self._current_item = self._bar.createMessage('', title)
+        if progress is None:
+            if self._progress_bar and not sip.isdeleted(self._progress_bar):
+                self._progress_bar.deleteLater()
+            self._progress_bar = None
+        else:
+            if not self._progress_bar or sip.isdeleted(self._progress_bar):
+                self._progress_bar = QProgressBar()
+                self._progress_bar.setRange(0, 100)
+                self._current_item.layout().addWidget(self._progress_bar)
+            self._progress_bar.setValue(int(progress))
+
+        if not show_cancel_button:
+            if self._cancel_button and not sip.isdeleted(self._cancel_button):
+                self._cancel_button.deleteLater()
+            self._cancel_button = None
+        else:
+            if not self._cancel_button or sip.isdeleted(self._cancel_button):
+                self._cancel_button = QPushButton(self.tr('Cancel'))
+                self._current_item.layout().addWidget(self._cancel_button)
+                self._cancel_button.clicked.connect(self._manager.cancel)
+
         return self._current_item
 
     def _report_operation_progress(self,
-                                   operation: str,
+                                   operation: KartOperation,
+                                   message: str,
                                    tasks_in_progress: int,
                                    progress: float):
         """
@@ -91,44 +135,32 @@ class OperationManagerMessageBarBridge(QObject):
         if tasks_in_progress == 1:
             if self._completed_count:
                 title = self.tr('{} {} dataset. {} completed').format(
-                     operation,
+                     operation.to_present_tense_string(),
                      tasks_in_progress,
-                    self._completed_count
+                     self._completed_count
                     )
             else:
-                title = operation
+                title = message
         elif tasks_in_progress > 1:
             if self._completed_count:
                 title = self.tr('{} {} datasets. {} completed').format(
-                     operation,
+                     operation.to_present_tense_string(),
                      tasks_in_progress,
                     self._completed_count
                     )
             else:
                 title = self.tr('{} {} datasets.').format(
-                     operation,
+                     operation.to_present_tense_string(),
                      tasks_in_progress
                     )
         else:
-            title = operation
+            title = message
 
-        item = self._create_new_item(
-            title
-        )
-        self._progress_bar = QProgressBar()
-        self._progress_bar.setRange(0, 100)
-        item.layout().addWidget(self._progress_bar)
-
-        cancel_button = QPushButton(self.tr('Cancel'))
-        item.layout().addWidget(cancel_button)
-        cancel_button.clicked.connect(self._manager.cancel)
-
-        self._progress_bar.setValue(int(progress))
-
-        self._bar.pushWidget(
-            item,
+        self._set_item_state(
+            title,
             Qgis.MessageLevel.Info,
-            0
+            progress,
+            show_cancel_button=True
         )
 
     def _report_operation_error(self, title: str, error: str):
@@ -138,53 +170,46 @@ class OperationManagerMessageBarBridge(QObject):
             dialog.setMessage(error, QgsMessageOutput.MessageHtml)
             dialog.showMessage()
 
-        item = self._create_new_item(title)
+        item = self._set_item_state(title, Qgis.MessageLevel.Critical)
         details_button = QPushButton(self.tr("View Details"))
         details_button.clicked.connect(show_details)
         item.layout().addWidget(details_button)
-        self._bar.pushWidget(
-            item,
-            Qgis.MessageLevel.Critical,
-            0
-        )
 
     def _report_operation_success(self,
                                   operation: KartOperation,
                                   message: str,
                                   remaining_tasks: int,
-                                  remaining_progress: Optional[float]):
+                                  remaining_progress: float):
+        if remaining_progress < 0:
+            remaining_progress = None
+
         self._completed_count += 1
         if remaining_tasks == 0:
             if self._completed_count == 1:
                 title = message
             else:
                 title = self.tr('{} {} datasets.').format(
-                    operation.to_present_tense_string(),
+                    operation.to_past_tense_string(),
                     self._completed_count
                 )
 
-            item = self._create_new_item(title)
-            self._bar.pushWidget(
-                item,
-                Qgis.MessageLevel.Success,
-                QgsMessageBar.defaultMessageTimeout(Qgis.MessageLevel.Success)
-            )
+            self._set_item_state(title,
+                                 Qgis.MessageLevel.Success,
+                                 show_cancel_button=False)
         else:
             if remaining_tasks == 1:
                 title = self.tr('{} 1 dataset. {} completed.').format(
-                    operation.to_past_tense_string(),
+                    operation.to_present_tense_string(),
                     self._completed_count
                 )
             else:
                 title = self.tr('{} {} datasets. {} completed.').format(
-                    operation.to_past_tense_string(),
+                    operation.to_present_tense_string(),
                     remaining_tasks,
                     self._completed_count
                 )
 
-            item = self._create_new_item(title)
-            self._bar.pushWidget(
-                item,
-                Qgis.MessageLevel.Info,
-                0
-            )
+            self._set_item_state(title,
+                                 Qgis.MessageLevel.Info,
+                                 remaining_progress,
+                                 show_cancel_button=True)
