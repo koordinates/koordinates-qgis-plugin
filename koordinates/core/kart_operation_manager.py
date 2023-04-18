@@ -36,8 +36,6 @@ class KartOperationManager(QObject):
     # operation, description, count ongoing tasks, overall progress
     task_progress_changed = pyqtSignal(KartOperation, str, int, float)
 
-    task_completed_multiple_remain = pyqtSignal(int)
-
     _instance: Optional['KartOperationManager'] = None
 
     @classmethod
