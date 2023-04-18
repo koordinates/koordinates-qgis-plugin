@@ -25,14 +25,14 @@ class KartOperationManager(QObject):
     Keeps track of ongoing kart operations
     """
 
-    # description, remaining tasks, overall remaining progress
+    # operation, description, remaining tasks, overall remaining progress
     task_completed = pyqtSignal(KartOperation, str, int, float)
 
     single_task_failed = pyqtSignal(str, str)
     single_task_canceled = pyqtSignal()
 
-    # operation, count ongoing tasks, overall progress
-    task_progress_changed = pyqtSignal(str, int, float)
+    # operation, description, count ongoing tasks, overall progress
+    task_progress_changed = pyqtSignal(KartOperation, str, int, float)
 
     task_completed_multiple_remain = pyqtSignal(int)
 
@@ -121,12 +121,12 @@ class KartOperationManager(QObject):
                 else:
                     assert False
 
-    def calculate_remaining_progress(self) -> Optional[float]:
+    def calculate_remaining_progress(self) -> float:
         """
         Returns the overall progress of remaining tasks
         """
         if not self._ongoing_tasks:
-            return None
+            return -1
 
         return 100 * sum(t.progress() for t in self._ongoing_tasks) / \
             (100 * len(self._ongoing_tasks))
@@ -137,13 +137,15 @@ class KartOperationManager(QObject):
         """
         if len(self._ongoing_tasks) == 1:
             self.task_progress_changed.emit(
+                self._ongoing_tasks[0].operation(),
                 self._ongoing_tasks[0].description(),
                 1,
                 self._ongoing_tasks[0].progress()
             )
         elif all(isinstance(t, KartCloneTask) for t in self._ongoing_tasks):
             self.task_progress_changed.emit(
-                self.tr('Cloning'),
+                KartOperation.Clone,
+                '',
                 len(self._ongoing_tasks),
                 self.calculate_remaining_progress()
             )
