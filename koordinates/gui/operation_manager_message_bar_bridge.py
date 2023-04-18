@@ -171,10 +171,10 @@ class OperationManagerMessageBarBridge(QObject):
             remaining_progress
         )
 
-       # item = self._set_item_state(title, Qgis.MessageLevel.Critical)
-      #  details_button = QPushButton(self.tr("View Details"))
-      #  details_button.clicked.connect(show_details)
-      #  item.layout().addWidget(details_button)
+    # item = self._set_item_state(title, Qgis.MessageLevel.Critical)
+    #  details_button = QPushButton(self.tr("View Details"))
+    #  details_button.clicked.connect(show_details)
+    #  item.layout().addWidget(details_button)
 
     def _report_operation_success(self,
                                   operation: KartOperation,
