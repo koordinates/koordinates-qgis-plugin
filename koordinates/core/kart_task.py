@@ -164,6 +164,7 @@ class KartCloneTask(KartTask):
         )
 
         self._title = title
+        self.url = url
         self.destination = destination
         self.repo: Optional[Repository] = None
 
