@@ -10,7 +10,8 @@ from qgis.PyQt.QtCore import (
 )
 from qgis.core import (
     QgsApplication,
-    QgsReferencedRectangle
+    QgsReferencedRectangle,
+    QgsTask
 )
 
 from .enums import KartOperation
@@ -61,13 +62,14 @@ class KartOperationManager(QObject):
     def _push_task(self,
                    task: KartTask,
                    on_complete: Optional[Callable[[KartTask], None]] = None,
-                   on_fail: Optional[Callable[[KartTask], None]] = None):
+                   on_fail: Optional[Callable[[KartTask], None]] = None,
+                   on_cancel: Optional[Callable[[KartTask], None]] = None):
         """
         Pushes a new active task to the manager
         """
         self._ongoing_tasks.append(task)
 
-        if on_complete is not None:
+        if on_complete is not None or on_cancel is not None:
 
             def call_on_complete_and_pop(_task: KartTask):
                 """
@@ -75,7 +77,12 @@ class KartOperationManager(QObject):
                 before cleaning up the task
                 """
                 if not _task.was_canceled():
-                    on_complete(_task)
+                    if on_complete is not None:
+                        on_complete(_task)
+                else:
+                    if on_cancel is not None:
+                        on_cancel(_task)
+
                 self._pop_task(_task)
 
             task.taskCompleted.connect(partial(call_on_complete_and_pop, task))
@@ -198,8 +205,25 @@ class KartOperationManager(QObject):
             RepoManager.instance().add_repo(_task.repo)
             self.clone_finished.emit(_task.url)
 
+        def on_task_failed_or_cancel(_task: KartCloneTask):
+            self.clone_finished.emit(_task.url)
+
         self._push_task(task,
-                        on_complete=on_task_complete)
+                        on_complete=on_task_complete,
+                        on_fail=on_task_failed_or_cancel,
+                        on_cancel=on_task_failed_or_cancel
+        )
 
         self.clone_started.emit(url)
 
+    def is_cloning(self, url: str) -> bool:
+        """
+        Returns True if the dataset is currently being cloned
+        """
+        for task in self._ongoing_tasks:
+            if isinstance(task, KartCloneTask):
+                if task.url == url and task.status() not in (
+                        QgsTask.Complete, QgsTask.Terminated):
+                    return True
+
+        return False
