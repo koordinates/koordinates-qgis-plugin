@@ -85,6 +85,18 @@ class KartOperationManager(QAbstractItemModel):
         self._ongoing_tasks: List[QgsTask] = []
         self._failures: List[FailedOperationDetails] = []
 
+    def clear_errors(self):
+        """
+        Clears all error results from the manager
+        """
+        if not self._failures:
+            return
+
+        self.beginRemoveRows(QModelIndex(), len(self._ongoing_tasks),
+                             self.rowCount())
+        self._failures = []
+        self.endRemoveRows()
+
     def _push_task(self,
                    task: KartTask,
                    on_complete: Optional[Callable[[KartTask], None]] = None,

@@ -83,6 +83,7 @@ class OperationManagerMessageBarBridge(QObject):
         self._completed_count = 0
         self._failed_count = 0
         self._current_item = None
+        self._manager.clear_errors()
 
     def _set_item_state(self,
                         title: str,
