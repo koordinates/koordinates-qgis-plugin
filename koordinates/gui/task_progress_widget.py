@@ -17,7 +17,8 @@ from qgis.PyQt.QtWidgets import (
 from qgis.gui import QgsGui
 
 from ..core import (
-    KartOperationManager
+    KartOperationManager,
+    OperationStatus
 )
 
 
@@ -45,7 +46,8 @@ class TaskDetailsWidget(QWidget):
 
         hl.addWidget(self.title_label)
         self.operation_label = QLabel()
-        hl.addWidget(self.operation_label, 1)
+        hl.addWidget(self.operation_label)
+        hl.addStretch(1)
         vl.addLayout(hl)
 
         hl = QHBoxLayout()
@@ -57,7 +59,13 @@ class TaskDetailsWidget(QWidget):
         self.cancel_button.clicked.connect(self._cancel)
         vl.addLayout(hl)
 
+        hl = QHBoxLayout()
+        self.details_label = QLabel()
+        hl.addWidget(self.details_label, 1)
+        vl.addLayout(hl)
         self.setLayout(vl)
+
+        self.details_label.hide()
 
         self.setMinimumHeight(self.sizeHint().height())
         self.update_from_model()
@@ -69,10 +77,41 @@ class TaskDetailsWidget(QWidget):
         self.title_label.setText(self.operations_manager.data(
             self.index, KartOperationManager.DescriptionRole
         ))
-        self.progress_bar.setValue(
-            int(self.operations_manager.data(
-                self.index, KartOperationManager.ProgressRole
-            )))
+        status = self.operations_manager.data(
+            self.index, KartOperationManager.StatusRole
+        )
+        if status == OperationStatus.Ongoing:
+            self.operation_label.setText(self.tr('CLONING'))
+            self.operation_label.setStyleSheet('''
+                        background-color: #868889;
+                        border: 2px solid #6b6d6e;
+                        border-radius: 4px;
+                        color: #ffffff;
+                        font-size: 10pt;
+            ''')
+            self.details_label.hide()
+            self.progress_bar.setValue(
+                int(self.operations_manager.data(
+                    self.index, KartOperationManager.ProgressRole
+                )))
+        elif status == OperationStatus.Failed:
+            self.operation_label.setText(self.tr('ERROR'))
+            self.operation_label.setStyleSheet('''
+                        background-color: #d64041;
+                        border: 2px solid #ab3334;
+                        border-radius: 4px;
+                        color: #ffffff;
+                        font-size: 10pt;
+                        ''')
+            self.details_label.setText(self.operations_manager.data(
+                self.index,
+                KartOperationManager.DetailsRole
+            ))
+            self.details_label.show()
+            self.progress_bar.hide()
+            self.cancel_button.hide()
+
+
 
     def _cancel(self):
         """
