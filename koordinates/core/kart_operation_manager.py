@@ -38,6 +38,14 @@ class FailedOperationDetails:
         self.description = description
         self.error = error
 
+        self.title: str = ''
+        self.url: str = ''
+        self.destination: str = ''
+        self.location: Optional[str] = None
+        self.extent: Optional[QgsReferencedRectangle] = None
+        self.username: Optional[str] = None
+        self.password: Optional[str] = None
+
 
 class KartOperationManager(QAbstractItemModel):
     """
@@ -156,6 +164,15 @@ class KartOperationManager(QAbstractItemModel):
         result, short_description, detailed_description = task.result()
         details = FailedOperationDetails(description=short_description,
                                          error=detailed_description)
+
+        if isinstance(task, KartCloneTask):
+            details.url = task.url
+            details.title = task.title
+            details.destination = task.destination
+            details.location = task.location
+            details.extent = task.extent
+            details.username = task.username
+            details.password = task.password
 
         self._pop_task(task)
 
@@ -368,6 +385,23 @@ class KartOperationManager(QAbstractItemModel):
         task = self.index2task(index)
         if task:
             task.cancel()
+
+    def retry_task(self, index: QModelIndex):
+        """
+        Retries the task at the specified model index
+        """
+
+        task = self.index2failed_task_details(index)
+        if task:
+            self.start_clone(
+                title=task.title,
+                url = task.url,
+                destination=task.destination,
+                location=task.location,
+                extent=task.extent,
+                username=task.username,
+                password=task.password
+            )
 
     def index2task(self, index: QModelIndex) -> Optional[QgsTask]:
         """

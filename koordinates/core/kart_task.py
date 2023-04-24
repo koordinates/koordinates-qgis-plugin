@@ -163,9 +163,13 @@ class KartCloneTask(KartTask):
             commands
         )
 
-        self._title = title
+        self.title = title
         self.url = url
         self.destination = destination
+        self.location = location
+        self.extent = extent
+        self.username = username
+        self.password = password
         self.repo: Optional[Repository] = None
 
     def operation(self):
@@ -175,7 +179,7 @@ class KartCloneTask(KartTask):
         return (
             self.tr('Cloned {}') if self._result
             else self.tr('Failed to clone {}')
-        ).format(self._title)
+        ).format(self.title)
 
     def on_stdout(self, ba):
         val = ba.data().decode('UTF-8')
