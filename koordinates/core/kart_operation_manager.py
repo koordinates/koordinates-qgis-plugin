@@ -326,4 +326,3 @@ class KartOperationManager(QAbstractItemModel):
             return None
 
         return self._ongoing_tasks[index.row()]
-

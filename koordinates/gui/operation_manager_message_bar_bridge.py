@@ -40,7 +40,7 @@ class OperationManagerMessageBarBridge(QObject):
         super().__init__()
 
         self._manager = operations_manager
-        self.table: Optional[TaskDetailsTable] = None
+        self.table: Optional[TaskDetailsDialog] = None
 
         self._bar = message_bar
 
@@ -188,11 +188,6 @@ class OperationManagerMessageBarBridge(QObject):
             remaining_tasks,
             remaining_progress
         )
-
-    # item = self._set_item_state(title, Qgis.MessageLevel.Critical)
-    #  details_button = QPushButton(self.tr("View Details"))
-    #  details_button.clicked.connect(show_details)
-    #  item.layout().addWidget(details_button)
 
     def _report_operation_success(self,
                                   operation: KartOperation,
@@ -350,4 +345,3 @@ class OperationManagerMessageBarBridge(QObject):
         self.table.setWindowTitle(self.tr('Clone Details'))
         self.table.setAttribute(Qt.WA_DeleteOnClose)
         self.table.show()
-
