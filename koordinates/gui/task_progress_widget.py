@@ -13,7 +13,6 @@ from qgis.PyQt.QtWidgets import (
     QTableView,
     QDialog
 )
-
 from qgis.gui import QgsGui
 
 from ..core import (
@@ -110,8 +109,6 @@ class TaskDetailsWidget(QWidget):
             self.details_label.show()
             self.progress_bar.hide()
             self.cancel_button.hide()
-
-
 
     def _cancel(self):
         """
