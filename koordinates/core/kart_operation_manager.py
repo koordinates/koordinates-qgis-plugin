@@ -395,7 +395,7 @@ class KartOperationManager(QAbstractItemModel):
         if task:
             self.start_clone(
                 title=task.title,
-                url = task.url,
+                url=task.url,
                 destination=task.destination,
                 location=task.location,
                 extent=task.extent,
