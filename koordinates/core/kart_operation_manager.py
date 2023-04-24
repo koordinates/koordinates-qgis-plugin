@@ -1,11 +1,14 @@
 from functools import partial
 from typing import (
     Optional,
-    Callable
+    Callable,
+    List
 )
 
 from qgis.PyQt.QtCore import (
-    QObject,
+    Qt,
+    QAbstractItemModel,
+    QModelIndex,
     pyqtSignal
 )
 from qgis.core import (
@@ -21,10 +24,15 @@ from .kart_task import (
 )
 
 
-class KartOperationManager(QObject):
+class KartOperationManager(QAbstractItemModel):
     """
-    Keeps track of ongoing kart operations
+    Keeps track of ongoing kart operations.
+
+    Implemented as a model.
     """
+
+    DescriptionRole = Qt.UserRole + 1
+    ProgressRole = Qt.UserRole + 2
 
     # operation, description, remaining tasks, overall remaining progress
     task_completed = pyqtSignal(KartOperation, str, int, float)
@@ -57,7 +65,7 @@ class KartOperationManager(QObject):
     def __init__(self):
         super().__init__()
 
-        self._ongoing_tasks = []
+        self._ongoing_tasks: List[QgsTask] = []
 
     def _push_task(self,
                    task: KartTask,
@@ -67,7 +75,10 @@ class KartOperationManager(QObject):
         """
         Pushes a new active task to the manager
         """
+        self.beginInsertRows(QModelIndex(), len(self._ongoing_tasks),
+                             len(self._ongoing_tasks))
         self._ongoing_tasks.append(task)
+        self.endInsertRows()
 
         if on_complete is not None or on_cancel is not None:
 
@@ -104,6 +115,7 @@ class KartOperationManager(QObject):
             task.taskTerminated.connect(partial(self._pop_task, task))
 
         task.progressChanged.connect(self._emit_progress_message)
+        task.statusChanged.connect(self._task_status_changed)
 
         QgsApplication.taskManager().addTask(task)
 
@@ -114,7 +126,10 @@ class KartOperationManager(QObject):
         result, short_description, detailed_description = task.result()
         was_canceled = task.was_canceled()
 
-        self._ongoing_tasks = [t for t in self._ongoing_tasks if t != task]
+        task_index = self._ongoing_tasks.index(task)
+        self.beginRemoveRows(QModelIndex(), task_index, task_index)
+        del self._ongoing_tasks[task_index]
+        self.endRemoveRows()
 
         remaining_progress = self.calculate_remaining_progress()
 
@@ -167,6 +182,25 @@ class KartOperationManager(QObject):
         else:
             # mixed task types, not handled yet
             assert False
+
+        task = self.sender()
+        if task:
+            try:
+                task_index = self._ongoing_tasks.index(task)
+                index = self.index(task_index, 0, QModelIndex())
+                self.dataChanged.emit(index, index)
+            except ValueError:
+                pass
+
+    def _task_status_changed(self):
+        """
+        Called when a task's status is changed
+        """
+        task = self.sender()
+        if task:
+            task_index = self._ongoing_tasks.index(task)
+            index = self.index(task_index, 0, QModelIndex())
+            self.dataChanged.emit(index, index)
 
     def cancel(self):
         """
@@ -227,3 +261,69 @@ class KartOperationManager(QObject):
                     return True
 
         return False
+
+    # Qt model interface
+
+    # pylint: disable=missing-docstring, unused-arguments
+    def index(self, row, column, parent=QModelIndex()):
+        if column < 0 or column >= self.columnCount():
+            return QModelIndex()
+
+        if not parent.isValid() and 0 <= row < len(
+                self._ongoing_tasks):
+            return self.createIndex(row, column)
+
+        return QModelIndex()
+
+    def parent(self, index):
+        return QModelIndex()  # all are top level items
+
+    def rowCount(self, parent=QModelIndex()):
+        if not parent.isValid():
+            return len(self._ongoing_tasks)
+        # no child items
+        return 0
+
+    def columnCount(self, parent=QModelIndex()):
+        return 1
+
+    def data(self, index, role=Qt.DisplayRole):
+        task = self.index2task(index)
+        if not task:
+            return None
+
+        if role == self.DescriptionRole:
+            return task.description()
+        if role == self.ProgressRole:
+            return task.progress()
+
+        return None
+
+    def flags(self, index):
+        f = super().flags(index)
+        if not index.isValid():
+            return f
+
+        return f | Qt.ItemIsEnabled
+
+    # pylint: enable=missing-docstring, unused-arguments
+
+    def cancel_task(self, index: QModelIndex):
+        """
+        Cancels the task at the specified model index
+        """
+
+        task = self.index2task(index)
+        if task:
+            task.cancel()
+
+    def index2task(self, index: QModelIndex) -> Optional[QgsTask]:
+        """
+        Returns the task at the given model index
+        """
+        if not index.isValid() or index.row() < 0 or index.row() >= len(
+                self._ongoing_tasks):
+            return None
+
+        return self._ongoing_tasks[index.row()]
+
