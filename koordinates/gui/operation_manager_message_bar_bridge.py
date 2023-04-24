@@ -10,8 +10,7 @@ from qgis.PyQt.QtWidgets import (
     QProgressBar
 )
 from qgis.core import (
-    Qgis,
-    QgsMessageOutput
+    Qgis
 )
 from qgis.gui import (
     QgsMessageBar,
@@ -173,12 +172,6 @@ class OperationManagerMessageBarBridge(QObject):
                                 remaining_progress: float):
         if remaining_progress < 0:
             remaining_progress = None
-
-        def show_details(_):
-            dialog = QgsMessageOutput.createMessageOutput()
-            dialog.setTitle(message)
-            dialog.setMessage(error, QgsMessageOutput.MessageHtml)
-            dialog.showMessage()
 
         self._failed_count += 1
 
