@@ -1,3 +1,5 @@
+from typing import Optional
+
 from qgis.PyQt.QtCore import (
     QModelIndex
 )
@@ -8,8 +10,11 @@ from qgis.PyQt.QtWidgets import (
     QVBoxLayout,
     QHBoxLayout,
     QLabel,
-    QTableView
+    QTableView,
+    QDialog
 )
+
+from qgis.gui import QgsGui
 
 from ..core import (
     KartOperationManager
@@ -55,6 +60,7 @@ class TaskDetailsWidget(QWidget):
         self.setLayout(vl)
 
         self.setMinimumHeight(self.sizeHint().height())
+        self.update_from_model()
 
     def update_from_model(self):
         """
@@ -92,6 +98,9 @@ class TaskDetailsTable(QTableView):
 
         self._manager.rowsInserted.connect(self._rows_inserted)
         self._manager.dataChanged.connect(self._data_changed)
+        row_count = self._manager.rowCount()
+        if row_count:
+            self._rows_inserted(QModelIndex(), 0, row_count - 1)
 
     def _rows_inserted(self,
                        parent: QModelIndex,  # pylint: disable=unused-argument
@@ -120,3 +129,23 @@ class TaskDetailsTable(QTableView):
                 continue
 
             widget.update_from_model()
+
+
+class TaskDetailsDialog(QDialog):
+    """
+    A dialog for showing task details
+    """
+
+    def __init__(self,
+                 operations_manager: KartOperationManager,
+                 parent: Optional[QWidget] = None):
+        super().__init__(parent)
+
+        self.setObjectName('TaskDetailsDialog')
+        QgsGui.enableAutoGeometryRestore(self)
+
+        vl = QVBoxLayout()
+        vl.setContentsMargins(0, 0, 0, 0)
+        self.widget = TaskDetailsTable(operations_manager)
+        vl.addWidget(self.widget)
+        self.setLayout(vl)

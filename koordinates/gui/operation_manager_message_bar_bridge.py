@@ -2,6 +2,7 @@ from typing import Optional
 
 from qgis.PyQt import sip
 from qgis.PyQt.QtCore import (
+    Qt,
     QObject
 )
 from qgis.PyQt.QtWidgets import (
@@ -16,11 +17,14 @@ from qgis.gui import (
     QgsMessageBar,
     QgsMessageBarItem
 )
+from qgis.utils import iface
 
 from ..core import (
     KartOperationManager,
     KartOperation
 )
+
+from .task_progress_widget import TaskDetailsDialog
 
 
 class OperationManagerMessageBarBridge(QObject):
@@ -36,11 +40,14 @@ class OperationManagerMessageBarBridge(QObject):
         super().__init__()
 
         self._manager = operations_manager
+        self.table: Optional[TaskDetailsTable] = None
+
         self._bar = message_bar
 
         self._current_item: Optional[QgsMessageBarItem] = None
         self._progress_bar: Optional[QProgressBar] = None
         self._cancel_button: Optional[QPushButton] = None
+        self._view_details_button: Optional[QPushButton] = None
 
         self._completed_count = 0
         self._failed_count = 0
@@ -82,7 +89,8 @@ class OperationManagerMessageBarBridge(QObject):
                         title: str,
                         level: Qgis.MessageLevel,
                         progress: Optional[float] = None,
-                        show_cancel_button: bool = False) -> QgsMessageBarItem:
+                        show_cancel_button: bool = False,
+                        show_details_button: bool = False) -> QgsMessageBarItem:
         """
         Ensures that there is a current message bar item, and that it matches
         the specified information level and title
@@ -129,6 +137,16 @@ class OperationManagerMessageBarBridge(QObject):
                 self._cancel_button = QPushButton(self.tr('Cancel'))
                 self._current_item.layout().addWidget(self._cancel_button)
                 self._cancel_button.clicked.connect(self._manager.cancel)
+
+        if not show_details_button:
+            if self._view_details_button and not sip.isdeleted(self._view_details_button):
+                self._view_details_button.deleteLater()
+            self._view_details_button = None
+        else:
+            if not self._view_details_button or sip.isdeleted(self._view_details_button):
+                self._view_details_button = QPushButton(self.tr('View Details'))
+                self._current_item.layout().addWidget(self._view_details_button)
+                self._view_details_button.clicked.connect(self._show_details)
 
         return self._current_item
 
@@ -200,9 +218,11 @@ class OperationManagerMessageBarBridge(QObject):
 
         if remaining_tasks == 0:
             # all tasks complete
+            show_details = False
             if self._failed_count == 1 and self._completed_count == 0:
                 title = message
                 level = Qgis.MessageLevel.Critical
+                show_details = True
             elif self._failed_count == 0 and self._completed_count == 1:
                 title = message
                 level = Qgis.MessageLevel.Success
@@ -218,6 +238,7 @@ class OperationManagerMessageBarBridge(QObject):
                     self._failed_count
                 )
                 level = Qgis.MessageLevel.Critical
+                show_details = True
             else:
                 # mixed results
                 if self._completed_count == 1:
@@ -225,19 +246,23 @@ class OperationManagerMessageBarBridge(QObject):
                         operation.to_past_tense_string(),
                         self._failed_count
                     )
+                    show_details = True
                 else:
                     title = self.tr('{} {} datasets. {} failed.').format(
                         operation.to_present_tense_string(),
                         self._completed_count,
                         self._failed_count
                     )
+                    show_details = True
 
                 level = Qgis.MessageLevel.Warning
 
             self._set_item_state(title,
                                  level,
-                                 show_cancel_button=False)
+                                 show_cancel_button=False,
+                                 show_details_button=show_details)
         else:
+            show_details = False
             if self._failed_count == 0 and self._completed_count == 0:
                 if remaining_tasks == 1:
                     title = message
@@ -246,6 +271,7 @@ class OperationManagerMessageBarBridge(QObject):
                         operation.to_present_tense_string(),
                         remaining_tasks
                     )
+                    show_details = True
                 level = Qgis.MessageLevel.Info
             elif self._failed_count == 0:
                 if remaining_tasks == 1:
@@ -253,12 +279,14 @@ class OperationManagerMessageBarBridge(QObject):
                         operation.to_present_tense_string(),
                         self._completed_count
                     )
+                    show_details = True
                 else:
                     title = self.tr('{} {} datasets. {} completed.').format(
                         operation.to_present_tense_string(),
                         remaining_tasks,
                         self._completed_count
                     )
+                    show_details = True
                 level = Qgis.MessageLevel.Info
             elif self._completed_count == 0:
                 if remaining_tasks == 1:
@@ -266,12 +294,14 @@ class OperationManagerMessageBarBridge(QObject):
                         operation.to_present_tense_string(),
                         self._failed_count
                     )
+                    show_details = True
                 else:
                     title = self.tr('{} {} datasets. {} failed.').format(
                         operation.to_present_tense_string(),
                         remaining_tasks,
                         self._failed_count
                     )
+                    show_details = True
                 level = Qgis.MessageLevel.Warning
             else:
                 if remaining_tasks == 1:
@@ -281,6 +311,7 @@ class OperationManagerMessageBarBridge(QObject):
                         self._failed_count,
                         self._completed_count
                     )
+                    show_details = True
                 else:
                     title = self.tr(
                         '{} {} datasets. {} failed. {} completed.').format(
@@ -289,9 +320,34 @@ class OperationManagerMessageBarBridge(QObject):
                         self._failed_count,
                         self._completed_count
                     )
+                    show_details = True
                 level = Qgis.MessageLevel.Warning
 
             self._set_item_state(title,
                                  level,
                                  remaining_progress,
-                                 show_cancel_button=True)
+                                 show_cancel_button=True,
+                                 show_details_button=show_details)
+
+    def _show_details(self):
+        """
+        Shows the details widget
+        """
+        if self.table and sip.isdeleted(self.table):
+            self.table = None
+
+        if self.table:
+            self.table.show()
+            self.table.raise_()
+            self.table.setWindowState(self.table.windowState() & ~Qt.WindowMinimized)
+            self.table.activateWindow()
+            return
+
+        self.table = TaskDetailsDialog(
+            self._manager,
+            parent=iface.mainWindow()
+        )
+        self.table.setWindowTitle(self.tr('Clone Details'))
+        self.table.setAttribute(Qt.WA_DeleteOnClose)
+        self.table.show()
+
