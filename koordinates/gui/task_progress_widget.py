@@ -61,10 +61,14 @@ class TaskDetailsWidget(QWidget):
         hl = QHBoxLayout()
         self.details_label = QLabel()
         hl.addWidget(self.details_label, 1)
+        self.retry_button = QPushButton(self.tr('Retry'))
+        hl.addWidget(self.retry_button)
+        self.retry_button.clicked.connect(self._retry)
         vl.addLayout(hl)
         self.setLayout(vl)
 
         self.details_label.hide()
+        self.retry_button.hide()
 
         self.setMinimumHeight(self.sizeHint().height())
         self.update_from_model()
@@ -89,6 +93,7 @@ class TaskDetailsWidget(QWidget):
                         font-size: 10pt;
             ''')
             self.details_label.hide()
+            self.retry_button.hide()
             self.progress_bar.setValue(
                 int(self.operations_manager.data(
                     self.index, KartOperationManager.ProgressRole
@@ -107,6 +112,7 @@ class TaskDetailsWidget(QWidget):
                 KartOperationManager.DetailsRole
             ))
             self.details_label.show()
+            self.retry_button.show()
             self.progress_bar.hide()
             self.cancel_button.hide()
 
@@ -115,6 +121,12 @@ class TaskDetailsWidget(QWidget):
         Triggers cancelation of the corresponding task
         """
         self.operations_manager.cancel_task(self.index)
+
+    def _retry(self):
+        """
+        Triggers a retry of the corresponding task
+        """
+        self.operations_manager.retry_task(self.index)
 
 
 class TaskDetailsTable(QTableView):
