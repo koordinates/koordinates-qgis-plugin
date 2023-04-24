@@ -37,3 +37,12 @@ class KartOperation(Enum):
             KartOperation.Unknown: 'unknown',
             KartOperation.Clone: 'Cloned'
         }[self]
+
+
+class OperationStatus(Enum):
+    """
+    Task operation status
+    """
+    Ongoing = auto()
+    Failed = auto()
+    Success = auto()

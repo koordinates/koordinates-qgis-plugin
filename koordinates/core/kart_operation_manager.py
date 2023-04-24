@@ -17,11 +17,26 @@ from qgis.core import (
     QgsTask
 )
 
-from .enums import KartOperation
+from .enums import (
+    KartOperation,
+    OperationStatus
+)
 from .kart_task import (
     KartCloneTask,
     KartTask
 )
+
+
+class FailedOperationDetails:
+    """
+    Encapsulates information about a failed operation
+    """
+
+    def __init__(self,
+                 description: str,
+                 error: str):
+        self.description = description
+        self.error = error
 
 
 class KartOperationManager(QAbstractItemModel):
@@ -33,6 +48,8 @@ class KartOperationManager(QAbstractItemModel):
 
     DescriptionRole = Qt.UserRole + 1
     ProgressRole = Qt.UserRole + 2
+    DetailsRole = Qt.UserRole + 3
+    StatusRole = Qt.UserRole + 4
 
     # operation, description, remaining tasks, overall remaining progress
     task_completed = pyqtSignal(KartOperation, str, int, float)
@@ -66,6 +83,7 @@ class KartOperationManager(QAbstractItemModel):
         super().__init__()
 
         self._ongoing_tasks: List[QgsTask] = []
+        self._failures: List[FailedOperationDetails] = []
 
     def _push_task(self,
                    task: KartTask,
@@ -108,16 +126,30 @@ class KartOperationManager(QAbstractItemModel):
                 before cleaning up the task
                 """
                 on_fail(_task)
-                self._pop_task(_task)
+                self._task_failed(_task)
 
             task.taskTerminated.connect(partial(call_on_fail_and_pop, task))
         else:
-            task.taskTerminated.connect(partial(self._pop_task, task))
+            task.taskTerminated.connect(partial(self._task_failed, task))
 
         task.progressChanged.connect(self._emit_progress_message)
         task.statusChanged.connect(self._task_status_changed)
 
         QgsApplication.taskManager().addTask(task)
+
+    def _task_failed(self, task: KartTask):
+        """
+        Called when a task has failed
+        """
+        result, short_description, detailed_description = task.result()
+        details = FailedOperationDetails(description=short_description,
+                                         error=detailed_description)
+
+        self._pop_task(task)
+
+        self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
+        self._failures.append(details)
+        self.endInsertRows()
 
     def _pop_task(self, task: KartTask):
         """
@@ -269,8 +301,8 @@ class KartOperationManager(QAbstractItemModel):
         if column < 0 or column >= self.columnCount():
             return QModelIndex()
 
-        if not parent.isValid() and 0 <= row < len(
-                self._ongoing_tasks):
+        if not parent.isValid() and 0 <= (row < len(
+                self._ongoing_tasks) + len(self._failures)):
             return self.createIndex(row, column)
 
         return QModelIndex()
@@ -280,7 +312,7 @@ class KartOperationManager(QAbstractItemModel):
 
     def rowCount(self, parent=QModelIndex()):
         if not parent.isValid():
-            return len(self._ongoing_tasks)
+            return len(self._ongoing_tasks) + len(self._failures)
         # no child items
         return 0
 
@@ -289,13 +321,21 @@ class KartOperationManager(QAbstractItemModel):
 
     def data(self, index, role=Qt.DisplayRole):
         task = self.index2task(index)
-        if not task:
-            return None
-
-        if role == self.DescriptionRole:
-            return task.description()
-        if role == self.ProgressRole:
-            return task.progress()
+        if task:
+            if role == self.DescriptionRole:
+                return task.description()
+            if role == self.ProgressRole:
+                return task.progress()
+            if role == self.StatusRole:
+                return OperationStatus.Ongoing
+        failed_task = self.index2failed_task_details(index)
+        if failed_task:
+            if role == self.DescriptionRole:
+                return failed_task.description
+            if role == self.DetailsRole:
+                return failed_task.error
+            if role == self.StatusRole:
+                return OperationStatus.Failed
 
         return None
 
@@ -326,3 +366,14 @@ class KartOperationManager(QAbstractItemModel):
             return None
 
         return self._ongoing_tasks[index.row()]
+
+    def index2failed_task_details(self, index: QModelIndex) -> \
+            Optional[FailedOperationDetails]:
+        """
+        Returns the details of the failed operation at the given model index
+        """
+        if not index.isValid() or index.row() < len(self._ongoing_tasks) or \
+                index.row() >= len(self._ongoing_tasks) + len(self._failures):
+            return None
+
+        return self._failures[index.row() - len(self._ongoing_tasks)]
