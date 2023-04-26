@@ -122,6 +122,8 @@ class DatasetGuiUtils:
             return 'Set'
         elif data_type == DataType.Repositories:
             return 'Repository'
+        elif data_type == DataType.PointClouds:
+            return 'Point Cloud'
 
         return None
 
@@ -158,6 +160,9 @@ class DatasetGuiUtils:
             return None
         elif data_type == DataType.Repositories:
             return None
+        elif data_type == DataType.PointClouds:
+            count = dataset.get("data", {}).get("feature_count") or 0
+            return '{} Tiles'.format(count)
 
         return None
 
