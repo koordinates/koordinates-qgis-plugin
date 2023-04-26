@@ -62,6 +62,8 @@ class DatasetGuiUtils:
             return 'set-{}.svg'.format(suffix)
         elif data_type == DataType.Repositories:
             return 'repo-{}.svg'.format(suffix)
+        elif data_type == DataType.PointClouds:
+            return 'point-cloud-{}.svg'.format(suffix)
 
         return None
 
