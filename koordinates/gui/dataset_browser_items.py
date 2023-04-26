@@ -5,7 +5,6 @@ from typing import (
     Dict
 )
 
-from dateutil import parser
 from qgis.PyQt.QtCore import (
     Qt,
     QPointF,
@@ -57,7 +56,6 @@ from .dataset_utils import (
 from .gui_utils import GuiUtils
 from .star_button import StarButton
 from ..api import (
-    ApiUtils,
     DataType,
     Capability,
     PublicAccessType,

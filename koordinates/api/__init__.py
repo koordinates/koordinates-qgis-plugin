@@ -4,7 +4,7 @@ from .client import (  # NOQA
     PAGE_SIZE
 )
 from .data_browser import DataBrowserQuery  # NOQA
-
+from .dataset import Dataset  # NOQA
 from .enums import (  # NOQA
     DataType,
     VectorFilter,
@@ -18,9 +18,6 @@ from .enums import (  # NOQA
     Capability,
     PublicAccessType
 )
-
-from .utils import ApiUtils  # NOQA
 from .layer_utils import LayerUtils  # NOQA
-from .dataset import Dataset  # NOQA
 from .repo import Repo  # NOQA
-
+from .utils import ApiUtils  # NOQA

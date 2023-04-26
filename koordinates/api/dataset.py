@@ -5,7 +5,6 @@ from typing import (
     Optional
 )
 
-from .enums import DataType
 from .utils import ApiUtils
 from .client import KoordinatesClient
 from .repo import Repo
