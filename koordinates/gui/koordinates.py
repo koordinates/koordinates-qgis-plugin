@@ -604,6 +604,7 @@ class Koordinates(QgsDockWidget, WIDGET):
                 [c for c in self._contexts if c['name'] == self.context_tab.tabData(current)][0]
 
             if self._current_context['type'] == 'user':
+                Koordinates.instance().reset_domain()
                 if KoordinatesClient.instance().user_details()["avatar_url"]:
                     self.context_logo_label.circle = True
                     downloadThumbnail(KoordinatesClient.instance().user_details()["avatar_url"],
@@ -622,6 +623,8 @@ class Koordinates(QgsDockWidget, WIDGET):
                 self.context_header.setVisible(True)
             else:
                 self.context_logo_label.circle = False
+                KoordinatesClient.instance().domain = \
+                    self._current_context.get('domain')
                 downloadThumbnail(self._current_context.get("logo"),
                                   self.context_logo_label)
                 self.context_logo_label.show()
