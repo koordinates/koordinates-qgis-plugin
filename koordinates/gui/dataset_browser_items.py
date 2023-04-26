@@ -746,7 +746,8 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         Shows the details dialog for the item
         """
         if self.dataset_type == DataType.Repositories:
-            dlg = RepositoryDialog(self, self.dataset)
+            # dlg = RepositoryDialog(self, self.dataset)
+            return
         else:
             dlg = DatasetDialog(self, self.dataset)
         dlg.exec()

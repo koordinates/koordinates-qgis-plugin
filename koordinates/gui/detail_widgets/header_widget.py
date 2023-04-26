@@ -49,7 +49,7 @@ class HeaderWidget(QFrame):
         url_frame.setFrameShape(QFrame.NoFrame)
         if background_color:
             url_frame.setStyleSheet(
-                """QFrame { 
+                """QFrame {
                     border-radius: 6px;
                     background-color: rgba(255,255,255,0.1);
                 }""")
