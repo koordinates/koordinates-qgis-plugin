@@ -21,3 +21,6 @@ from .enums import (  # NOQA
 
 from .utils import ApiUtils  # NOQA
 from .layer_utils import LayerUtils  # NOQA
+from .dataset import Dataset  # NOQA
+from .repo import Repo  # NOQA
+

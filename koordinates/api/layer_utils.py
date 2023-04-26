@@ -6,6 +6,7 @@ from qgis.core import (
 from qgis.utils import iface
 
 from .client import KoordinatesClient
+from .dataset import Dataset
 
 
 class LayerUtils:
@@ -26,19 +27,21 @@ class LayerUtils:
         return color.name()[1:]
 
     @staticmethod
-    def add_layer_to_project(dataset: Dict):
+    def add_layer_to_project(dataset: Dataset):
         """
         Adds the layer to the current project from a dataset definition
         """
         color_name = LayerUtils.get_random_color_string()
 
         apikey = KoordinatesClient.instance().apiKey
+        dataset_id = dataset.id
+
         uri = (
             "contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&format=image/png"
-            f"&layers=layer-{dataset['id']}&styles=style%3Dauto,"
+            f"&layers=layer-{dataset_id}&styles=style%3Dauto,"
             f"color%3D{color_name}&tileMatrixSet=EPSG:3857&"
             f"tilePixelRatio=0&url={LayerUtils.WMTS_URL_BASE};"
             f"key%3D{apikey}/{LayerUtils.WMTS_ENDPOINT}/"
-            f"{dataset['id']}/WMTSCapabilities.xml"
+            f"{dataset_id}/WMTSCapabilities.xml"
         )
-        iface.addRasterLayer(uri, dataset.get("title", 'Layer'), "wms")
+        iface.addRasterLayer(uri, dataset.title(), "wms")

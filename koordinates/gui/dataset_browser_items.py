@@ -57,7 +57,8 @@ from ..api import (
     ApiUtils,
     DataType,
     Capability,
-    PublicAccessType
+    PublicAccessType,
+    Dataset
 )
 
 
@@ -532,15 +533,14 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         """
         self.setStyleSheet(base_style)
 
-        capabilities = ApiUtils.capabilities_from_dataset_response(self.dataset)
-
-        if Capability.Clone in capabilities:
-            self.btnClone = CloneButton(self.dataset)
+        dataset_obj = Dataset(self.dataset)
+        if Capability.Clone in dataset_obj.capabilities:
+            self.btnClone = CloneButton(dataset_obj)
             buttons_layout.addWidget(self.btnClone)
         else:
             self.btnClone = None
 
-        if Capability.Add in capabilities:
+        if Capability.Add in dataset_obj.capabilities:
             self.btnAdd = AddButton(self.dataset)
             buttons_layout.addWidget(self.btnAdd)
         else:

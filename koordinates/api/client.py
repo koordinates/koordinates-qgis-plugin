@@ -24,6 +24,7 @@ from qgis.core import (
 from koordinates.utils import waitcursor
 from .data_browser import DataBrowserQuery
 from .utils import ApiUtils
+from .repo import Repo
 
 PAGE_SIZE = 20
 
@@ -194,6 +195,16 @@ class KoordinatesClient(QObject):
         tokens = ret['reply'].rawHeader(b"X-Resource-Range").data().decode().split("/")
         total = int(tokens[-1])
         return total
+
+    def retrieve_repository(self, url) -> Optional[Repo]:
+        """
+        Retrieve repository details blocking
+        """
+        res = self.get_json(url)
+        if res:
+            return Repo(res)
+
+        return None
 
     def user_details(self) -> dict:
         """

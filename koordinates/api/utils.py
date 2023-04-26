@@ -40,6 +40,8 @@ class ApiUtils:
                 return DataType.Rasters
             elif dataset.get('kind') == 'grid':
                 return DataType.Grids
+            elif dataset.get('kind') == 'pointcloud':
+                return DataType.PointClouds
         elif dataset.get('type') == 'table':
             return DataType.Tables
         elif dataset.get('type') == 'document':
