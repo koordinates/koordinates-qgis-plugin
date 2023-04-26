@@ -34,6 +34,13 @@ from qgis.core import (
 )
 
 
+FONT_FAMILIES = "KxMetric, -apple-system, BlinkMacSystemFont," \
+                "'avenir next', avenir, helvetica, 'helvetica neue', ubuntu," \
+                "roboto, noto, 'segoe ui', arial, sans-serif"
+MONOSPACE_FONT_FAMILIES = "SFMono-Regular, Menlo, Monaco, Consolas, " \
+                          "'Liberation Mono', 'Courier New', monospace"
+
+
 class GuiUtils:
     """
     Utilities for GUI plugin components

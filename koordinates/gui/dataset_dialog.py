@@ -8,31 +8,22 @@ from qgis.PyQt import uic
 from qgis.PyQt.QtCore import (
     Qt,
     QSize,
-    QUrl,
-    QRect,
-    pyqtSignal
+    QRect
 )
 from qgis.PyQt.QtGui import (
     QPixmap,
     QImage,
     QPainter,
     QBrush,
-    QColor,
-    QFontMetrics,
-    QFont,
-    QDesktopServices
+    QColor
 )
 from qgis.PyQt.QtWidgets import (
     QFrame,
     QLabel,
     QHBoxLayout,
-    QApplication,
-    QSizePolicy,
     QDialog,
     QVBoxLayout,
     QScrollArea,
-    QGridLayout,
-    QWidget
 )
 from qgis.PyQt.QtSvg import QSvgWidget
 
@@ -44,7 +35,10 @@ from .dataset_utils import (
     DatasetGuiUtils,
     IconStyle
 )
-from .gui_utils import GuiUtils
+from .gui_utils import (
+    GuiUtils,
+    FONT_FAMILIES,
+)
 from .star_button import StarButton
 from .svg_label import SvgLabel
 from .thumbnails import downloadThumbnail
@@ -55,431 +49,18 @@ from ..api import (
     Capability,
     KoordinatesClient
 )
+from .detail_widgets import (
+    HorizontalLine,
+    StatisticWidget,
+    HeaderWidget,
+    DetailsTable,
+    AttachmentWidget,
+    MetadataWidget
+)
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
 WIDGET, BASE = uic.loadUiType(GuiUtils.get_ui_file_path("datasetdialog.ui"))
-
-FONT_FAMILIES = "KxMetric, -apple-system, BlinkMacSystemFont," \
-                "'avenir next', avenir, helvetica, 'helvetica neue', ubuntu," \
-                "roboto, noto, 'segoe ui', arial, sans-serif"
-MONOSPACE_FONT_FAMILIES = "SFMono-Regular, Menlo, Monaco, Consolas, " \
-                          "'Liberation Mono', 'Courier New', monospace"
-
-
-class HorizontalLine(QFrame):
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-        self.setFixedHeight(1)
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.setStyleSheet("background-color: #eaeaea;")
-
-
-class ThumbnailLabel(QLabel):
-
-    def __init__(self, url, width, height, parent=None):
-        super().__init__(parent)
-        self.setFixedSize(QSize(width, height))
-
-        downloadThumbnail(url, self)
-
-    def setThumbnail(self, image: QImage):
-        image = image.convertToFormat(QImage.Format_ARGB32)
-        if image.width() > self.width():
-            image = image.scaled(self.width(), int(image.height() * self.width() / image.width()),
-                                 transformMode=Qt.SmoothTransformation)
-            self.setFixedHeight(image.height())
-
-        if image.height() > self.height():
-            image = image.scaled(int(image.width() * self.height() / image.height()),
-                                 self.height(),
-                                 transformMode=Qt.SmoothTransformation)
-            self.setFixedWidth(image.width())
-
-        self.setPixmap(QPixmap.fromImage(image))
-
-
-class SvgFramedButton(QFrame):
-    clicked = pyqtSignal()
-
-    def __init__(self, icon_name: str, width: int, height: int,
-                 icon_width: int, icon_height: int, parent=None,
-                 border_color=None, hover_border_color=None):
-        super().__init__(parent)
-
-        self.setFixedSize(width, height)
-
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
-
-        if hover_border_color:
-            self.setMouseTracking(True)
-
-        if border_color:
-            self.setStyleSheet(
-                """
-            SvgFramedButton {{ background-color: none; border-radius: 3px; border: 1px solid {}; }}
-            SvgFramedButton:hover {{ border-color: {}}}
-            """.format(
-                    border_color,
-                    hover_border_color if hover_border_color else border_color
-                )
-            )
-
-        svg_label = SvgLabel(icon_name, icon_width, icon_height)
-        vl = QVBoxLayout()
-        vl.setContentsMargins(0, 0, 0, 0)
-        vl.addStretch()
-        hl = QHBoxLayout()
-        hl.setContentsMargins(0, 0, 0, 0)
-        hl.addStretch()
-        hl.addWidget(svg_label)
-        hl.addStretch()
-        vl.addLayout(hl)
-        vl.addStretch()
-        self.setLayout(vl)
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.clicked.emit()
-        else:
-            super().mousePressEvent(event)
-
-
-class StatisticWidget(QWidget):
-
-    def __init__(self, title: str, icon_name: str, value: str, parent=None):
-        super().__init__(parent)
-
-        gl = QGridLayout()
-        gl.setContentsMargins(0, 0, 0, 0)
-
-        font_size = 9
-        if platform.system() == 'Darwin':
-            font_size = 11
-
-        title_label = QLabel(
-            '<b style="font-family: {}; font-size: {}pt">{}</b>'.format(
-                FONT_FAMILIES,
-                font_size,
-                title))
-        gl.addWidget(title_label, 0, 0, 1, 2)
-
-        icon = SvgLabel(icon_name, 16, 16)
-        gl.addWidget(icon, 1, 0, 1, 1)
-
-        value_label = QLabel(
-            '<span style="font-family: {}; font-size: {}pt">{}</span>'.format(
-                FONT_FAMILIES,
-                font_size, value))
-        gl.addWidget(value_label, 1, 1, 1, 1)
-
-        self.setLayout(gl)
-
-
-class HeaderWidget(QFrame):
-
-    def __init__(self, dataset: Dict, parent=None):
-        super().__init__(parent)
-        self.dataset = dataset
-
-        self.setFixedHeight(72)
-        self.setFrameShape(QFrame.NoFrame)
-
-        background_color = self.dataset.get('publisher', {}).get('theme', {}).get(
-            'background_color') or '555657'
-        self.setStyleSheet(
-            'HeaderWidget {{ background-color: #{}; }}'.format(background_color))
-
-        hl = QHBoxLayout()
-        hl.setContentsMargins(15, 0, 15, 0)
-
-        logo = self.dataset.get('publisher', {}).get('theme', {}).get('logo')
-        if logo:
-            logo = 'https:{}'.format(logo)
-            logo_widget = ThumbnailLabel(logo, 145, 35)
-            hl.addWidget(logo_widget)
-
-        url_frame = QFrame()
-        url_frame.setFrameShape(QFrame.NoFrame)
-        if background_color:
-            url_frame.setStyleSheet(
-                'QFrame { border-radius: 6px; background-color: rgba(255,255,255,0.1); }')
-        url_frame.setFixedHeight(35)
-        url_layout = QHBoxLayout()
-        url_layout.setContentsMargins(12, 7, 12, 7)
-
-        url_label = QLabel(self.dataset.get('url_canonical', ''))
-        if background_color:
-            url_label.setStyleSheet(
-                'QLabel {background-color: none; color: rgba(255,255,255,0.3)}')
-        url_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
-        url_label.setCursor(Qt.CursorShape.IBeamCursor)
-        url_label.setMinimumWidth(10)
-        url_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-
-        url_layout.addWidget(url_label, 1)
-
-        url_copy = SvgFramedButton(
-            'copy.svg', 19, 19, 11, 14,
-            border_color='rgba(255,255,255,0.3)' if background_color else None,
-            hover_border_color='rgba(255,255,255,0.5)' if background_color else None
-        )
-
-        url_copy.clicked.connect(self._copy_url)
-        url_layout.addWidget(url_copy)
-        url_frame.setLayout(url_layout)
-
-        hl.addWidget(url_frame, 1)
-
-        font_scale = self.screen().logicalDotsPerInch() / 92
-        org_font_size = 10
-        if font_scale > 1:
-            org_font_size = int(12 / font_scale)
-
-        org_details_label = QLabel()
-        org_details_label.setStyleSheet('padding-left: 10px;')
-        org_details_label.setText(
-            f"""<p style="line-height: 130%;
-            font-size: {org_font_size}pt;
-            color: rgba(255,255,255,0.7);
-            font-family: {FONT_FAMILIES}" """
-            f"""><b>{self.dataset.get('publisher', {}).get('name')}</b><br>"""
-            f"""<span style="
-        font-size: {org_font_size}pt;
-        font-family: {FONT_FAMILIES};
-        color: rgba(255,255,255,0.8);"
-        >via {self.dataset.get("publisher").get('site', {}).get("name")}</span></p>"""
-        )
-
-        hl.addWidget(org_details_label)
-
-        self.setLayout(hl)
-
-    def _copy_url(self):
-        url = self.dataset.get('url_canonical', '')
-        QApplication.clipboard().setText(url)
-
-
-class DetailsTable(QGridLayout):
-
-    def __init__(self, title: str, parent=None):
-        super().__init__(parent)
-        self.setVerticalSpacing(13)
-        self.font_size = 10
-        if platform.system() == 'Darwin':
-            self.font_size = 14
-
-        heading = QLabel(
-            """<b style="font-family: {}; font-size: {}pt; color: black">{}</b>""".format(
-                FONT_FAMILIES,
-                self.font_size,
-                title))
-        self.addWidget(heading, 0, 0, 1, 2)
-        self.setColumnStretch(1, 1)
-
-    def push_row(self, title: str, value: str):
-        if self.rowCount() > 1:
-            self.addWidget(HorizontalLine(), self.rowCount(), 0, 1, 2)
-
-        is_monospace = title.startswith('_')
-        if is_monospace:
-            title = title[1:]
-
-        row = self.rowCount()
-        title_label = QLabel(
-            """<span style="font-family: {};
-            font-size: {}pt;
-            color: #868889">{}</span>""".format(FONT_FAMILIES,
-                                                self.font_size,
-                                                title))
-        title_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
-
-        fm = QFontMetrics(QFont())
-        title_label.setFixedWidth(fm.width('x') * 30)
-        title_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
-        self.addWidget(title_label, row, 0, 1, 1)
-        font_family = FONT_FAMILIES if not is_monospace else MONOSPACE_FONT_FAMILIES
-        value_label = QLabel(
-            """<span style="font-family: {}; font-size: {}pt; color: black">{}</span>""".format(
-                font_family,
-                self.font_size,
-                value))
-        value_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
-        value_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
-        value_label.setWordWrap(True)
-        self.addWidget(value_label, row, 1, 1, 1)
-
-    def finalize(self):
-        self.addWidget(HorizontalLine(), self.rowCount(), 0, 1, 2)
-
-    def set_details(self, details: List[Tuple]):
-        for title, value in details:
-            self.push_row(title, value)
-        self.finalize()
-
-
-class AttachmentWidget(QFrame):
-
-    def __init__(self, attachment):
-        super().__init__()
-
-        self.setStyleSheet("""AttachmentWidget {
-        border: 1px solid #dddddd;
-        border-radius: 3px;
-         }
-         """)
-
-        self.attachment = attachment
-        label = QLabel()
-
-        base_font_size = 11
-        if platform.system() == 'Darwin':
-            base_font_size = 12
-
-        title = attachment.get('document', {}).get('title')
-
-        label.setText(
-            f"""<span style="font-family: {FONT_FAMILIES};
-            font-weight: 500;
-            font-size: {base_font_size}pt;">{title}</span>"""
-        )
-        hl = QHBoxLayout()
-        hl.addWidget(label, 1)
-
-        download_frame = QFrame()
-        download_frame.setStyleSheet("""QFrame {
-        border: 1px solid #dddddd;
-        border-radius: 3px;
-        }
-
-        QFrame:hover { background-color: #f8f8f8; }
-        """)
-
-        file_details = attachment.get('document', {}).get('extension', '').upper()
-        file_details += ' ' + attachment.get('document', {}).get('file_size_formatted', '')
-
-        download_label = QLabel()
-        download_label.setText(
-            f"""<span style="font-family: {FONT_FAMILIES};
-            font-size: {base_font_size}pt;">{file_details}</span>"""
-        )
-        download_label.setStyleSheet('border: none')
-
-        download_layout = QHBoxLayout()
-        download_layout.addWidget(download_label)
-
-        download_icon = SvgLabel('arrow-down.svg', 16, 16)
-        download_layout.addWidget(download_icon)
-
-        download_frame.setLayout(download_layout)
-        download_frame.setCursor(Qt.PointingHandCursor)
-
-        download_frame.mousePressEvent = self._download
-
-        hl.addWidget(download_frame)
-
-        self.setLayout(hl)
-
-    def _download(self, event):
-        url = self.attachment['url_download']
-        QDesktopServices.openUrl(QUrl(url))
-
-
-class MetadataWidget(QFrame):
-
-    def __init__(self, source, metadata):
-        super().__init__()
-
-        self.setStyleSheet("""MetadataWidget {
-        border: 1px solid #dddddd;
-        border-radius: 3px;
-         }
-         """)
-
-        self.metadata = metadata
-        label = QLabel()
-
-        base_font_size = 11
-        if platform.system() == 'Darwin':
-            base_font_size = 12
-
-        title = 'ISO 19115/19139 Metadata' if source == 'iso' else 'Dublin Core Metadata'
-
-        label.setText(
-            f"""<span style="font-family: {FONT_FAMILIES};
-            font-weight: 500;
-            font-size: {base_font_size}pt;">{title}</span>"""
-        )
-        hl = QHBoxLayout()
-        hl.addWidget(label, 1)
-
-        download_xml_frame = QFrame()
-        download_xml_frame.setStyleSheet("""QFrame {
-        border: 1px solid #dddddd;
-        border-radius: 3px;
-         }
-
-         QFrame:hover { background-color: #f8f8f8; }
-         """)
-
-        download_xml_label = QLabel()
-        download_xml_label.setText(
-            f"""<span style="font-family: {FONT_FAMILIES};
-            font-size: {base_font_size}pt;">XML</span>"""
-        )
-        download_xml_label.setStyleSheet('border: none')
-
-        download_xml_layout = QHBoxLayout()
-        download_xml_layout.addWidget(download_xml_label)
-
-        download_icon = SvgLabel('arrow-down.svg', 16, 16)
-        download_xml_layout.addWidget(download_icon)
-
-        download_xml_frame.setLayout(download_xml_layout)
-        download_xml_frame.setCursor(Qt.PointingHandCursor)
-
-        download_xml_frame.mousePressEvent = self._download_xml
-
-        hl.addWidget(download_xml_frame)
-
-        download_pdf_frame = QFrame()
-        download_pdf_frame.setStyleSheet("""QFrame {
-        border: 1px solid #dddddd;
-        border-radius: 3px;
-         }
-
-         QFrame:hover { background-color: #f8f8f8; }
-         """)
-
-        download_pdf_label = QLabel()
-        download_pdf_label.setText(
-            f"""<span style="font-family: {FONT_FAMILIES};
-            font-size: {base_font_size}pt;">PDF</span>"""
-        )
-        download_pdf_label.setStyleSheet('border: none')
-
-        download_pdf_layout = QHBoxLayout()
-        download_pdf_layout.addWidget(download_pdf_label)
-
-        download_icon = SvgLabel('arrow-down.svg', 16, 16)
-        download_pdf_layout.addWidget(download_icon)
-
-        download_pdf_frame.setLayout(download_pdf_layout)
-        download_pdf_frame.setCursor(Qt.PointingHandCursor)
-
-        download_pdf_frame.mousePressEvent = self._download_pdf
-
-        hl.addWidget(download_pdf_frame)
-
-        self.setLayout(hl)
-
-    def _download_xml(self, event):
-        QDesktopServices.openUrl(QUrl(self.metadata))
-
-    def _download_pdf(self, event):
-        QDesktopServices.openUrl(QUrl(self.metadata + '?format=pdf'))
 
 
 class DatasetDialog(QDialog):
@@ -487,7 +68,7 @@ class DatasetDialog(QDialog):
     A dialog showing details of a dataset
     """
 
-    def __init__(self, parent, dataset):
+    def __init__(self, parent, dataset: Dict):
         super().__init__(parent)
 
         self.dataset = dataset
