@@ -1,6 +1,9 @@
 import json
 import platform
-from typing import Optional
+from typing import (
+    Optional,
+    Dict
+)
 
 from dateutil import parser
 from qgis.PyQt.QtCore import (
@@ -414,16 +417,15 @@ class DatasetItemWidget(DatasetItemWidgetBase):
     Shows details for a dataset item
     """
 
-    def __init__(self, dataset, column_count, parent):
+    def __init__(self, dataset: Dict, column_count, parent):
         super().__init__(parent)
 
         self.setMouseTracking(True)
-        self.dataset = dataset
+        self.dataset = Dataset(dataset)
+
         self.raw_thumbnail = None
 
         font_scale = self.screen().logicalDotsPerInch() / 92
-
-        self.dataset_type: DataType = ApiUtils.data_type_from_dataset_response(self.dataset)
 
         self.thumbnail_label = Label()
         self.thumbnail_label.setFixedHeight(150)
@@ -433,23 +435,22 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.title_label.setWordWrap(True)
         self.title_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
-        if self.dataset_type == DataType.Repositories:
+        if self.dataset.datatype == DataType.Repositories:
             self.setThumbnail(GuiUtils.get_svg_as_image('repository-image.svg',
                                                         150, 150))
         else:
-            thumbnail_url = self.dataset.get('thumbnail_url')
+            thumbnail_url = self.dataset.details.get('thumbnail_url')
             if thumbnail_url:
                 downloadThumbnail(thumbnail_url, self)
 
-        if ApiUtils.access_from_dataset_response(self.dataset) == \
-                PublicAccessType.none:
+        if self.dataset.access == PublicAccessType.none:
             private_icon = QSvgWidget(GuiUtils.get_icon_svg('private.svg'))
             private_icon.setFixedSize(QSize(24, 24))
             private_icon.setToolTip(self.tr('Private'))
             self.layout().set_private_icon(private_icon)
 
-        is_starred = self.dataset.get('is_starred', False)
-        self.star_button = StarButton(dataset_id=self.dataset['id'], checked=is_starred)
+        self.star_button = StarButton(dataset_id=self.dataset.id,
+                                      checked=self.dataset.is_starred())
         self.layout().set_star_button(self.star_button)
 
         title_layout = QHBoxLayout()
@@ -473,13 +474,13 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.title_label.setText(
             f"""<p style="line-height: 130%;
                 font-size: {main_title_size}pt;
-                font-family: Arial, Sans"><b>{self.dataset.get("title", 'Layer')}</b><br>"""
+                font-family: Arial, Sans"><b>{self.dataset.title()}</b><br>"""
             f"""<span style="color: #868889;
             font-size: {title_font_size}pt;
-            font-family: Arial, Sans">{self.dataset.get("publisher", {}).get("name")}</span></p>"""
+            font-family: Arial, Sans">{self.dataset.publisher_name()}</span></p>"""
         )
 
-        license = self.dataset.get('license')
+        license = self.dataset.details.get('license')
         self.license_label = None
         if license:
             license_type = license.get('type')
@@ -496,13 +497,12 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.labelUpdatedIcon.setFixedSize(13, 12)
         self.labelUpdated = QLabel()
 
-        published_at_date_str: Optional[str] = self.dataset.get("published_at")
-        if published_at_date_str:
-            date = parser.parse(published_at_date_str)
+        published_at_date = self.dataset.published_at_date()
+        if published_at_date is not None:
             self.labelUpdated.setText(
                 f"""<span style="color: #868889;
                     font-family: Arial, Sans;
-                    font-size: {detail_font_size}pt">{date.strftime("%d %b %Y")}</span>"""
+                    font-size: {detail_font_size}pt">{published_at_date.strftime("%d %b %Y")}</span>"""
             )
 
         details_layout = QVBoxLayout()
@@ -533,14 +533,13 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         """
         self.setStyleSheet(base_style)
 
-        dataset_obj = Dataset(self.dataset)
-        if Capability.Clone in dataset_obj.capabilities:
-            self.btnClone = CloneButton(dataset_obj)
+        if Capability.Clone in self.dataset.capabilities:
+            self.btnClone = CloneButton(self.dataset)
             buttons_layout.addWidget(self.btnClone)
         else:
             self.btnClone = None
 
-        if Capability.Add in dataset_obj.capabilities:
+        if Capability.Add in self.dataset.capabilities:
             self.btnAdd = AddButton(self.dataset)
             buttons_layout.addWidget(self.btnAdd)
         else:
@@ -549,7 +548,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.layout().set_button_layout(buttons_layout)
 
         self.bbox: Optional[QgsGeometry] = self._geomFromGeoJson(
-            self.dataset.get("data", {}).get("extent"))
+            self.dataset.details.get("data", {}).get("extent"))
         # if self.bbox:
         #     self.footprint = QgsRubberBand(iface.mapCanvas(), QgsWkbTypes.PolygonGeometry)
         #     self.footprint.setWidth(2)
@@ -688,14 +687,17 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         painter.setBrush(QBrush(QColor(0, 0, 0, 150)))
         painter.drawRoundedRect(QRectF(15, 100, 117, 32), 4, 4)
 
-        icon = DatasetGuiUtils.get_icon_for_dataset(self.dataset, IconStyle.Light)
+        icon = DatasetGuiUtils.get_icon_for_dataset(self.dataset.details,
+                                                    IconStyle.Light)
         if icon:
             painter.drawImage(QRectF(21, 106, 20, 20),
                               GuiUtils.get_svg_as_image(icon,
                                                         int(20 * scale_factor),
                                                         int(20 * scale_factor)))
 
-        description = DatasetGuiUtils.get_type_description(self.dataset)
+        description = DatasetGuiUtils.get_type_description(
+            self.dataset.details
+        )
 
         font_scale = self.screen().logicalDotsPerInch() / 92
 
@@ -715,7 +717,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             painter.setPen(QPen(QColor(255, 255, 255)))
             painter.drawText(QPointF(47, 112), description)
 
-        subtitle = DatasetGuiUtils.get_subtitle(self.dataset)
+        subtitle = DatasetGuiUtils.get_subtitle(self.dataset.details)
         if subtitle:
             font = QFont('Arial')
             font.setPointSizeF(overlay_font_size / scale_factor)
@@ -745,11 +747,11 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         """
         Shows the details dialog for the item
         """
-        if self.dataset_type == DataType.Repositories:
+        if self.dataset.datatype == DataType.Repositories:
             # dlg = RepositoryDialog(self, self.dataset)
             return
         else:
-            dlg = DatasetDialog(self, self.dataset)
+            dlg = DatasetDialog(self, self.dataset.details)
         dlg.exec()
 
     def _geomFromGeoJson(self, geojson) -> Optional[QgsGeometry]:
