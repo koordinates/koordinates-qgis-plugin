@@ -19,7 +19,8 @@ from .gui_utils import GuiUtils
 from ..api import (
     KoordinatesClient,
     UserCapability,
-    LayerUtils
+    LayerUtils,
+    Dataset
 )
 from ..core import (
     KartOperationManager
@@ -71,13 +72,10 @@ class CloneButton(ActionButton):
     BUTTON_TEXT = "#323233"
     BUTTON_HOVER = "#e4e4e6"
 
-    def __init__(self, dataset, parent=None, close_parent_on_clone=False):
+    def __init__(self, dataset: Dataset, parent=None, close_parent_on_clone=False):
         super().__init__(parent)
 
         self.dataset = dataset
-        self.clone_url = \
-            self.dataset.get("repository", {}).get("clone_location_https")
-
         self.clicked.connect(self.cloneRepository)
 
         self._close_parent_on_clone = close_parent_on_clone
@@ -98,7 +96,7 @@ class CloneButton(ActionButton):
         Updates button state based on current operations
         """
         is_cloning = KartOperationManager.instance().is_cloning(
-            self.clone_url
+            self.dataset.clone_url()
         )
         self.setEnabled(not is_cloning)
         if is_cloning:
@@ -119,8 +117,8 @@ class CloneButton(ActionButton):
     def cloneRepository(self):
         if self._close_parent_on_clone:
             self.parent().close()
-        url = self.clone_url
-        title = self.dataset.get('title')
+        url = self.dataset.clone_url()
+        title = self.dataset.title()
 
         from .action_dialog import ActionDialog
         if UserCapability.EnableKartClone not in KoordinatesClient.instance().user_capabilities():
@@ -150,7 +148,7 @@ class CloneButton(ActionButton):
 
 class AddButton(ActionButton):
 
-    def __init__(self, dataset, parent=None):
+    def __init__(self, dataset: Dataset, parent=None):
         super().__init__(parent)
 
         self.dataset = dataset

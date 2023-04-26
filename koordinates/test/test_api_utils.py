@@ -58,6 +58,11 @@ class TestApiUtils(unittest.TestCase):
             }), DataType.Grids)
         self.assertEqual(ApiUtils.data_type_from_dataset_response(
             {
+                'type': 'layer',
+                'kind': 'pointcloud'
+            }), DataType.PointClouds)
+        self.assertEqual(ApiUtils.data_type_from_dataset_response(
+            {
                 'type': 'table'
             }), DataType.Tables)
         self.assertEqual(ApiUtils.data_type_from_dataset_response(

@@ -47,7 +47,8 @@ from ..api import (
     DataType,
     PublicAccessType,
     Capability,
-    KoordinatesClient
+    KoordinatesClient,
+    Dataset
 )
 from .detail_widgets import (
     HorizontalLine,
@@ -126,16 +127,16 @@ class DatasetDialog(QDialog):
         self.star_button = StarButton(dataset_id=self.dataset['id'], checked=is_starred)
         title_hl.addWidget(self.star_button)
 
-        capabilities = ApiUtils.capabilities_from_dataset_response(self.dataset)
+        dataset_obj = Dataset(dataset)
 
-        if Capability.Clone in capabilities:
-            self.clone_button = CloneButton(dataset, close_parent_on_clone=True)
+        if Capability.Clone in dataset_obj.capabilities:
+            self.clone_button = CloneButton(dataset_obj, close_parent_on_clone=True)
             title_hl.addWidget(self.clone_button)
         else:
             self.clone_button = None
 
-        if Capability.Add in capabilities:
-            self.add_button = AddButton(dataset)
+        if Capability.Add in dataset_obj.capabilities:
+            self.add_button = AddButton(dataset_obj)
             title_hl.addWidget(self.add_button)
         else:
             self.add_button = None
