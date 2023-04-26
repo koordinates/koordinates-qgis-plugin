@@ -60,10 +60,15 @@ class KoordinatesClient(QObject):
         self.layers = {}
         self._categories = None
 
+        self.reset_domain()
+
         self.apiKey = None
         self.headers = {}
         self._datasets = None
         self._user_details = None
+
+    def reset_domain(self):
+        self.domain = 'koordinates.com'
 
     @waitcursor
     def login(self, apiKey):
@@ -229,7 +234,7 @@ class KoordinatesClient(QObject):
         """
         Stars or unstars a dataset
         """
-        url = QUrl(f"https://koordinates.com/services/api/v1.x/layers/{dataset_id}/star/")
+        url = QUrl(f"https://{self.domain}/services/api/v1.x/layers/{dataset_id}/star/")
         network_request = QNetworkRequest(url)
 
         for header, value in self.headers.items():
@@ -248,7 +253,7 @@ class KoordinatesClient(QObject):
         """
         Builds a network request
         """
-        url = QUrl(f"https://koordinates.com/services/api/v1.x/{endpoint}")
+        url = QUrl(f"https://{self.domain}/services/api/v1.x/{endpoint}")
 
         if params:
             url.setQuery(ApiUtils.to_url_query(params))
