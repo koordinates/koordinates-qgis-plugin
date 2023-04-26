@@ -432,9 +432,13 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.title_label.setWordWrap(True)
         self.title_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
-        thumbnail_url = self.dataset.get('thumbnail_url')
-        if thumbnail_url:
-            downloadThumbnail(thumbnail_url, self)
+        if self.dataset_type == DataType.Repositories:
+            self.setThumbnail(GuiUtils.get_svg_as_image('repository-image.svg',
+                                                        150, 150))
+        else:
+            thumbnail_url = self.dataset.get('thumbnail_url')
+            if thumbnail_url:
+                downloadThumbnail(thumbnail_url, self)
 
         if ApiUtils.access_from_dataset_response(self.dataset) == \
                 PublicAccessType.none:
