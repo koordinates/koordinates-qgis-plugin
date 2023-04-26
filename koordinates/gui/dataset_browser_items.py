@@ -435,8 +435,11 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.title_label.setWordWrap(True)
         self.title_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
-        if self.dataset.datatype == DataType.Repositories:
-            self.setThumbnail(GuiUtils.get_svg_as_image('repository-image.svg',
+        thumbnail_svg = DatasetGuiUtils.thumbnail_icon_for_dataset(
+            self.dataset
+        )
+        if thumbnail_svg:
+            self.setThumbnail(GuiUtils.get_svg_as_image(thumbnail_svg,
                                                         150, 150))
         else:
             thumbnail_url = self.dataset.details.get('thumbnail_url')

@@ -8,7 +8,8 @@ from qgis.core import QgsFileUtils
 
 from ..api import (
     ApiUtils,
-    DataType
+    DataType,
+    Dataset
 )
 
 
@@ -18,6 +19,18 @@ class IconStyle(Enum):
 
 
 class DatasetGuiUtils:
+
+    @staticmethod
+    def thumbnail_icon_for_dataset(dataset: Dataset) -> Optional[str]:
+        """
+        Returns the name of the SVG thumbnail graphic for datasets which
+        have a fixed thumbnail
+        """
+        if dataset.datatype == DataType.Repositories:
+            return 'repository-image.svg'
+        if dataset.datatype == DataType.PointClouds:
+            return 'point-cloud-image.svg'
+        return None
 
     @staticmethod
     def get_icon_for_dataset(dataset: Dict, style: IconStyle) -> Optional[str]:
