@@ -500,12 +500,14 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.labelUpdatedIcon.setFixedSize(13, 12)
         self.labelUpdated = QLabel()
 
-        published_at_date = self.dataset.published_at_date()
-        if published_at_date is not None:
+        changed_date = self.dataset.published_at_date()
+        if changed_date is None:
+            changed_date = self.dataset.updated_at_date()
+        if changed_date is not None:
             self.labelUpdated.setText(
                 f"""<span style="color: #868889;
                     font-family: Arial, Sans;
-                    font-size: {detail_font_size}pt">{published_at_date.strftime("%d %b %Y")}</span>"""
+                    font-size: {detail_font_size}pt">{changed_date.strftime("%d %b %Y")}</span>"""
             )
 
         details_layout = QVBoxLayout()
