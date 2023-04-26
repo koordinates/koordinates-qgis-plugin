@@ -37,7 +37,7 @@ class SvgFramedButton(QFrame):
         if border_color:
             self.setStyleSheet(
                 """
-            SvgFramedButton {{ 
+            SvgFramedButton {{
                 background-color: none;
                 border-radius: 3px;
                 border: 1px solid {};
