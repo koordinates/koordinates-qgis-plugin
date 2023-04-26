@@ -54,6 +54,16 @@ class Dataset:
 
         return None
 
+    def updated_at_date(self) -> Optional[datetime.date]:
+        """
+        Returns the updated at date
+        """
+        updated_at_date_str: Optional[str] = self.details.get("updated_at")
+        if updated_at_date_str:
+            return parser.parse(updated_at_date_str)
+
+        return None
+
     def clone_url(self) -> Optional[str]:
         """
         Returns the clone URL for the dataset
