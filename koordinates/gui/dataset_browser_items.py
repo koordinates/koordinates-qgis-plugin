@@ -737,15 +737,18 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            self.showDetails()
+            self.show_details()
         else:
             super().mousePressEvent(event)
 
-    def showDetails(self):
-        dataset = (
-            self.dataset
-        )
-        dlg = DatasetDialog(self, dataset)
+    def show_details(self):
+        """
+        Shows the details dialog for the item
+        """
+        if self.dataset_type == DataType.Repositories:
+            dlg = RepositoryDialog(self, self.dataset)
+        else:
+            dlg = DatasetDialog(self, self.dataset)
         dlg.exec()
 
     def _geomFromGeoJson(self, geojson) -> Optional[QgsGeometry]:

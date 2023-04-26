@@ -107,6 +107,9 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
 
         self.raster_frame.setVisible(False)
 
+        self.point_cloud_radio = QRadioButton('Point Clouds')
+        layers_widget_layout.addWidget(self.point_cloud_radio)
+
         self.grid_radio = QRadioButton('Grids')
         layers_widget_layout.addWidget(self.grid_radio)
 
@@ -162,6 +165,7 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
             self.band_radio,
             self.rgb_radio,
             self.grayscale_radio,
+            self.point_cloud_radio,
             self.grid_radio,
             self.table_radio,
             self.data_repository_radio,
@@ -264,6 +268,7 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
         self.grayscale_radio.setChecked(False)
         self.vector_radio.setChecked(False)
         self.grid_radio.setChecked(False)
+        self.point_cloud_radio.setChecked(False)
         self._block_changes -= 1
 
         self._update_visible_frames()
@@ -329,6 +334,8 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
                     text = 'Raster: Grayscale, Alpha'
                 else:
                     text = 'Raster: Grayscale'
+        elif self.point_cloud_radio.isChecked():
+            text = 'Point Clouds'
         elif self.grid_radio.isChecked():
             if self.multi_attribute_grids_only_checkbox.isChecked():
                 text = 'Multi-attribute grids'
@@ -366,6 +373,8 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
             types = {DataType.Rasters}
         elif self.grid_radio.isChecked():
             types = {DataType.Grids}
+        elif self.point_cloud_radio.isChecked():
+            types = {DataType.PointClouds}
         elif self.table_radio.isChecked():
             types = {DataType.Tables}
         elif self.WITH_SETS and self.set_radio.isChecked():
@@ -415,6 +424,8 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
                 query.raster_band_filters = {RasterBandFilter.RGB}
             elif self.grayscale_radio.isChecked():
                 query.raster_band_filters = {RasterBandFilter.BlackAndWhite}
+        elif self.point_cloud_radio.isChecked():
+            query.data_types = {DataType.PointClouds}
         elif self.grid_radio.isChecked():
             query.data_types = {DataType.Grids}
             if self.multi_attribute_grids_only_checkbox.isChecked():
@@ -466,6 +477,8 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
                     self.rgb_radio.setChecked(True)
                 if RasterBandFilter.BlackAndWhite in query.raster_band_filters:
                     self.grayscale_radio.setChecked(True)
+        elif query.data_types == {DataType.PointClouds}:
+            type_radio = self.point_cloud_radio
         elif query.data_types == {DataType.Grids}:
             type_radio = self.grid_radio
             self.multi_attribute_grids_only_checkbox.setChecked(
