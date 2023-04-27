@@ -74,7 +74,11 @@ class DatasetDialog(QDialog):
         super().__init__(parent)
 
         self.dataset = dataset
-        self.details = KoordinatesClient.instance().layer_details(self.dataset["id"])
+        self.dataset_obj = Dataset(dataset)
+
+        self.details = KoordinatesClient.instance().dataset_details(
+            self.dataset_obj)
+
         if self.details.get('attachments'):
             self.attachments = KoordinatesClient.instance().get_json(self.details['attachments'])
         else:
@@ -127,8 +131,6 @@ class DatasetDialog(QDialog):
         is_starred = self.dataset.get('is_starred', False)
         self.star_button = StarButton(dataset_id=self.dataset['id'], checked=is_starred)
         title_hl.addWidget(self.star_button)
-
-        self.dataset_obj = Dataset(dataset)
 
         if Capability.Clone in self.dataset_obj.capabilities:
             self.clone_button = CloneButton(self.dataset_obj, close_parent_on_clone=True)

@@ -25,6 +25,7 @@ from koordinates.utils import waitcursor
 from .data_browser import DataBrowserQuery
 from .utils import ApiUtils
 from .repo import Repo
+from .enums import DataType
 
 PAGE_SIZE = 20
 
@@ -59,6 +60,7 @@ class KoordinatesClient(QObject):
         KoordinatesClient.__instance = self
 
         self.layers = {}
+        self._dataset_details = {}
         self._categories = None
 
         self.reset_domain()
@@ -229,18 +231,21 @@ class KoordinatesClient(QObject):
 
         return res
 
-    def layer_details(self, datasetid):
-        return self._get(f"layers/{datasetid}/")['json']
+    def dataset_details(self, dataset: 'Dataset') -> Dict:
+        """
+        Retrieve dataset details
+        """
+        str_id = str(dataset.id)
+        if str_id not in self._dataset_details:
+            if dataset.datatype == DataType.PointClouds:
+                endpoint = f"datasets/{str_id}/"
+            elif dataset.datatype == DataType.Tables:
+                endpoint = f"tables/{str_id}/"
+            else:
+                endpoint = f"layers/{str_id}/"
+            self._dataset_details[str_id] = self._get(endpoint)['json']
 
-    def dataset(self, datasetid):
-        if str(datasetid) not in self.layers:
-            self.layers[str(datasetid)] = self._get(f"data/{datasetid}/")['json']
-        return self.layers[str(datasetid)]
-
-    def table(self, tableid):
-        if str(tableid) not in self.layers:
-            self.tables[str(tableid)] = self._get(f"tables/{tableid}/")['json']
-        return self.layers[str(tableid)]
+        return self._dataset_details[str_id]
 
     def categories(self):
         if self._categories is None:
