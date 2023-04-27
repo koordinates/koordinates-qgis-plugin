@@ -87,71 +87,77 @@ class TestApiUtils(unittest.TestCase):
                 'type': 'layer',
                 'kind': 'vector',
                 'repository': 'something'
-            }), {Capability.Clone, Capability.Add})
+            }), {Capability.Clone, Capability.Add, Capability.RevisionCount})
         self.assertEqual(ApiUtils.capabilities_from_dataset_response(
             {
                 'type': 'layer',
                 'kind': 'vector',
                 'repository': None
-            }), {Capability.Add})
+            }), {Capability.Add, Capability.RevisionCount})
         self.assertEqual(ApiUtils.capabilities_from_dataset_response(
             {
                 'type': 'layer',
                 'kind': 'raster',
                 'repository': 'something'
-            }), {Capability.Clone, Capability.Add})
+            }), {Capability.Clone, Capability.Add, Capability.RevisionCount})
         self.assertEqual(ApiUtils.capabilities_from_dataset_response(
             {
                 'type': 'layer',
                 'kind': 'raster'
-            }), {Capability.Add})
+            }), {Capability.Add, Capability.RevisionCount})
         self.assertEqual(ApiUtils.capabilities_from_dataset_response(
             {
                 'type': 'layer',
                 'kind': 'grid'
-            }), {Capability.Add})
+            }), {Capability.Add, Capability.RevisionCount})
         self.assertEqual(ApiUtils.capabilities_from_dataset_response(
             {
                 'type': 'layer',
                 'kind': 'grid',
                 'repository': 'something'
-            }), {Capability.Clone, Capability.Add})
+            }), {Capability.Clone, Capability.Add, Capability.RevisionCount})
         self.assertEqual(ApiUtils.capabilities_from_dataset_response(
             {
                 'type': 'table'
-            }), set())
+            }), {Capability.RevisionCount})
         self.assertEqual(ApiUtils.capabilities_from_dataset_response(
             {
                 'type': 'table',
                 'repository': 'something'
-            }), {Capability.Clone})
+            }), {Capability.Clone, Capability.RevisionCount})
         self.assertEqual(ApiUtils.capabilities_from_dataset_response(
             {
                 'type': 'document'
-            }), set())
+            }), {Capability.RevisionCount})
         self.assertEqual(ApiUtils.capabilities_from_dataset_response(
             {
                 'type': 'document',
                 'repository': 'something'
-            }), {Capability.Clone})
+            }), {Capability.Clone, Capability.RevisionCount})
         self.assertEqual(ApiUtils.capabilities_from_dataset_response(
             {
                 'type': 'set'
-            }), set())
+            }), {Capability.RevisionCount})
         self.assertEqual(ApiUtils.capabilities_from_dataset_response(
             {
                 'type': 'set',
                 'repository': 'something'
-            }), {Capability.Clone})
+            }), {Capability.Clone, Capability.RevisionCount})
         self.assertEqual(ApiUtils.capabilities_from_dataset_response(
             {
                 'type': 'repo'
-            }), set())
+            }), {Capability.RevisionCount})
         self.assertEqual(ApiUtils.capabilities_from_dataset_response(
             {
                 'type': 'repo',
                 'repository': 'something'
-            }), {Capability.Clone})
+            }), {Capability.Clone, Capability.RevisionCount})
+        self.assertEqual(ApiUtils.capabilities_from_dataset_response(
+            {
+                'type': 'layer',
+                'kind': 'pointcloud',
+                'repository': 'something'
+            }), {Capability.Clone, Capability.Add})
 
 
 if __name__ == '__main__':
