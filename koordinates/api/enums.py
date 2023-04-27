@@ -105,7 +105,6 @@ class DataType(Enum):
         }[self]
 
 
-
 class VectorFilter(Enum):
     """
     Vector filter options
