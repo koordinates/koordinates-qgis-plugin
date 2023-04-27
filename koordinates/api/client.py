@@ -164,7 +164,7 @@ class KoordinatesClient(QObject):
         last = tokens[0].split("-")[-1]
         return ret['json'], last == total
 
-    def data_revisions_count(self, id) -> int:
+    def data_revisions_count(self, id) -> Optional[int]:
         """
         Retrieve data revisions blocking
         """
@@ -177,10 +177,14 @@ class KoordinatesClient(QObject):
         ret = self._get(endpoint, headers, params)
 
         tokens = ret['reply'].rawHeader(b"X-Resource-Range").data().decode().split("/")
-        total = int(tokens[-1])
+        try:
+            total = int(tokens[-1])
+        except ValueError:
+            return None
+
         return total
 
-    def total_revisions_count(self, id) -> int:
+    def total_revisions_count(self, id) -> Optional[int]:
         """
         Retrieve total revisions blocking
         """
@@ -193,7 +197,10 @@ class KoordinatesClient(QObject):
         ret = self._get(endpoint, headers, params)
 
         tokens = ret['reply'].rawHeader(b"X-Resource-Range").data().decode().split("/")
-        total = int(tokens[-1])
+        try:
+            total = int(tokens[-1])
+        except ValueError:
+            return None
         return total
 
     def retrieve_repository(self, url) -> Optional[Repo]:
