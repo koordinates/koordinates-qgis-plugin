@@ -355,21 +355,32 @@ class TestDataBrowser(unittest.TestCase):
         Test capabilities for different data types
         """
         self.assertEqual(DataType.capabilities(DataType.Vectors),
-                         {Capability.Clone, Capability.Add})
+                         {Capability.Clone,
+                          Capability.Add,
+                          Capability.RevisionCount})
         self.assertEqual(DataType.capabilities(DataType.Rasters),
-                         {Capability.Clone, Capability.Add})
+                         {Capability.Clone,
+                          Capability.Add,
+                          Capability.RevisionCount})
         self.assertEqual(DataType.capabilities(DataType.Grids),
-                         {Capability.Clone, Capability.Add})
+                         {Capability.Clone,
+                          Capability.Add,
+                          Capability.RevisionCount})
         self.assertEqual(DataType.capabilities(DataType.Sets),
-                         {Capability.Clone})
+                         {Capability.Clone,
+                          Capability.RevisionCount})
         self.assertEqual(DataType.capabilities(DataType.Tables),
-                         {Capability.Clone})
+                         {Capability.Clone,
+                          Capability.RevisionCount})
         self.assertEqual(DataType.capabilities(DataType.Documents),
-                         {Capability.Clone})
+                         {Capability.Clone,
+                          Capability.RevisionCount})
         self.assertEqual(DataType.capabilities(DataType.Repositories),
-                         {Capability.Clone})
+                         {Capability.Clone,
+                          Capability.RevisionCount})
         self.assertEqual(DataType.capabilities(DataType.PointClouds),
-                         {Capability.Clone, Capability.Add})
+                         {Capability.Clone,
+                          Capability.Add})
 
 
 if __name__ == '__main__':
