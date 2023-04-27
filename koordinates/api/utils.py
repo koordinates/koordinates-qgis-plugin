@@ -1,6 +1,9 @@
 from typing import Dict, Set
+import binascii
 
 from qgis.PyQt.QtCore import QUrlQuery
+
+from qgis.core import QgsGeometry
 
 from .enums import (
     DataType,
@@ -73,3 +76,15 @@ class ApiUtils:
             capabilities.remove(Capability.Clone)
 
         return capabilities
+
+    @staticmethod
+    def geometry_from_hexewkb(hexewkb: str) -> QgsGeometry:
+        """
+        Converts a HEXEWKB string to a QgsGeometry
+        """
+        ewkb = binascii.unhexlify(hexewkb)
+        # skip over ewkb bits
+        wkb = ewkb[0:4] + ewkb[8:]
+        g = QgsGeometry()
+        g.fromWkb(wkb)
+        return g

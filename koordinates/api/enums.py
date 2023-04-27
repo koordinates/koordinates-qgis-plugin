@@ -47,7 +47,10 @@ class DataType(Enum):
         """
         Returns capabilities for a data type
         """
-        if data_type in (DataType.Vectors, DataType.Rasters, DataType.Grids):
+        if data_type in (DataType.Vectors,
+                         DataType.Rasters,
+                         DataType.Grids,
+                         DataType.PointClouds):
             return {Capability.Add, Capability.Clone}
 
         return {Capability.Clone}
