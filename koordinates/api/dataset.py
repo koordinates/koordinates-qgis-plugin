@@ -1,10 +1,10 @@
 import datetime
-from dateutil import parser
 from typing import (
     Dict,
     Optional
 )
 
+from dateutil import parser
 from qgis.core import (
     QgsGeometry,
     QgsMapLayer,
@@ -15,10 +15,10 @@ from qgis.core import (
     QgsFeature
 )
 
-from .utils import ApiUtils
 from .client import KoordinatesClient
+from .enums import DataType
 from .repo import Repo
-from .enums import  DataType
+from .utils import ApiUtils
 
 
 class Dataset:
@@ -38,7 +38,8 @@ class Dataset:
         self.repository: Optional[Repo] = None
 
         self.gridded_extent: Optional[QgsGeometry] = None
-        if 'data' in self.details and self.details['data'].get('gridded_extent'):
+        if 'data' in self.details and self.details['data'].get(
+                'gridded_extent'):
             self.gridded_extent = ApiUtils.geometry_from_hexewkb(
                 self.details['data']['gridded_extent']
             )
@@ -109,7 +110,10 @@ class Dataset:
         """
         from .layer_utils import LayerUtils
 
-        if self.datatype in (DataType.Vectors, DataType.Rasters, DataType.Grids):
+        if self.datatype in (
+                DataType.Vectors,
+                DataType.Rasters,
+                DataType.Grids):
             color_name = LayerUtils.get_random_color_string()
 
             apikey = KoordinatesClient.instance().apiKey
