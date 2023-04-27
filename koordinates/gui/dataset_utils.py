@@ -128,7 +128,7 @@ class DatasetGuiUtils:
         return None
 
     @staticmethod
-    def get_subtitle(dataset: Dict) -> Optional[str]:
+    def get_subtitle(dataset: Dict, short_format: bool = True) -> Optional[str]:
         data_type = ApiUtils.data_type_from_dataset_response(dataset)
         if data_type == DataType.Vectors:
 
@@ -162,7 +162,16 @@ class DatasetGuiUtils:
             return None
         elif data_type == DataType.PointClouds:
             count = dataset.get("data", {}).get("feature_count") or 0
-            return '{} Tiles'.format(count)
+            point_count = dataset.get("data", {}).get("point_count") or 0
+            if short_format:
+                return '{} Tiles'.format(
+                    DatasetGuiUtils.format_count(count)
+                )
+            else:
+                return '{} Points, {} Tiles'.format(
+                    DatasetGuiUtils.format_count(point_count),
+                    DatasetGuiUtils.format_count(count)
+                )
 
         return None
 
