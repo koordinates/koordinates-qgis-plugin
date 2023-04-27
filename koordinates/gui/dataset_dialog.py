@@ -178,7 +178,8 @@ class DatasetDialog(QDialog):
         summary_label.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         description = DatasetGuiUtils.get_type_description(self.dataset)
-        subtitle = DatasetGuiUtils.get_subtitle(self.dataset)
+        subtitle = DatasetGuiUtils.get_subtitle(self.dataset,
+                                                short_format=False)
 
         summary_label.setText("""<p style="line-height: 130%;
         font-family: {};

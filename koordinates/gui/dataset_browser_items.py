@@ -718,7 +718,8 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             painter.setPen(QPen(QColor(255, 255, 255)))
             painter.drawText(QPointF(47, 112), description)
 
-        subtitle = DatasetGuiUtils.get_subtitle(self.dataset.details)
+        subtitle = DatasetGuiUtils.get_subtitle(self.dataset.details,
+                                                short_format=True)
         if subtitle:
             font = QFont('Arial')
             font.setPointSizeF(overlay_font_size / scale_factor)
