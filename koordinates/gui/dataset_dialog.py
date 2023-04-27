@@ -127,16 +127,16 @@ class DatasetDialog(QDialog):
         self.star_button = StarButton(dataset_id=self.dataset['id'], checked=is_starred)
         title_hl.addWidget(self.star_button)
 
-        dataset_obj = Dataset(dataset)
+        self.dataset_obj = Dataset(dataset)
 
-        if Capability.Clone in dataset_obj.capabilities:
-            self.clone_button = CloneButton(dataset_obj, close_parent_on_clone=True)
+        if Capability.Clone in self.dataset_obj.capabilities:
+            self.clone_button = CloneButton(self.dataset_obj, close_parent_on_clone=True)
             title_hl.addWidget(self.clone_button)
         else:
             self.clone_button = None
 
-        if Capability.Add in dataset_obj.capabilities:
-            self.add_button = AddButton(dataset_obj)
+        if Capability.Add in self.dataset_obj.capabilities:
+            self.add_button = AddButton(self.dataset_obj)
             title_hl.addWidget(self.add_button)
         else:
             self.add_button = None
@@ -225,7 +225,12 @@ class DatasetDialog(QDialog):
         statistics_layout.addWidget(StatisticWidget('Views', 'eye.svg',
                                                     DatasetGuiUtils.format_count(
                                                         num_views)))
-        statistics_layout.addWidget(StatisticWidget('Layer ID', 'layers.svg', str(dataset["id"])))
+        statistics_layout.addWidget(
+            StatisticWidget('{} ID'.format(
+                self.dataset_obj.datatype.identifier_string()),
+                'layers.svg',
+                str(dataset["id"]))
+        )
 
         contents_layout.addLayout(statistics_layout)
 

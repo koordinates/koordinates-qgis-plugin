@@ -88,6 +88,23 @@ class DataType(Enum):
             'document': DataType.Documents,
         }[string]
 
+    def identifier_string(self) -> str:
+        """
+        Returns a user friendly string identifying the data type, eg 'layer'
+        or 'dataset'
+        """
+        return {
+            DataType.Vectors: 'Layer',
+            DataType.Rasters: 'Layer',
+            DataType.Grids: 'Layer',
+            DataType.PointClouds: 'Dataset',
+            DataType.Tables: 'Dataset',
+            DataType.Sets: 'Dataset',
+            DataType.Repositories: 'Dataset',
+            DataType.Documents: 'Dataset',
+        }[self]
+
+
 
 class VectorFilter(Enum):
     """
