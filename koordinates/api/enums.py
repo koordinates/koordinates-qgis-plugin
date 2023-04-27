@@ -27,6 +27,7 @@ class Capability(Enum):
     """
     Clone = 0
     Add = 1
+    RevisionCount = 2
 
 
 class DataType(Enum):
@@ -47,13 +48,18 @@ class DataType(Enum):
         """
         Returns capabilities for a data type
         """
+        res = {Capability.Clone}
         if data_type in (DataType.Vectors,
                          DataType.Rasters,
                          DataType.Grids,
                          DataType.PointClouds):
-            return {Capability.Add, Capability.Clone}
+            res.add(Capability.Add)
 
-        return {Capability.Clone}
+        # not supported for point clouds:
+        if data_type not in (DataType.PointClouds,):
+            res.add(Capability.RevisionCount)
+
+        return res
 
     @staticmethod
     def to_filter_strings(data_type: 'DataType') -> List[str]:

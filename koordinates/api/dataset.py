@@ -66,7 +66,9 @@ class Dataset:
         """
         Returns the created at / first published at date
         """
-        created_at_date_str: Optional[str] = self.details.get("first_published_at")
+        created_at_date_str: Optional[str] = self.details.get(
+            "first_published_at"
+        )
         if not created_at_date_str:
             created_at_date_str = self.details.get("created_at")
 
