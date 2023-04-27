@@ -369,7 +369,7 @@ class TestDataBrowser(unittest.TestCase):
         self.assertEqual(DataType.capabilities(DataType.Repositories),
                          {Capability.Clone})
         self.assertEqual(DataType.capabilities(DataType.PointClouds),
-                         {Capability.Clone})
+                         {Capability.Clone, Capability.Add})
 
 
 if __name__ == '__main__':
