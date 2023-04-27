@@ -91,4 +91,4 @@ class TestDataset(unittest.TestCase):
                              'https://test.koordinates.com/koordinates/aaa-laz')
             self.assertEqual(point_cloud_dataset.id, 'aaa')
             self.assertEqual(point_cloud_dataset.capabilities,
-                             {Capability.Clone})
+                             {Capability.Clone, Capability.Add})
