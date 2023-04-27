@@ -1,6 +1,7 @@
 import locale
 import os
 import platform
+import datetime
 from typing import Dict, List, Tuple
 
 from dateutil import parser
@@ -211,7 +212,7 @@ class DatasetDialog(QDialog):
                 StatisticWidget(
                     'Date Added',
                     'add.svg',
-                    first_published.strftime("%d %b %Y")
+                    self.format_date(first_published)
                 )
             )
 
@@ -221,7 +222,7 @@ class DatasetDialog(QDialog):
                 StatisticWidget(
                     'Last Updated',
                     'history.svg',
-                    last_updated.strftime("%d %b %Y")
+                    self.format_date(last_updated)
                 )
             )
 
@@ -294,7 +295,7 @@ class DatasetDialog(QDialog):
 
         contents_layout.addSpacing(40)
 
-        history_grid = DetailsTable('History')
+        history_grid = DetailsTable('History & Version Control')
         history_grid.set_details(self.get_history_details())
         contents_layout.addLayout(history_grid)
 
@@ -334,11 +335,19 @@ class DatasetDialog(QDialog):
             </style>
         """.format(FONT_FAMILIES, self.description_font_size)
 
-    def format_number(self, value):
+    @staticmethod
+    def format_number(value):
+        """
+        Formats a number for localised display
+        """
         return locale.format_string("%d", value, grouping=True)
 
-    def format_date(self, value):
-        return parser.parse(value).strftime("%d %b %Y")
+    @staticmethod
+    def format_date(value: datetime.date):
+        """
+        Formats a date value for display
+        """
+        return value.strftime("%d %b %Y")
 
     def get_technical_details(self) -> List[Tuple]:
         res = [
@@ -374,23 +383,30 @@ class DatasetDialog(QDialog):
     def get_history_details(self) -> List[Tuple]:
         res = []
 
-        first_published = self.dataset.get("first_published_at")
+        first_published = self.dataset_obj.created_at_date()
         if first_published:
-            res.append(('Added', self.format_date(first_published)))
+            res.append(('Date Added', self.format_date(first_published)))
 
-        last_updated = self.dataset.get("published_at")
+        last_updated = self.dataset_obj.updated_at_date()
         if last_updated:
             res.append(('Last updated', self.format_date(last_updated)))
 
-        data_revisions_count = KoordinatesClient.instance().data_revisions_count(
-            self.dataset["id"])
-        total_revisions_count = KoordinatesClient.instance().total_revisions_count(
-            self.dataset["id"])
+        if Capability.RevisionCount in self.dataset_obj.capabilities:
+            data_revisions_count = \
+                KoordinatesClient.instance().data_revisions_count(
+                    self.dataset["id"])
+            total_revisions_count = \
+                KoordinatesClient.instance().total_revisions_count(
+                    self.dataset["id"])
 
-        res.append(('Revisions', '{} data revisions • {} total revisions'.format(
-            data_revisions_count,
-            total_revisions_count
-        )))
+            if data_revisions_count is not None or total_revisions_count is not None:
+                res.append(
+                    ('Revisions',
+                     '{} data revisions • {} total revisions'.format(
+                         data_revisions_count,
+                         total_revisions_count
+                     )))
+
         return res
 
     def setThumbnail(self, img):
