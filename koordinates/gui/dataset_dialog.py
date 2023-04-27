@@ -221,7 +221,7 @@ class DatasetDialog(QDialog):
                 StatisticWidget(
                     'Last Updated',
                     'history.svg',
-                    last_updated.strftime( "%d %b %Y")
+                    last_updated.strftime("%d %b %Y")
                 )
             )
 
