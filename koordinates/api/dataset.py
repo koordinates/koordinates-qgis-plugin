@@ -62,13 +62,16 @@ class Dataset:
         """
         return self.details.get('is_starred', False)
 
-    def published_at_date(self) -> Optional[datetime.date]:
+    def created_at_date(self) -> Optional[datetime.date]:
         """
-        Returns the published at date
+        Returns the created at / first published at date
         """
-        published_at_date_str: Optional[str] = self.details.get("published_at")
-        if published_at_date_str:
-            return parser.parse(published_at_date_str)
+        created_at_date_str: Optional[str] = self.details.get("first_published_at")
+        if not created_at_date_str:
+            created_at_date_str = self.details.get("created_at")
+
+        if created_at_date_str:
+            return parser.parse(created_at_date_str)
 
         return None
 
@@ -77,6 +80,9 @@ class Dataset:
         Returns the updated at date
         """
         updated_at_date_str: Optional[str] = self.details.get("updated_at")
+        if not updated_at_date_str:
+            updated_at_date_str = self.details.get("published_at")
+
         if updated_at_date_str:
             return parser.parse(updated_at_date_str)
 

@@ -498,9 +498,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.labelUpdatedIcon.setFixedSize(13, 12)
         self.labelUpdated = QLabel()
 
-        changed_date = self.dataset.published_at_date()
-        if changed_date is None:
-            changed_date = self.dataset.updated_at_date()
+        changed_date = self.dataset.updated_at_date()
         if changed_date is not None:
             self.labelUpdated.setText(
                 f"""<span style="color: #868889;
