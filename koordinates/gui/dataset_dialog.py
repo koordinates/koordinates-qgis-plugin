@@ -205,16 +205,25 @@ class DatasetDialog(QDialog):
         statistics_layout = QHBoxLayout()
         statistics_layout.setContentsMargins(0, 0, 0, 0)
 
-        first_published = dataset.get('first_published_at')
+        first_published = self.dataset_obj.created_at_date()
         if first_published:
-            statistics_layout.addWidget(StatisticWidget('Date Added', 'add.svg', parser.parse(
-                first_published).strftime("%d %b %Y")))
+            statistics_layout.addWidget(
+                StatisticWidget(
+                    'Date Added',
+                    'add.svg',
+                    first_published.strftime("%d %b %Y")
+                )
+            )
 
-        last_updated = dataset.get("published_at")
+        last_updated = self.dataset_obj.updated_at_date()
         if last_updated:
-            statistics_layout.addWidget(StatisticWidget('Last Updated', 'history.svg',
-                                                        parser.parse(last_updated).strftime(
-                                                            "%d %b %Y")))
+            statistics_layout.addWidget(
+                StatisticWidget(
+                    'Last Updated',
+                    'history.svg',
+                    last_updated.strftime( "%d %b %Y")
+                )
+            )
 
         num_downloads = dataset.get("num_downloads", 0)
         statistics_layout.addWidget(StatisticWidget('Exports', 'arrow-down.svg',
