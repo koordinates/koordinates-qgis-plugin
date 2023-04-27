@@ -26,6 +26,7 @@ from .data_browser import DataBrowserQuery
 from .utils import ApiUtils
 from .repo import Repo
 from .enums import DataType
+from .dataset import Dataset
 
 PAGE_SIZE = 20
 
@@ -231,7 +232,7 @@ class KoordinatesClient(QObject):
 
         return res
 
-    def dataset_details(self, dataset: 'Dataset') -> Dict:
+    def dataset_details(self, dataset: Dataset) -> Dict:
         """
         Retrieve dataset details
         """

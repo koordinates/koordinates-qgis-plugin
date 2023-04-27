@@ -4,7 +4,6 @@ import platform
 import datetime
 from typing import Dict, List, Tuple
 
-from dateutil import parser
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import (
     Qt,

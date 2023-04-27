@@ -15,7 +15,6 @@ from qgis.core import (
     QgsFeature
 )
 
-from .client import KoordinatesClient
 from .enums import DataType
 from .repo import Repo
 from .utils import ApiUtils
@@ -104,6 +103,7 @@ class Dataset:
 
         repo_detail_url = self.details.get('repository')
         if repo_detail_url:
+            from .client import KoordinatesClient
             self.repository = KoordinatesClient.instance().retrieve_repository(
                 repo_detail_url
             )
@@ -124,6 +124,7 @@ class Dataset:
                 DataType.Grids):
             color_name = LayerUtils.get_random_color_string()
 
+            from .client import KoordinatesClient
             apikey = KoordinatesClient.instance().apiKey
 
             uri = (
