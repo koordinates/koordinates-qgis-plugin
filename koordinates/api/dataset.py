@@ -5,9 +5,20 @@ from typing import (
     Optional
 )
 
+from qgis.core import (
+    QgsGeometry,
+    QgsMapLayer,
+    QgsRasterLayer,
+    QgsFields,
+    QgsMemoryProviderUtils,
+    QgsCoordinateReferenceSystem,
+    QgsFeature
+)
+
 from .utils import ApiUtils
 from .client import KoordinatesClient
 from .repo import Repo
+from .enums import  DataType
 
 
 class Dataset:
@@ -19,11 +30,18 @@ class Dataset:
         self.details = details
         self.id = details['id']
         self.datatype = ApiUtils.data_type_from_dataset_response(self.details)
+
         self.capabilities = ApiUtils.capabilities_from_dataset_response(
             self.details
         )
         self.access = ApiUtils.access_from_dataset_response(self.details)
         self.repository: Optional[Repo] = None
+
+        self.gridded_extent: Optional[QgsGeometry] = None
+        if 'data' in self.details and self.details['data'].get('gridded_extent'):
+            self.gridded_extent = ApiUtils.geometry_from_hexewkb(
+                self.details['data']['gridded_extent']
+            )
 
     def title(self) -> str:
         """
@@ -84,3 +102,36 @@ class Dataset:
             return self.repository.clone_url()
 
         return None
+
+    def to_map_layer(self) -> Optional[QgsMapLayer]:
+        """
+        Converts the dataset to a map layer, if possible
+        """
+        from .layer_utils import LayerUtils
+
+        if self.datatype in (DataType.Vectors, DataType.Rasters, DataType.Grids):
+            color_name = LayerUtils.get_random_color_string()
+
+            apikey = KoordinatesClient.instance().apiKey
+
+            uri = (
+                "contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&format=image/png"
+                f"&layers=layer-{self.id}&styles=style%3Dauto,"
+                f"color%3D{color_name}&tileMatrixSet=EPSG:3857&"
+                f"tilePixelRatio=0&url={LayerUtils.WMTS_URL_BASE};"
+                f"key%3D{apikey}/{LayerUtils.WMTS_ENDPOINT}/"
+                f"{self.id}/WMTSCapabilities.xml"
+            )
+            return QgsRasterLayer(uri, self.title(), "wms")
+
+        if self.datatype in (DataType.PointClouds,) and self.gridded_extent:
+            layer = QgsMemoryProviderUtils.createMemoryLayer(
+                self.title(),
+                QgsFields(),
+                self.gridded_extent.wkbType(),
+                QgsCoordinateReferenceSystem('EPSG:4326')
+            )
+            feature = QgsFeature()
+            feature.setGeometry(self.gridded_extent)
+            layer.dataProvider().addFeature(feature)
+            return layer
