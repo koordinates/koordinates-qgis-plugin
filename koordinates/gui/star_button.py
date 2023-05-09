@@ -6,16 +6,16 @@ from qgis.PyQt.QtSvg import (
 )
 
 from .gui_utils import GuiUtils
-from ..api import KoordinatesClient
+from ..api import KoordinatesClient, Dataset
 
 
 class StarButton(QSvgWidget):
 
-    def __init__(self, checked: bool, dataset_id, parent=None):
+    def __init__(self, dataset: Dataset, parent=None):
         super().__init__(parent)
         self.setMouseTracking(True)
-        self._dataset_id = dataset_id
-        self._checked = checked
+        self.dataset = dataset
+        self._checked = dataset.is_starred()
         self._hover = False
         self.setFixedSize(24, 24)
         self._update_icon()
@@ -42,7 +42,8 @@ class StarButton(QSvgWidget):
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             to_star = not self._checked
-            KoordinatesClient.instance().star(self._dataset_id, is_starred=to_star)
+            KoordinatesClient.instance().star(self.dataset.id,
+                                              is_starred=to_star)
             self._checked = to_star
             self._update_icon()
         else:

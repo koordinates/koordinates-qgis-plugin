@@ -3,7 +3,10 @@ import binascii
 
 from qgis.PyQt.QtCore import QUrlQuery
 
-from qgis.core import QgsGeometry
+from qgis.core import (
+    QgsGeometry,
+    QgsWkbTypes
+)
 
 from .enums import (
     DataType,
@@ -53,6 +56,24 @@ class ApiUtils:
             return DataType.Sets
         elif dataset.get('type') == 'repo':
             return DataType.Repositories
+
+    @staticmethod
+    def geometry_type_from_dataset_response(dataset: dict) \
+            -> QgsWkbTypes.GeometryType:
+        """
+        Extracts geometry type from a dataset response
+        """
+        if dataset.get('data', {}).get('geometry_type') in (
+                'polygon', 'multipolygon'):
+            return QgsWkbTypes.PolygonGeometry
+        elif dataset.get('data', {}).get('geometry_type') in (
+                'point', 'multipoint'):
+            return QgsWkbTypes.PointGeometry
+        elif dataset.get('data', {}).get('geometry_type') in (
+                'linestring', 'multilinestring'):
+            return QgsWkbTypes.LineGeometry
+
+        return QgsWkbTypes.UnknownGeometry
 
     @staticmethod
     def access_from_dataset_response(dataset: dict) -> PublicAccessType:

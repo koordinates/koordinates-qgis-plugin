@@ -4,7 +4,10 @@ from typing import (
     Dict
 )
 
-from qgis.core import QgsFileUtils
+from qgis.core import (
+    QgsFileUtils,
+    QgsWkbTypes
+)
 
 from ..api import (
     ApiUtils,
@@ -33,36 +36,33 @@ class DatasetGuiUtils:
         return None
 
     @staticmethod
-    def get_icon_for_dataset(dataset: Dict, style: IconStyle) -> Optional[str]:
+    def get_icon_for_dataset(dataset: Dataset, style: IconStyle) \
+            -> Optional[str]:
         if style == IconStyle.Light:
             suffix = 'light'
         else:
             suffix = 'dark'
 
-        data_type = ApiUtils.data_type_from_dataset_response(dataset)
-
-        if data_type == DataType.Vectors:
-            if dataset.get('data', {}).get('geometry_type') in (
-                    'polygon', 'multipolygon'):
+        if dataset.datatype == DataType.Vectors:
+            if dataset.geometry_type == QgsWkbTypes.PolygonGeometry:
                 return 'polygon-{}.svg'.format(suffix)
-            elif dataset.get('data', {}).get('geometry_type') in ('point', 'multipoint'):
+            elif dataset.geometry_type == QgsWkbTypes.PointGeometry:
                 return 'point-{}.svg'.format(suffix)
-            elif dataset.get('data', {}).get('geometry_type') in (
-                    'linestring', 'multilinestring'):
+            elif dataset.geometry_type == QgsWkbTypes.LineGeometry:
                 return 'line-{}.svg'.format(suffix)
-        elif data_type == DataType.Rasters:
+        elif dataset.datatype == DataType.Rasters:
             return 'raster-{}.svg'.format(suffix)
-        elif data_type == DataType.Grids:
+        elif dataset.datatype == DataType.Grids:
             return 'grid-{}.svg'.format(suffix)
-        elif data_type == DataType.Tables:
+        elif dataset.datatype == DataType.Tables:
             return 'table-{}.svg'.format(suffix)
-        elif data_type == DataType.Documents:
+        elif dataset.datatype == DataType.Documents:
             return 'document-{}.svg'.format(suffix)
-        elif data_type == DataType.Sets:
+        elif dataset.datatype == DataType.Sets:
             return 'set-{}.svg'.format(suffix)
-        elif data_type == DataType.Repositories:
+        elif dataset.datatype == DataType.Repositories:
             return 'repo-{}.svg'.format(suffix)
-        elif data_type == DataType.PointClouds:
+        elif dataset.datatype == DataType.PointClouds:
             return 'point-cloud-{}.svg'.format(suffix)
 
         return None
@@ -99,70 +99,64 @@ class DatasetGuiUtils:
         return None
 
     @staticmethod
-    def get_type_description(dataset: Dict) -> Optional[str]:
-        data_type = ApiUtils.data_type_from_dataset_response(dataset)
-        if data_type == DataType.Vectors:
-            if dataset.get('data', {}).get('geometry_type') in (
-                    'polygon', 'multipolygon'):
+    def get_type_description(dataset: Dataset) -> Optional[str]:
+        if dataset.datatype == DataType.Vectors:
+            if dataset.geometry_type == QgsWkbTypes.PolygonGeometry:
                 return 'Polygon Layer'
-            elif dataset.get('data', {}).get('geometry_type') in ('point', 'multipoint'):
+            elif dataset.geometry_type == QgsWkbTypes.PointGeometry:
                 return 'Point Layer'
-            elif dataset.get('data', {}).get('geometry_type') in (
-                    'linestring', 'multilinestring'):
+            elif dataset.geometry_type == QgsWkbTypes.LineGeometry:
                 return 'Line Layer'
-        elif data_type == DataType.Rasters:
+        elif dataset.datatype == DataType.Rasters:
             return 'Raster Layer'
-        elif data_type == DataType.Grids:
+        elif dataset.datatype == DataType.Grids:
             return 'Grid Layer'
-        elif data_type == DataType.Tables:
+        elif dataset.datatype == DataType.Tables:
             return 'Table'
-        elif data_type == DataType.Documents:
+        elif dataset.datatype == DataType.Documents:
             return 'Document'
-        elif data_type == DataType.Sets:
+        elif dataset.datatype == DataType.Sets:
             return 'Set'
-        elif data_type == DataType.Repositories:
+        elif dataset.datatype == DataType.Repositories:
             return 'Repository'
-        elif data_type == DataType.PointClouds:
+        elif dataset.datatype == DataType.PointClouds:
             return 'Point Cloud'
 
         return None
 
     @staticmethod
-    def get_subtitle(dataset: Dict, short_format: bool = True) -> Optional[str]:
-        data_type = ApiUtils.data_type_from_dataset_response(dataset)
-        if data_type == DataType.Vectors:
+    def get_subtitle(dataset: Dataset, short_format: bool = True) -> Optional[str]:
+        if dataset.datatype == DataType.Vectors:
 
-            count = dataset.get("data", {}).get("feature_count") or 0
+            count = dataset.details.get("data", {}).get("feature_count") or 0
 
-            if dataset.get('data', {}).get('geometry_type') in (
-                    'polygon', 'multipolygon'):
+            if dataset.geometry_type == QgsWkbTypes.PolygonGeometry:
                 return '{} Polygons'.format(DatasetGuiUtils.format_count(count))
-            elif dataset.get('data', {}).get('geometry_type') in ('point', 'multipoint'):
+            elif dataset.geometry_type == QgsWkbTypes.PointGeometry:
                 return '{} Points'.format(DatasetGuiUtils.format_count(count))
-            elif dataset.get('data', {}).get('geometry_type') in (
-                    'linestring', 'multilinestring'):
+            elif dataset.geometry_type == QgsWkbTypes.LineGeometry:
                 return '{} Lines'.format(DatasetGuiUtils.format_count(count))
-        elif data_type in (DataType.Rasters, DataType.Grids):
-            count = dataset.get("data", {}).get("feature_count") or 0
-            res = dataset.get("data", {}).get("raster_resolution") or 0
+        elif dataset.datatype in (DataType.Rasters, DataType.Grids):
+            count = dataset.details.get("data", {}).get("feature_count") or 0
+            res = dataset.details.get("data", {}).get("raster_resolution") or 0
             return '{}m, {} Tiles'.format(res,
                                           DatasetGuiUtils.format_count(count))
-        elif data_type == DataType.Tables:
-            count = dataset.get("data", {}).get("feature_count") or 0
+        elif dataset.datatype == DataType.Tables:
+            count = dataset.details.get("data", {}).get("feature_count") or 0
             return '{} Rows'.format(DatasetGuiUtils.format_count(count))
-        elif data_type == DataType.Documents:
-            ext = dataset.get('extension', '').upper()
-            file_size = dataset.get('file_size')
+        elif dataset.datatype == DataType.Documents:
+            ext = dataset.details.get('extension', '').upper()
+            file_size = dataset.details.get('file_size')
             if file_size:
                 return '{} {}'.format(ext, QgsFileUtils.representFileSize(file_size))
             return ext
-        elif data_type == DataType.Sets:
+        elif dataset.datatype == DataType.Sets:
             return None
-        elif data_type == DataType.Repositories:
+        elif dataset.datatype == DataType.Repositories:
             return None
-        elif data_type == DataType.PointClouds:
-            count = dataset.get("data", {}).get("feature_count") or 0
-            point_count = dataset.get("data", {}).get("point_count") or 0
+        elif dataset.datatype == DataType.PointClouds:
+            count = dataset.details.get("data", {}).get("feature_count") or 0
+            point_count = dataset.details.get("data", {}).get("point_count") or 0
             if short_format:
                 return '{} Tiles'.format(
                     DatasetGuiUtils.format_count(count)

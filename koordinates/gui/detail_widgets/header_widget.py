@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Optional
 
 from qgis.PyQt.QtCore import (
     Qt
@@ -14,6 +14,10 @@ from qgis.PyQt.QtWidgets import (
 from koordinates.gui.gui_utils import FONT_FAMILIES
 from koordinates.gui.detail_widgets.svg_framed_button import SvgFramedButton
 from koordinates.gui.detail_widgets.thumbnail_label_widget import ThumbnailLabel
+from ...api import (
+    Dataset,
+    PublisherTheme
+)
 
 
 class HeaderWidget(QFrame):
@@ -22,16 +26,19 @@ class HeaderWidget(QFrame):
     themed by the publisher
     """
 
-    def __init__(self, dataset: Dict, parent=None):
+    def __init__(self, dataset: Dataset, parent=None):
         super().__init__(parent)
         self.dataset = dataset
 
         self.setFixedHeight(72)
         self.setFrameShape(QFrame.NoFrame)
 
-        background_color = self.dataset.get('publisher', {}).get('theme',
-                                                                 {}).get(
-            'background_color') or '555657'
+        self.publisher_theme = self.dataset.publisher().theme \
+            if self.dataset.publisher() else None
+        background_color = self.publisher_theme.background_color() \
+            if self.publisher_theme else None
+        background_color = background_color or '555657'
+
         self.setStyleSheet(
             'HeaderWidget {{ background-color: #{}; }}'.format(
                 background_color))
@@ -39,7 +46,7 @@ class HeaderWidget(QFrame):
         hl = QHBoxLayout()
         hl.setContentsMargins(15, 0, 15, 0)
 
-        logo = self.dataset.get('publisher', {}).get('theme', {}).get('logo')
+        logo = self.publisher_theme.logo() if self.publisher_theme else None
         if logo:
             logo = 'https:{}'.format(logo)
             logo_widget = ThumbnailLabel(logo, 145, 35)
@@ -57,7 +64,7 @@ class HeaderWidget(QFrame):
         url_layout = QHBoxLayout()
         url_layout.setContentsMargins(12, 7, 12, 7)
 
-        url_label = QLabel(self.dataset.get('url_canonical', ''))
+        url_label = QLabel(self.dataset.url_canonical() or '')
         if background_color:
             url_label.setStyleSheet(
                 """QLabel {
@@ -91,21 +98,25 @@ class HeaderWidget(QFrame):
         if font_scale > 1:
             org_font_size = int(12 / font_scale)
 
-        publisher_site = self.dataset.get("publisher").get('site',
-                                                           {}).get("name")
+        publisher_site = self.dataset.publisher().site \
+            if self.dataset.publisher() else None
+        publisher_site_name = publisher_site.name() if publisher_site else ''
+
         org_details_label = QLabel()
         org_details_label.setStyleSheet('padding-left: 10px;')
+        publisher_name = self.dataset.publisher().name() \
+            if self.dataset.publisher() else ''
         org_details_label.setText(
             f"""<p style="line-height: 130%;
             font-size: {org_font_size}pt;
             color: rgba(255,255,255,0.7);
             font-family: {FONT_FAMILIES}" """
-            f"""><b>{self.dataset.get('publisher', {}).get('name')}</b><br>"""
+            f"""><b>{publisher_name}</b><br>"""
             f"""<span style="
         font-size: {org_font_size}pt;
         font-family: {FONT_FAMILIES};
         color: rgba(255,255,255,0.8);"
-        >via {publisher_site}</span></p>"""
+        >via {publisher_site_name}</span></p>"""
         )
 
         hl.addWidget(org_details_label)
@@ -113,5 +124,5 @@ class HeaderWidget(QFrame):
         self.setLayout(hl)
 
     def _copy_url(self):
-        url = self.dataset.get('url_canonical', '')
+        url = self.dataset.url_canonical()
         QApplication.clipboard().setText(url)
