@@ -414,10 +414,38 @@ class DatasetDialog(QDialog):
                 self.format_number(empty_count))
             res.append(('Feature count', feature_count_label))
 
-        fields = self.dataset.details.get('data', {}).get('fields', [])
-        if fields:
-            res.append(('_Attributes', ", ".join(
-                [f.get("name", '') for f in fields])))
+        if self.dataset.datatype == DataType.PointClouds:
+            point_count = self.dataset.details.get("data", {}).get(
+                "point_count") or 0
+            res.append(('Point count', self.format_number(point_count)))
+            tile_count = self.dataset.details.get("data", {}).get(
+                "feature_count") or 0
+            res.append(('Tile count', self.format_number(tile_count)))
+            density = self.dataset.details.get("data", {}).get("point_density_sqm", {}) or 0
+            res.append(('Point density', '{:.2f} points per m² • {:.2f} points per US ft²'.format(density,
+                                                                                          density / 10.7639)))
+            las_version = self.dataset.details.get("data", {}).get('tile_format_stored', {}).get(
+                "lasVersion") or 0
+            pdrf = self.dataset.details.get("data", {}).get('tile_format_stored', {}).get(
+                "pointDataRecordFormat") or 0
+            res.append(('Point cloud type', 'LAZ {} PDRF{}'.format(las_version, pdrf)))
+
+            format_as_stored = self.dataset.details.get("data", {}).get('tile_format_stored', {}).get(
+                "format") or ''
+            if format_as_stored == 'las':
+                format_as_stored = 'LAZ'
+            optimization = self.dataset.details.get("data", {}).get('tile_format_stored', {}).get(
+                "optimization") or ''
+            if optimization == 'copc':
+                optimization = 'COPc'
+
+            res.append(('Format as stored', '{} {}'.format(format_as_stored, optimization)))
+
+        else:
+            fields = self.dataset.details.get('data', {}).get('fields', [])
+            if fields:
+                res.append(('_Attributes', ", ".join(
+                    [f.get("name", '') for f in fields])))
 
         primary_key_fields = self.dataset.details.get('data', {}).get('primary_key_fields', [])
         if primary_key_fields:
