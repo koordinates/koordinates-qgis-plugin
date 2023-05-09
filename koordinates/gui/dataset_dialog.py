@@ -69,11 +69,11 @@ class DatasetDialog(QDialog):
     A dialog showing details of a dataset
     """
 
-    def __init__(self, parent, dataset: Dict):
+    def __init__(self, parent, dataset: Dataset):
         super().__init__(parent)
 
-        self.dataset = dataset
-        self.dataset_obj = Dataset(dataset)
+        self.dataset = dataset.details
+        self.dataset_obj = dataset
 
         self.details = KoordinatesClient.instance().dataset_details(
             self.dataset_obj)
@@ -394,15 +394,18 @@ class DatasetDialog(QDialog):
 
     def get_technical_details(self) -> List[Tuple]:
         res = [
-            ('Data type', DatasetGuiUtils.get_data_type(self.dataset))
+            ('Data type', DatasetGuiUtils.get_data_type(self.dataset_obj))
         ]
 
-        crs_display = self.dataset.get('data', {}).get('crs_display')
-        crs = self.dataset.get('data', {}).get('crs')
+        crs = self.dataset_obj.crs
+        crs_display = crs.name() if crs else ''
+        crs_id = crs.id() if crs else ''
         if crs_display:
-            res.append(('CRS', '{} • {}'.format(crs_display,
-                                                crs
-                                                )))
+            res.append(('CRS', '{} • <a href="{}">{}</a>'.format(
+                crs_display,
+                crs.url_external(),
+                crs_id
+            )))
 
         feature_count = self.dataset.get("data", {}).get("feature_count", 0)
         empty_count = self.dataset.get("data", {}).get('empty_geometry_count', 0)
@@ -437,10 +440,10 @@ class DatasetDialog(QDialog):
         if Capability.RevisionCount in self.dataset_obj.capabilities:
             data_revisions_count = \
                 KoordinatesClient.instance().data_revisions_count(
-                    self.dataset["id"])
+                    self.dataset_obj.id)
             total_revisions_count = \
                 KoordinatesClient.instance().total_revisions_count(
-                    self.dataset["id"])
+                    self.dataset_obj.id)
 
             if data_revisions_count is not None or total_revisions_count is not None:
                 res.append(

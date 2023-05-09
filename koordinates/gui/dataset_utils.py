@@ -68,33 +68,34 @@ class DatasetGuiUtils:
         return None
 
     @staticmethod
-    def get_data_type(dataset: Dict) -> Optional[str]:
-        data_type = ApiUtils.data_type_from_dataset_response(dataset)
-        if data_type == DataType.Vectors:
-            if dataset.get('data', {}).get('geometry_type') == 'polygon':
+    def get_data_type(dataset: Dataset) -> Optional[str]:
+        if dataset.datatype == DataType.Vectors:
+            if dataset.details.get('data', {}).get('geometry_type') == 'polygon':
                 return 'Vector polygon'
-            elif dataset.get('data', {}).get('geometry_type') == 'multipolygon':
+            elif dataset.details.get('data', {}).get('geometry_type') == 'multipolygon':
                 return 'Vector multipolygon'
-            elif dataset.get('data', {}).get('geometry_type') == 'point':
+            elif dataset.details.get('data', {}).get('geometry_type') == 'point':
                 return 'Vector point'
-            elif dataset.get('data', {}).get('geometry_type') == 'multipoint':
+            elif dataset.details.get('data', {}).get('geometry_type') == 'multipoint':
                 return 'Vector multipoint'
-            elif dataset.get('data', {}).get('geometry_type') == 'linestring':
+            elif dataset.details.get('data', {}).get('geometry_type') == 'linestring':
                 return 'Vector line'
-            elif dataset.get('data', {}).get('geometry_type') == 'multilinestring':
+            elif dataset.details.get('data', {}).get('geometry_type') == 'multilinestring':
                 return 'Vector multiline'
-        elif data_type == DataType.Rasters:
+        elif dataset.datatype == DataType.Rasters:
             return 'Raster'
-        elif data_type == DataType.Grids:
+        elif dataset.datatype == DataType.Grids:
             return 'Grid'
-        elif data_type == DataType.Tables:
+        elif dataset.datatype == DataType.Tables:
             return 'Table'
-        elif data_type == DataType.Documents:
+        elif dataset.datatype == DataType.Documents:
             return 'Document'
-        elif data_type == DataType.Sets:
+        elif dataset.datatype == DataType.Sets:
             return 'Set'
-        elif data_type == DataType.Repositories:
+        elif dataset.datatype == DataType.Repositories:
             return 'Repository'
+        elif dataset.datatype == DataType.PointClouds:
+            return 'Point cloud'
 
         return None
 

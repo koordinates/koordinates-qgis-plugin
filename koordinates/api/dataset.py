@@ -22,6 +22,33 @@ from .utils import ApiUtils
 from .publisher import Publisher
 
 
+class Crs:
+    """
+    Represents a CRS
+    """
+
+    def __init__(self, details: Dict):
+        self.details = details
+
+    def name(self) -> Optional[str]:
+        """
+        Returns the CRS name
+        """
+        return self.details.get('name')
+
+    def id(self) -> Optional[str]:
+        """
+        Returns the CRS ID
+        """
+        return self.details.get('id')
+
+    def url_external(self) -> Optional[str]:
+        """
+        Returns the external URL for the CRS
+        """
+        return self.details.get('url_external')
+
+
 class Dataset:
     """
     Represents a dataset
@@ -48,6 +75,9 @@ class Dataset:
             self.gridded_extent = ApiUtils.geometry_from_hexewkb(
                 self.details['data']['gridded_extent']
             )
+
+        self.crs: Optional[Crs] = Crs(self.details['data']['crs']) \
+            if self.details.get('data', {}).get('crs') else None
 
     def title(self) -> str:
         """
