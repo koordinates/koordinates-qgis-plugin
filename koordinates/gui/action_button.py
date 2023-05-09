@@ -95,9 +95,10 @@ class CloneButton(ActionButton):
         """
         Updates button state based on current operations
         """
-        is_cloning = KartOperationManager.instance().is_cloning(
-            self.dataset.clone_url()
-        )
+        is_cloning = self.dataset.repository() and \
+                     KartOperationManager.instance().is_cloning(
+                         self.dataset.repository().clone_url()
+                     )
         self.setEnabled(not is_cloning)
         if is_cloning:
             icon = GuiUtils.get_icon('cloning_button.svg')
@@ -115,9 +116,12 @@ class CloneButton(ActionButton):
             self.setText(self.tr('Clone'))
 
     def cloneRepository(self):
+        if not self.dataset.repository():
+            return
+
         if self._close_parent_on_clone:
             self.parent().close()
-        url = self.dataset.clone_url()
+        url = self.dataset.repository().clone_url()
         title = self.dataset.title()
 
         from .action_dialog import ActionDialog

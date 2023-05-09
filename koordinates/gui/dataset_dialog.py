@@ -200,6 +200,33 @@ class DatasetDialog(QDialog):
         base_details_right_pane_layout_vl = QVBoxLayout()
         base_details_right_pane_layout_vl.setContentsMargins(0, 0, 0, 0)
         base_details_right_pane_layout_vl.addLayout(base_details_right_pane_layout)
+
+        if self.dataset_obj.repository():
+            base_details_right_pane_layout = QHBoxLayout()
+            base_details_right_pane_layout.setContentsMargins(12, 0, 0, 0)
+
+            icon_label = SvgLabel(GuiUtils.get_icon_svg('repo-book.svg'), 24, 24)
+            base_details_right_pane_layout.addWidget(icon_label)
+
+            summary_label = QLabel()
+            summary_label.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+            description = self.tr('Repository')
+            subtitle = self.dataset_obj.repository().title()
+
+            summary_label.setText("""<p style="line-height: 130%;
+                    font-family: {};
+                    font-size: {}pt"><b>{}</b><br>
+                    {}</p>""".format(
+                FONT_FAMILIES,
+                base_font_size,
+                description,
+                subtitle))
+
+            base_details_right_pane_layout.addSpacing(10)
+            base_details_right_pane_layout.addWidget(summary_label, 1)
+            base_details_right_pane_layout_vl.addLayout(base_details_right_pane_layout)
+
         base_details_right_pane_layout_vl.addStretch()
 
         base_details_layout.addLayout(base_details_right_pane_layout_vl)

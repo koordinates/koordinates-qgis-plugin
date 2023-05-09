@@ -40,7 +40,7 @@ class Dataset:
             self.details
         )
         self.access = ApiUtils.access_from_dataset_response(self.details)
-        self.repository: Optional[Repo] = None
+        self._repository: Optional[Repo] = None
 
         self.gridded_extent: Optional[QgsGeometry] = None
         if 'data' in self.details and self.details['data'].get(
@@ -128,28 +128,23 @@ class Dataset:
         """
         return self.details.get("num_views", 0)
 
-    def clone_url(self) -> Optional[str]:
+    def repository(self) -> Optional[Repo]:
         """
-        Returns the clone URL for the dataset
+        Returns the repository information for the dataset
         """
-        if self.repository is not None:
-            return self.repository.clone_url()
-
-        if isinstance(self.details.get("repository"), dict):
-            url = self.details["repository"].get("clone_location_https")
-            if url:
-                return url
+        if self._repository is not None:
+            return self._repository
 
         repo_detail_url = self.details.get('repository')
-        if repo_detail_url:
+        if repo_detail_url and isinstance(repo_detail_url, dict):
+            self._repository = Repo(repo_detail_url)
+        elif repo_detail_url:
             from .client import KoordinatesClient
-            self.repository = KoordinatesClient.instance().retrieve_repository(
+            self._repository = KoordinatesClient.instance().retrieve_repository(
                 repo_detail_url
             )
-        if self.repository:
-            return self.repository.clone_url()
 
-        return None
+        return self._repository
 
     def to_map_layer(self) -> Optional[QgsMapLayer]:
         """
