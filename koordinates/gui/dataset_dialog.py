@@ -445,6 +445,8 @@ class DatasetDialog(QDialog):
         painter.drawRoundedRect(0, 0, image_size.width(), image_size.height(), 9, 9)
 
         painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
+        painter.setBrush(QBrush(QColor('#dddddd')))
+        painter.drawRect(0, 0, image_size.width(), image_size.height())
 
         if img is not None:
             if img.size() != image_size:
@@ -465,8 +467,13 @@ class DatasetDialog(QDialog):
                 else:
                     top = 0
 
-                cropped = resized.copy(QRect(left, top, image_size.width(), image_size.height()))
-                painter.drawImage(0, 0, cropped)
+                if left > 0 or top > 0:
+                    cropped = resized.copy(QRect(left, top, image_size.width(), image_size.height()))
+                    painter.drawImage(0, 0, cropped)
+                else:
+                    painter.drawImage(int((image_size.width() - resized.width()) / 2),
+                                      int((image_size.height() - resized.height()) / 2),
+                                      resized)
             else:
                 painter.drawImage(0, 0, img)
         else:
