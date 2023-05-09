@@ -87,7 +87,7 @@ class TestDataset(unittest.TestCase):
             )
             self.assertEqual(point_cloud_dataset.datatype,
                              DataType.PointClouds)
-            self.assertEqual(point_cloud_dataset.clone_url(),
+            self.assertEqual(point_cloud_dataset.repository().clone_url(),
                              'https://test.koordinates.com/koordinates/aaa-laz')
             self.assertEqual(point_cloud_dataset.id, 'aaa')
             self.assertEqual(point_cloud_dataset.capabilities,
