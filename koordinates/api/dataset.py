@@ -12,12 +12,14 @@ from qgis.core import (
     QgsFields,
     QgsMemoryProviderUtils,
     QgsCoordinateReferenceSystem,
-    QgsFeature
+    QgsFeature,
+    QgsWkbTypes
 )
 
 from .enums import DataType
 from .repo import Repo
 from .utils import ApiUtils
+from .publisher import Publisher
 
 
 class Dataset:
@@ -29,6 +31,10 @@ class Dataset:
         self.details = details
         self.id = details['id']
         self.datatype = ApiUtils.data_type_from_dataset_response(self.details)
+        self.geometry_type: QgsWkbTypes.GeometryType = \
+            ApiUtils.geometry_type_from_dataset_response(
+                self.details
+            )
 
         self.capabilities = ApiUtils.capabilities_from_dataset_response(
             self.details
@@ -49,17 +55,38 @@ class Dataset:
         """
         return self.details.get("title", 'Layer')
 
-    def publisher_name(self) -> Optional[str]:
+    def html_description(self) -> str:
         """
-        Returns the publisher name
+        Returns the HTML dataset description
         """
-        return self.details.get("publisher", {}).get("name")
+        return self.details.get("description_html", '')
+
+    def url_canonical(self) -> Optional[str]:
+        """
+        Returns the canonical URL for the dataset
+        """
+        return self.details.get('url_canonical')
+
+    def publisher(self) -> Optional[Publisher]:
+        """
+        Returns the publisher details
+        """
+        if not self.details.get("publisher"):
+            return None
+
+        return Publisher(self.details["publisher"])
 
     def is_starred(self) -> bool:
         """
         Returns True if the dataset is starred
         """
         return self.details.get('is_starred', False)
+
+    def thumbnail_url(self) -> Optional[str]:
+        """
+        Returns the dataset's thumbnail URL
+        """
+        return self.details.get('thumbnail_url')
 
     def created_at_date(self) -> Optional[datetime.date]:
         """
@@ -88,6 +115,18 @@ class Dataset:
             return parser.parse(updated_at_date_str)
 
         return None
+
+    def number_downloads(self) -> int:
+        """
+        Returns the number of dataset downloads
+        """
+        return self.details.get("num_downloads", 0)
+
+    def number_views(self) -> int:
+        """
+        Returns the number of dataset views
+        """
+        return self.details.get("num_views", 0)
 
     def clone_url(self) -> Optional[str]:
         """

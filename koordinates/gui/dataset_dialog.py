@@ -83,21 +83,16 @@ class DatasetDialog(QDialog):
         else:
             self.attachments = []
 
-        self.dataset_type: DataType = ApiUtils.data_type_from_dataset_response(
-            self.dataset
+        self.setWindowTitle('Dataset Details - {}'.format(
+            self.dataset_obj.title())
         )
-        self.public_access_type = ApiUtils.access_from_dataset_response(
-            self.dataset
-        )
-
-        self.setWindowTitle('Dataset Details - {}'.format(dataset.get('title', 'layer')))
 
         self.setStyleSheet('DatasetDialog {background-color: white; }')
 
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 20)
 
-        self.header_widget = HeaderWidget(dataset)
+        self.header_widget = HeaderWidget(self.dataset_obj)
         layout.addWidget(self.header_widget)
 
         title_hl = QHBoxLayout()
@@ -115,11 +110,12 @@ class DatasetDialog(QDialog):
         self.label_title.setText(
             f"""<span style="font-family: {FONT_FAMILIES};
             font-weight: 500;
-            font-size: {title_font_size}pt;">{dataset.get('title', '')}</span>"""
+            font-size: {title_font_size}pt;">"""
+            f"""{self.dataset_obj.title()}</span>"""
         )
         title_hl.addWidget(self.label_title)
 
-        if self.public_access_type == PublicAccessType.none:
+        if self.dataset_obj.access == PublicAccessType.none:
             private_icon = QSvgWidget(GuiUtils.get_icon_svg('private.svg'))
             private_icon.setFixedSize(QSize(24, 24))
             private_icon.setToolTip(self.tr('Private'))
@@ -127,12 +123,12 @@ class DatasetDialog(QDialog):
 
         title_hl.addStretch()
 
-        is_starred = self.dataset.get('is_starred', False)
-        self.star_button = StarButton(dataset_id=self.dataset['id'], checked=is_starred)
+        self.star_button = StarButton(self.dataset_obj)
         title_hl.addWidget(self.star_button)
 
         if Capability.Clone in self.dataset_obj.capabilities:
-            self.clone_button = CloneButton(self.dataset_obj, close_parent_on_clone=True)
+            self.clone_button = CloneButton(self.dataset_obj,
+                                            close_parent_on_clone=True)
             title_hl.addWidget(self.clone_button)
         else:
             self.clone_button = None
@@ -156,7 +152,7 @@ class DatasetDialog(QDialog):
 
         self.thumbnail_label = QLabel()
         self.thumbnail_label.setFixedSize(256, 195)
-        thumbnail_url = dataset.get('thumbnail_url')
+        thumbnail_url = self.dataset_obj.thumbnail_url()
         if thumbnail_url:
             downloadThumbnail(thumbnail_url, self)
 
@@ -169,15 +165,16 @@ class DatasetDialog(QDialog):
 
         base_details_right_pane_layout = QHBoxLayout()
         base_details_right_pane_layout.setContentsMargins(12, 0, 0, 0)
-        icon_name = DatasetGuiUtils.get_icon_for_dataset(self.dataset, IconStyle.Dark)
+        icon_name = DatasetGuiUtils.get_icon_for_dataset(self.dataset_obj,
+                                                         IconStyle.Dark)
         icon_label = SvgLabel(icon_name, 24, 24)
         base_details_right_pane_layout.addWidget(icon_label)
 
         summary_label = QLabel()
         summary_label.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        description = DatasetGuiUtils.get_type_description(self.dataset)
-        subtitle = DatasetGuiUtils.get_subtitle(self.dataset,
+        description = DatasetGuiUtils.get_type_description(self.dataset_obj)
+        subtitle = DatasetGuiUtils.get_subtitle(self.dataset_obj,
                                                 short_format=False)
 
         summary_label.setText("""<p style="line-height: 130%;
@@ -228,20 +225,29 @@ class DatasetDialog(QDialog):
                 )
             )
 
-        num_downloads = dataset.get("num_downloads", 0)
-        statistics_layout.addWidget(StatisticWidget('Exports', 'arrow-down.svg',
-                                                    DatasetGuiUtils.format_count(
-                                                        num_downloads)))
+        num_downloads = self.dataset_obj.number_downloads()
+        statistics_layout.addWidget(
+            StatisticWidget(
+                'Exports',
+                'arrow-down.svg',
+                DatasetGuiUtils.format_count(num_downloads)
+            )
+        )
 
-        num_views = dataset.get('num_views', 0)
-        statistics_layout.addWidget(StatisticWidget('Views', 'eye.svg',
-                                                    DatasetGuiUtils.format_count(
-                                                        num_views)))
+        num_views = self.dataset_obj.number_views()
+        statistics_layout.addWidget(
+            StatisticWidget(
+                'Views',
+                'eye.svg',
+                DatasetGuiUtils.format_count(num_views)
+            )
+        )
+
         statistics_layout.addWidget(
             StatisticWidget('{} ID'.format(
                 self.dataset_obj.datatype.identifier_string()),
                 'layers.svg',
-                str(dataset["id"]))
+                str(self.dataset_obj.id))
         )
 
         contents_layout.addLayout(statistics_layout)
@@ -256,7 +262,7 @@ class DatasetDialog(QDialog):
             Qt.TextInteractionFlag.TextBrowserInteraction)
         self.description_label.setOpenExternalLinks(True)
         self.description_label.setText(
-            self.dialog_css() + self.dataset.get("description_html", ''))
+            self.dialog_css() + self.dataset_obj.html_description())
 
         contents_layout.addWidget(self.description_label, 1)
 

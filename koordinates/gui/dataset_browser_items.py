@@ -440,7 +440,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             self.setThumbnail(GuiUtils.get_svg_as_image(thumbnail_svg,
                                                         150, 150))
         else:
-            thumbnail_url = self.dataset.details.get('thumbnail_url')
+            thumbnail_url = self.dataset.thumbnail_url()
             if thumbnail_url:
                 downloadThumbnail(thumbnail_url, self)
 
@@ -450,8 +450,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             private_icon.setToolTip(self.tr('Private'))
             self.layout().set_private_icon(private_icon)
 
-        self.star_button = StarButton(dataset_id=self.dataset.id,
-                                      checked=self.dataset.is_starred())
+        self.star_button = StarButton(self.dataset)
         self.layout().set_star_button(self.star_button)
 
         title_layout = QHBoxLayout()
@@ -472,13 +471,15 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             title_font_size = int(12 / font_scale)
             detail_font_size = int(10 / font_scale)
 
+        publisher_name = self.dataset.publisher().name() if \
+            self.dataset.publisher() else ''
         self.title_label.setText(
             f"""<p style="line-height: 130%;
                 font-size: {main_title_size}pt;
                 font-family: Arial, Sans"><b>{self.dataset.title()}</b><br>"""
             f"""<span style="color: #868889;
             font-size: {title_font_size}pt;
-            font-family: Arial, Sans">{self.dataset.publisher_name()}</span></p>"""
+            font-family: Arial, Sans">{publisher_name}</span></p>"""
         )
 
         license = self.dataset.details.get('license')
@@ -688,7 +689,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         painter.setBrush(QBrush(QColor(0, 0, 0, 150)))
         painter.drawRoundedRect(QRectF(15, 100, 117, 32), 4, 4)
 
-        icon = DatasetGuiUtils.get_icon_for_dataset(self.dataset.details,
+        icon = DatasetGuiUtils.get_icon_for_dataset(self.dataset,
                                                     IconStyle.Light)
         if icon:
             painter.drawImage(QRectF(21, 106, 20, 20),
@@ -697,7 +698,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
                                                         int(20 * scale_factor)))
 
         description = DatasetGuiUtils.get_type_description(
-            self.dataset.details
+            self.dataset
         )
 
         font_scale = self.screen().logicalDotsPerInch() / 92
@@ -718,7 +719,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             painter.setPen(QPen(QColor(255, 255, 255)))
             painter.drawText(QPointF(47, 112), description)
 
-        subtitle = DatasetGuiUtils.get_subtitle(self.dataset.details,
+        subtitle = DatasetGuiUtils.get_subtitle(self.dataset,
                                                 short_format=True)
         if subtitle:
             font = QFont('Arial')

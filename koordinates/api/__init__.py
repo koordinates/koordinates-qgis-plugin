@@ -5,6 +5,7 @@ from .client import (  # NOQA
 )
 from .data_browser import DataBrowserQuery  # NOQA
 from .dataset import Dataset  # NOQA
+from .publisher import Publisher, PublisherTheme  # NOQA
 from .enums import (  # NOQA
     DataType,
     VectorFilter,
