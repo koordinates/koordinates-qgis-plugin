@@ -72,11 +72,10 @@ class DatasetDialog(QDialog):
     def __init__(self, parent, dataset: Dataset):
         super().__init__(parent)
 
-        self.dataset = dataset.details
-        self.dataset_obj = dataset
+        self.dataset = dataset
 
         self.details = KoordinatesClient.instance().dataset_details(
-            self.dataset_obj)
+            self.dataset)
 
         if self.details.get('attachments'):
             self.attachments = KoordinatesClient.instance().get_json(self.details['attachments'])
@@ -84,7 +83,7 @@ class DatasetDialog(QDialog):
             self.attachments = []
 
         self.setWindowTitle('Dataset Details - {}'.format(
-            self.dataset_obj.title())
+            self.dataset.title())
         )
 
         self.setStyleSheet('DatasetDialog {background-color: white; }')
@@ -92,7 +91,7 @@ class DatasetDialog(QDialog):
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 20)
 
-        self.header_widget = HeaderWidget(self.dataset_obj)
+        self.header_widget = HeaderWidget(self.dataset)
         layout.addWidget(self.header_widget)
 
         title_hl = QHBoxLayout()
@@ -111,11 +110,11 @@ class DatasetDialog(QDialog):
             f"""<span style="font-family: {FONT_FAMILIES};
             font-weight: 500;
             font-size: {title_font_size}pt;">"""
-            f"""{self.dataset_obj.title()}</span>"""
+            f"""{self.dataset.title()}</span>"""
         )
         title_hl.addWidget(self.label_title)
 
-        if self.dataset_obj.access == PublicAccessType.none:
+        if self.dataset.access == PublicAccessType.none:
             private_icon = QSvgWidget(GuiUtils.get_icon_svg('private.svg'))
             private_icon.setFixedSize(QSize(24, 24))
             private_icon.setToolTip(self.tr('Private'))
@@ -123,18 +122,18 @@ class DatasetDialog(QDialog):
 
         title_hl.addStretch()
 
-        self.star_button = StarButton(self.dataset_obj)
+        self.star_button = StarButton(self.dataset)
         title_hl.addWidget(self.star_button)
 
-        if Capability.Clone in self.dataset_obj.capabilities:
-            self.clone_button = CloneButton(self.dataset_obj,
+        if Capability.Clone in self.dataset.capabilities:
+            self.clone_button = CloneButton(self.dataset,
                                             close_parent_on_clone=True)
             title_hl.addWidget(self.clone_button)
         else:
             self.clone_button = None
 
-        if Capability.Add in self.dataset_obj.capabilities:
-            self.add_button = AddButton(self.dataset_obj)
+        if Capability.Add in self.dataset.capabilities:
+            self.add_button = AddButton(self.dataset)
             title_hl.addWidget(self.add_button)
         else:
             self.add_button = None
@@ -154,13 +153,13 @@ class DatasetDialog(QDialog):
         self.thumbnail_label.setFixedSize(256, 195)
 
         thumbnail_svg = DatasetGuiUtils.thumbnail_icon_for_dataset(
-            self.dataset_obj
+            self.dataset
         )
         if thumbnail_svg:
             self.setThumbnail(GuiUtils.get_svg_as_image(thumbnail_svg,
                                                         195, 195))
         else:
-            thumbnail_url = self.dataset_obj.thumbnail_url()
+            thumbnail_url = self.dataset.thumbnail_url()
             if thumbnail_url:
                 downloadThumbnail(thumbnail_url, self)
 
@@ -173,7 +172,7 @@ class DatasetDialog(QDialog):
 
         base_details_right_pane_layout = QHBoxLayout()
         base_details_right_pane_layout.setContentsMargins(12, 0, 0, 0)
-        icon_name = DatasetGuiUtils.get_icon_for_dataset(self.dataset_obj,
+        icon_name = DatasetGuiUtils.get_icon_for_dataset(self.dataset,
                                                          IconStyle.Dark)
         icon_label = SvgLabel(icon_name, 24, 24)
         base_details_right_pane_layout.addWidget(icon_label)
@@ -181,8 +180,8 @@ class DatasetDialog(QDialog):
         summary_label = QLabel()
         summary_label.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        description = DatasetGuiUtils.get_type_description(self.dataset_obj)
-        subtitle = DatasetGuiUtils.get_subtitle(self.dataset_obj,
+        description = DatasetGuiUtils.get_type_description(self.dataset)
+        subtitle = DatasetGuiUtils.get_subtitle(self.dataset,
                                                 short_format=False)
 
         summary_label.setText("""<p style="line-height: 130%;
@@ -201,7 +200,7 @@ class DatasetDialog(QDialog):
         base_details_right_pane_layout_vl.setContentsMargins(0, 0, 0, 0)
         base_details_right_pane_layout_vl.addLayout(base_details_right_pane_layout)
 
-        if self.dataset_obj.repository():
+        if self.dataset.repository():
             base_details_right_pane_layout = QHBoxLayout()
             base_details_right_pane_layout.setContentsMargins(12, 0, 0, 0)
 
@@ -212,7 +211,7 @@ class DatasetDialog(QDialog):
             summary_label.setAlignment(Qt.AlignmentFlag.AlignTop)
 
             description = self.tr('Repository')
-            subtitle = self.dataset_obj.repository().title()
+            subtitle = self.dataset.repository().title()
 
             summary_label.setText("""<p style="line-height: 130%;
                     font-family: {};
@@ -240,7 +239,7 @@ class DatasetDialog(QDialog):
         statistics_layout = QHBoxLayout()
         statistics_layout.setContentsMargins(0, 0, 0, 0)
 
-        first_published = self.dataset_obj.created_at_date()
+        first_published = self.dataset.created_at_date()
         if first_published:
             statistics_layout.addWidget(
                 StatisticWidget(
@@ -250,7 +249,7 @@ class DatasetDialog(QDialog):
                 )
             )
 
-        last_updated = self.dataset_obj.updated_at_date()
+        last_updated = self.dataset.updated_at_date()
         if last_updated:
             statistics_layout.addWidget(
                 StatisticWidget(
@@ -260,7 +259,7 @@ class DatasetDialog(QDialog):
                 )
             )
 
-        num_downloads = self.dataset_obj.number_downloads()
+        num_downloads = self.dataset.number_downloads()
         statistics_layout.addWidget(
             StatisticWidget(
                 'Exports',
@@ -269,7 +268,7 @@ class DatasetDialog(QDialog):
             )
         )
 
-        num_views = self.dataset_obj.number_views()
+        num_views = self.dataset.number_views()
         statistics_layout.addWidget(
             StatisticWidget(
                 'Views',
@@ -280,9 +279,9 @@ class DatasetDialog(QDialog):
 
         statistics_layout.addWidget(
             StatisticWidget('{} ID'.format(
-                self.dataset_obj.datatype.identifier_string()),
+                self.dataset.datatype.identifier_string()),
                 'layers.svg',
-                str(self.dataset_obj.id))
+                str(self.dataset.id))
         )
 
         contents_layout.addLayout(statistics_layout)
@@ -297,7 +296,7 @@ class DatasetDialog(QDialog):
             Qt.TextInteractionFlag.TextBrowserInteraction)
         self.description_label.setOpenExternalLinks(True)
         self.description_label.setText(
-            self.dialog_css() + self.dataset_obj.html_description())
+            self.dialog_css() + self.dataset.html_description())
 
         contents_layout.addWidget(self.description_label, 1)
 
@@ -394,10 +393,10 @@ class DatasetDialog(QDialog):
 
     def get_technical_details(self) -> List[Tuple]:
         res = [
-            ('Data type', DatasetGuiUtils.get_data_type(self.dataset_obj))
+            ('Data type', DatasetGuiUtils.get_data_type(self.dataset))
         ]
 
-        crs = self.dataset_obj.crs
+        crs = self.dataset.crs
         crs_display = crs.name() if crs else ''
         crs_id = crs.id() if crs else ''
         if crs_display:
@@ -407,20 +406,20 @@ class DatasetDialog(QDialog):
                 crs_id
             )))
 
-        feature_count = self.dataset.get("data", {}).get("feature_count", 0)
-        empty_count = self.dataset.get("data", {}).get('empty_geometry_count', 0)
+        feature_count = self.dataset.details.get("data", {}).get("feature_count", 0)
+        empty_count = self.dataset.details.get("data", {}).get('empty_geometry_count', 0)
         feature_count_label = self.format_number(feature_count)
         if empty_count:
             feature_count_label += ' • {} with empty or null geometries'.format(
                 self.format_number(empty_count))
             res.append(('Feature count', feature_count_label))
 
-        fields = self.dataset.get('data', {}).get('fields', [])
+        fields = self.dataset.details.get('data', {}).get('fields', [])
         if fields:
             res.append(('_Attributes', ", ".join(
                 [f.get("name", '') for f in fields])))
 
-        primary_key_fields = self.dataset.get('data', {}).get('primary_key_fields', [])
+        primary_key_fields = self.dataset.details.get('data', {}).get('primary_key_fields', [])
         if primary_key_fields:
             res.append(('_Primary key', ", ".join(primary_key_fields)))
 
@@ -429,21 +428,21 @@ class DatasetDialog(QDialog):
     def get_history_details(self) -> List[Tuple]:
         res = []
 
-        first_published = self.dataset_obj.created_at_date()
+        first_published = self.dataset.created_at_date()
         if first_published:
             res.append(('Date Added', self.format_date(first_published)))
 
-        last_updated = self.dataset_obj.updated_at_date()
+        last_updated = self.dataset.updated_at_date()
         if last_updated:
             res.append(('Last updated', self.format_date(last_updated)))
 
-        if Capability.RevisionCount in self.dataset_obj.capabilities:
+        if Capability.RevisionCount in self.dataset.capabilities:
             data_revisions_count = \
                 KoordinatesClient.instance().data_revisions_count(
-                    self.dataset_obj.id)
+                    self.dataset.id)
             total_revisions_count = \
                 KoordinatesClient.instance().total_revisions_count(
-                    self.dataset_obj.id)
+                    self.dataset.id)
 
             if data_revisions_count is not None or total_revisions_count is not None:
                 res.append(
