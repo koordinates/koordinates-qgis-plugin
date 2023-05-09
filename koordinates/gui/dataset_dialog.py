@@ -152,9 +152,17 @@ class DatasetDialog(QDialog):
 
         self.thumbnail_label = QLabel()
         self.thumbnail_label.setFixedSize(256, 195)
-        thumbnail_url = self.dataset_obj.thumbnail_url()
-        if thumbnail_url:
-            downloadThumbnail(thumbnail_url, self)
+
+        thumbnail_svg = DatasetGuiUtils.thumbnail_icon_for_dataset(
+            self.dataset_obj
+        )
+        if thumbnail_svg:
+            self.setThumbnail(GuiUtils.get_svg_as_image(thumbnail_svg,
+                                                        195, 195))
+        else:
+            thumbnail_url = self.dataset_obj.thumbnail_url()
+            if thumbnail_url:
+                downloadThumbnail(thumbnail_url, self)
 
         contents_layout = QVBoxLayout()
         contents_layout.setContentsMargins(0, 0, 15, 15)
@@ -439,21 +447,28 @@ class DatasetDialog(QDialog):
         painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
 
         if img is not None:
-            resized = img.scaled(image_size.width(),
-                                 image_size.height(),
-                                 Qt.KeepAspectRatioByExpanding,
-                                 Qt.SmoothTransformation)
-            if resized.width() > image_size.width():
-                left = int((resized.width() - image_size.width()) / 2)
-            else:
-                left = 0
-            if resized.height() > image_size.height():
-                top = int((resized.height() - image_size.height()) / 2)
-            else:
-                top = 0
+            if img.size() != image_size:
+                if image_size.width() != img.width() and image_size.height() != img.height():
+                    resized = img.scaled(image_size.width(),
+                                         image_size.height(),
+                                         Qt.KeepAspectRatioByExpanding,
+                                         Qt.SmoothTransformation)
+                else:
+                    resized = img
 
-            cropped = resized.copy(QRect(left, top, image_size.width(), image_size.height()))
-            painter.drawImage(0, 0, cropped)
+                if resized.width() > image_size.width():
+                    left = int((resized.width() - image_size.width()) / 2)
+                else:
+                    left = 0
+                if resized.height() > image_size.height():
+                    top = int((resized.height() - image_size.height()) / 2)
+                else:
+                    top = 0
+
+                cropped = resized.copy(QRect(left, top, image_size.width(), image_size.height()))
+                painter.drawImage(0, 0, cropped)
+            else:
+                painter.drawImage(0, 0, img)
         else:
             painter.setBrush(QBrush(QColor('#cccccc')))
             painter.setPen(Qt.NoPen)

@@ -578,6 +578,14 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.update_thumbnail()
 
     def update_thumbnail(self):
+        thumbnail_svg = DatasetGuiUtils.thumbnail_icon_for_dataset(
+            self.dataset
+        )
+        if thumbnail_svg:
+            size = 150
+            self.raw_thumbnail = GuiUtils.get_svg_as_image(
+                thumbnail_svg, size, size)
+
         thumbnail = self.process_thumbnail(self.raw_thumbnail)
         dpi_ratio = self.window().screen().devicePixelRatio()
         width = int(thumbnail.width() / dpi_ratio)
@@ -652,9 +660,10 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         if img is not None:
             resized = img.scaled(image_size.width(),
-                                 image_size.height(),
-                                 Qt.KeepAspectRatioByExpanding,
-                                 Qt.SmoothTransformation)
+                                     image_size.height(),
+                                     Qt.KeepAspectRatioByExpanding,
+                                     Qt.SmoothTransformation)
+
             if resized.width() > image_size.width():
                 left = int((resized.width() - image_size.width())/2)
             else:
