@@ -763,7 +763,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             # dlg = RepositoryDialog(self, self.dataset)
             return
         else:
-            dlg = DatasetDialog(self, self.dataset.details)
+            dlg = DatasetDialog(self, self.dataset)
         dlg.exec()
 
     def _geomFromGeoJson(self, geojson) -> Optional[QgsGeometry]:

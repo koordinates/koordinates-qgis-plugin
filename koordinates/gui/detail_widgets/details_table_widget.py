@@ -59,6 +59,7 @@ class DetailsTable(QGridLayout):
                                                 title))
         title_label.setTextInteractionFlags(
             Qt.TextInteractionFlag.TextBrowserInteraction)
+        title_label.setOpenExternalLinks(True)
 
         fm = QFontMetrics(QFont())
         title_label.setFixedWidth(fm.width('x') * 30)
@@ -73,6 +74,7 @@ class DetailsTable(QGridLayout):
             """color: black">{}</span>""".format(value))
         value_label.setTextInteractionFlags(
             Qt.TextInteractionFlag.TextBrowserInteraction)
+        value_label.setOpenExternalLinks(True)
         value_label.setAlignment(
             Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         value_label.setWordWrap(True)
