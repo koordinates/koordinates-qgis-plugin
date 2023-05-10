@@ -4,6 +4,11 @@ from typing import (
     List
 )
 
+from qgis.PyQt.QtCore import (
+    Qt,
+    QUrl
+)
+from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -22,6 +27,8 @@ class TableWidget(QWidget):
     HEADING_BACKGROUND_COLOR = "#f5f5f7"
     BORDER_COLOR = "#eaeaea"
 
+    INITIAL_VISIBLE_ROWS = 4
+
     def __init__(self,
                  headings: List[str],
                  contents: List[List[str]],
@@ -32,7 +39,17 @@ class TableWidget(QWidget):
         vl.setContentsMargins(0, 0, 0, 0)
 
         self.table_label = QLabel()
+        self.headings = headings
+        self.contents = contents
 
+        self.rebuild_table()
+        self.table_label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        self.table_label.linkActivated.connect(self.link_clicked)
+
+        vl.addWidget(self.table_label)
+        self.setLayout(vl)
+
+    def rebuild_table(self, expand=False):
         base_font_size = 10
         if platform.system() == 'Darwin':
             base_font_size = 14
@@ -45,9 +62,9 @@ class TableWidget(QWidget):
             border-collapse: collapse;
            ">
         """
-        if headings:
+        if self.headings:
             html += "<tr>"
-            for cell in headings:
+            for cell in self.headings:
                 html += f"""<th
                 style="background-color: {self.HEADING_BACKGROUND_COLOR};
                 text-align: left;
@@ -55,7 +72,12 @@ class TableWidget(QWidget):
                 padding: {padding} {padding} {padding} {padding}">{cell}</th>"""
             html += "</tr>"
 
-        for row in contents:
+        if not expand:
+            visible_rows = self.contents[:self.INITIAL_VISIBLE_ROWS]
+        else:
+            visible_rows = self.contents[:]
+
+        for row in visible_rows:
             html += "<tr>"
             for cell in row:
                 html += f"""<td
@@ -65,10 +87,24 @@ class TableWidget(QWidget):
 
             html += "</tr>"
 
+        if len(self.contents) > self.INITIAL_VISIBLE_ROWS and not expand:
+            html += "<tr>"
+            html += """<td colspan="2"><a href="more"><table><tr><td
+                style="background-color: #ffffff; 
+                border: 1px solid #a9a9a9;
+                color: #868889;
+                padding: 3px;
+                text-decoration: none;
+                border-radius: 3px;">Show more</td></tr></table></a></td>"""
+            html += "</tr>"
+
         html += """
         </table>
         """
         self.table_label.setText(html)
 
-        vl.addWidget(self.table_label)
-        self.setLayout(vl)
+    def link_clicked(self, link):
+        if link == 'more':
+            self.rebuild_table(True)
+        else:
+            QDesktopServices.openUrl(QUrl(link))
