@@ -660,9 +660,9 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         if img is not None:
             resized = img.scaled(image_size.width(),
-                                     image_size.height(),
-                                     Qt.KeepAspectRatioByExpanding,
-                                     Qt.SmoothTransformation)
+                                 image_size.height(),
+                                 Qt.KeepAspectRatioByExpanding,
+                                 Qt.SmoothTransformation)
 
             if resized.width() > image_size.width():
                 left = int((resized.width() - image_size.width())/2)

@@ -11,10 +11,6 @@ from qgis.core import (
 )
 from qgis.utils import iface
 
-from ..core import (
-    KartUtils,
-    KartNotInstalledException
-)
 from .gui_utils import GuiUtils
 from ..api import (
     KoordinatesClient,
@@ -24,6 +20,10 @@ from ..api import (
 )
 from ..core import (
     KartOperationManager
+)
+from ..core import (
+    KartUtils,
+    KartNotInstalledException
 )
 
 COLOR_INDEX = 0
@@ -72,7 +72,8 @@ class CloneButton(ActionButton):
     BUTTON_TEXT = "#323233"
     BUTTON_HOVER = "#e4e4e6"
 
-    def __init__(self, dataset: Dataset, parent=None, close_parent_on_clone=False):
+    def __init__(self, dataset: Dataset, parent=None,
+                 close_parent_on_clone=False):
         super().__init__(parent)
 
         self.dataset = dataset
@@ -95,10 +96,12 @@ class CloneButton(ActionButton):
         """
         Updates button state based on current operations
         """
-        is_cloning = self.dataset.repository() and \
-                     KartOperationManager.instance().is_cloning(
-                         self.dataset.repository().clone_url()
-                     )
+        is_cloning = \
+            self.dataset.repository() and \
+            KartOperationManager.instance().is_cloning(
+                self.dataset.repository().clone_url()
+            )
+
         self.setEnabled(not is_cloning)
         if is_cloning:
             icon = GuiUtils.get_icon('cloning_button.svg')
@@ -136,11 +139,11 @@ class CloneButton(ActionButton):
 
         try:
             KartUtils.clone_kart_repo(
-                    title=title,
-                    url=url,
-                    username="kart",
-                    password=KoordinatesClient.instance().apiKey,
-                    parent=iface.mainWindow()
+                title=title,
+                url=url,
+                username="kart",
+                password=KoordinatesClient.instance().apiKey,
+                parent=iface.mainWindow()
             )
         except KartNotInstalledException:
             iface.messageBar().pushMessage(

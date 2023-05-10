@@ -1,7 +1,6 @@
 from enum import Enum
 from typing import (
-    Optional,
-    Dict
+    Optional
 )
 
 from qgis.core import (
@@ -10,7 +9,6 @@ from qgis.core import (
 )
 
 from ..api import (
-    ApiUtils,
     DataType,
     Dataset
 )
@@ -70,17 +68,23 @@ class DatasetGuiUtils:
     @staticmethod
     def get_data_type(dataset: Dataset) -> Optional[str]:
         if dataset.datatype == DataType.Vectors:
-            if dataset.details.get('data', {}).get('geometry_type') == 'polygon':
+            if dataset.details.get('data', {}).get(
+                    'geometry_type') == 'polygon':
                 return 'Vector polygon'
-            elif dataset.details.get('data', {}).get('geometry_type') == 'multipolygon':
+            elif dataset.details.get('data', {}).get(
+                    'geometry_type') == 'multipolygon':
                 return 'Vector multipolygon'
-            elif dataset.details.get('data', {}).get('geometry_type') == 'point':
+            elif dataset.details.get('data', {}).get(
+                    'geometry_type') == 'point':
                 return 'Vector point'
-            elif dataset.details.get('data', {}).get('geometry_type') == 'multipoint':
+            elif dataset.details.get('data', {}).get(
+                    'geometry_type') == 'multipoint':
                 return 'Vector multipoint'
-            elif dataset.details.get('data', {}).get('geometry_type') == 'linestring':
+            elif dataset.details.get('data', {}).get(
+                    'geometry_type') == 'linestring':
                 return 'Vector line'
-            elif dataset.details.get('data', {}).get('geometry_type') == 'multilinestring':
+            elif dataset.details.get('data', {}).get(
+                    'geometry_type') == 'multilinestring':
                 return 'Vector multiline'
         elif dataset.datatype == DataType.Rasters:
             return 'Raster'
@@ -126,13 +130,18 @@ class DatasetGuiUtils:
         return None
 
     @staticmethod
-    def get_subtitle(dataset: Dataset, short_format: bool = True) -> Optional[str]:
+    def get_subtitle(dataset: Dataset, short_format: bool = True) \
+            -> Optional[str]:
+        """
+        Return a subtitle to use for a Dataset
+        """
         if dataset.datatype == DataType.Vectors:
 
             count = dataset.details.get("data", {}).get("feature_count") or 0
 
             if dataset.geometry_type == QgsWkbTypes.PolygonGeometry:
-                return '{} Polygons'.format(DatasetGuiUtils.format_count(count))
+                return '{} Polygons'.format(
+                    DatasetGuiUtils.format_count(count))
             elif dataset.geometry_type == QgsWkbTypes.PointGeometry:
                 return '{} Points'.format(DatasetGuiUtils.format_count(count))
             elif dataset.geometry_type == QgsWkbTypes.LineGeometry:
@@ -149,7 +158,8 @@ class DatasetGuiUtils:
             ext = dataset.details.get('extension', '').upper()
             file_size = dataset.details.get('file_size')
             if file_size:
-                return '{} {}'.format(ext, QgsFileUtils.representFileSize(file_size))
+                return '{} {}'.format(ext, QgsFileUtils.representFileSize(
+                    file_size))
             return ext
         elif dataset.datatype == DataType.Sets:
             return None
@@ -157,7 +167,8 @@ class DatasetGuiUtils:
             return None
         elif dataset.datatype == DataType.PointClouds:
             count = dataset.details.get("data", {}).get("feature_count") or 0
-            point_count = dataset.details.get("data", {}).get("point_count") or 0
+            point_count = dataset.details.get("data", {}).get(
+                "point_count") or 0
             if short_format:
                 return '{} Tiles'.format(
                     DatasetGuiUtils.format_count(count)

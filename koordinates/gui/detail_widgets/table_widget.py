@@ -90,7 +90,7 @@ class TableWidget(QWidget):
         if len(self.contents) > self.INITIAL_VISIBLE_ROWS and not expand:
             html += "<tr>"
             html += """<td colspan="2"><a href="more"><table><tr><td
-                style="background-color: #ffffff; 
+                style="background-color: #ffffff;
                 border: 1px solid #a9a9a9;
                 color: #868889;
                 padding: 3px;
