@@ -1,8 +1,11 @@
+import datetime
 import locale
 import os
 import platform
-import datetime
-from typing import Dict, List, Tuple
+from typing import (
+    List,
+    Tuple
+)
 
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import (
@@ -17,6 +20,7 @@ from qgis.PyQt.QtGui import (
     QBrush,
     QColor
 )
+from qgis.PyQt.QtSvg import QSvgWidget
 from qgis.PyQt.QtWidgets import (
     QFrame,
     QLabel,
@@ -26,7 +30,6 @@ from qgis.PyQt.QtWidgets import (
     QScrollArea,
     QGridLayout,
 )
-from qgis.PyQt.QtSvg import QSvgWidget
 
 from .action_button import (
     AddButton,
@@ -36,21 +39,6 @@ from .dataset_utils import (
     DatasetGuiUtils,
     IconStyle
 )
-from .gui_utils import (
-    GuiUtils,
-    FONT_FAMILIES,
-)
-from .star_button import StarButton
-from .svg_label import SvgLabel
-from .thumbnails import downloadThumbnail
-from ..api import (
-    ApiUtils,
-    DataType,
-    PublicAccessType,
-    Capability,
-    KoordinatesClient,
-    Dataset
-)
 from .detail_widgets import (
     HorizontalLine,
     StatisticWidget,
@@ -59,6 +47,20 @@ from .detail_widgets import (
     AttachmentWidget,
     MetadataWidget,
     TableWidget
+)
+from .gui_utils import (
+    GuiUtils,
+    FONT_FAMILIES,
+)
+from .star_button import StarButton
+from .svg_label import SvgLabel
+from .thumbnails import downloadThumbnail
+from ..api import (
+    DataType,
+    PublicAccessType,
+    Capability,
+    KoordinatesClient,
+    Dataset
 )
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
@@ -80,7 +82,8 @@ class DatasetDialog(QDialog):
             self.dataset)
 
         if self.details.get('attachments'):
-            self.attachments = KoordinatesClient.instance().get_json(self.details['attachments'])
+            self.attachments = KoordinatesClient.instance().get_json(
+                self.details['attachments'])
         else:
             self.attachments = []
 
@@ -200,13 +203,15 @@ class DatasetDialog(QDialog):
 
         base_details_right_pane_layout_vl = QVBoxLayout()
         base_details_right_pane_layout_vl.setContentsMargins(0, 0, 0, 0)
-        base_details_right_pane_layout_vl.addLayout(base_details_right_pane_layout)
+        base_details_right_pane_layout_vl.addLayout(
+            base_details_right_pane_layout)
 
         if self.dataset.repository():
             base_details_right_pane_layout = QHBoxLayout()
             base_details_right_pane_layout.setContentsMargins(12, 0, 0, 0)
 
-            icon_label = SvgLabel(GuiUtils.get_icon_svg('repo-book.svg'), 24, 24)
+            icon_label = SvgLabel(GuiUtils.get_icon_svg('repo-book.svg'), 24,
+                                  24)
             base_details_right_pane_layout.addWidget(icon_label)
 
             summary_label = QLabel()
@@ -226,7 +231,8 @@ class DatasetDialog(QDialog):
 
             base_details_right_pane_layout.addSpacing(10)
             base_details_right_pane_layout.addWidget(summary_label, 1)
-            base_details_right_pane_layout_vl.addLayout(base_details_right_pane_layout)
+            base_details_right_pane_layout_vl.addLayout(
+                base_details_right_pane_layout)
 
         base_details_right_pane_layout_vl.addStretch()
 
@@ -317,8 +323,9 @@ class DatasetDialog(QDialog):
 
             contents_layout.addSpacing(40)
 
-        if self.details.get('metadata') and (self.details['metadata'].get('iso') or
-                                             self.details['metadata'].get('dc')):
+        if self.details.get('metadata') and (
+                self.details['metadata'].get('iso') or
+                self.details['metadata'].get('dc')):
             heading = QLabel(
                 """<b style="font-family: {}; font-size: {}pt; color: black">{}</b>""".format(
                     FONT_FAMILIES,
@@ -329,7 +336,8 @@ class DatasetDialog(QDialog):
             for source in ('iso', 'dc'):
                 if self.details['metadata'].get(source):
                     contents_layout.addWidget(
-                        MetadataWidget(source, self.details['metadata'][source]))
+                        MetadataWidget(source,
+                                       self.details['metadata'][source]))
 
             contents_layout.addSpacing(40)
 
@@ -356,7 +364,8 @@ class DatasetDialog(QDialog):
         scroll_area.setWidgetResizable(True)
 
         scroll_area_layout.addWidget(scroll_area)
-        scroll_area.viewport().setStyleSheet("#qt_scrollarea_viewport{ background: transparent; }")
+        scroll_area.viewport().setStyleSheet(
+            "#qt_scrollarea_viewport{ background: transparent; }")
 
         layout.addLayout(scroll_area_layout, 1)
 
@@ -410,8 +419,10 @@ class DatasetDialog(QDialog):
                 crs_id
             )))
 
-        feature_count = self.dataset.details.get("data", {}).get("feature_count", 0)
-        empty_count = self.dataset.details.get("data", {}).get('empty_geometry_count', 0)
+        feature_count = self.dataset.details.get("data", {}).get(
+            "feature_count", 0)
+        empty_count = self.dataset.details.get("data", {}).get(
+            'empty_geometry_count', 0)
         feature_count_label = self.format_number(feature_count)
         if empty_count:
             feature_count_label += ' • {} with empty or null geometries'.format(
@@ -425,25 +436,34 @@ class DatasetDialog(QDialog):
             tile_count = self.dataset.details.get("data", {}).get(
                 "feature_count") or 0
             res.append(('Tile count', self.format_number(tile_count)))
-            density = self.dataset.details.get("data", {}).get("point_density_sqm", {}) or 0
-            res.append(('Point density', '{:.2f} points per m² • {:.2f} points per US ft²'.format(density,
-                                                                                          density / 10.7639)))
-            las_version = self.dataset.details.get("data", {}).get('tile_format_stored', {}).get(
+            density = self.dataset.details.get("data", {}).get(
+                "point_density_sqm", {}) or 0
+            res.append(('Point density',
+                        '{:.2f} points per m² • {:.2f} points per US ft²'.format(
+                            density,
+                            density / 10.7639)))
+            las_version = self.dataset.details.get("data", {}).get(
+                'tile_format_stored', {}).get(
                 "lasVersion") or 0
-            pdrf = self.dataset.details.get("data", {}).get('tile_format_stored', {}).get(
+            pdrf = self.dataset.details.get("data", {}).get(
+                'tile_format_stored', {}).get(
                 "pointDataRecordFormat") or 0
-            res.append(('Point cloud type', 'LAZ {} PDRF{}'.format(las_version, pdrf)))
+            res.append(('Point cloud type',
+                        'LAZ {} PDRF{}'.format(las_version, pdrf)))
 
-            format_as_stored = self.dataset.details.get("data", {}).get('tile_format_stored', {}).get(
+            format_as_stored = self.dataset.details.get("data", {}).get(
+                'tile_format_stored', {}).get(
                 "format") or ''
             if format_as_stored == 'las':
                 format_as_stored = 'LAZ'
-            optimization = self.dataset.details.get("data", {}).get('tile_format_stored', {}).get(
+            optimization = self.dataset.details.get("data", {}).get(
+                'tile_format_stored', {}).get(
                 "optimization") or ''
             if optimization == 'copc':
                 optimization = 'COPc'
 
-            res.append(('Format as stored', '{} {}'.format(format_as_stored, optimization)))
+            res.append(('Format as stored',
+                        '{} {}'.format(format_as_stored, optimization)))
 
         else:
             fields = self.dataset.details.get('data', {}).get('fields', [])
@@ -451,7 +471,8 @@ class DatasetDialog(QDialog):
                 res.append(('_Attributes', ", ".join(
                     [f.get("name", '') for f in fields])))
 
-        primary_key_fields = self.dataset.details.get('data', {}).get('primary_key_fields', [])
+        primary_key_fields = self.dataset.details.get('data', {}).get(
+            'primary_key_fields', [])
         if primary_key_fields:
             res.append(('_Primary key', ", ".join(primary_key_fields)))
 
@@ -503,7 +524,8 @@ class DatasetDialog(QDialog):
 
         painter.setPen(Qt.NoPen)
         painter.setBrush(QBrush(QColor(255, 0, 0)))
-        painter.drawRoundedRect(0, 0, image_size.width(), image_size.height(), 9, 9)
+        painter.drawRoundedRect(0, 0, image_size.width(), image_size.height(),
+                                9, 9)
 
         painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
         painter.setBrush(QBrush(QColor('#dddddd')))
@@ -529,12 +551,14 @@ class DatasetDialog(QDialog):
                     top = 0
 
                 if left > 0 or top > 0:
-                    cropped = resized.copy(QRect(left, top, image_size.width(), image_size.height()))
+                    cropped = resized.copy(QRect(left, top, image_size.width(),
+                                                 image_size.height()))
                     painter.drawImage(0, 0, cropped)
                 else:
-                    painter.drawImage(int((image_size.width() - resized.width()) / 2),
-                                      int((image_size.height() - resized.height()) / 2),
-                                      resized)
+                    painter.drawImage(
+                        int((image_size.width() - resized.width()) / 2),
+                        int((image_size.height() - resized.height()) / 2),
+                        resized)
             else:
                 painter.drawImage(0, 0, img)
         else:
@@ -594,13 +618,15 @@ class DatasetDialog(QDialog):
                 "point_count") or 1
 
             contents = []
-            for classification in self.dataset.details.get('data', {}).get('classifications', []):
+            for classification in self.dataset.details.get('data', {}).get(
+                    'classifications', []):
                 row = [
                     str(classification.get('id')),
                     str(classification.get('name')),
                     self.format_number(classification.get('count', 0)),
-                    '{:.2f}%'.format(100*classification.get('count', 0) / point_count),
-                    ]
+                    '{:.2f}%'.format(
+                        100 * classification.get('count', 0) / point_count),
+                ]
                 contents.append(row)
 
             table = TableWidget(headings, contents)

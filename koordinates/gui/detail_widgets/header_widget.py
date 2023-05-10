@@ -1,5 +1,3 @@
-from typing import Optional
-
 from qgis.PyQt.QtCore import (
     Qt
 )
@@ -11,12 +9,12 @@ from qgis.PyQt.QtWidgets import (
     QApplication
 )
 
-from koordinates.gui.gui_utils import FONT_FAMILIES
 from koordinates.gui.detail_widgets.svg_framed_button import SvgFramedButton
-from koordinates.gui.detail_widgets.thumbnail_label_widget import ThumbnailLabel
+from koordinates.gui.detail_widgets.thumbnail_label_widget import \
+    ThumbnailLabel
+from koordinates.gui.gui_utils import FONT_FAMILIES
 from ...api import (
-    Dataset,
-    PublisherTheme
+    Dataset
 )
 
 
