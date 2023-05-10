@@ -56,7 +56,8 @@ from .detail_widgets import (
     HeaderWidget,
     DetailsTable,
     AttachmentWidget,
-    MetadataWidget
+    MetadataWidget,
+    TableWidget
 )
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
@@ -335,6 +336,8 @@ class DatasetDialog(QDialog):
         tech_details_grid.set_details(self.get_technical_details())
         contents_layout.addLayout(tech_details_grid)
 
+        self.append_dataset_tables(contents_layout)
+
         contents_layout.addSpacing(40)
 
         history_grid = DetailsTable('History & Version Control')
@@ -544,3 +547,68 @@ class DatasetDialog(QDialog):
         thumbnail.setDevicePixelRatio(scale_factor)
 
         self.thumbnail_label.setPixmap(thumbnail)
+
+    def append_dataset_tables(self, layout):
+        """
+        Appends dataset specific tables to the layout
+        """
+        heading_font_size = 10
+        if platform.system() == 'Darwin':
+            heading_font_size = 14
+
+        if self.dataset.datatype == DataType.PointClouds:
+            heading = QLabel(
+                """<b style="font-family: {};""".format(FONT_FAMILIES) +
+                """font-size: {}pt;""".format(heading_font_size) +
+                """color: black">{}</b>""".format(self.tr('Classifications'))
+            )
+            layout.addSpacing(20)
+            layout.addWidget(heading)
+            layout.addSpacing(10)
+
+            headings = ['',
+                        self.tr('Class'),
+                        self.tr('Point count'),
+                        self.tr('% of dataset')
+                        ]
+
+            point_count = self.dataset.details.get("data", {}).get(
+                "point_count") or 1
+
+            contents = []
+            for classification in self.dataset.details.get('data', {}).get('classifications', []):
+                row = [
+                    str(classification.get('id')),
+                    str(classification.get('name')),
+                    self.format_number(classification.get('count', 0)),
+                    '{:.2f}%'.format(100*classification.get('count', 0) / point_count),
+                    ]
+                contents.append(row)
+
+            table = TableWidget(headings, contents)
+            layout.addWidget(table)
+
+            heading = QLabel(
+                """<b style="font-family: {};""".format(FONT_FAMILIES) +
+                """font-size: {}pt;""".format(heading_font_size) +
+                """color: black">{}</b>""".format(self.tr('Dimensions'))
+            )
+            layout.addSpacing(20)
+            layout.addWidget(heading)
+            layout.addSpacing(10)
+
+            headings = [self.tr('Name'),
+                        self.tr('Data type')
+                        ]
+
+            contents = []
+            for field in self.dataset.details.get('data', {}).get(
+                    'fields', []):
+                row = [
+                    str(field.get('name')),
+                    str(field.get('type'))
+                ]
+                contents.append(row)
+
+            table = TableWidget(headings, contents)
+            layout.addWidget(table)
