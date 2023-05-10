@@ -24,6 +24,7 @@ from qgis.PyQt.QtWidgets import (
     QDialog,
     QVBoxLayout,
     QScrollArea,
+    QGridLayout,
 )
 from qgis.PyQt.QtSvg import QSvgWidget
 
@@ -560,11 +561,28 @@ class DatasetDialog(QDialog):
             heading = QLabel(
                 """<b style="font-family: {};""".format(FONT_FAMILIES) +
                 """font-size: {}pt;""".format(heading_font_size) +
-                """color: black">{}</b>""".format(self.tr('Classifications'))
+                """color: black">{}</b>""".format(
+                    self.tr('Point Cloud Characteristics')
+                )
             )
             layout.addSpacing(20)
             layout.addWidget(heading)
-            layout.addSpacing(10)
+            layout.addWidget(HorizontalLine())
+            layout.addSpacing(7)
+
+            gl = QGridLayout()
+            heading = QLabel(
+                """<span style="font-family: {};""".format(FONT_FAMILIES) +
+                """font-size: {}pt;""".format(heading_font_size) +
+                """color: #868889">{}</span>""".format(
+                    self.tr('Classifications')
+                )
+            )
+            heading.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+            vl = QVBoxLayout()
+            vl.setContentsMargins(0, 5, 10, 0)
+            vl.addWidget(heading)
+            gl.addLayout(vl, 0, 0)
 
             headings = ['',
                         self.tr('Class'),
@@ -586,16 +604,18 @@ class DatasetDialog(QDialog):
                 contents.append(row)
 
             table = TableWidget(headings, contents)
-            layout.addWidget(table)
+            gl.addWidget(table, 0, 1)
 
             heading = QLabel(
-                """<b style="font-family: {};""".format(FONT_FAMILIES) +
+                """<span style="font-family: {};""".format(FONT_FAMILIES) +
                 """font-size: {}pt;""".format(heading_font_size) +
-                """color: black">{}</b>""".format(self.tr('Dimensions'))
+                """color: #868889">{}</span>""".format(self.tr('Dimensions'))
             )
-            layout.addSpacing(20)
-            layout.addWidget(heading)
-            layout.addSpacing(10)
+            heading.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+            vl = QVBoxLayout()
+            vl.setContentsMargins(0, 5, 10, 0)
+            vl.addWidget(heading)
+            gl.addLayout(vl, 1, 0)
 
             headings = [self.tr('Name'),
                         self.tr('Data type')
@@ -611,4 +631,6 @@ class DatasetDialog(QDialog):
                 contents.append(row)
 
             table = TableWidget(headings, contents)
-            layout.addWidget(table)
+            gl.addWidget(table, 1, 1)
+            gl.setColumnStretch(1, 1)
+            layout.addLayout(gl)
