@@ -19,6 +19,7 @@ from ..api import (
     DataBrowserQuery,
     SortOrder
 )
+from .explore_tab_bar import ExploreTabBar
 
 
 class FilterWidget(QWidget):
@@ -70,6 +71,9 @@ class FilterWidget(QWidget):
         hl.addWidget(self.clear_all_button)
 
         vl.addLayout(hl)
+
+        self.explore_tab_bar = ExploreTabBar()
+        vl.addWidget(self.explore_tab_bar)
 
         # changes to filter parameters are deferred to a small timeout, to avoid
         # starting lots of queries while a user is mid-operation (such as dragging a slider)
