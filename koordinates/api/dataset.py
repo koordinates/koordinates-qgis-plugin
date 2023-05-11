@@ -72,7 +72,7 @@ class Dataset:
         self.gridded_extent: Optional[QgsGeometry] = None
         if 'data' in self.details and self.details['data'].get(
                 'gridded_extent'):
-            self.gridded_extent = ApiUtils.geometry_from_hexewkb(
+            self.gridded_extent = ApiUtils.geometry_from_hexwkb(
                 self.details['data']['gridded_extent']
             )
 
