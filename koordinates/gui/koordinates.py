@@ -57,7 +57,8 @@ from .thumbnails import downloadThumbnail
 from ..api import (
     KoordinatesClient,
     SortOrder,
-    DataBrowserQuery
+    DataBrowserQuery,
+    ExplorePanel
 )
 from ..auth import OAuthWorkflow
 
@@ -411,6 +412,7 @@ class Koordinates(QgsDockWidget, WIDGET):
         self.context_frame.color_height = int(self.filter_widget.height() / 2)
 
         self.filter_widget.filters_changed.connect(self.search)
+        self.filter_widget.explore.connect(self.explore)
 
         self.context_tab.currentChanged.connect(self._context_tab_changed)
         self.context_tab.tabBarClicked.connect(self._tab_bar_clicked)
@@ -647,7 +649,7 @@ class Koordinates(QgsDockWidget, WIDGET):
 
         self._prev_tab = current
         self.filter_widget.set_starred(current == self.TAB_STARRED_INDEX)
-        self.search()
+        self.explore()
 
     def _user_menu_about_to_show(self):
         """
@@ -665,6 +667,10 @@ class Koordinates(QgsDockWidget, WIDGET):
         self._fetch_facets(browser_query, context)
 
         self.browser.populate(browser_query, context)
+
+    def explore(self, panel: ExplorePanel = ExplorePanel.Popular ):
+        context = self._current_context
+        self.browser.explore(panel, context)
 
     def _fetch_facets(self,
                       query: Optional[DataBrowserQuery] = None,
@@ -734,7 +740,7 @@ class Koordinates(QgsDockWidget, WIDGET):
 
             self.filter_widget.set_logged_in(True)
 
-            self.search()
+            self.explore()
         else:
             self.stackedWidget.setCurrentWidget(self.pageAuth)
 

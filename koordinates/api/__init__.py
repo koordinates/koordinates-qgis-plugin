@@ -17,7 +17,8 @@ from .enums import (  # NOQA
     AccessType,
     SortOrder,
     Capability,
-    PublicAccessType
+    PublicAccessType,
+    ExplorePanel
 )
 from .layer_utils import LayerUtils  # NOQA
 from .repo import Repo  # NOQA
