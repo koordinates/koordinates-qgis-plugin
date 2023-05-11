@@ -171,50 +171,38 @@ class FilterWidget(QWidget):
 
     def set_search_line_edit(self, widget):
         self.search_line_edit = widget
-        self.search_line_edit.textChanged.connect(self._filter_widget_changed)
+        self.search_line_edit.textChanged.connect(self._search_text_changed)
+
+    def _search_text_changed(self):
+        if self.search_line_edit.text().strip():
+            self.set_explore_mode(ExploreMode.Browse)
+            self._filter_widget_changed()
 
     def _explore_tab_changed(self, tab_index: int):
         """
         Called when the active explore tab is changed
         """
-        show_filters = tab_index == 1
-        self.advanced_filter_widget.setVisible(
-            show_filters
-        )
-        if show_filters:
-            self.advanced_filter_widget.updateGeometry()
-
         if tab_index == 0:
-            self.popular_button.setChecked(True)
+            self.set_explore_mode(ExploreMode.Popular)
         elif tab_index == 1:
-            self.browse_button.setChecked(True)
+            self.set_explore_mode(ExploreMode.Browse)
         elif tab_index == 2:
-            self.publishers_button.setChecked(True)
+            self.set_explore_mode(ExploreMode.Publishers)
         elif tab_index == 3:
-            self.recent_button.setChecked(True)
-
-        self.updateGeometry()
-        if self.explore_mode() == ExploreMode.Popular:
-            self.explore.emit(ExplorePanel.Popular)
-        elif self.explore_mode() == ExploreMode.Recent:
-            self.explore.emit(ExplorePanel.Recent)
-        else:
-            self._update_query()
+            self.set_explore_mode(ExploreMode.Recent)
 
     def _explore_button_toggled(self, button, checked):
         if not checked:
             return
 
         if button == self.popular_button:
-            self.explore_tab_bar.setCurrentIndex(0)
+            self.set_explore_mode(ExploreMode.Popular)
         elif button == self.browse_button:
-            self.explore_tab_bar.setCurrentIndex(1)
+            self.set_explore_mode(ExploreMode.Browse)
         elif button == self.publishers_button:
-            self.explore_tab_bar.setCurrentIndex(2)
+            self.set_explore_mode(ExploreMode.Publishers)
         elif button == self.recent_button:
-            self.explore_tab_bar.setCurrentIndex(3)
-
-        self.updateGeometry()
+            self.set_explore_mode(ExploreMode.Recent)
 
     def explore_mode(self) -> ExploreMode:
         tab_index = self.explore_tab_bar.currentIndex()
@@ -226,6 +214,39 @@ class FilterWidget(QWidget):
             return ExploreMode.Publishers
         else:
             return ExploreMode.Recent
+
+    def set_explore_mode(self, mode: ExploreMode):
+        show_filters = mode == ExploreMode.Browse
+        self.advanced_filter_widget.setVisible(
+            show_filters
+        )
+        if show_filters:
+            self.advanced_filter_widget.updateGeometry()
+
+        if mode in (ExploreMode.Popular,
+            ExploreMode.Recent) and self.search_line_edit:
+            self.search_line_edit.clear()
+
+        if mode == ExploreMode.Popular:
+            self.explore_tab_bar.setCurrentIndex(0)
+            self.popular_button.setChecked(True)
+        elif mode == ExploreMode.Browse:
+            self.explore_tab_bar.setCurrentIndex(1)
+            self.browse_button.setChecked(True)
+        elif mode == ExploreMode.Publishers:
+            self.explore_tab_bar.setCurrentIndex(2)
+            self.publishers_button.setChecked(True)
+        elif mode == ExploreMode.Recent:
+            self.explore_tab_bar.setCurrentIndex(3)
+            self.recent_button.setChecked(True)
+
+        self.updateGeometry()
+        if mode == ExploreMode.Popular:
+            self.explore.emit(ExplorePanel.Popular)
+        elif mode == ExploreMode.Recent:
+            self.explore.emit(ExplorePanel.Recent)
+        else:
+            self._update_query()
 
     def _clear_all(self):
         self.search_line_edit.clear()
