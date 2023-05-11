@@ -1,12 +1,19 @@
+from enum import Enum, auto
 from qgis.PyQt.QtCore import (
+    Qt,
     QTimer,
     pyqtSignal
 )
 from qgis.PyQt.QtGui import (
-    QFontMetrics
+    QFontMetrics,
+    QPainter,
+    QBrush,
+    QColor
 )
 from qgis.PyQt.QtWidgets import (
-    QWidget
+    QWidget,
+    QStylePainter,
+    QStyleOption
 )
 
 from .access_filter_widget import AccessFilterWidget
@@ -22,6 +29,11 @@ from ..api import (
 )
 
 
+class FilterWidgetAppearance(Enum):
+    Horizontal = auto()
+    Vertical = auto()
+
+
 class AdvancedFilterWidget(QWidget):
     filters_changed = pyqtSignal()
 
@@ -29,6 +41,7 @@ class AdvancedFilterWidget(QWidget):
         super().__init__(parent)
 
         self.should_show = False
+        self.appearance = FilterWidgetAppearance.Horizontal
 
         # self.category_filter_widget = CategoryFilterWidget(self)
         self.data_type_filter_widget = DataTypeFilterWidget(self)
@@ -48,7 +61,7 @@ class AdvancedFilterWidget(QWidget):
         self.resolution_widget.hide()
 
         filter_widget_layout = FlowLayout()
-        filter_widget_layout.setContentsMargins(0, 0, 0, 0)
+        filter_widget_layout.setContentsMargins(10, 10, 10, 10)
         # filter_widget_layout.addWidget(self.category_filter_widget)
         filter_widget_layout.addWidget(self.data_type_filter_widget)
         filter_widget_layout.addWidget(self.resolution_widget)
@@ -77,6 +90,26 @@ class AdvancedFilterWidget(QWidget):
     def clear_all(self):
         for w in self.filter_widgets:
             w.clear()
+
+    def set_appearance(self, appearance: FilterWidgetAppearance):
+        self.appearance = appearance
+        self.update()
+
+    def paintEvent(self, event):
+        option = QStyleOption()
+        option.initFrom(self)
+
+        painter = QStylePainter(self)
+        painter.setRenderHint(QPainter.Antialiasing, True)
+
+        painter.save()
+        brush = QBrush(QColor(0, 0, 0, 38))
+        painter.setBrush(brush)
+        painter.setPen(Qt.NoPen)
+        painter.drawRoundedRect(option.rect, 4, 4)
+        painter.restore()
+
+        super().paintEvent(event)
 
     def _filter_widget_changed(self):
         # changes to filter parameters are deferred to a small timeout, to avoid
