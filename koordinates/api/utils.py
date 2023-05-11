@@ -109,3 +109,13 @@ class ApiUtils:
         g = QgsGeometry()
         g.fromWkb(wkb)
         return g
+
+    @staticmethod
+    def geometry_from_hexwkb(hexwkb: str) -> QgsGeometry:
+        """
+        Converts a HEXWKB string to a QgsGeometry
+        """
+        wkb = binascii.unhexlify(hexwkb)
+        g = QgsGeometry()
+        g.fromWkb(wkb)
+        return g
