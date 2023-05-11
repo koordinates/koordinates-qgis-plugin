@@ -36,7 +36,10 @@ from qgis.PyQt.QtWidgets import (
     QLayout,
     QToolButton
 )
-from qgis.gui import QgsDockWidget
+from qgis.gui import (
+    QgsDockWidget,
+    QgsFilterLineEdit
+)
 
 from .colored_frame import ColoredFrame
 from .context_widget import (
@@ -333,10 +336,24 @@ class Koordinates(QgsDockWidget, WIDGET):
         self.responsive_layout.set_results_layout(results_layout)
         self.browserFrame.setLayout(self.responsive_layout)
 
+        filter_layout = QVBoxLayout()
+        filter_layout.setContentsMargins(0, 0, 6, 0)
+
+        self.search_line_edit = QgsFilterLineEdit()
+        self.search_line_edit.setShowClearButton(True)
+        self.search_line_edit.setShowSearchIcon(True)
+        self.search_line_edit.setPlaceholderText('Search')
+        self.search_line_edit.setFixedHeight(
+                    int(self.search_line_edit.sizeHint().height() * 1.2)
+        )
+        filter_layout.addWidget(self.search_line_edit)
+
         self.filter_widget = FilterWidget(self)
-        filter_layout.addSpacing(11)
+        self.filter_widget.set_search_line_edit(self.search_line_edit)
+        filter_layout.addSpacing(6)
         filter_layout.addWidget(self.filter_widget)
-        filter_layout.addSpacing(11)
+
+        self.horizontal_filter_container.setLayout(filter_layout)
 
         self.responsive_layout.set_filter_widget(self.filter_widget)
 

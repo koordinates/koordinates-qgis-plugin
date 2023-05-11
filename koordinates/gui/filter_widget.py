@@ -1,3 +1,5 @@
+from typing import Optional
+
 from qgis.PyQt.QtCore import (
     QTimer,
     pyqtSignal
@@ -40,29 +42,6 @@ class FilterWidget(QWidget):
         vl.setSpacing(0)
         vl.setContentsMargins(0, 0, 0, 0)
 
-        hl = QHBoxLayout()
-        hl.setContentsMargins(0, 0, 0, 0)
-        hl.setSpacing(6)
-
-        self.search_line_edit = QgsFilterLineEdit()
-        self.search_line_edit.setShowClearButton(True)
-        self.search_line_edit.setShowSearchIcon(True)
-        self.search_line_edit.setPlaceholderText('Search')
-        self.search_line_edit.setFixedHeight(int(self.search_line_edit.sizeHint().height() * 1.2))
-        hl.addWidget(self.search_line_edit)
-
-        self.clear_all_button = QToolButton()
-        self.clear_all_button.setText('Clear All')
-        self.clear_all_button.clicked.connect(self._clear_all)
-        label = QLabel()
-        default_font = label.font()
-        self.clear_all_button.setFont(default_font)
-
-        hl.addWidget(self.clear_all_button)
-
-        vl.addLayout(hl)
-        vl.addSpacing(12)
-
         self.explore_tab_bar = ExploreTabBar()
         vl.addWidget(self.explore_tab_bar)
         self.explore_tab_bar.currentChanged.connect(self._explore_tab_changed)
@@ -77,11 +56,15 @@ class FilterWidget(QWidget):
         self._update_query_timeout.setSingleShot(True)
         self._update_query_timeout.timeout.connect(self._update_query)
 
-        self.search_line_edit.textChanged.connect(self._filter_widget_changed)
+        self.search_line_edit: Optional[QgsFilterLineEdit] = None
 
         self.setLayout(vl)
 
         self._explore_tab_changed(0)
+
+    def set_search_line_edit(self, widget):
+        self.search_line_edit = widget
+        self.search_line_edit.textChanged.connect(self._filter_widget_changed)
 
     def _explore_tab_changed(self, tab_index: int):
         """
