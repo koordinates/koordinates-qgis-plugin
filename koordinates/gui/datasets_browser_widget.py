@@ -2,7 +2,11 @@ import json
 import math
 import os
 from functools import partial
-from typing import Optional
+from typing import (
+    Optional,
+    List,
+    Dict
+)
 
 from qgis.PyQt import sip
 from qgis.PyQt.QtCore import (
@@ -88,20 +92,6 @@ class DatasetsBrowserWidget(QWidget):
         self.visible_count_changed.emit(-1)
         self._fetch_records(query, context)
 
-    def explore(self, panel: ExplorePanel, context):
-        self.table_widget.setUpdatesEnabled(False)
-        self.table_widget.clear()
-
-        self._datasets = []
-        self._create_temporary_items_for_page(count=4)
-        self.table_widget.setUpdatesEnabled(True)
-
-        self._load_more_widget = None
-        self._no_records_widget = None
-
-        self.visible_count_changed.emit(-1)
-        self._start_explore(panel, context)
-
     def _fetch_records(self,
                        query: Optional[DataBrowserQuery] = None,
                        context: Optional[str] = None,
@@ -119,24 +109,6 @@ class DatasetsBrowserWidget(QWidget):
             query=self._current_query,
             context=self._current_context,
             page=page
-        )
-        self._current_reply.finished.connect(partial(self._reply_finished, self._current_reply))
-        self.setCursor(Qt.WaitCursor)
-
-    def _start_explore(self,
-                       panel: ExplorePanel,
-                       context: Optional[str] = None):
-        if self._current_reply is not None and not sip.isdeleted(self._current_reply):
-            self._current_reply.abort()
-            self._current_reply = None
-
-        self._current_query = None
-        if context is not None:
-            self._current_context = context
-
-        self._current_reply = KoordinatesClient.instance().explore_async(
-            panel=panel,
-            context=self._current_context
         )
         self._current_reply.finished.connect(partial(self._reply_finished, self._current_reply))
         self.setCursor(Qt.WaitCursor)
@@ -196,6 +168,13 @@ class DatasetsBrowserWidget(QWidget):
             self.table_widget.remove_widget(self._no_records_widget)
             self._no_records_widget = None
 
+        self.table_widget.setUpdatesEnabled(True)
+
+    def set_datasets(self, datasets: List[Dict]):
+        self.table_widget.setUpdatesEnabled(False)
+        self._add_datasets(datasets)
+        self._datasets.extend(datasets)
+        self.visible_count_changed.emit(len(self._datasets))
         self.table_widget.setUpdatesEnabled(True)
 
     def _add_datasets(self, datasets):
