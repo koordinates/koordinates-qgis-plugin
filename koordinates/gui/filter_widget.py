@@ -20,11 +20,11 @@ from ..api import (
     SortOrder
 )
 from .explore_tab_bar import ExploreTabBar
+from .advanced_filter_widget import AdvancedFilterWidget
 
 
 class FilterWidget(QWidget):
     filters_changed = pyqtSignal()
-    show_advanced = pyqtSignal(bool)
     clear_all = pyqtSignal()
 
     def __init__(self, parent=None):
@@ -37,10 +37,12 @@ class FilterWidget(QWidget):
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
 
         vl = QVBoxLayout()
+        vl.setSpacing(0)
         vl.setContentsMargins(0, 0, 0, 0)
 
         hl = QHBoxLayout()
         hl.setContentsMargins(0, 0, 0, 0)
+        hl.setSpacing(6)
 
         self.search_line_edit = QgsFilterLineEdit()
         self.search_line_edit.setShowClearButton(True)
@@ -49,14 +51,6 @@ class FilterWidget(QWidget):
         self.search_line_edit.setFixedHeight(int(self.search_line_edit.sizeHint().height() * 1.2))
         hl.addWidget(self.search_line_edit)
 
-        self.show_advanced_button = QToolButton()
-        self.show_advanced_button.setIcon(GuiUtils.get_icon('filter.svg'))
-        self.show_advanced_button.setText('Advanced')
-        self.show_advanced_button.setToolTip('Advanced')
-        self.show_advanced_button.setCheckable(True)
-        hl.addWidget(self.show_advanced_button)
-        self.show_advanced_button.toggled.connect(self.show_advanced)
-
         self.clear_all_button = QToolButton()
         self.clear_all_button.setText('Clear All')
         self.clear_all_button.clicked.connect(self._clear_all)
@@ -64,16 +58,18 @@ class FilterWidget(QWidget):
         default_font = label.font()
         self.clear_all_button.setFont(default_font)
 
-        # a QToolButton with an icon will appear smaller by default vs one with text, so
-        # force the advanced button to match the Clear All button size
-        self.show_advanced_button.setFixedHeight(self.clear_all_button.sizeHint().height())
-        self.show_advanced_button.setFixedWidth(self.show_advanced_button.height())
         hl.addWidget(self.clear_all_button)
 
         vl.addLayout(hl)
+        vl.addSpacing(12)
 
         self.explore_tab_bar = ExploreTabBar()
         vl.addWidget(self.explore_tab_bar)
+        self.explore_tab_bar.currentChanged.connect(self._explore_tab_changed)
+        self.advanced_filter_widget = AdvancedFilterWidget(self)
+        self.advanced_filter_widget.filters_changed.connect(self._filter_widget_changed)
+
+        vl.addWidget(self.advanced_filter_widget)
 
         # changes to filter parameters are deferred to a small timeout, to avoid
         # starting lots of queries while a user is mid-operation (such as dragging a slider)
@@ -85,12 +81,21 @@ class FilterWidget(QWidget):
 
         self.setLayout(vl)
 
+        self._explore_tab_changed(0)
+
+    def _explore_tab_changed(self, tab_index: int):
+        """
+        Called when the active explore tab is changed
+        """
+        self.advanced_filter_widget.setVisible(
+            tab_index == 1
+        )
+        self.updateGeometry()
+
     def _clear_all(self):
         self.search_line_edit.clear()
+        self.advanced_filter_widget.clear_all()
         self.clear_all.emit()
-
-    def set_show_advanced_button(self, show):
-        self.show_advanced_button.setVisible(show)
 
     def set_starred(self, starred: bool):
         """
@@ -118,16 +123,17 @@ class FilterWidget(QWidget):
         if self.search_line_edit.text().strip():
             query.search = self.search_line_edit.text().strip()
 
+        self.advanced_filter_widget.apply_constraints_to_query(query)
         return query
 
     def _update_query(self):
         self.filters_changed.emit()
 
     def set_logged_in(self, logged_in: bool):
-        pass
+        self.advanced_filter_widget.set_logged_in(logged_in)
 
     def set_facets(self, facets: dict):
         """
         Sets corresponding facets response for tweaking the widget choices
         """
-        pass
+        self.advanced_filter_widget.set_facets(facets)

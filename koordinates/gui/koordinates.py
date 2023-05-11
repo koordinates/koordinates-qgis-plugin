@@ -34,12 +34,10 @@ from qgis.PyQt.QtWidgets import (
     QStyleOptionTabBarBase,
     QStyle,
     QLayout,
-    QWidgetItem,
     QToolButton
 )
 from qgis.gui import QgsDockWidget
 
-from .advanced_filter_widget import AdvancedFilterWidget
 from .colored_frame import ColoredFrame
 from .context_widget import (
     ContextItemMenuAction,
@@ -112,17 +110,9 @@ class ReponsiveLayout(QLayout):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.advanced_filter_widget = None
-        self.advanced_filter_item = None
         self.results_layout = None
         self.filter_widget = None
         self.is_wide_mode = False
-
-    def set_advanced_filter_widget(self, widget):
-        self.advanced_filter_widget = widget
-        self.advanced_filter_item = QWidgetItem(widget)
-        self.addChildWidget(widget)
-        self.invalidate()
 
     def set_results_layout(self, layout):
         self.results_layout = layout
@@ -137,26 +127,16 @@ class ReponsiveLayout(QLayout):
 
     def count(self):
         res = 0
-        if self.advanced_filter_item:
-            res += 1
         if self.results_layout:
             res += 1
         return res
 
     def itemAt(self, index):
         if index == 0:
-            return self.advanced_filter_item
-        elif index == 1:
             return self.results_layout
 
     def takeAt(self, index: int):
         if index == 0:
-            res = self.advanced_filter_item
-            self.advanced_filter_item = None
-            self.advanced_filter_widget.deleteLater()
-            self.advanced_filter_item = None
-            return res
-        elif index == 1:
             res = self.results_layout
             self.results_layout = None
             return res
@@ -185,38 +165,11 @@ class ReponsiveLayout(QLayout):
 
         effective_rect = rect.adjusted(left, top, -right, -bottom)
 
-        advanced_filter_item_rect_changed = False
-
         if effective_rect.width() < 650:
             # show advanced filters on top
             self.is_wide_mode = False
-            if self.filter_widget:
-                self.filter_widget.set_show_advanced_button(True)
 
             top = effective_rect.top()
-
-            if self.advanced_filter_item:
-                if not self.advanced_filter_widget.should_show:
-                    self.advanced_filter_widget.show_advanced(False)
-                else:
-                    self.advanced_filter_widget.show_advanced(True)
-
-                    height = self.advanced_filter_widget.layout().heightForWidth(
-                        effective_rect.width())
-
-                    new_geom = QRect(
-                        effective_rect.left(), top,
-                        effective_rect.width(),
-                        height
-                    )
-                    advanced_filter_item_rect_changed = \
-                        new_geom != self.advanced_filter_item.geometry()
-
-                    self.advanced_filter_item.setGeometry(
-                        new_geom
-                    )
-
-                    top += height + 6
 
             if self.results_layout:
                 self.results_layout.setGeometry(
@@ -229,19 +182,6 @@ class ReponsiveLayout(QLayout):
         else:
             # show advanced filters on left
             self.is_wide_mode = True
-            if self.filter_widget:
-                self.filter_widget.set_show_advanced_button(False)
-
-            if self.advanced_filter_item:
-                self.advanced_filter_widget.show_advanced(True)
-                self.advanced_filter_item.setGeometry(
-                    QRect(
-                        effective_rect.left(),
-                        effective_rect.top(),
-                        270,
-                        effective_rect.height()
-                    )
-                )
 
             if self.results_layout:
                 self.results_layout.setGeometry(
@@ -252,10 +192,6 @@ class ReponsiveLayout(QLayout):
                     )
                 )
 
-        if self.advanced_filter_widget and advanced_filter_item_rect_changed:
-            self.advanced_filter_widget.layout().invalidate()
-        else:
-            self.advanced_filter_widget.update()
 
 
 class Koordinates(QgsDockWidget, WIDGET):
@@ -375,8 +311,6 @@ class Koordinates(QgsDockWidget, WIDGET):
         vl.addWidget(self.login_widget)
         self.pageAuth.setLayout(vl)
 
-        self.advanced_filter_widget = AdvancedFilterWidget(self)
-
         results_layout = QVBoxLayout()
 
         self.label_count = QLabel()
@@ -397,7 +331,6 @@ class Koordinates(QgsDockWidget, WIDGET):
         self.responsive_layout = ReponsiveLayout()
         self.responsive_layout.setContentsMargins(11, 0, 11, 0)
         self.responsive_layout.set_results_layout(results_layout)
-        self.responsive_layout.set_advanced_filter_widget(self.advanced_filter_widget)
         self.browserFrame.setLayout(self.responsive_layout)
 
         self.filter_widget = FilterWidget(self)
@@ -406,18 +339,15 @@ class Koordinates(QgsDockWidget, WIDGET):
         filter_layout.addSpacing(11)
 
         self.responsive_layout.set_filter_widget(self.filter_widget)
-        self.filter_widget.show_advanced.connect(self._show_advanced)
 
         self.context_frame.color_height = int(self.filter_widget.height() / 2)
 
         self.filter_widget.filters_changed.connect(self.search)
-        self.advanced_filter_widget.filters_changed.connect(self.search)
 
         self.context_tab.currentChanged.connect(self._context_tab_changed)
         self.context_tab.tabBarClicked.connect(self._tab_bar_clicked)
 
         self.filter_widget.clear_all.connect(self._clear_all_filters)
-        self.filter_widget.clear_all.connect(self.advanced_filter_widget.clear_all)
 
         if os.name == 'nt' or self.window().screen().devicePixelRatio() > 1:
             self.button_sort_order.setStyleSheet(
@@ -537,11 +467,11 @@ class Koordinates(QgsDockWidget, WIDGET):
             'Sort by {}'.format(SortOrder.to_text(self.filter_widget.sort_order))
         )
 
-    def _show_advanced(self, show):
-        self.advanced_filter_widget.set_should_show(show)
-        if not self.responsive_layout.is_wide_mode:
-            self.advanced_filter_widget.show_advanced(show)
-            self.responsive_layout.update()
+   # def _show_advanced(self, show):
+   #     self.advanced_filter_widget.set_should_show(show)
+   #     if not self.responsive_layout.is_wide_mode:
+   #         self.advanced_filter_widget.show_advanced(show)
+   #         self.responsive_layout.update()
 
     def _show_context_switcher_menu(self):
         # because this menu will be shown in a fix location (center of tab), we
@@ -668,7 +598,6 @@ class Koordinates(QgsDockWidget, WIDGET):
 
     def search(self):
         browser_query = self.filter_widget.build_query()
-        self.advanced_filter_widget.apply_constraints_to_query(browser_query)
         context = self._current_context
 
         self._fetch_facets(browser_query, context)
@@ -709,7 +638,6 @@ class Koordinates(QgsDockWidget, WIDGET):
 
         self._facets = json.loads(reply.readAll().data().decode())
         self.filter_widget.set_facets(self._facets)
-        self.advanced_filter_widget.set_facets(self._facets)
 
     def _visible_count_changed(self, count):
         self._visible_count = count
@@ -743,7 +671,6 @@ class Koordinates(QgsDockWidget, WIDGET):
             self._create_context_tabs(user.get('contexts', []))
 
             self.filter_widget.set_logged_in(True)
-            self.advanced_filter_widget.set_logged_in(True)
 
             self.search()
         else:
