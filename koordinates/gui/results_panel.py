@@ -41,7 +41,6 @@ pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
 
 class ResultsPanel(QWidget):
-    datasetDetailsRequested = pyqtSignal(dict)
     total_count_changed = pyqtSignal(int)
     visible_count_changed = pyqtSignal(int)
 
@@ -98,6 +97,8 @@ class ResultsPanel(QWidget):
             self.current_mode = ExploreMode.Browse
 
             item = DatasetsBrowserWidget()
+            item.total_count_changed.connect(self.total_count_changed)
+            item.visible_count_changed.connect(self.visible_count_changed)
             item.populate(query, context)
             self.child_items.append(item)
             self.container_layout.addWidget(item)

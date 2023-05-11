@@ -36,7 +36,6 @@ pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
 
 class DatasetsBrowserWidget(QWidget):
-    datasetDetailsRequested = pyqtSignal(dict)
     total_count_changed = pyqtSignal(int)
     visible_count_changed = pyqtSignal(int)
 
