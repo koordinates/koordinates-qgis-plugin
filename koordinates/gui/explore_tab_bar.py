@@ -2,10 +2,6 @@ from typing import (
     Optional,
     Dict
 )
-from enum import (
-    Enum,
-    auto
-)
 
 from qgis.PyQt.QtCore import (
     Qt,
@@ -22,15 +18,13 @@ from qgis.PyQt.QtWidgets import (
     QTabBar,
     QStyle,
     QStylePainter,
-    QStyleOptionTab
+    QStyleOptionTab,
+    QStyleOptionButton,
+    QPushButton
 )
 
 from .gui_utils import GuiUtils
-
-
-class TabStyle(Enum):
-    Flat = auto()
-    Rounded = auto()
+from .enums import TabStyle
 
 
 class FlatTabBar(QTabBar):
@@ -82,9 +76,9 @@ class FlatTabBar(QTabBar):
                                90, -90
                                )
                     path.lineTo(option.rect.right(),
-                                option.rect.bottom()+1)
+                                option.rect.bottom() + 1)
                     path.lineTo(option.rect.left(),
-                                option.rect.bottom()+1)
+                                option.rect.bottom() + 1)
                     path.lineTo(option.rect.left(),
                                 option.rect.top() + self.CORNER_RADIUS)
                     path.arcTo(option.rect.left(),
@@ -111,5 +105,72 @@ class ExploreTabBar(FlatTabBar):
         self.addTab(GuiUtils.get_icon('popular.svg'), self.tr('Popular'))
         self.addTab(GuiUtils.get_icon('browse.svg'), self.tr('Browse'))
         self.set_bottom_tab_style(1, TabStyle.Flat)
-        # self.addTab(GuiUtils.get_icon('publishers.svg'), self.tr('Publishers'))
-        # self.addTab(GuiUtils.get_icon('recent.svg'), self.tr('Recent'))
+        self.addTab(GuiUtils.get_icon('publishers.svg'), self.tr('Publishers'))
+        self.addTab(GuiUtils.get_icon('recent.svg'), self.tr('Recent'))
+
+
+class ExploreTabButton(QPushButton):
+    """
+    Custom button for displaying tab style switcher as vertical stack
+    """
+    CORNER_RADIUS = 4
+
+    def __init__(self, parent: Optional[QWidget] = None):
+        super().__init__(parent)
+        self.setCheckable(True)
+        self.setIconSize(QSize(24, 24))
+        self.setStyleSheet("text-align:left;")
+
+        self.bottom_tab_style = TabStyle.Rounded
+
+    def sizeHint(self):
+        hint = super().sizeHint()
+        hint.setHeight(int(hint.height() * 1.25))
+        return hint
+
+    def paintEvent(self, event):
+        painter = QStylePainter(self)
+        painter.setRenderHint(QPainter.Antialiasing, True)
+
+        option = QStyleOptionButton()
+        self.initStyleOption(option)
+
+        if option.state & QStyle.State_On:
+            painter.save()
+            brush = QBrush(QColor(0, 0, 0, 38))
+            painter.setBrush(brush)
+            painter.setPen(Qt.NoPen)
+            if self.bottom_tab_style == TabStyle.Rounded:
+                painter.drawRoundedRect(option.rect,
+                                        self.CORNER_RADIUS,
+                                        self.CORNER_RADIUS)
+            else:
+                path = QPainterPath()
+                path.moveTo(option.rect.left() + self.CORNER_RADIUS,
+                            option.rect.top())
+                path.lineTo(option.rect.right() - self.CORNER_RADIUS,
+                            option.rect.top())
+                path.arcTo(option.rect.right() - self.CORNER_RADIUS * 2,
+                           option.rect.top(),
+                           self.CORNER_RADIUS * 2,
+                           self.CORNER_RADIUS * 2,
+                           90, -90
+                           )
+                path.lineTo(option.rect.right(),
+                            option.rect.bottom() + 1)
+                path.lineTo(option.rect.left(),
+                            option.rect.bottom() + 1)
+                path.lineTo(option.rect.left(),
+                            option.rect.top() + self.CORNER_RADIUS)
+                path.arcTo(option.rect.left(),
+                           option.rect.top(),
+                           self.CORNER_RADIUS * 2,
+                           self.CORNER_RADIUS * 2,
+                           180, -90
+                           )
+                painter.drawPath(path)
+            painter.restore()
+
+        option.state = option.state & (~QStyle.State_Selected)
+        option.rect.translate(12, 0)
+        painter.drawControl(QStyle.CE_PushButtonLabel, option)

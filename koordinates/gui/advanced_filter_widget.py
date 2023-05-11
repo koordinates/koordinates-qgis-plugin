@@ -9,7 +9,8 @@ from qgis.PyQt.QtGui import (
     QFontMetrics,
     QPainter,
     QBrush,
-    QColor
+    QColor,
+    QPainterPath
 )
 from qgis.PyQt.QtWidgets import (
     QWidget,
@@ -29,14 +30,13 @@ from ..api import (
     DataType
 )
 
-
-class FilterWidgetAppearance(Enum):
-    Horizontal = auto()
-    Vertical = auto()
+from .enums import FilterWidgetAppearance
 
 
 class AdvancedFilterWidget(QWidget):
     filters_changed = pyqtSignal()
+
+    CORNER_RADIUS = 4
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -111,7 +111,34 @@ class AdvancedFilterWidget(QWidget):
         brush = QBrush(QColor(0, 0, 0, 38))
         painter.setBrush(brush)
         painter.setPen(Qt.NoPen)
-        painter.drawRoundedRect(option.rect, 4, 4)
+
+        if self.appearance == FilterWidgetAppearance.Horizontal:
+            painter.drawRoundedRect(option.rect,
+                                    self.CORNER_RADIUS,
+                                    self.CORNER_RADIUS)
+        else:
+            path = QPainterPath()
+            path.moveTo(option.rect.left(), option.rect.top())
+            path.lineTo(option.rect.right(), option.rect.top())
+            path.lineTo(option.rect.right(),
+                        option.rect.bottom() - self.CORNER_RADIUS)
+            path.arcTo(option.rect.right() - self.CORNER_RADIUS * 2,
+                       option.rect.bottom() - self.CORNER_RADIUS * 2,
+                       self.CORNER_RADIUS * 2,
+                       self.CORNER_RADIUS * 2,
+                       0, -90
+                       )
+            path.lineTo(option.rect.left() + self.CORNER_RADIUS,
+                        option.rect.bottom())
+            path.arcTo(option.rect.left(),
+                       option.rect.bottom() - self.CORNER_RADIUS * 2,
+                       self.CORNER_RADIUS * 2,
+                       self.CORNER_RADIUS * 2,
+                       270, -90
+                       )
+            path.lineTo(option.rect.left(),
+                        option.rect.top())
+            painter.drawPath(path)
         painter.restore()
 
         super().paintEvent(event)
