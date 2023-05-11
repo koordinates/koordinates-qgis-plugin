@@ -12,3 +12,10 @@ class TabStyle(Enum):
 class FilterWidgetAppearance(Enum):
     Horizontal = auto()
     Vertical = auto()
+
+
+class ExploreMode:
+    Popular = auto()
+    Browse = auto()
+    Publishers = auto()
+    Recent = auto()

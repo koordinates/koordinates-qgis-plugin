@@ -18,7 +18,8 @@ from qgis.gui import (
 from .advanced_filter_widget import AdvancedFilterWidget
 from .enums import (
     TabStyle,
-    FilterWidgetAppearance
+    FilterWidgetAppearance,
+    ExploreMode
 )
 from .explore_tab_bar import (
     ExploreTabBar,
@@ -27,7 +28,9 @@ from .explore_tab_bar import (
 from .gui_utils import GuiUtils
 from ..api import (
     DataBrowserQuery,
-    SortOrder
+    SortOrder,
+    DataType,
+    AccessType
 )
 
 
@@ -187,7 +190,9 @@ class FilterWidget(QWidget):
             self.publishers_button.setChecked(True)
         elif tab_index == 3:
             self.recent_button.setChecked(True)
+
         self.updateGeometry()
+        self._update_query()
 
     def _explore_button_toggled(self, button, checked):
         if not checked:
@@ -203,6 +208,17 @@ class FilterWidget(QWidget):
             self.explore_tab_bar.setCurrentIndex(3)
 
         self.updateGeometry()
+
+    def explore_mode(self) -> ExploreMode:
+        tab_index = self.explore_tab_bar.currentIndex()
+        if tab_index == 0:
+            return ExploreMode.Popular
+        elif tab_index == 1:
+            return ExploreMode.Browse
+        elif tab_index == 2:
+            return ExploreMode.Publishers
+        else:
+            return ExploreMode.Recent
 
     def _clear_all(self):
         self.search_line_edit.clear()
@@ -229,13 +245,32 @@ class FilterWidget(QWidget):
         Returns a query representing the current widget state
         """
         query = DataBrowserQuery()
-        query.starred = self._starred
-        query.order = self.sort_order
+        mode = self.explore_mode()
+        if mode == ExploreMode.Browse:
+            query.starred = self._starred
+            query.order = self.sort_order
 
-        if self.search_line_edit.text().strip():
-            query.search = self.search_line_edit.text().strip()
+            if self.search_line_edit.text().strip():
+                query.search = self.search_line_edit.text().strip()
 
-        self.advanced_filter_widget.apply_constraints_to_query(query)
+            self.advanced_filter_widget.apply_constraints_to_query(query)
+        elif mode == ExploreMode.Popular:
+            query.order = SortOrder.Popularity
+            query.access_type = AccessType.Public
+            query.data_types = {DataType.Tables,
+                                DataType.Vectors,
+                                DataType.Rasters,
+                                DataType.Grids,
+                                DataType.PointClouds}
+        elif mode == ExploreMode.Recent:
+            query.order = SortOrder.RecentlyUpdated
+            query.access_type = AccessType.Public
+            query.data_types = {DataType.Tables,
+                                DataType.Vectors,
+                                DataType.Rasters,
+                                DataType.Grids,
+                                DataType.PointClouds}
+
         return query
 
     def _update_query(self):
