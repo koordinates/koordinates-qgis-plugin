@@ -223,8 +223,9 @@ class FilterWidget(QWidget):
         if show_filters:
             self.advanced_filter_widget.updateGeometry()
 
-        if mode in (ExploreMode.Popular,
-            ExploreMode.Recent) and self.search_line_edit:
+        if mode in (
+                ExploreMode.Popular,
+                ExploreMode.Recent) and self.search_line_edit:
             self.search_line_edit.clear()
 
         if mode == ExploreMode.Popular:
