@@ -76,7 +76,8 @@ class FlowLayout(QLayout):
         size = QSize()
 
         for item in self.itemList:
-            size = size.expandedTo(item.minimumSize())
+            if item.widget().isVisible():
+                size = size.expandedTo(item.minimumSize())
 
         margins = self.contentsMargins()
         size += QSize(margins.left() + margins.right(),
