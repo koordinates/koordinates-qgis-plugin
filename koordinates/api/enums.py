@@ -1,4 +1,7 @@
-from enum import Enum
+from enum import (
+    Enum,
+    auto
+)
 from typing import (
     Set,
     List
@@ -183,3 +186,11 @@ class SortOrder(Enum):
                 SortOrder.AlphabeticalAZ: 'Alphabetical (A-Z)',
                 SortOrder.AlphabeticalZA: 'Alphabetical (Z-A)',
                 SortOrder.Oldest: 'Oldest'}[order]
+
+
+class ExplorePanel(Enum):
+    """
+    Explore panels
+    """
+    Popular = auto()
+    Recent = auto()

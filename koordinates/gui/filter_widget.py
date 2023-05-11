@@ -30,12 +30,14 @@ from ..api import (
     DataBrowserQuery,
     SortOrder,
     DataType,
-    AccessType
+    AccessType,
+    ExplorePanel
 )
 
 
 class FilterWidget(QWidget):
     filters_changed = pyqtSignal()
+    explore = pyqtSignal(ExplorePanel)
     clear_all = pyqtSignal()
 
     def __init__(self, parent=None):
@@ -192,7 +194,12 @@ class FilterWidget(QWidget):
             self.recent_button.setChecked(True)
 
         self.updateGeometry()
-        self._update_query()
+        if self.explore_mode() == ExploreMode.Popular:
+            self.explore.emit(ExplorePanel.Popular)
+        elif self.explore_mode() == ExploreMode.Recent:
+            self.explore.emit(ExplorePanel.Recent)
+        else:
+            self._update_query()
 
     def _explore_button_toggled(self, button, checked):
         if not checked:

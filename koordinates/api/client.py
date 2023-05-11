@@ -25,7 +25,10 @@ from koordinates.utils import waitcursor
 from .data_browser import DataBrowserQuery
 from .utils import ApiUtils
 from .repo import Repo
-from .enums import DataType
+from .enums import (
+    DataType,
+    ExplorePanel
+)
 from .dataset import Dataset
 
 PAGE_SIZE = 20
@@ -130,6 +133,27 @@ class KoordinatesClient(QObject):
 
         return endpoint, headers, params
 
+    def _build_explore_request(self,
+                               panel: ExplorePanel,
+                               context=None) -> Tuple[str, Dict[str, str], dict]:
+        """
+        Builds the parameters used for a datasets request
+        """
+        headers = {"Expand": "list,list.publisher,list.styles,list.data.source_summary"}
+
+        params = {}
+        params.update({"page_size": PAGE_SIZE})
+
+        endpoint = "explore-sections/"
+        if panel == ExplorePanel.Popular:
+            endpoint += "popular/"
+        elif panel == ExplorePanel.Recent:
+            endpoint += "recent/"
+
+        params["item_types"] = 'layer.*,publisher.*'
+
+        return endpoint, headers, params
+
     def datasets_async(self,
                        page=1,
                        query: Optional[DataBrowserQuery] = None,
@@ -151,6 +175,17 @@ class KoordinatesClient(QObject):
         """
         endpoint, headers, params = self._build_datasets_request(page, query, context,
                                                                  is_facets=True)
+        network_request = self._build_request(endpoint, headers, params)
+
+        return QgsNetworkAccessManager.instance().get(network_request)
+
+    def explore_async(self,
+                      panel: ExplorePanel,
+                      context=None) -> QNetworkReply:
+        """
+        Retrieve datasets asynchronously
+        """
+        endpoint, headers, params = self._build_explore_request(panel, context)
         network_request = self._build_request(endpoint, headers, params)
 
         return QgsNetworkAccessManager.instance().get(network_request)

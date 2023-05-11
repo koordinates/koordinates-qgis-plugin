@@ -28,7 +28,8 @@ from .response_table_layout import ResponsiveTableWidget
 from ..api import (
     KoordinatesClient,
     PAGE_SIZE,
-    DataBrowserQuery
+    DataBrowserQuery,
+    ExplorePanel
 )
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
@@ -77,8 +78,8 @@ class DatasetsBrowserWidget(QWidget):
 
         self._current_reply = None
 
-    def _create_temporary_items_for_page(self):
-        for i in range(PAGE_SIZE):
+    def _create_temporary_items_for_page(self, count=PAGE_SIZE):
+        for i in range(count+1):
             self.table_widget.push_empty_widget()
 
     def populate(self, query: DataBrowserQuery, context):
@@ -94,6 +95,20 @@ class DatasetsBrowserWidget(QWidget):
 
         self.visible_count_changed.emit(-1)
         self._fetch_records(query, context)
+
+    def explore(self, panel: ExplorePanel, context):
+        self.table_widget.setUpdatesEnabled(False)
+        self.table_widget.clear()
+
+        self._datasets = []
+        self._create_temporary_items_for_page(count=4)
+        self.table_widget.setUpdatesEnabled(True)
+
+        self._load_more_widget = None
+        self._no_records_widget = None
+
+        self.visible_count_changed.emit(-1)
+        self._start_explore(panel, context)
 
     def _fetch_records(self,
                        query: Optional[DataBrowserQuery] = None,
@@ -120,6 +135,27 @@ class DatasetsBrowserWidget(QWidget):
         self._current_reply.finished.connect(partial(self._reply_finished, self._current_reply))
         self.setCursor(Qt.WaitCursor)
 
+    def _start_explore(self,
+                       panel: ExplorePanel,
+                       context: Optional[str] = None):
+        if self._current_reply is not None and not sip.isdeleted(self._current_reply):
+            self._current_reply.abort()
+            self._current_reply = None
+
+        # scroll to top on new explore
+        self.scroll_area.verticalScrollBar().setValue(0)
+
+        self._current_query = None
+        if context is not None:
+            self._current_context = context
+
+        self._current_reply = KoordinatesClient.instance().explore_async(
+            panel=panel,
+            context=self._current_context
+        )
+        self._current_reply.finished.connect(partial(self._reply_finished, self._current_reply))
+        self.setCursor(Qt.WaitCursor)
+
     def _reply_finished(self, reply: QNetworkReply):
         if sip.isdeleted(self):
             return
@@ -138,7 +174,12 @@ class DatasetsBrowserWidget(QWidget):
             return
         #            self.error_occurred.emit(request.reply().errorString())
 
-        datasets = json.loads(reply.readAll().data().decode())
+        result = json.loads(reply.readAll().data().decode())
+        if 'panels' in result:
+            datasets = [item['content'] for item in result['panels'][0]['items']]
+        else:
+            datasets = result
+
         tokens = reply.rawHeader(b"X-Resource-Range").data().decode().split("/")
         total = tokens[-1]
         self.total_count_changed.emit(int(total))
