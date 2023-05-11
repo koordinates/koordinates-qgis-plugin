@@ -35,6 +35,8 @@ class FilterWidget(QWidget):
 
         self._starred = False
 
+        self._wide_mode = False
+
         self.sort_order = SortOrder.Popularity
 
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Minimum)
@@ -69,6 +71,13 @@ class FilterWidget(QWidget):
         if self.advanced_filter_widget.isVisible():
             height += self.advanced_filter_widget.sizeHint().height()
         return QSize(self.width(), height)
+
+    def set_wide_mode(self, wide_mode: bool):
+        if self._wide_mode == wide_mode:
+            return
+
+        self._wide_mode = wide_mode
+        self.updateGeometry()
 
     def set_search_line_edit(self, widget):
         self.search_line_edit = widget
