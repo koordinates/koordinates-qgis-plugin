@@ -374,12 +374,17 @@ class Koordinates(QgsDockWidget, WIDGET):
         self.button_sort_order.setPopupMode(QToolButton.InstantPopup)
         self.button_sort_order.setToolButtonStyle(Qt.ToolButtonTextOnly)
         self.button_sort_order.setAutoRaise(True)
+
+        self.browse_header_widget = QWidget()
+        self.browse_header_widget.setSizePolicy(QSizePolicy.Ignored,
+                                                QSizePolicy.Fixed)
         results_top_layout = QHBoxLayout()
         results_top_layout.setContentsMargins(0, 0, 0, 0)
         results_top_layout.addWidget(self.label_count)
         results_top_layout.addStretch()
         results_top_layout.addWidget(self.button_sort_order)
-        results_layout.addLayout(results_top_layout)
+        self.browse_header_widget.setLayout(results_top_layout)
+        results_layout.addWidget(self.browse_header_widget)
 
         results_layout.addWidget(self.browser)
 
@@ -663,13 +668,14 @@ class Koordinates(QgsDockWidget, WIDGET):
     def search(self):
         browser_query = self.filter_widget.build_query()
         context = self._current_context
-
+        self.browse_header_widget.show()
         self._fetch_facets(browser_query, context)
 
         self.browser.populate(browser_query, context)
 
     def explore(self, panel: ExplorePanel = ExplorePanel.Popular ):
         context = self._current_context
+        self.browse_header_widget.hide()
         self.browser.explore(panel, context)
 
     def _fetch_facets(self,
