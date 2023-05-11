@@ -43,22 +43,15 @@ class DatasetsBrowserWidget(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.scroll_area = QgsScrollArea()
-        self.scroll_area.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
-        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.scroll_area.setWidgetResizable(True)
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
 
         self.table_widget = ResponsiveTableWidget()
-        self.scroll_area.setWidget(self.table_widget)
 
-        layout.addWidget(self.scroll_area)
+        layout.addWidget(self.table_widget)
         self.setLayout(layout)
 
         self.setObjectName('DatasetsBrowserWidget')
-        self.scroll_area.setFrameShape(QFrame.NoFrame)
-        self.scroll_area.setStyleSheet("#qt_scrollarea_viewport{ background: transparent; }")
 
         self._current_query: Optional[DataBrowserQuery] = None
         self._current_reply: Optional[QNetworkReply] = None
@@ -79,7 +72,7 @@ class DatasetsBrowserWidget(QWidget):
         self._current_reply = None
 
     def _create_temporary_items_for_page(self, count=PAGE_SIZE):
-        for i in range(count+1):
+        for i in range(count):
             self.table_widget.push_empty_widget()
 
     def populate(self, query: DataBrowserQuery, context):
@@ -118,10 +111,6 @@ class DatasetsBrowserWidget(QWidget):
             self._current_reply.abort()
             self._current_reply = None
 
-        if page == 1:
-            # scroll to top on new search
-            self.scroll_area.verticalScrollBar().setValue(0)
-
         if query is not None:
             self._current_query = query
         if context is not None:
@@ -141,9 +130,6 @@ class DatasetsBrowserWidget(QWidget):
         if self._current_reply is not None and not sip.isdeleted(self._current_reply):
             self._current_reply.abort()
             self._current_reply = None
-
-        # scroll to top on new explore
-        self.scroll_area.verticalScrollBar().setValue(0)
 
         self._current_query = None
         if context is not None:
