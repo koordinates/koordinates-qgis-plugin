@@ -156,7 +156,9 @@ class ResultsPanel(QWidget):
         self.child_items.clear()
 
     def populate(self, query: DataBrowserQuery, context):
-        if self.current_mode == ExploreMode.Browse:
+        if self.current_mode == ExploreMode.Browse and \
+                self.child_items and \
+                isinstance(self.child_items[0], DatasetsBrowserWidget):
             self.child_items[0].populate(query, context)
             # scroll to top on new search
             self.scroll_area.verticalScrollBar().setValue(0)
