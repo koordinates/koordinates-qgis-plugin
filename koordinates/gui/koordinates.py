@@ -535,12 +535,6 @@ class Koordinates(QgsDockWidget, WIDGET):
             'Sort by {}'.format(SortOrder.to_text(self.filter_widget.sort_order))
         )
 
-   # def _show_advanced(self, show):
-   #     self.advanced_filter_widget.set_should_show(show)
-   #     if not self.responsive_layout.is_wide_mode:
-   #         self.advanced_filter_widget.show_advanced(show)
-   #         self.responsive_layout.update()
-
     def _show_context_switcher_menu(self):
         # because this menu will be shown in a fix location (center of tab), we
         # don't allow it to be dismissed via a mouse release event

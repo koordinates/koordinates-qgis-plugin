@@ -9,19 +9,13 @@ from qgis.PyQt.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QButtonGroup,
-    QToolButton,
-    QSizePolicy,
-    QLabel
+    QSizePolicy
 )
 from qgis.gui import (
     QgsFilterLineEdit
 )
 
-from .gui_utils import GuiUtils
-from ..api import (
-    DataBrowserQuery,
-    SortOrder
-)
+from .advanced_filter_widget import AdvancedFilterWidget
 from .enums import (
     TabStyle,
     FilterWidgetAppearance
@@ -30,7 +24,11 @@ from .explore_tab_bar import (
     ExploreTabBar,
     ExploreTabButton
 )
-from .advanced_filter_widget import AdvancedFilterWidget
+from .gui_utils import GuiUtils
+from ..api import (
+    DataBrowserQuery,
+    SortOrder
+)
 
 
 class FilterWidget(QWidget):
@@ -53,15 +51,17 @@ class FilterWidget(QWidget):
         vl.setContentsMargins(0, 0, 0, 0)
 
         narrow_layout = QVBoxLayout()
-        narrow_layout.setContentsMargins(0,0,0,0)
+        narrow_layout.setContentsMargins(0, 0, 0, 0)
         narrow_layout.setSpacing(0)
         self.explore_tab_bar = ExploreTabBar()
-        self.explore_tab_bar.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Fixed)
+        self.explore_tab_bar.setSizePolicy(QSizePolicy.Ignored,
+                                           QSizePolicy.Fixed)
         narrow_layout.addWidget(self.explore_tab_bar)
 
         self.explore_tab_bar.currentChanged.connect(self._explore_tab_changed)
         self.advanced_filter_widget = AdvancedFilterWidget(self)
-        self.advanced_filter_widget.filters_changed.connect(self._filter_widget_changed)
+        self.advanced_filter_widget.filters_changed.connect(
+            self._filter_widget_changed)
 
         narrow_layout.addWidget(self.advanced_filter_widget)
 
@@ -102,12 +102,12 @@ class FilterWidget(QWidget):
         button_group.buttonToggled.connect(self._explore_button_toggled)
 
         wide_mode_layout = QVBoxLayout()
-        wide_mode_layout.setContentsMargins(0,0,0,0)
+        wide_mode_layout.setContentsMargins(0, 0, 0, 0)
         wide_mode_layout.setSpacing(0)
         wide_mode_layout.addWidget(self.popular_button)
         wide_mode_layout.addWidget(self.browse_button)
         self.wide_mode_filter_layout = QVBoxLayout()
-        self.wide_mode_filter_layout.setContentsMargins(0,0,0,0)
+        self.wide_mode_filter_layout.setContentsMargins(0, 0, 0, 0)
         wide_mode_layout.addLayout(self.wide_mode_filter_layout)
         wide_mode_layout.addWidget(self.publishers_button)
         wide_mode_layout.addWidget(self.recent_button)
