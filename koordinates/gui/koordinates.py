@@ -34,6 +34,7 @@ from qgis.PyQt.QtWidgets import (
     QStyleOptionTabBarBase,
     QStyle,
     QLayout,
+    QWidgetItem,
     QToolButton
 )
 from qgis.gui import (
@@ -113,33 +114,47 @@ class ResponsiveLayout(QLayout):
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        self.filter_widget: Optional[FilterWidget] = None
+        self.filter_item: Optional[QWidgetItem] = None
         self.results_layout = None
-        self.filter_widget = None
         self.is_wide_mode = False
+
+    def set_filter_widget(self, widget: FilterWidget):
+        self.filter_widget = widget
+        self.filter_item = QWidgetItem(widget)
+        self.addChildWidget(widget)
+        self.invalidate()
 
     def set_results_layout(self, layout):
         self.results_layout = layout
         self.addChildLayout(layout)
         self.invalidate()
 
-    def set_filter_widget(self, widget):
-        self.filter_widget = widget
-
     def addItem(self, item):
         pass
 
     def count(self):
         res = 0
+        if self.filter_item:
+            res += 1
         if self.results_layout:
             res += 1
         return res
 
     def itemAt(self, index):
         if index == 0:
+            return self.filter_item
+        elif index == 1:
             return self.results_layout
 
     def takeAt(self, index: int):
         if index == 0:
+            res = self.filter_item
+            self.filter_item = None
+            self.filter_widget.deleteLater()
+            self.filter_item = None
+            return res
+        elif index == 1:
             res = self.results_layout
             self.results_layout = None
             return res
@@ -168,11 +183,31 @@ class ResponsiveLayout(QLayout):
 
         effective_rect = rect.adjusted(left, top, -right, -bottom)
 
+        advanced_filter_item_rect_changed = False
+
         if effective_rect.width() < 650:
             # show advanced filters on top
             self.is_wide_mode = False
 
             top = effective_rect.top()
+
+            if self.filter_item:
+                self.filter_widget.set_wide_mode(False)
+                height = self.filter_widget.sizeHint().height()
+
+                new_geom = QRect(
+                    effective_rect.left(), top,
+                    effective_rect.width(),
+                    height
+                )
+                advanced_filter_item_rect_changed = \
+                    new_geom != self.filter_item.geometry()
+
+                self.filter_item.setGeometry(
+                    new_geom
+                )
+
+                top += height + 6
 
             if self.results_layout:
                 self.results_layout.setGeometry(
@@ -186,6 +221,18 @@ class ResponsiveLayout(QLayout):
             # show advanced filters on left
             self.is_wide_mode = True
 
+            if self.filter_item:
+                self.filter_widget.set_wide_mode(True)
+                # self.filter_widget.show_advanced(True)
+                self.filter_item.setGeometry(
+                    QRect(
+                        effective_rect.left(),
+                        effective_rect.top(),
+                        270,
+                        effective_rect.height()
+                    )
+                )
+
             if self.results_layout:
                 self.results_layout.setGeometry(
                     QRect(
@@ -195,6 +242,10 @@ class ResponsiveLayout(QLayout):
                     )
                 )
 
+        if self.filter_widget and advanced_filter_item_rect_changed:
+            self.filter_widget.layout().invalidate()
+        else:
+            self.filter_widget.update()
 
 
 class Koordinates(QgsDockWidget, WIDGET):
@@ -334,7 +385,6 @@ class Koordinates(QgsDockWidget, WIDGET):
         self.responsive_layout = ResponsiveLayout()
         self.responsive_layout.setContentsMargins(11, 0, 11, 0)
         self.responsive_layout.set_results_layout(results_layout)
-        self.browserFrame.setLayout(self.responsive_layout)
 
         filter_layout = QVBoxLayout()
         filter_layout.setContentsMargins(0, 0, 6, 0)
@@ -351,11 +401,12 @@ class Koordinates(QgsDockWidget, WIDGET):
         self.filter_widget = FilterWidget(self)
         self.filter_widget.set_search_line_edit(self.search_line_edit)
         filter_layout.addSpacing(6)
-        filter_layout.addWidget(self.filter_widget)
 
         self.horizontal_filter_container.setLayout(filter_layout)
 
         self.responsive_layout.set_filter_widget(self.filter_widget)
+
+        self.browserFrame.setLayout(self.responsive_layout)
 
         self.context_frame.color_height = int(self.filter_widget.height() / 2)
 
