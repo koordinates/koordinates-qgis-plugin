@@ -48,7 +48,7 @@ from .context_widget import (
     ContextLogo
 )
 from .country_widget import CountryWidgetAction
-from .datasets_browser_widget import DatasetsBrowserWidget
+from .results_panel import ResultsPanel
 from .filter_widget import FilterWidget
 from .gui_utils import GuiUtils
 from .login_widget import LoginWidget
@@ -355,9 +355,9 @@ class Koordinates(QgsDockWidget, WIDGET):
             b.setFixedHeight(temp_combo.sizeHint().height())
             b.setFixedWidth(b.height())
 
-        self.browser = DatasetsBrowserWidget()
-        self.browser.visible_count_changed.connect(self._visible_count_changed)
-        self.browser.total_count_changed.connect(self._total_count_changed)
+        self.results_panel = ResultsPanel()
+        self.results_panel.visible_count_changed.connect(self._visible_count_changed)
+        self.results_panel.total_count_changed.connect(self._total_count_changed)
         self.oauth: Optional[OAuthWorkflow] = None
 
         self.login_widget = LoginWidget(self)
@@ -386,7 +386,7 @@ class Koordinates(QgsDockWidget, WIDGET):
         self.browse_header_widget.setLayout(results_top_layout)
         results_layout.addWidget(self.browse_header_widget)
 
-        results_layout.addWidget(self.browser)
+        results_layout.addWidget(self.results_panel)
 
         self.responsive_layout = ResponsiveLayout()
         self.responsive_layout.setContentsMargins(11, 0, 11, 0)
@@ -504,7 +504,7 @@ class Koordinates(QgsDockWidget, WIDGET):
 
         self._current_facets_reply = None
 
-        self.browser.cancel_active_requests()
+        self.results_panel.cancel_active_requests()
 
     def _clear_all_filters(self):
         """
@@ -671,12 +671,12 @@ class Koordinates(QgsDockWidget, WIDGET):
         self.browse_header_widget.show()
         self._fetch_facets(browser_query, context)
 
-        self.browser.populate(browser_query, context)
+        self.results_panel.populate(browser_query, context)
 
     def explore(self, panel: ExplorePanel = ExplorePanel.Popular ):
         context = self._current_context
         self.browse_header_widget.hide()
-        self.browser.explore(panel, context)
+        self.results_panel.explore(panel, context)
 
     def _fetch_facets(self,
                       query: Optional[DataBrowserQuery] = None,
