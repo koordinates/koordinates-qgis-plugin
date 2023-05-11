@@ -108,7 +108,7 @@ class NoMouseReleaseMenu(QMenu):
         event.accept()
 
 
-class ReponsiveLayout(QLayout):
+class ResponsiveLayout(QLayout):
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -331,7 +331,7 @@ class Koordinates(QgsDockWidget, WIDGET):
 
         results_layout.addWidget(self.browser)
 
-        self.responsive_layout = ReponsiveLayout()
+        self.responsive_layout = ResponsiveLayout()
         self.responsive_layout.setContentsMargins(11, 0, 11, 0)
         self.responsive_layout.set_results_layout(results_layout)
         self.browserFrame.setLayout(self.responsive_layout)
