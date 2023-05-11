@@ -673,7 +673,7 @@ class Koordinates(QgsDockWidget, WIDGET):
 
         self.results_panel.populate(browser_query, context)
 
-    def explore(self, panel: ExplorePanel = ExplorePanel.Popular ):
+    def explore(self, panel: ExplorePanel = ExplorePanel.Popular):
         context = self._current_context
         self.browse_header_widget.hide()
         self.results_panel.explore(panel, context)

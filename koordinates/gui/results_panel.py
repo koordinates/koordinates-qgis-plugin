@@ -1,7 +1,6 @@
 import json
 import os
 import platform
-
 from functools import partial
 from typing import (
     List,
@@ -28,8 +27,7 @@ from qgis.PyQt.QtWidgets import (
     QSizePolicy,
     QWidget,
     QLabel,
-    QStylePainter,
-    QStyleOption
+    QStylePainter
 )
 from qgis.gui import QgsScrollArea
 
@@ -45,7 +43,6 @@ pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
 
 class ExplorePanelWidget(QWidget):
-
     CORNER_RADIUS = 4
 
     def __init__(self, content: Dict, parent: Optional[QWidget] = None):
@@ -73,7 +70,7 @@ class ExplorePanelWidget(QWidget):
         self.browser.set_datasets(item['content'] for item in content['items'])
 
         vl = QVBoxLayout()
-        vl.setContentsMargins(12,12,12,0)
+        vl.setContentsMargins(12, 12, 12, 0)
         vl.addWidget(title_label)
         vl.addWidget(self.browser)
 
@@ -96,8 +93,8 @@ class ExplorePanelWidget(QWidget):
 
         painter.setPen(pen)
         painter.drawRoundedRect(self.rect(),
-                                    self.CORNER_RADIUS,
-                                    self.CORNER_RADIUS)
+                                self.CORNER_RADIUS,
+                                self.CORNER_RADIUS)
         painter.restore()
 
 
@@ -130,7 +127,8 @@ class ResultsPanel(QWidget):
         self.scroll_area.setStyleSheet(
             "#qt_scrollarea_viewport{ background: transparent; }")
 
-        self.child_items: List[Union[DatasetsBrowserWidget, ExplorePanelWidget]] = []
+        self.child_items: List[
+            Union[DatasetsBrowserWidget, ExplorePanelWidget]] = []
 
         self.setMinimumWidth(370)
         self.current_mode: Optional[ExploreMode] = None
@@ -219,7 +217,7 @@ class ResultsPanel(QWidget):
         if reply.error() != QNetworkReply.NoError:
             print('error occurred :(')
             return
-        #            self.error_occurred.emit(request.reply().errorString())
+        # self.error_occurred.emit(request.reply().errorString())
 
         result = json.loads(reply.readAll().data().decode())
         if 'panels' not in result:

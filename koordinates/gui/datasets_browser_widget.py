@@ -23,17 +23,14 @@ from qgis.PyQt.QtWidgets import (
     QLabel,
     QToolButton,
     QVBoxLayout,
-    QSizePolicy,
     QWidget
 )
-from qgis.gui import QgsScrollArea
 
 from .response_table_layout import ResponsiveTableWidget
 from ..api import (
     KoordinatesClient,
     PAGE_SIZE,
-    DataBrowserQuery,
-    ExplorePanel
+    DataBrowserQuery
 )
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
@@ -96,7 +93,8 @@ class DatasetsBrowserWidget(QWidget):
                        query: Optional[DataBrowserQuery] = None,
                        context: Optional[str] = None,
                        page: int = 1):
-        if self._current_reply is not None and not sip.isdeleted(self._current_reply):
+        if self._current_reply is not None and not sip.isdeleted(
+                self._current_reply):
             self._current_reply.abort()
             self._current_reply = None
 
@@ -110,7 +108,8 @@ class DatasetsBrowserWidget(QWidget):
             context=self._current_context,
             page=page
         )
-        self._current_reply.finished.connect(partial(self._reply_finished, self._current_reply))
+        self._current_reply.finished.connect(
+            partial(self._reply_finished, self._current_reply))
         self.setCursor(Qt.WaitCursor)
 
     def _reply_finished(self, reply: QNetworkReply):
@@ -133,11 +132,13 @@ class DatasetsBrowserWidget(QWidget):
 
         result = json.loads(reply.readAll().data().decode())
         if 'panels' in result:
-            datasets = [item['content'] for item in result['panels'][0]['items']]
+            datasets = [item['content'] for item in
+                        result['panels'][0]['items']]
         else:
             datasets = result
 
-        tokens = reply.rawHeader(b"X-Resource-Range").data().decode().split("/")
+        tokens = reply.rawHeader(b"X-Resource-Range").data().decode().split(
+            "/")
         total = tokens[-1]
         self.total_count_changed.emit(int(total))
         last = tokens[0].split("-")[-1]
