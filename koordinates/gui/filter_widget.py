@@ -8,7 +8,7 @@ from qgis.PyQt.QtCore import (
 from qgis.PyQt.QtWidgets import (
     QWidget,
     QVBoxLayout,
-    QHBoxLayout,
+    QButtonGroup,
     QToolButton,
     QSizePolicy,
     QLabel
@@ -22,7 +22,14 @@ from ..api import (
     DataBrowserQuery,
     SortOrder
 )
-from .explore_tab_bar import ExploreTabBar
+from .enums import (
+    TabStyle,
+    FilterWidgetAppearance
+)
+from .explore_tab_bar import (
+    ExploreTabBar,
+    ExploreTabButton
+)
 from .advanced_filter_widget import AdvancedFilterWidget
 
 
@@ -45,14 +52,23 @@ class FilterWidget(QWidget):
         vl.setSpacing(0)
         vl.setContentsMargins(0, 0, 0, 0)
 
+        narrow_layout = QVBoxLayout()
+        narrow_layout.setContentsMargins(0,0,0,0)
+        narrow_layout.setSpacing(0)
         self.explore_tab_bar = ExploreTabBar()
         self.explore_tab_bar.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Fixed)
-        vl.addWidget(self.explore_tab_bar)
+        narrow_layout.addWidget(self.explore_tab_bar)
+
         self.explore_tab_bar.currentChanged.connect(self._explore_tab_changed)
         self.advanced_filter_widget = AdvancedFilterWidget(self)
         self.advanced_filter_widget.filters_changed.connect(self._filter_widget_changed)
 
-        vl.addWidget(self.advanced_filter_widget)
+        narrow_layout.addWidget(self.advanced_filter_widget)
+
+        self.narrow_widget = QWidget()
+        self.narrow_widget.setLayout(narrow_layout)
+
+        vl.addWidget(self.narrow_widget)
 
         # changes to filter parameters are deferred to a small timeout, to avoid
         # starting lots of queries while a user is mid-operation (such as dragging a slider)
@@ -60,23 +76,92 @@ class FilterWidget(QWidget):
         self._update_query_timeout.setSingleShot(True)
         self._update_query_timeout.timeout.connect(self._update_query)
 
-        self.search_line_edit: Optional[QgsFilterLineEdit] = None
+        self.popular_button = ExploreTabButton()
+        self.popular_button.setIcon(GuiUtils.get_icon('popular.svg'))
+        self.popular_button.setText(self.tr('Popular'))
 
+        self.browse_button = ExploreTabButton()
+        self.browse_button.setIcon(GuiUtils.get_icon('browse.svg'))
+        self.browse_button.setText(self.tr('Browse'))
+        self.browse_button.bottom_tab_style = TabStyle.Flat
+
+        self.publishers_button = ExploreTabButton()
+        self.publishers_button.setIcon(GuiUtils.get_icon('publishers.svg'))
+        self.publishers_button.setText(self.tr('Publishers'))
+
+        self.recent_button = ExploreTabButton()
+        self.recent_button.setIcon(GuiUtils.get_icon('recent.svg'))
+        self.recent_button.setText(self.tr('Recent'))
+
+        button_group = QButtonGroup(self)
+        button_group.addButton(self.popular_button)
+        button_group.addButton(self.browse_button)
+        button_group.addButton(self.publishers_button)
+        button_group.addButton(self.recent_button)
+
+        button_group.buttonToggled.connect(self._explore_button_toggled)
+
+        wide_mode_layout = QVBoxLayout()
+        wide_mode_layout.setContentsMargins(0,0,0,0)
+        wide_mode_layout.setSpacing(0)
+        wide_mode_layout.addWidget(self.popular_button)
+        wide_mode_layout.addWidget(self.browse_button)
+        self.wide_mode_filter_layout = QVBoxLayout()
+        self.wide_mode_filter_layout.setContentsMargins(0,0,0,0)
+        wide_mode_layout.addLayout(self.wide_mode_filter_layout)
+        wide_mode_layout.addWidget(self.publishers_button)
+        wide_mode_layout.addWidget(self.recent_button)
+        wide_mode_layout.addStretch(1)
+
+        self.wide_widget = QWidget()
+        self.wide_widget.setLayout(wide_mode_layout)
+        self.wide_widget.hide()
+        vl.addWidget(self.wide_widget)
         self.setLayout(vl)
+
+        self.search_line_edit: Optional[QgsFilterLineEdit] = None
 
         self._explore_tab_changed(0)
 
     def sizeHint(self):
-        height = self.explore_tab_bar.sizeHint().height()
-        if self.advanced_filter_widget.isVisible():
-            height += self.advanced_filter_widget.sizeHint().height()
-        return QSize(self.width(), height)
+        if not self._wide_mode:
+            width = self.width()
+            height = self.explore_tab_bar.sizeHint().height()
+            if self.advanced_filter_widget.isVisible():
+                height += self.advanced_filter_widget.sizeHint().height()
+        else:
+            width = self.advanced_filter_widget.sizeHint().width()
+            height = self.browse_button.sizeHint().height()
+            height += self.popular_button.sizeHint().height()
+            if self.advanced_filter_widget.isVisible():
+                height += self.advanced_filter_widget.sizeHint().height()
+
+        return QSize(width, height)
 
     def set_wide_mode(self, wide_mode: bool):
         if self._wide_mode == wide_mode:
             return
 
         self._wide_mode = wide_mode
+        if self._wide_mode:
+            self.narrow_widget.layout().removeWidget(
+                self.advanced_filter_widget)
+            self.wide_mode_filter_layout.addWidget(self.advanced_filter_widget)
+            self.wide_widget.show()
+            self.narrow_widget.hide()
+            self.advanced_filter_widget.set_appearance(
+                FilterWidgetAppearance.Vertical
+            )
+        else:
+            self.wide_mode_filter_layout.removeWidget(
+                self.advanced_filter_widget)
+            self.narrow_widget.layout().addWidget(self.advanced_filter_widget)
+            self.wide_widget.hide()
+            self.narrow_widget.show()
+            self.advanced_filter_widget.set_appearance(
+                FilterWidgetAppearance.Horizontal
+            )
+
         self.updateGeometry()
 
     def set_search_line_edit(self, widget):
@@ -87,9 +172,36 @@ class FilterWidget(QWidget):
         """
         Called when the active explore tab is changed
         """
+        show_filters = tab_index == 1
         self.advanced_filter_widget.setVisible(
-            tab_index == 1
+            show_filters
         )
+        if show_filters:
+            self.advanced_filter_widget.updateGeometry()
+
+        if tab_index == 0:
+            self.popular_button.setChecked(True)
+        elif tab_index == 1:
+            self.browse_button.setChecked(True)
+        elif tab_index == 2:
+            self.publishers_button.setChecked(True)
+        elif tab_index == 3:
+            self.recent_button.setChecked(True)
+        self.updateGeometry()
+
+    def _explore_button_toggled(self, button, checked):
+        if not checked:
+            return
+
+        if button == self.popular_button:
+            self.explore_tab_bar.setCurrentIndex(0)
+        elif button == self.browse_button:
+            self.explore_tab_bar.setCurrentIndex(1)
+        elif button == self.publishers_button:
+            self.explore_tab_bar.setCurrentIndex(2)
+        elif button == self.recent_button:
+            self.explore_tab_bar.setCurrentIndex(3)
+
         self.updateGeometry()
 
     def _clear_all(self):
