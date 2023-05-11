@@ -2,7 +2,8 @@ from typing import Optional
 
 from qgis.PyQt.QtCore import (
     QTimer,
-    pyqtSignal
+    pyqtSignal,
+    QSize
 )
 from qgis.PyQt.QtWidgets import (
     QWidget,
@@ -36,13 +37,14 @@ class FilterWidget(QWidget):
 
         self.sort_order = SortOrder.Popularity
 
-        self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
+        self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Minimum)
 
         vl = QVBoxLayout()
         vl.setSpacing(0)
         vl.setContentsMargins(0, 0, 0, 0)
 
         self.explore_tab_bar = ExploreTabBar()
+        self.explore_tab_bar.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Fixed)
         vl.addWidget(self.explore_tab_bar)
         self.explore_tab_bar.currentChanged.connect(self._explore_tab_changed)
         self.advanced_filter_widget = AdvancedFilterWidget(self)
@@ -61,6 +63,12 @@ class FilterWidget(QWidget):
         self.setLayout(vl)
 
         self._explore_tab_changed(0)
+
+    def sizeHint(self):
+        height = self.explore_tab_bar.sizeHint().height()
+        if self.advanced_filter_widget.isVisible():
+            height += self.advanced_filter_widget.sizeHint().height()
+        return QSize(self.width(), height)
 
     def set_search_line_edit(self, widget):
         self.search_line_edit = widget
