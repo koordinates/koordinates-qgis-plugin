@@ -2,7 +2,8 @@ from enum import Enum, auto
 from qgis.PyQt.QtCore import (
     Qt,
     QTimer,
-    pyqtSignal
+    pyqtSignal,
+    QSize
 )
 from qgis.PyQt.QtGui import (
     QFontMetrics,
@@ -86,6 +87,10 @@ class AdvancedFilterWidget(QWidget):
             w.changed.connect(self._filter_widget_changed)
 
         self.setLayout(filter_widget_layout)
+
+    def sizeHint(self):
+        return QSize(self.width(),
+                     self.layout().heightForWidth(self.width()))
 
     def clear_all(self):
         for w in self.filter_widgets:
