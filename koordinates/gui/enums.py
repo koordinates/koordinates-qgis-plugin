@@ -9,7 +9,6 @@ class TabStyle(Enum):
     Rounded = auto()
 
 
-
 class FilterWidgetAppearance(Enum):
     Horizontal = auto()
     Vertical = auto()

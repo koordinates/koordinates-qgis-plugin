@@ -1,4 +1,3 @@
-from enum import Enum, auto
 from qgis.PyQt.QtCore import (
     Qt,
     QTimer,
@@ -22,6 +21,7 @@ from .access_filter_widget import AccessFilterWidget
 #  from .category_filter_widget import CategoryFilterWidget
 from .data_type_filter_widget import DataTypeFilterWidget
 from .date_filter_widget import DateFilterWidget
+from .enums import FilterWidgetAppearance
 from .flow_layout import FlowLayout
 from .license_filter_widget import LicenseFilterWidget
 from .resolution_filter_widget import ResolutionFilterWidget
@@ -29,8 +29,6 @@ from ..api import (
     DataBrowserQuery,
     DataType
 )
-
-from .enums import FilterWidgetAppearance
 
 
 class AdvancedFilterWidget(QWidget):
