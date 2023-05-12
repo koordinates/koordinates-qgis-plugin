@@ -52,8 +52,9 @@ from ..api import (
     KoordinatesClient,
     DataBrowserQuery,
     AccessType,
-    Publisher
+    Publisher,
 )
+from ..api import PublisherType
 
 from .explore_tab_bar import FlatUnderlineTabBar
 
@@ -130,16 +131,26 @@ class PublisherDelegate(QStyledItemDelegate):
                    )
 
         if publisher.theme:
+            background_color = publisher.theme.background_color()
+            if not background_color:
+                background_color = '#f5f5f7'
+
             thumbnail_image = index.data(PublisherModel.ThumbnailRole)
             painter.setPen(Qt.NoPen)
-            painter.setBrush(QBrush(QColor(publisher.theme.background_color())))
+            painter.setBrush(QBrush(QColor(background_color)))
             painter.drawPath(path)
-            if not thumbnail_image.isNull():
-                scaled = thumbnail_image.scaled(
-                    QSize(int(thumbnail_rect.width()) - 2 * self.THUMBNAIL_MARGIN,
-                          int(thumbnail_image.height()) - 2 * self.THUMBNAIL_MARGIN),
-                    Qt.KeepAspectRatio,
-                    Qt.SmoothTransformation)
+
+            if thumbnail_image and not thumbnail_image.isNull():
+                if publisher.publisher_type == PublisherType.Publisher:
+                    scaled = thumbnail_image.scaled(
+                        QSize(int(thumbnail_rect.width()) - 2 * self.THUMBNAIL_MARGIN,
+                              int(thumbnail_image.height()) - 2 * self.THUMBNAIL_MARGIN),
+                        Qt.KeepAspectRatio,
+                        Qt.SmoothTransformation)
+                else:
+                    scaled = DatasetGuiUtils.crop_image_to_circle(
+                        thumbnail_image, thumbnail_image.height()
+                    )
 
                 center_x = int((thumbnail_rect.width() - scaled.width()) / 2)
                 center_y = int((thumbnail_rect.height() - scaled.height()) / 2)
@@ -160,24 +171,31 @@ class PublisherDelegate(QStyledItemDelegate):
         left_text_edge = inner_rect.left() + self.THUMBNAIL_WIDTH + \
             self.HORIZONTAL_MARGIN * 2
 
+        if publisher.publisher_type == PublisherType.Publisher:
+            line_heights = [1.2, 2.1, 3.0]
+        else:
+            line_heights = [1.6, 0, 2.6]
+
         painter.setBrush(Qt.NoBrush)
         painter.setPen(QPen(QColor(0, 0, 0)))
         painter.drawText(QPointF(left_text_edge,
                                  inner_rect.top() + int(
-                                     metrics.height() * 1.2)),
+                                     metrics.height() * line_heights[0])),
                          publisher.name())
 
         font.setBold(False)
         painter.setFont(font)
-        painter.drawText(QPointF(left_text_edge,
-                                 inner_rect.top() + int(
-                                     metrics.height() * 2.1)),
-                         'via ' + publisher.site.name())
+
+        if line_heights[1]:
+            painter.drawText(QPointF(left_text_edge,
+                                     inner_rect.top() + int(
+                                         metrics.height() * line_heights[1])),
+                             'via ' + publisher.site.name())
 
         painter.setPen(QPen(QColor(0, 0, 0, 100)))
         painter.drawText(QPointF(left_text_edge,
                                  inner_rect.top() + int(
-                                     metrics.height() * 3.0)),
+                                     metrics.height() * line_heights[2])),
                          '{} datasets '.format(DatasetGuiUtils.format_number(
                              publisher.dataset_count())))
 
@@ -196,7 +214,9 @@ class PublisherModel(QAbstractItemModel):
     def __init__(self, parent: Optional[QObject] = None):
         super().__init__(parent)
 
+        self._current_reply = None
         self.available_count = 0
+        self.publisher_type = PublisherType.Publisher
         self.publishers: List[Publisher] = []
         self.current_page = 1
         self._load_next_results()
@@ -204,8 +224,22 @@ class PublisherModel(QAbstractItemModel):
         self._thumbnail_manager = GenericThumbnailManager()
         self._thumbnail_manager.downloaded.connect(self._thumbnail_downloaded)
 
+    def set_publisher_type(self, publisher_type: PublisherType):
+        if self.publisher_type == publisher_type:
+            return
+
+        self.beginResetModel()
+        self.publisher_type = publisher_type
+        self.publishers = []
+        self._current_reply = None
+        self.current_page = 1
+        self.endResetModel()
+
+        self._load_next_results()
+
     def _load_next_results(self):
         self._current_reply = KoordinatesClient.instance().publishers_async(
+            publisher_type=self.publisher_type,
             page=self.current_page
         )
         self._current_reply.finished.connect(
@@ -242,7 +276,7 @@ class PublisherModel(QAbstractItemModel):
 
         thumbnail_urls = set()
         for p in result:
-            publisher = Publisher(p)
+            publisher = Publisher(self.publisher_type, p)
             self.publishers.append(publisher)
             thumbnail_urls.add(publisher.theme.logo())
 
@@ -397,6 +431,9 @@ class PublisherSelectionWidget(QWidget):
         self.tab_bar.addTab(self.tr('Publishers'))
         self.tab_bar.addTab(self.tr('Users'))
         self.tab_bar.addTab(self.tr('Mirrored'))
+        self.tab_bar.setCurrentIndex(1)
+
+        self.tab_bar.currentChanged.connect(self._tab_changed)
         vl.addWidget(self.tab_bar)
 
         self.publisher_list = PublisherListView()
@@ -407,7 +444,24 @@ class PublisherSelectionWidget(QWidget):
 
         self.setMinimumWidth(QFontMetrics(self.font()).horizontalAdvance('x')* 60)
 
-        self.filter_edit.textChanged.connect(self.publisher_list.filter_model.set_filter_string)
+        self.filter_edit.textChanged.connect(self._filter_changed)
+
+    def _filter_changed(self, text: str):
+        self.publisher_list.filter_model.set_filter_string(text)
+        self.tab_bar.setCurrentIndex(0)
+
+    def _tab_changed(self, index: int):
+        if index > 0:
+            self.filter_edit.clear()
+
+        if index == 1:
+            self.publisher_list.publisher_model.set_publisher_type(PublisherType.Publisher)
+        elif index == 2:
+            self.publisher_list.publisher_model.set_publisher_type(
+                PublisherType.User)
+        elif index == 3:
+            self.publisher_list.publisher_model.set_publisher_type(
+                PublisherType.Mirror)
 
 
 class PublisherFilterWidget(FilterWidgetComboBase):

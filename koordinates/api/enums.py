@@ -194,3 +194,13 @@ class ExplorePanel(Enum):
     """
     Popular = auto()
     Recent = auto()
+
+
+class PublisherType(Enum):
+    """
+    Publisher types
+    """
+    All = auto()
+    Publisher = auto()
+    User = auto()
+    Mirror = auto()

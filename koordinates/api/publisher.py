@@ -3,6 +3,8 @@ from typing import (
     Optional
 )
 
+from .enums import PublisherType
+
 
 class PublisherTheme:
     """
@@ -15,13 +17,22 @@ class PublisherTheme:
         """
         Returns the background color
         """
-        return '#' + self.details.get('background_color')
+        if not self.details.get('background_color'):
+            return None
+
+        return '#' + self.details['background_color']
 
     def logo(self) -> Optional[str]:
         """
         Returns the publisher's logo
         """
-        return 'https:' + self.details.get('logo')
+        _logo = self.details.get('logo')
+        if _logo:
+            if not _logo[:6] == 'https:':
+                return 'https:' + _logo
+            return _logo
+
+        return None
 
 
 class PublisherSite:
@@ -44,8 +55,9 @@ class Publisher:
     Represents a publisher
     """
 
-    def __init__(self, details: Dict):
+    def __init__(self, publisher_type: PublisherType, details: Dict):
         self.details = details
+        self.publisher_type = publisher_type
         self.site = PublisherSite(self.details['site']) \
             if self.details.get('site') else None
         self.theme = PublisherTheme(self.details['theme']) \

@@ -27,7 +27,8 @@ from .utils import ApiUtils
 from .repo import Repo
 from .enums import (
     DataType,
-    ExplorePanel
+    ExplorePanel,
+    PublisherType
 )
 from .dataset import Dataset
 
@@ -155,6 +156,7 @@ class KoordinatesClient(QObject):
         return endpoint, headers, params
 
     def _build_publishers_request(self,
+                                  publisher_type: PublisherType,
                                   page=1,
                                   context=None) -> Tuple[str, Dict[str, str], dict]:
         """
@@ -162,10 +164,18 @@ class KoordinatesClient(QObject):
         """
         headers = {"Expand": "list,list.publisher,list.styles,list.data.source_summary"}
 
-        params = {'type': 'site',
+        params = {
                   'public': 'true',
                   'sort': 'popularity'
                   }
+
+        if publisher_type == PublisherType.Publisher:
+            params['type'] = 'site'
+        elif publisher_type == PublisherType.User:
+            params['type'] = 'user'
+        elif publisher_type == PublisherType.Mirror:
+            params['type'] = 'mirror'
+
         params.update({"page_size": PAGE_SIZE, "page": page})
         endpoint = "publishers/"
 
@@ -208,12 +218,13 @@ class KoordinatesClient(QObject):
         return QgsNetworkAccessManager.instance().get(network_request)
 
     def publishers_async(self,
+                         publisher_type: PublisherType,
                          page=1,
                          context=None) -> QNetworkReply:
         """
         Retrieve publishers asynchronously
         """
-        endpoint, headers, params = self._build_publishers_request(page, context)
+        endpoint, headers, params = self._build_publishers_request(publisher_type, page, context)
         network_request = self._build_request(endpoint, headers, params)
 
         return QgsNetworkAccessManager.instance().get(network_request)

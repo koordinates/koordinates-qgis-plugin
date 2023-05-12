@@ -5,6 +5,12 @@ from typing import (
 import locale
 import datetime
 
+from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtGui import (
+    QImage,
+    QPainter
+)
+
 from qgis.core import (
     QgsFileUtils,
     QgsWkbTypes
@@ -34,6 +40,38 @@ class DatasetGuiUtils:
         if dataset.datatype == DataType.PointClouds:
             return 'point-cloud-image.svg'
         return None
+
+    @staticmethod
+    def crop_image_to_circle(image: QImage,
+                             size: int,
+                             radius: Optional[int] = 0) -> QImage:
+        """
+        Crops an image to a circle
+        """
+        image = image.convertToFormat(QImage.Format_ARGB32)
+        if image.width() != size or image.height() != size:
+            image = image.scaled(size, size,
+                                 transformMode=Qt.SmoothTransformation)
+
+        # round corners of image
+        rounded_image = QImage(size, size,
+                               QImage.Format_ARGB32)
+        rounded_image.fill(Qt.transparent)
+        painter = QPainter(rounded_image)
+        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(Qt.red)
+        if not radius:
+            painter.drawEllipse(0, 0, size, size)
+        else:
+            painter.drawRoundedRect(0, 0, size, size,
+                                    radius,
+                                    radius)
+        painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
+        painter.drawImage(0, 0, image)
+        painter.end()
+
+        return rounded_image
 
     @staticmethod
     def get_icon_for_dataset(dataset: Dataset, style: IconStyle) \

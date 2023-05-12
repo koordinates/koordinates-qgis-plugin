@@ -16,7 +16,7 @@ from qgis.core import (
     QgsWkbTypes
 )
 
-from .enums import DataType
+from .enums import DataType, PublisherType
 from .repo import Repo
 from .utils import ApiUtils
 from .publisher import Publisher
@@ -104,7 +104,8 @@ class Dataset:
         if not self.details.get("publisher"):
             return None
 
-        return Publisher(self.details["publisher"])
+        return Publisher(PublisherType.Publisher,
+                         self.details["publisher"])
 
     def is_starred(self) -> bool:
         """
