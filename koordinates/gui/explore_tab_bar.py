@@ -21,8 +21,7 @@ from qgis.PyQt.QtWidgets import (
     QStylePainter,
     QStyleOptionTab,
     QStyleOptionButton,
-    QPushButton,
-    QStyleOption
+    QPushButton
 )
 
 from .gui_utils import GuiUtils
@@ -139,7 +138,6 @@ class FlatUnderlineTabBar(QTabBar):
 
             option.state = option.state & (~QStyle.State_Selected)
             painter.drawControl(QStyle.CE_TabBarTabLabel, option)
-
 
 
 class ExploreTabBar(FlatTabBar):

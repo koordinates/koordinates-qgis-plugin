@@ -10,7 +10,6 @@ from qgis.PyQt.QtGui import (
     QPalette,
     QPixmap,
     QImage,
-    QPainter,
     QCursor,
     QColor
 )
