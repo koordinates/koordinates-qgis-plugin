@@ -29,6 +29,8 @@ class DataBrowserQuery:
         self.access_type: Optional[AccessType] = None
         self.category: Optional[str] = None
 
+        self.publisher: Optional[str] = None
+
         self.data_types: Set[DataType] = set()
         self.vector_filters: Set[VectorFilter] = set()
         self.raster_filters: Set[RasterFilter] = set()
@@ -69,6 +71,9 @@ class DataBrowserQuery:
 
         if self.category:
             params['category'] = self.category
+
+        if self.publisher:
+            params['from'] = self.publisher
 
         kind_params = []
         for data_type in self.data_types:

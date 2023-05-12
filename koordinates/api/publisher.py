@@ -63,6 +63,12 @@ class Publisher:
         self.theme = PublisherTheme(self.details['theme']) \
             if self.details.get('theme') else None
 
+    def id(self) -> Optional[str]:
+        """
+        Returns the publisher's ID
+        """
+        return self.details.get("id")
+
     def name(self) -> Optional[str]:
         """
         Returns the publisher's name

@@ -128,7 +128,8 @@ class KoordinatesClient(QObject):
 
         if context["type"] == "site":
             endpoint = "data/"
-            params["from"] = context["domain"]
+            if not query.publisher:
+                params["from"] = context["domain"]
         else:
             endpoint = "users/me/data/"
 
