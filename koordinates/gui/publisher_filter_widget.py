@@ -8,6 +8,7 @@ from typing import (
 
 from qgis.PyQt import sip
 from qgis.PyQt.QtCore import (
+    pyqtSignal,
     Qt,
     QAbstractItemModel,
     QObject,
@@ -424,6 +425,8 @@ class PublisherSelectionWidget(QWidget):
     Custom widget for selecting publishers
     """
 
+    selection_changed = pyqtSignal(Publisher)
+
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
 
@@ -458,11 +461,20 @@ class PublisherSelectionWidget(QWidget):
             QFontMetrics(self.font()).height() * 20
         )
 
+        self.publisher_list.selectionModel().selectionChanged.connect(self._selection_changed)
+
         self.filter_edit.textChanged.connect(self._filter_changed)
 
     def _filter_changed(self, text: str):
         self.publisher_list.filter_model.set_filter_string(text)
         self.tab_bar.setCurrentIndex(0)
+
+    def _selection_changed(self, selected, _):
+        try:
+            selection: Optional[Publisher] = selected[0].topLeft().data(PublisherModel.PublisherRole)
+            self.selection_changed.emit(selection)
+        except IndexError:
+            return
 
     def _tab_changed(self, index: int):
         if index > 0:
@@ -491,19 +503,16 @@ class PublisherFilterWidget(FilterWidgetComboBase):
         super().__init__(parent)
 
         self.drop_down_widget = PublisherSelectionWidget()
+        self.drop_down_widget.selection_changed.connect(self._selection_changed)
 
         self.set_contents_widget(self.drop_down_widget)
 
+        self._current_publisher: Optional[Publisher] = None
+
         self.clear()
 
-    def _access_group_member_clicked(self, clicked_button):
-        self._block_changes += 1
-        for radio in (self.public_radio,
-                      self.private_radio):
-            if radio.isChecked() and radio != clicked_button:
-                radio.setChecked(False)
-
-        self._block_changes -= 1
+    def _selection_changed(self, publisher: Publisher):
+        self._current_publisher = publisher
         self._update_value()
 
     def _update_visible_frames(self):
@@ -511,12 +520,11 @@ class PublisherFilterWidget(FilterWidgetComboBase):
         self._floating_widget.reflow()
 
     def clear(self):
-        pass
+        self._current_publisher = None
+        self._update_value()
 
     def should_show_clear(self):
-        return False
-
-        if not self.public_radio.isChecked() and not self.private_radio.isChecked():
+        if self._current_publisher is None:
             return False
 
         return super().should_show_clear()
@@ -524,25 +532,16 @@ class PublisherFilterWidget(FilterWidgetComboBase):
     def _update_value(self):
         text = 'Publishers'
 
-
-        #if self.public_radio.isChecked():
-        #    text = 'Only public data'
-        #elif self.private_radio.isChecked():
-        #    text = 'Shared with me'
+        if self._current_publisher:
+            text = self._current_publisher.name()
 
         self.set_current_text(text)
         if not self._block_changes:
             self.changed.emit()
 
     def apply_constraints_to_query(self, query: DataBrowserQuery):
-        return
-
-        if self.public_radio.isChecked():
-            query.access_type = AccessType.Public
-        elif self.private_radio.isChecked():
-            query.access_type = AccessType.Private
-        else:
-            query.access_type = None
+        if self._current_publisher:
+            query.publisher = self._current_publisher.id()
 
     def set_from_query(self, query: DataBrowserQuery):
         return
