@@ -22,7 +22,8 @@ from qgis.PyQt.QtGui import (
     QBrush,
     QPen,
     QColor,
-    QFont
+    QFont,
+    QPainterPath
 )
 from qgis.PyQt.QtNetwork import (
     QNetworkReply
@@ -40,6 +41,7 @@ from qgis.PyQt.QtWidgets import (
 
 from .dataset_utils import DatasetGuiUtils
 from .filter_widget_combo_base import FilterWidgetComboBase
+from .thumbnails import GenericThumbnailManager
 from ..api import (
     KoordinatesClient,
     DataBrowserQuery,
@@ -57,6 +59,7 @@ class PublisherDelegate(QStyledItemDelegate):
     VERTICAL_MARGIN = 7
     HORIZONTAL_MARGIN = 5
     THUMBNAIL_WIDTH = 118
+    THUMBNAIL_MARGIN = 5
 
     def __init__(self, parent: Optional[QObject] = None):
         super().__init__(parent)
@@ -71,6 +74,7 @@ class PublisherDelegate(QStyledItemDelegate):
         painter.save()
         painter.setRenderHint(QPainter.Antialiasing, True)
         painter.setRenderHint(QPainter.TextAntialiasing, True)
+        painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
 
         pen = QPen(QColor('#dddddd'))
         pen.setWidth(0)
@@ -90,9 +94,46 @@ class PublisherDelegate(QStyledItemDelegate):
 
         thumbnail_rect = inner_rect
         thumbnail_rect.setWidth(self.THUMBNAIL_WIDTH)
+
+        path = QPainterPath()
+
+        path.moveTo(thumbnail_rect.left() + self.THUMBNAIL_CORNER_RADIUS,
+                    thumbnail_rect.top())
+        path.lineTo(thumbnail_rect.right(), thumbnail_rect.top())
+        path.lineTo(thumbnail_rect.right(), thumbnail_rect.bottom())
+        path.lineTo(thumbnail_rect.left() + self.THUMBNAIL_CORNER_RADIUS,
+                    thumbnail_rect.bottom())
+        path.arcTo(thumbnail_rect.left(),
+                   thumbnail_rect.bottom() - self.THUMBNAIL_CORNER_RADIUS * 2,
+                   self.THUMBNAIL_CORNER_RADIUS * 2,
+                   self.THUMBNAIL_CORNER_RADIUS * 2,
+                   270, -90
+                   )
+        path.lineTo(thumbnail_rect.left(),
+                    thumbnail_rect.top() + self.THUMBNAIL_CORNER_RADIUS)
+        path.arcTo(thumbnail_rect.left(),
+                   thumbnail_rect.top(),
+                   self.THUMBNAIL_CORNER_RADIUS * 2,
+                   self.THUMBNAIL_CORNER_RADIUS * 2,
+                   180, -90
+                   )
+
+        thumbnail_image = index.data(PublisherModel.ThumbnailRole)
         painter.setPen(Qt.NoPen)
-        painter.setBrush(QBrush(QColor(255, 0, 0)))
-        painter.drawRect(thumbnail_rect)
+        painter.setBrush(QBrush(QColor(publisher.theme.background_color())))
+        painter.drawPath(path)
+        if not thumbnail_image.isNull():
+            scaled = thumbnail_image.scaled(
+                QSize(int(thumbnail_rect.width()) - 2 * self.THUMBNAIL_MARGIN,
+                      int(thumbnail_image.height()) - 2 * self.THUMBNAIL_MARGIN),
+                Qt.KeepAspectRatio,
+                Qt.SmoothTransformation)
+
+            center_x = int((thumbnail_rect.width() - scaled.width()) / 2)
+            center_y = int((thumbnail_rect.height() - scaled.height()) / 2)
+            painter.drawImage(QRectF(thumbnail_rect.left() + center_x,
+                                     thumbnail_rect.top() + center_y,
+                                     scaled.width(), scaled.height()), scaled)
 
         heading_font_size = 10
         if platform.system() == 'Darwin':
@@ -138,6 +179,7 @@ class PublisherModel(QAbstractItemModel):
 
     TitleRole = Qt.UserRole + 1
     PublisherRole = Qt.UserRole + 2
+    ThumbnailRole = Qt.UserRole + 3
 
     def __init__(self, parent: Optional[QObject] = None):
         super().__init__(parent)
@@ -146,6 +188,9 @@ class PublisherModel(QAbstractItemModel):
         self.publishers: List[Publisher] = []
         self.current_page = 1
         self._load_next_results()
+
+        self._thumbnail_manager = GenericThumbnailManager()
+        self._thumbnail_manager.downloaded.connect(self._thumbnail_downloaded)
 
     def _load_next_results(self):
         self._current_reply = KoordinatesClient.instance().publishers_async(
@@ -182,10 +227,17 @@ class PublisherModel(QAbstractItemModel):
         result = json.loads(reply.readAll().data().decode())
         self.beginInsertRows(QModelIndex(), len(self.publishers),
                              len(self.publishers) + len(result))
+
+        thumbnail_urls = set()
         for p in result:
-            self.publishers.append(Publisher(p))
+            publisher = Publisher(p)
+            self.publishers.append(publisher)
+            thumbnail_urls.add(publisher.theme.logo())
 
         self.endInsertRows()
+
+        for thumbnail_url in thumbnail_urls:
+            self._thumbnail_manager.download_thumbnail(thumbnail_url)
 
     # Qt model interface
 
@@ -216,6 +268,10 @@ class PublisherModel(QAbstractItemModel):
         if publisher:
             if role == self.PublisherRole:
                 return publisher
+
+            if role == self.ThumbnailRole:
+                return self._thumbnail_manager.thumbnail(
+                    publisher.theme.logo())
 
             if role == self.TitleRole:
                 return publisher.name()
@@ -250,6 +306,15 @@ class PublisherModel(QAbstractItemModel):
             return None
 
         return self.publishers[index.row()]
+
+    def _thumbnail_downloaded(self, url: str):
+        """
+        Called when a thumbnail is downloaded
+        """
+        for row, publisher in enumerate(self.publishers):
+            if publisher.theme.logo() == url:
+                index = self.index(row, 0)
+                self.dataChanged.emit(index, index)
 
 
 class PublisherListView(QListView):
