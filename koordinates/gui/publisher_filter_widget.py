@@ -33,7 +33,9 @@ from qgis.PyQt.QtWidgets import (
     QRadioButton,
     QButtonGroup,
     QStyledItemDelegate,
-    QStyleOptionViewItem
+    QStyleOptionViewItem,
+    QAbstractItemView,
+    QListView
 )
 
 from .dataset_utils import DatasetGuiUtils
@@ -78,7 +80,7 @@ class PublisherDelegate(QStyledItemDelegate):
 
         rect = QRectF(option.rect)
         inner_rect = rect
-        inner_rect.adjust(0,
+        inner_rect.adjust(self.HORIZONTAL_MARGIN,
                           self.VERTICAL_MARGIN,
                           -self.HORIZONTAL_MARGIN,
                           -self.VERTICAL_MARGIN)
@@ -250,6 +252,22 @@ class PublisherModel(QAbstractItemModel):
         return self.publishers[index.row()]
 
 
+class PublisherListView(QListView):
+    """
+    Custom list view for publishers
+    """
+
+    def __init__(self, parent: Optional[QWidget] = None):
+        super().__init__(parent)
+
+        self.publisher_model = PublisherModel(self)
+        self.setModel(self.publisher_model)
+        delegate = PublisherDelegate(self)
+        self.setItemDelegate(delegate)
+
+        self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
+
+
 class PublisherFilterWidget(FilterWidgetComboBase):
     """
     Custom widget for publisher based filtering
@@ -258,12 +276,7 @@ class PublisherFilterWidget(FilterWidgetComboBase):
     def __init__(self, parent):
         super().__init__(parent)
 
-        self.publisher_model = PublisherModel(self)
-        from qgis.PyQt.QtWidgets import QTreeView
-        self.view = QTreeView()
-        self.view.setModel(self.publisher_model)
-        delegate = PublisherDelegate(self)
-        self.view.setItemDelegate(delegate)
+        self.view = PublisherListView()
         self.view.show()
 
         self.drop_down_widget = QWidget()
