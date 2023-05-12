@@ -19,4 +19,3 @@ class ExploreMode(Enum):
     Browse = auto()
     Publishers = auto()
     Recent = auto()
-

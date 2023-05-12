@@ -40,12 +40,12 @@ from qgis.PyQt.QtWidgets import (
     QListView,
     QFrame
 )
-
 from qgis.gui import (
     QgsFilterLineEdit
 )
 
 from .dataset_utils import DatasetGuiUtils
+from .explore_tab_bar import FlatUnderlineTabBar
 from .filter_widget_combo_base import FilterWidgetComboBase
 from .thumbnails import GenericThumbnailManager
 from ..api import (
@@ -55,8 +55,6 @@ from ..api import (
     Publisher,
 )
 from ..api import PublisherType
-
-from .explore_tab_bar import FlatUnderlineTabBar
 
 
 class PublisherDelegate(QStyledItemDelegate):
@@ -143,8 +141,9 @@ class PublisherDelegate(QStyledItemDelegate):
             if thumbnail_image and not thumbnail_image.isNull():
                 if publisher.publisher_type == PublisherType.Publisher:
                     scaled = thumbnail_image.scaled(
-                        QSize(int(thumbnail_rect.width()) - 2 * self.THUMBNAIL_MARGIN,
-                              int(thumbnail_image.height()) - 2 * self.THUMBNAIL_MARGIN),
+                        QSize(
+                            int(thumbnail_rect.width()) - 2 * self.THUMBNAIL_MARGIN,
+                            int(thumbnail_image.height()) - 2 * self.THUMBNAIL_MARGIN),
                         Qt.KeepAspectRatio,
                         Qt.SmoothTransformation)
                 else:
@@ -156,7 +155,8 @@ class PublisherDelegate(QStyledItemDelegate):
                 center_y = int((thumbnail_rect.height() - scaled.height()) / 2)
                 painter.drawImage(QRectF(thumbnail_rect.left() + center_x,
                                          thumbnail_rect.top() + center_y,
-                                         scaled.width(), scaled.height()), scaled)
+                                         scaled.width(), scaled.height()),
+                                  scaled)
 
         heading_font_size = 10
         if platform.system() == 'Darwin':
@@ -169,7 +169,7 @@ class PublisherDelegate(QStyledItemDelegate):
         painter.setFont(font)
 
         left_text_edge = inner_rect.left() + self.THUMBNAIL_WIDTH + \
-            self.HORIZONTAL_MARGIN * 2
+                         self.HORIZONTAL_MARGIN * 2
 
         if publisher.publisher_type == PublisherType.Publisher:
             line_heights = [1.2, 2.1, 3.0]
@@ -383,7 +383,8 @@ class PublisherFilterModel(QSortFilterProxyModel):
             return True
 
         parent_index = self.sourceModel().index(row, 0, parent)
-        if self._filter_string.upper() in parent_index.data(PublisherModel.TitleRole).upper():
+        if self._filter_string.upper() in parent_index.data(
+                PublisherModel.TitleRole).upper():
             return True
 
         return False
@@ -407,7 +408,7 @@ class PublisherListView(QListView):
 
         self.setFrameShape(QFrame.NoFrame)
         self.viewport().setStyleSheet(
-             "#qt_scrollarea_viewport{ background: transparent; }")
+            "#qt_scrollarea_viewport{ background: transparent; }")
 
         self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
 
@@ -417,7 +418,7 @@ class PublisherSelectionWidget(QWidget):
     Custom widget for selecting publishers
     """
 
-    def __init__(self, parent:Optional[QWidget] = None):
+    def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
 
         vl = QVBoxLayout()
@@ -442,7 +443,9 @@ class PublisherSelectionWidget(QWidget):
             "PublisherSelectionWidget{ background: white; }")
         self.setLayout(vl)
 
-        self.setMinimumWidth(QFontMetrics(self.font()).horizontalAdvance('x')* 60)
+        self.setMinimumWidth(
+            QFontMetrics(self.font()).horizontalAdvance('x') * 60
+        )
 
         self.filter_edit.textChanged.connect(self._filter_changed)
 
@@ -455,7 +458,8 @@ class PublisherSelectionWidget(QWidget):
             self.filter_edit.clear()
 
         if index == 1:
-            self.publisher_list.publisher_model.set_publisher_type(PublisherType.Publisher)
+            self.publisher_list.publisher_model.set_publisher_type(
+                PublisherType.Publisher)
         elif index == 2:
             self.publisher_list.publisher_model.set_publisher_type(
                 PublisherType.User)
