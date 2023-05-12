@@ -37,7 +37,12 @@ from qgis.PyQt.QtWidgets import (
     QStyledItemDelegate,
     QStyleOptionViewItem,
     QAbstractItemView,
-    QListView
+    QListView,
+    QFrame
+)
+
+from qgis.gui import (
+    QgsFilterLineEdit
 )
 
 from .dataset_utils import DatasetGuiUtils
@@ -348,8 +353,6 @@ class PublisherFilterModel(QSortFilterProxyModel):
         return False
 
 
-
-
 class PublisherListView(QListView):
     """
     Custom list view for publishers
@@ -366,7 +369,36 @@ class PublisherListView(QListView):
         delegate = PublisherDelegate(self)
         self.setItemDelegate(delegate)
 
+        self.setFrameShape(QFrame.NoFrame)
+        self.viewport().setStyleSheet(
+             "#qt_scrollarea_viewport{ background: transparent; }")
+
         self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
+
+
+class PublisherSelectionWidget(QWidget):
+    """
+    Custom widget for selecting publishers
+    """
+
+    def __init__(self, parent:Optional[QWidget] = None):
+        super().__init__(parent)
+
+        vl = QVBoxLayout()
+        self.filter_edit = QgsFilterLineEdit()
+        self.filter_edit.setShowClearButton(True)
+        self.filter_edit.setPlaceholderText(self.tr('Search publishers'))
+        vl.addWidget(self.filter_edit)
+
+        self.publisher_list = PublisherListView()
+        vl.addWidget(self.publisher_list, 1)
+        self.setStyleSheet(
+            "PublisherSelectionWidget{ background: white; }")
+        self.setLayout(vl)
+
+        self.setMinimumWidth(QFontMetrics(self.font()).horizontalAdvance('x')* 60)
+
+        self.filter_edit.textChanged.connect(self.publisher_list.filter_model.set_filter_string)
 
 
 class PublisherFilterWidget(FilterWidgetComboBase):
@@ -377,7 +409,7 @@ class PublisherFilterWidget(FilterWidgetComboBase):
     def __init__(self, parent):
         super().__init__(parent)
 
-        self.view = PublisherListView()
+        self.view = PublisherSelectionWidget()
         self.view.show()
 
         self.drop_down_widget = QWidget()
