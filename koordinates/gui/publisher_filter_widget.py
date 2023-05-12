@@ -14,7 +14,8 @@ from qgis.PyQt.QtCore import (
     QModelIndex,
     QSize,
     QRectF,
-    QPointF
+    QPointF,
+    QSortFilterProxyModel
 )
 from qgis.PyQt.QtGui import (
     QFontMetrics,
@@ -92,6 +93,9 @@ class PublisherDelegate(QStyledItemDelegate):
                                 self.THUMBNAIL_CORNER_RADIUS,
                                 self.THUMBNAIL_CORNER_RADIUS)
 
+        if not publisher:
+            return
+
         thumbnail_rect = inner_rect
         thumbnail_rect.setWidth(self.THUMBNAIL_WIDTH)
 
@@ -118,22 +122,23 @@ class PublisherDelegate(QStyledItemDelegate):
                    180, -90
                    )
 
-        thumbnail_image = index.data(PublisherModel.ThumbnailRole)
-        painter.setPen(Qt.NoPen)
-        painter.setBrush(QBrush(QColor(publisher.theme.background_color())))
-        painter.drawPath(path)
-        if not thumbnail_image.isNull():
-            scaled = thumbnail_image.scaled(
-                QSize(int(thumbnail_rect.width()) - 2 * self.THUMBNAIL_MARGIN,
-                      int(thumbnail_image.height()) - 2 * self.THUMBNAIL_MARGIN),
-                Qt.KeepAspectRatio,
-                Qt.SmoothTransformation)
+        if publisher.theme:
+            thumbnail_image = index.data(PublisherModel.ThumbnailRole)
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(QBrush(QColor(publisher.theme.background_color())))
+            painter.drawPath(path)
+            if not thumbnail_image.isNull():
+                scaled = thumbnail_image.scaled(
+                    QSize(int(thumbnail_rect.width()) - 2 * self.THUMBNAIL_MARGIN,
+                          int(thumbnail_image.height()) - 2 * self.THUMBNAIL_MARGIN),
+                    Qt.KeepAspectRatio,
+                    Qt.SmoothTransformation)
 
-            center_x = int((thumbnail_rect.width() - scaled.width()) / 2)
-            center_y = int((thumbnail_rect.height() - scaled.height()) / 2)
-            painter.drawImage(QRectF(thumbnail_rect.left() + center_x,
-                                     thumbnail_rect.top() + center_y,
-                                     scaled.width(), scaled.height()), scaled)
+                center_x = int((thumbnail_rect.width() - scaled.width()) / 2)
+                center_y = int((thumbnail_rect.height() - scaled.height()) / 2)
+                painter.drawImage(QRectF(thumbnail_rect.left() + center_x,
+                                         thumbnail_rect.top() + center_y,
+                                         scaled.width(), scaled.height()), scaled)
 
         heading_font_size = 10
         if platform.system() == 'Darwin':
@@ -226,7 +231,7 @@ class PublisherModel(QAbstractItemModel):
 
         result = json.loads(reply.readAll().data().decode())
         self.beginInsertRows(QModelIndex(), len(self.publishers),
-                             len(self.publishers) + len(result))
+                             len(self.publishers) + len(result) - 1)
 
         thumbnail_urls = set()
         for p in result:
@@ -317,6 +322,34 @@ class PublisherModel(QAbstractItemModel):
                 self.dataChanged.emit(index, index)
 
 
+class PublisherFilterModel(QSortFilterProxyModel):
+    """
+    Sort/filter model for publishers
+    """
+
+    def __init__(self, parent: Optional[QObject] = None):
+        super().__init__(parent)
+        self.setDynamicSortFilter(True)
+
+        self._filter_string: str = ''
+
+    def set_filter_string(self, filter_str: str):
+        self._filter_string = filter_str
+        self.invalidateFilter()
+
+    def filterAcceptsRow(self, row: int, parent: QModelIndex) -> bool:
+        if not self._filter_string:
+            return True
+
+        parent_index = self.sourceModel().index(row, 0, parent)
+        if self._filter_string.upper() in parent_index.data(PublisherModel.TitleRole).upper():
+            return True
+
+        return False
+
+
+
+
 class PublisherListView(QListView):
     """
     Custom list view for publishers
@@ -326,7 +359,10 @@ class PublisherListView(QListView):
         super().__init__(parent)
 
         self.publisher_model = PublisherModel(self)
-        self.setModel(self.publisher_model)
+        self.filter_model = PublisherFilterModel(self)
+        self.filter_model.setSourceModel(self.publisher_model)
+
+        self.setModel(self.filter_model)
         delegate = PublisherDelegate(self)
         self.setItemDelegate(delegate)
 
