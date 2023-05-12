@@ -14,8 +14,9 @@ class FilterWidgetAppearance(Enum):
     Vertical = auto()
 
 
-class ExploreMode:
+class ExploreMode(Enum):
     Popular = auto()
     Browse = auto()
     Publishers = auto()
     Recent = auto()
+

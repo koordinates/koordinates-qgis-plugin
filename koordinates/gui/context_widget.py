@@ -35,6 +35,7 @@ from qgis.gui import (
 from .gui_utils import GuiUtils
 from .thumbnails import downloadThumbnail
 from ..api import KoordinatesClient
+from .dataset_utils import DatasetGuiUtils
 
 
 class ContextIcon(QLabel):
@@ -47,25 +48,15 @@ class ContextIcon(QLabel):
         self.setFixedSize(QSize(ContextIcon.SIZE, ContextIcon.SIZE))
 
     def setThumbnail(self, image: QImage):
-        image = image.convertToFormat(QImage.Format_ARGB32)
-        if image.width() != ContextIcon.SIZE or image.height() != ContextIcon.SIZE:
-            image = image.scaled(ContextIcon.SIZE, ContextIcon.SIZE,
-                                 transformMode=Qt.SmoothTransformation)
-
-        # round corners of image
-        rounded_image = QImage(ContextIcon.SIZE, ContextIcon.SIZE, QImage.Format_ARGB32)
-        rounded_image.fill(Qt.transparent)
-        painter = QPainter(rounded_image)
-        painter.setRenderHint(QPainter.Antialiasing, True)
-        painter.setPen(Qt.NoPen)
-        painter.setBrush(Qt.red)
-        painter.drawRoundedRect(0, 0, ContextIcon.SIZE, ContextIcon.SIZE,
-                                ContextIcon.CORNER_RADIUS, ContextIcon.CORNER_RADIUS)
-        painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
-        painter.drawImage(0, 0, image)
-        painter.end()
-
-        self.setPixmap(QPixmap.fromImage(rounded_image))
+        self.setPixmap(
+            QPixmap.fromImage(
+                DatasetGuiUtils.crop_image_to_circle(
+                    image,
+                    ContextIcon.SIZE,
+                    ContextIcon.CORNER_RADIUS
+                )
+            )
+        )
 
 
 class ContextLogo(QLabel):
@@ -86,21 +77,13 @@ class ContextLogo(QLabel):
         self.setFixedWidth(image.width())
 
         if self.circle:
-            image = image.convertToFormat(QImage.Format_ARGB32)
-
-            # round corners of image
-            rounded_image = QImage(ContextIcon.SIZE, ContextIcon.SIZE, QImage.Format_ARGB32)
-            rounded_image.fill(Qt.transparent)
-            painter = QPainter(rounded_image)
-            painter.setRenderHint(QPainter.Antialiasing, True)
-            painter.setPen(Qt.NoPen)
-            painter.setBrush(Qt.red)
-            painter.drawEllipse(0, 0, ContextIcon.SIZE, ContextIcon.SIZE)
-            painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
-            painter.drawImage(0, 0, image)
-            painter.end()
-
-            self.setPixmap(QPixmap.fromImage(rounded_image))
+            self.setPixmap(
+                QPixmap.fromImage(
+                    DatasetGuiUtils.crop_image_to_circle(
+                        image, ContextIcon.SIZE, ContextIcon.SIZE
+                    )
+                )
+            )
         else:
             self.setPixmap(QPixmap.fromImage(image))
 
