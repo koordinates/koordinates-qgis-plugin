@@ -55,6 +55,8 @@ from ..api import (
     Publisher
 )
 
+from .explore_tab_bar import FlatUnderlineTabBar
+
 
 class PublisherDelegate(QStyledItemDelegate):
     """
@@ -389,6 +391,13 @@ class PublisherSelectionWidget(QWidget):
         self.filter_edit.setShowClearButton(True)
         self.filter_edit.setPlaceholderText(self.tr('Search publishers'))
         vl.addWidget(self.filter_edit)
+
+        self.tab_bar = FlatUnderlineTabBar()
+        self.tab_bar.addTab(self.tr('All'))
+        self.tab_bar.addTab(self.tr('Publishers'))
+        self.tab_bar.addTab(self.tr('Users'))
+        self.tab_bar.addTab(self.tr('Mirrored'))
+        vl.addWidget(self.tab_bar)
 
         self.publisher_list = PublisherListView()
         vl.addWidget(self.publisher_list, 1)
