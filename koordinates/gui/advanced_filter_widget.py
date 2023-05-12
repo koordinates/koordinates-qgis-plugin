@@ -37,7 +37,7 @@ class AdvancedFilterWidget(QWidget):
 
     CORNER_RADIUS = 4
 
-    def __init__(self, parent=None):
+    def __init__(self, parent):
         super().__init__(parent)
 
         self.should_show = False

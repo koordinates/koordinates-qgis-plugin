@@ -46,7 +46,7 @@ class KoordinatesPlugin:
                 self.iface.messageBar()
         )
 
-        self.dock = Koordinates()
+        self.dock = Koordinates(self.iface.mainWindow())
         self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dock)
 
         self.explorerAction = QAction("Show Data Browser",

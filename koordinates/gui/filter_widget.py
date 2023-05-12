@@ -40,7 +40,7 @@ class FilterWidget(QWidget):
     explore = pyqtSignal(ExplorePanel)
     clear_all = pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent):
         super().__init__(parent)
 
         self._starred = False
