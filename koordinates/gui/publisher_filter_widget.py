@@ -485,26 +485,7 @@ class PublisherFilterWidget(FilterWidgetComboBase):
     def __init__(self, parent):
         super().__init__(parent)
 
-        self.view = PublisherSelectionWidget()
-        self.view.show()
-
-        self.drop_down_widget = QWidget()
-        vl = QVBoxLayout()
-
-        self.public_radio = QRadioButton('Public')
-        vl.addWidget(self.public_radio)
-
-        self.private_radio = QRadioButton('Me')
-        vl.addWidget(self.private_radio)
-
-        self.access_group = QButtonGroup()
-        self.access_group.addButton(self.public_radio)
-        self.access_group.addButton(self.private_radio)
-        self.access_group.setExclusive(False)
-        self.access_group.buttonClicked.connect(
-            self._access_group_member_clicked)
-
-        self.drop_down_widget.setLayout(vl)
+        self.drop_down_widget = PublisherSelectionWidget()
 
         self.set_contents_widget(self.drop_down_widget)
 
@@ -525,12 +506,11 @@ class PublisherFilterWidget(FilterWidgetComboBase):
         self._floating_widget.reflow()
 
     def clear(self):
-        self.public_radio.setChecked(False)
-        self.private_radio.setChecked(False)
-        self._update_visible_frames()
-        self._update_value()
+        pass
 
     def should_show_clear(self):
+        return False
+
         if not self.public_radio.isChecked() and not self.private_radio.isChecked():
             return False
 
@@ -539,16 +519,19 @@ class PublisherFilterWidget(FilterWidgetComboBase):
     def _update_value(self):
         text = 'Publishers'
 
-        if self.public_radio.isChecked():
-            text = 'Only public data'
-        elif self.private_radio.isChecked():
-            text = 'Shared with me'
+
+        #if self.public_radio.isChecked():
+        #    text = 'Only public data'
+        #elif self.private_radio.isChecked():
+        #    text = 'Shared with me'
 
         self.set_current_text(text)
         if not self._block_changes:
             self.changed.emit()
 
     def apply_constraints_to_query(self, query: DataBrowserQuery):
+        return
+
         if self.public_radio.isChecked():
             query.access_type = AccessType.Public
         elif self.private_radio.isChecked():
@@ -557,6 +540,7 @@ class PublisherFilterWidget(FilterWidgetComboBase):
             query.access_type = None
 
     def set_from_query(self, query: DataBrowserQuery):
+        return
         self._block_changes += 1
 
         self.public_radio.setChecked(query.access_type == AccessType.Public)

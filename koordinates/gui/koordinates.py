@@ -253,7 +253,7 @@ class Koordinates(QgsDockWidget, WIDGET):
     TAB_STARRED_INDEX = 0
     TAB_BROWSE_INDEX = 1
 
-    def __init__(self, parent=None):
+    def __init__(self, parent):
         super().__init__(parent)
         self.setupUi(self)
 
