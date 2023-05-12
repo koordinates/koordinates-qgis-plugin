@@ -21,6 +21,7 @@ from .access_filter_widget import AccessFilterWidget
 #  from .category_filter_widget import CategoryFilterWidget
 from .data_type_filter_widget import DataTypeFilterWidget
 from .date_filter_widget import DateFilterWidget
+from .publisher_filter_widget import PublisherFilterWidget
 from .enums import FilterWidgetAppearance
 from .flow_layout import FlowLayout
 from .license_filter_widget import LicenseFilterWidget
@@ -44,14 +45,16 @@ class AdvancedFilterWidget(QWidget):
 
         # self.category_filter_widget = CategoryFilterWidget(self)
         self.data_type_filter_widget = DataTypeFilterWidget(self)
+        self.publisher_filter_widget = PublisherFilterWidget(self)
         self.resolution_widget = ResolutionFilterWidget(self)
         self.date_filter_widget = DateFilterWidget(self)
         self.license_widget = LicenseFilterWidget(self)
         self.access_widget = AccessFilterWidget(self)
 
-        min_filter_widget_width = QFontMetrics(self.font()).width('x') * 20
+        min_filter_widget_width = QFontMetrics(self.font()).width('x') * 25
         # self.category_filter_widget.setMinimumWidth(min_filter_widget_width)
         self.data_type_filter_widget.setMinimumWidth(min_filter_widget_width)
+        self.publisher_filter_widget.setMinimumWidth(min_filter_widget_width)
         self.resolution_widget.setMinimumWidth(min_filter_widget_width)
         self.date_filter_widget.setMinimumWidth(min_filter_widget_width)
         self.license_widget.setMinimumWidth(min_filter_widget_width)
@@ -63,6 +66,7 @@ class AdvancedFilterWidget(QWidget):
         filter_widget_layout.setContentsMargins(10, 10, 10, 10)
         # filter_widget_layout.addWidget(self.category_filter_widget)
         filter_widget_layout.addWidget(self.data_type_filter_widget)
+        filter_widget_layout.addWidget(self.publisher_filter_widget)
         filter_widget_layout.addWidget(self.resolution_widget)
         filter_widget_layout.addWidget(self.date_filter_widget)
         filter_widget_layout.addWidget(self.license_widget)
@@ -70,6 +74,7 @@ class AdvancedFilterWidget(QWidget):
 
         self.filter_widgets = (  # self.category_filter_widget,
             self.data_type_filter_widget,
+            self.publisher_filter_widget,
             self.resolution_widget,
             self.date_filter_widget,
             self.license_widget,

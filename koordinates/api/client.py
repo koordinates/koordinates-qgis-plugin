@@ -154,6 +154,23 @@ class KoordinatesClient(QObject):
 
         return endpoint, headers, params
 
+    def _build_publishers_request(self,
+                                  page=1,
+                                  context=None) -> Tuple[str, Dict[str, str], dict]:
+        """
+        Builds the parameters used for a publishers request
+        """
+        headers = {"Expand": "list,list.publisher,list.styles,list.data.source_summary"}
+
+        params = {'type': 'site',
+                  'public': 'true',
+                  'sort': 'popularity'
+                  }
+        params.update({"page_size": PAGE_SIZE, "page": page})
+        endpoint = "publishers/"
+
+        return endpoint, headers, params
+
     def datasets_async(self,
                        page=1,
                        query: Optional[DataBrowserQuery] = None,
@@ -186,6 +203,17 @@ class KoordinatesClient(QObject):
         Retrieve datasets asynchronously
         """
         endpoint, headers, params = self._build_explore_request(panel, context)
+        network_request = self._build_request(endpoint, headers, params)
+
+        return QgsNetworkAccessManager.instance().get(network_request)
+
+    def publishers_async(self,
+                         page=1,
+                         context=None) -> QNetworkReply:
+        """
+        Retrieve publishers asynchronously
+        """
+        endpoint, headers, params = self._build_publishers_request(page, context)
         network_request = self._build_request(endpoint, headers, params)
 
         return QgsNetworkAccessManager.instance().get(network_request)

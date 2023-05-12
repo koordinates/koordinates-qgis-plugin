@@ -1,5 +1,3 @@
-import datetime
-import locale
 import os
 import platform
 from typing import (
@@ -253,7 +251,7 @@ class DatasetDialog(QDialog):
                 StatisticWidget(
                     'Date Added',
                     'add.svg',
-                    self.format_date(first_published)
+                    DatasetGuiUtils.format_date(first_published)
                 )
             )
 
@@ -263,7 +261,7 @@ class DatasetDialog(QDialog):
                 StatisticWidget(
                     'Last Updated',
                     'history.svg',
-                    self.format_date(last_updated)
+                    DatasetGuiUtils.format_date(last_updated)
                 )
             )
 
@@ -390,20 +388,6 @@ class DatasetDialog(QDialog):
             </style>
         """.format(FONT_FAMILIES, self.description_font_size)
 
-    @staticmethod
-    def format_number(value):
-        """
-        Formats a number for localised display
-        """
-        return locale.format_string("%d", value, grouping=True)
-
-    @staticmethod
-    def format_date(value: datetime.date):
-        """
-        Formats a date value for display
-        """
-        return value.strftime("%d %b %Y")
-
     def get_technical_details(self) -> List[Tuple]:
         res = [
             ('Data type', DatasetGuiUtils.get_data_type(self.dataset))
@@ -423,19 +407,19 @@ class DatasetDialog(QDialog):
             "feature_count", 0)
         empty_count = self.dataset.details.get("data", {}).get(
             'empty_geometry_count', 0)
-        feature_count_label = self.format_number(feature_count)
+        feature_count_label = DatasetGuiUtils.format_number(feature_count)
         if empty_count:
             feature_count_label += ' • {} with empty or null geometries'.format(
-                self.format_number(empty_count))
+                DatasetGuiUtils.format_number(empty_count))
             res.append(('Feature count', feature_count_label))
 
         if self.dataset.datatype == DataType.PointClouds:
             point_count = self.dataset.details.get("data", {}).get(
                 "point_count") or 0
-            res.append(('Point count', self.format_number(point_count)))
+            res.append(('Point count', DatasetGuiUtils.format_number(point_count)))
             tile_count = self.dataset.details.get("data", {}).get(
                 "feature_count") or 0
-            res.append(('Tile count', self.format_number(tile_count)))
+            res.append(('Tile count', DatasetGuiUtils.format_number(tile_count)))
             density = self.dataset.details.get("data", {}).get(
                 "point_density_sqm", {}) or 0
             res.append(('Point density',
@@ -483,11 +467,11 @@ class DatasetDialog(QDialog):
 
         first_published = self.dataset.created_at_date()
         if first_published:
-            res.append(('Date Added', self.format_date(first_published)))
+            res.append(('Date Added', DatasetGuiUtils.format_date(first_published)))
 
         last_updated = self.dataset.updated_at_date()
         if last_updated:
-            res.append(('Last updated', self.format_date(last_updated)))
+            res.append(('Last updated', DatasetGuiUtils.format_date(last_updated)))
 
         if Capability.RevisionCount in self.dataset.capabilities:
             data_revisions_count = \
@@ -623,7 +607,7 @@ class DatasetDialog(QDialog):
                 row = [
                     str(classification.get('id')),
                     str(classification.get('name')),
-                    self.format_number(classification.get('count', 0)),
+                    DatasetGuiUtils.format_number(classification.get('count', 0)),
                     '{:.2f}%'.format(
                         100 * classification.get('count', 0) / point_count),
                 ]

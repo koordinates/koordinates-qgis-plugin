@@ -2,6 +2,8 @@ from enum import Enum
 from typing import (
     Optional
 )
+import locale
+import datetime
 
 from qgis.core import (
     QgsFileUtils,
@@ -180,6 +182,20 @@ class DatasetGuiUtils:
                 )
 
         return None
+
+    @staticmethod
+    def format_number(value):
+        """
+        Formats a number for localised display
+        """
+        return locale.format_string("%d", value, grouping=True)
+
+    @staticmethod
+    def format_date(value: datetime.date):
+        """
+        Formats a date value for display
+        """
+        return value.strftime("%d %b %Y")
 
     @staticmethod
     def format_count(count: int) -> str:

@@ -56,3 +56,9 @@ class Publisher:
         Returns the publisher's name
         """
         return self.details.get("name")
+
+    def dataset_count(self) -> int:
+        """
+        Returns the dataset count
+        """
+        return int(self.details.get("dataset_count", 0))
