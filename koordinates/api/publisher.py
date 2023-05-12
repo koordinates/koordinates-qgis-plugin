@@ -15,13 +15,13 @@ class PublisherTheme:
         """
         Returns the background color
         """
-        return self.details.get('background_color')
+        return '#' + self.details.get('background_color')
 
     def logo(self) -> Optional[str]:
         """
         Returns the publisher's logo
         """
-        return self.details.get('logo')
+        return 'https:' + self.details.get('logo')
 
 
 class PublisherSite:
