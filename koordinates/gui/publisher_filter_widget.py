@@ -433,6 +433,8 @@ class PublisherSelectionWidget(QWidget):
         self.filter_edit.setPlaceholderText(self.tr('Search publishers'))
         vl.addWidget(self.filter_edit)
 
+        self.setCursor(Qt.PointingHandCursor)
+
         self.tab_bar = FlatUnderlineTabBar()
         self.tab_bar.addTab(self.tr('All'))
         self.tab_bar.addTab(self.tr('Publishers'))
@@ -451,6 +453,9 @@ class PublisherSelectionWidget(QWidget):
 
         self.setMinimumWidth(
             QFontMetrics(self.font()).horizontalAdvance('x') * 60
+        )
+        self.setMinimumHeight(
+            QFontMetrics(self.font()).height() * 20
         )
 
         self.filter_edit.textChanged.connect(self._filter_changed)
