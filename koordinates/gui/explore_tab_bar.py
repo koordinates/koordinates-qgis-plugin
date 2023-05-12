@@ -11,6 +11,7 @@ from qgis.PyQt.QtGui import (
     QPainter,
     QBrush,
     QColor,
+    QPen,
     QPainterPath
 )
 from qgis.PyQt.QtWidgets import (
@@ -20,7 +21,8 @@ from qgis.PyQt.QtWidgets import (
     QStylePainter,
     QStyleOptionTab,
     QStyleOptionButton,
-    QPushButton
+    QPushButton,
+    QStyleOption
 )
 
 from .gui_utils import GuiUtils
@@ -92,6 +94,52 @@ class FlatTabBar(QTabBar):
 
             option.state = option.state & (~QStyle.State_Selected)
             painter.drawControl(QStyle.CE_TabBarTabLabel, option)
+
+
+class FlatUnderlineTabBar(QTabBar):
+    """
+    A flat (material you) style tab bar widget, which underlines the selected tab
+    """
+
+    LINE_WIDTH = 4
+
+    def __init__(self, parent: Optional[QWidget] = None):
+        super().__init__(parent)
+        self.setIconSize(QSize(24, 24))
+        self.setExpanding(True)
+        font = self.font()
+        font.setBold(True)
+        self.setFont(font)
+        self._tab_color = QColor('#0a9b46')
+
+    def sizeHint(self):
+        return QSize(0, 36)
+
+    def paintEvent(self, event):
+        painter = QStylePainter(self)
+
+        painter.setRenderHint(QPainter.Antialiasing, True)
+
+        for i in range(self.count()):
+            option = QStyleOptionTab()
+            self.initStyleOption(option, i)
+
+            if option.state & QStyle.State_Selected:
+                painter.save()
+                painter.setRenderHint(QPainter.Antialiasing, False)
+                painter.setBrush(Qt.NoBrush)
+                pen = QPen(self._tab_color)
+                pen.setWidth(self.LINE_WIDTH)
+                painter.setPen(pen)
+                painter.drawLine(option.rect.left(),
+                                 self.rect().bottom(),
+                                 option.rect.right(),
+                                 self.rect().bottom())
+                painter.restore()
+
+            option.state = option.state & (~QStyle.State_Selected)
+            painter.drawControl(QStyle.CE_TabBarTabLabel, option)
+
 
 
 class ExploreTabBar(FlatTabBar):
