@@ -232,6 +232,7 @@ class PublisherModel(QAbstractItemModel):
         self.publisher_type = publisher_type
         self.publishers = []
         self._current_reply = None
+        self.available_count = 0
         self.current_page = 1
         self.endResetModel()
 
@@ -276,9 +277,14 @@ class PublisherModel(QAbstractItemModel):
 
         thumbnail_urls = set()
         for p in result:
-            publisher = Publisher(self.publisher_type, p)
+            # hmm, how to know the publisher type when returning All results?
+            if 'user:' in p['id']:
+                publisher = Publisher(PublisherType.User, p)
+            else:
+                publisher = Publisher(PublisherType.Publisher, p)
             self.publishers.append(publisher)
-            thumbnail_urls.add(publisher.theme.logo())
+            if publisher.theme.logo():
+                thumbnail_urls.add(publisher.theme.logo())
 
         self.endInsertRows()
 
@@ -457,7 +463,10 @@ class PublisherSelectionWidget(QWidget):
         if index > 0:
             self.filter_edit.clear()
 
-        if index == 1:
+        if index == 0:
+            self.publisher_list.publisher_model.set_publisher_type(
+                PublisherType.All)
+        elif index == 1:
             self.publisher_list.publisher_model.set_publisher_type(
                 PublisherType.Publisher)
         elif index == 2:
