@@ -146,7 +146,7 @@ class PublisherDelegate(QStyledItemDelegate):
         painter.setFont(font)
 
         left_text_edge = inner_rect.left() + self.THUMBNAIL_WIDTH + \
-                         self.HORIZONTAL_MARGIN * 2
+            self.HORIZONTAL_MARGIN * 2
 
         painter.setBrush(Qt.NoBrush)
         painter.setPen(QPen(QColor(0, 0, 0)))
