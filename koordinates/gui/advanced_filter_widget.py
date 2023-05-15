@@ -103,6 +103,14 @@ class AdvancedFilterWidget(QWidget):
         self.appearance = appearance
         self.update()
 
+    def set_publisher_filter_visible(self, visible: bool):
+        """
+        Sets whether the publisher filter is visible
+        """
+        self.publisher_filter_widget.setVisible(visible)
+        self.publisher_filter_widget.updateGeometry()
+        self.updateGeometry()
+
     def paintEvent(self, event):
         option = QStyleOption()
         option.initFrom(self)
