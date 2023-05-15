@@ -418,6 +418,7 @@ class Koordinates(QgsDockWidget, WIDGET):
 
         self.filter_widget.filters_changed.connect(self.search)
         self.filter_widget.explore.connect(self.explore)
+        self.filter_widget.explore_publishers.connect(self.explore_publishers)
 
         self.context_tab.currentChanged.connect(self._context_tab_changed)
         self.context_tab.tabBarClicked.connect(self._tab_bar_clicked)
@@ -677,6 +678,11 @@ class Koordinates(QgsDockWidget, WIDGET):
         context = self._current_context
         self.browse_header_widget.hide()
         self.results_panel.explore(panel, context)
+
+    def explore_publishers(self):
+        context = self._current_context
+        self.browse_header_widget.hide()
+        self.results_panel.show_publishers(context)
 
     def _fetch_facets(self,
                       query: Optional[DataBrowserQuery] = None,

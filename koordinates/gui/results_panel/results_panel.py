@@ -29,6 +29,7 @@ from koordinates.api import (
 from koordinates.gui.results_panel.datasets_browser_widget import DatasetsBrowserWidget
 from ..enums import ExploreMode
 from .explore_panel import ExplorePanelWidget
+from .publishers_panel import PublishersPanelWidget
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
@@ -121,6 +122,13 @@ class ResultsPanel(QWidget):
         self.clear_existing_items()
 
         self._start_explore(panel, context)
+
+    def show_publishers(self, context):
+        self.clear_existing_items()
+
+        item = PublishersPanelWidget()
+        self.child_items.append(item)
+        self.container_layout.addWidget(item)
 
     def _start_explore(self,
                        panel: ExplorePanel,
