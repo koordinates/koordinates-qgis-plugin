@@ -102,6 +102,7 @@ class ResultsPanel(QWidget):
             # scroll to top on new search
             self.scroll_area.verticalScrollBar().setValue(0)
         else:
+            self.cancel_active_requests()
             self.clear_existing_items()
 
             self.current_mode = ExploreMode.Browse
@@ -124,6 +125,7 @@ class ResultsPanel(QWidget):
         self._start_explore(panel, context)
 
     def show_publishers(self, context):
+        self.cancel_active_requests()
         self.clear_existing_items()
 
         item = PublishersPanelWidget()
