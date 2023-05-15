@@ -11,7 +11,8 @@ from .enums import (
     RasterBandFilter,
     RasterFilterOptions,
     GridFilterOptions,
-    CreativeCommonLicenseVersions
+    CreativeCommonLicenseVersions,
+    PublisherType
 )
 from .publisher import Publisher
 
@@ -74,7 +75,10 @@ class DataBrowserQuery:
             params['category'] = self.category
 
         if self.publisher:
-            params['from'] = self.publisher.id()
+            if self.publisher.publisher_type == PublisherType.User:
+                params['user'] = self.publisher.id()[len('user:'):]
+            else:
+                params['from'] = self.publisher.id()
 
         kind_params = []
         for data_type in self.data_types:
