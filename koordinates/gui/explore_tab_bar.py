@@ -152,6 +152,7 @@ class ExploreTabBar(FlatTabBar):
         self.addTab(GuiUtils.get_icon('browse.svg'), self.tr('Browse'))
         self.set_bottom_tab_style(1, TabStyle.Flat)
         self.addTab(GuiUtils.get_icon('publishers.svg'), self.tr('Publishers'))
+        self.set_bottom_tab_style(2, TabStyle.Flat)
         self.addTab(GuiUtils.get_icon('recent.svg'), self.tr('Recent'))
 
 
