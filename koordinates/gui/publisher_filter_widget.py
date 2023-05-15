@@ -549,14 +549,13 @@ class PublisherFilterWidget(FilterWidgetComboBase):
 
     def apply_constraints_to_query(self, query: DataBrowserQuery):
         if self._current_publisher:
-            query.publisher = self._current_publisher.id()
+            query.publisher = self._current_publisher
 
     def set_from_query(self, query: DataBrowserQuery):
-        return
         self._block_changes += 1
 
-        self.public_radio.setChecked(query.access_type == AccessType.Public)
-        self.private_radio.setChecked(query.access_type == AccessType.Private)
+        if query.publisher:
+            self._current_publisher = query.publisher
 
         self._update_value()
         self._update_visible_frames()

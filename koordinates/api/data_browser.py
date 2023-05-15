@@ -13,6 +13,7 @@ from .enums import (
     GridFilterOptions,
     CreativeCommonLicenseVersions
 )
+from .publisher import Publisher
 
 
 class DataBrowserQuery:
@@ -29,7 +30,7 @@ class DataBrowserQuery:
         self.access_type: Optional[AccessType] = None
         self.category: Optional[str] = None
 
-        self.publisher: Optional[str] = None
+        self.publisher: Optional[Publisher] = None
 
         self.data_types: Set[DataType] = set()
         self.vector_filters: Set[VectorFilter] = set()
@@ -73,7 +74,7 @@ class DataBrowserQuery:
             params['category'] = self.category
 
         if self.publisher:
-            params['from'] = self.publisher
+            params['from'] = self.publisher.id()
 
         kind_params = []
         for data_type in self.data_types:

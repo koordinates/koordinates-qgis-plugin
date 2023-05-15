@@ -169,6 +169,13 @@ class AdvancedFilterWidget(QWidget):
         for w in self.filter_widgets:
             w.apply_constraints_to_query(query)
 
+    def set_from_query(self, query: DataBrowserQuery):
+        """
+        Updates widgets to match a query
+        """
+        for w in self.filter_widgets:
+            w.set_from_query(query)
+
     def _update_query(self):
         self.filters_changed.emit()
 

@@ -26,10 +26,11 @@ from koordinates.api import (
     DataBrowserQuery,
     ExplorePanel
 )
-from koordinates.gui.results_panel.datasets_browser_widget import DatasetsBrowserWidget
+from .datasets_browser_widget import DatasetsBrowserWidget
 from ..enums import ExploreMode
 from .explore_panel import ExplorePanelWidget
 from .publishers_panel import PublishersPanelWidget
+from ...api import Publisher
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
@@ -40,6 +41,7 @@ class ResultsPanel(QWidget):
     """
     total_count_changed = pyqtSignal(int)
     visible_count_changed = pyqtSignal(int)
+    publisher_selected = pyqtSignal(Publisher)
 
     def __init__(self):
         super().__init__()
@@ -135,8 +137,12 @@ class ResultsPanel(QWidget):
         self.clear_existing_items()
 
         item = PublishersPanelWidget()
+        item.publisher_selected.connect(self._publisher_selected)
         self.child_items.append(item)
         self.container_layout.addWidget(item)
+
+    def _publisher_selected(self, publisher: Publisher):
+        self.publisher_selected.emit(publisher)
 
     def _start_explore(self,
                        panel: ExplorePanel,

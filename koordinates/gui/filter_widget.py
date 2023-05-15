@@ -305,6 +305,12 @@ class FilterWidget(QWidget):
 
         return query
 
+    def set_from_query(self, query: DataBrowserQuery):
+        """
+        Update widgets to match a query
+        """
+        self.advanced_filter_widget.set_from_query(query)
+
     def _update_query(self):
         self.filters_changed.emit()
 
