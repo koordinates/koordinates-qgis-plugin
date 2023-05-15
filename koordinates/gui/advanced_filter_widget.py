@@ -175,7 +175,8 @@ class AdvancedFilterWidget(QWidget):
         Updates a query to reflect the current widget state
         """
         for w in self.filter_widgets:
-            w.apply_constraints_to_query(query)
+            if w.isVisible():
+                w.apply_constraints_to_query(query)
 
     def set_from_query(self, query: DataBrowserQuery):
         """
