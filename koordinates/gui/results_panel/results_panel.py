@@ -97,6 +97,7 @@ class ResultsPanel(QWidget):
         self.child_items.clear()
 
     def populate(self, query: DataBrowserQuery, context):
+        self.cancel_active_requests()
         self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.container_layout.setContentsMargins(0, 6, 6, 6)
         if self.current_mode == ExploreMode.Browse and \
