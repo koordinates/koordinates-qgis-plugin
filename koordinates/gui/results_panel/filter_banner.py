@@ -22,13 +22,12 @@ from qgis.PyQt.QtWidgets import (
     QStylePainter,
 )
 
+from ..gui_utils import GuiUtils
 from ..thumbnails import downloadThumbnail
 from ...api import (
     Publisher,
     PublisherType
 )
-from ..gui_utils import GuiUtils
-
 
 
 class FilterBannerWidget(QWidget):
@@ -72,8 +71,8 @@ class FilterBannerWidget(QWidget):
 
     def close_button_rect(self):
         return QRectF(self.width() - 16 - self.HORIZONTAL_MARGIN,
-               0,
-               16, self.height())
+                      0,
+                      16, self.height())
 
     def mouseMoveEvent(self, event):
         if self.close_button_rect().contains(event.pos()):
@@ -141,9 +140,10 @@ class FilterBannerWidget(QWidget):
 
         image = GuiUtils.get_svg_as_image('close-reversed.svg', 16, 16)
         center_y = (self.height() - image.height()) / 2
-        painter.drawImage(QRectF(option.rect.right() - image.width() - self.HORIZONTAL_MARGIN,
-                                 option.rect.top() + center_y,
-                                 image.width(), image.height()),
+        painter.drawImage(QRectF(
+            option.rect.right() - image.width() - self.HORIZONTAL_MARGIN,
+            option.rect.top() + center_y,
+            image.width(), image.height()),
                           image)
 
 
