@@ -120,6 +120,12 @@ class AdvancedFilterWidget(QWidget):
         """
         return self.publisher_filter_widget.current_publisher()
 
+    def clear_publisher(self):
+        """
+        Clears any current publisher filter
+        """
+        self.publisher_filter_widget.clear()
+
     def paintEvent(self, event):
         option = QStyleOption()
         option.initFrom(self)

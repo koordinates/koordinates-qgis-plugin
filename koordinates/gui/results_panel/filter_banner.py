@@ -2,6 +2,7 @@ import platform
 from typing import Optional
 
 from qgis.PyQt.QtCore import (
+    pyqtSignal,
     Qt,
     QSize,
     QPointF,
@@ -41,10 +42,13 @@ class FilterBannerWidget(QWidget):
     THUMBNAIL_MARGIN = 3
     MARGIN_LEFT = 10
 
+    closed = pyqtSignal()
+
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
         self._icon: Optional[QImage] = None
         self._background: Optional[QColor] = None
+        self.setMouseTracking(True)
 
     def set_icon(self, icon: QImage):
         """
@@ -65,6 +69,21 @@ class FilterBannerWidget(QWidget):
 
     def sizeHint(self):
         return QSize(1000, int(QFontMetrics(self.font()).height() * 3))
+
+    def close_button_rect(self):
+        return QRectF(self.width() - 16 - self.HORIZONTAL_MARGIN,
+               0,
+               16, self.height())
+
+    def mouseMoveEvent(self, event):
+        if self.close_button_rect().contains(event.pos()):
+            self.setCursor(Qt.PointingHandCursor)
+        else:
+            self.setCursor(Qt.ArrowCursor)
+
+    def mousePressEvent(self, event):
+        if self.close_button_rect().contains(event.pos()):
+            self.closed.emit()
 
     def paintEvent(self, event):
         option = QStyleOption()
