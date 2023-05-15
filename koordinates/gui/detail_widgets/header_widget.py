@@ -35,10 +35,10 @@ class HeaderWidget(QFrame):
             if self.dataset.publisher() else None
         background_color = self.publisher_theme.background_color() \
             if self.publisher_theme else None
-        background_color = background_color or '555657'
+        background_color = background_color or '#555657'
 
         self.setStyleSheet(
-            'HeaderWidget {{ background-color: #{}; }}'.format(
+            'HeaderWidget {{ background-color: {}; }}'.format(
                 background_color))
 
         hl = QHBoxLayout()
