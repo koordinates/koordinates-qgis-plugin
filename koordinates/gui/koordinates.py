@@ -58,7 +58,12 @@ from ..api import (
     KoordinatesClient,
     SortOrder,
     DataBrowserQuery,
-    ExplorePanel
+    ExplorePanel,
+    Publisher,
+    DataType
+)
+from .enums import (
+    ExploreMode
 )
 from ..auth import OAuthWorkflow
 
@@ -358,6 +363,8 @@ class Koordinates(QgsDockWidget, WIDGET):
         self.results_panel = ResultsPanel()
         self.results_panel.visible_count_changed.connect(self._visible_count_changed)
         self.results_panel.total_count_changed.connect(self._total_count_changed)
+        self.results_panel.publisher_selected.connect(
+            self._publisher_selected)
         self.oauth: Optional[OAuthWorkflow] = None
 
         self.login_widget = LoginWidget(self)
@@ -740,6 +747,16 @@ class Koordinates(QgsDockWidget, WIDGET):
                     locale.format_string("%d", self._visible_count, grouping=True),
                     locale.format_string("%d", self._total_count, grouping=True))
             )
+
+    def _publisher_selected(self, publisher: Publisher):
+        query = DataBrowserQuery()
+        query.data_types = {DataType.Vectors, DataType.Rasters, DataType.Grids}
+        query.publisher = publisher
+        self.filter_widget.set_from_query(query)
+        self.filter_widget.set_explore_mode(ExploreMode.Browse)
+        context = self._current_context
+
+        self.results_panel.populate(query, context)
 
     def _loginChanged(self, logged_in: bool):
         if logged_in:
