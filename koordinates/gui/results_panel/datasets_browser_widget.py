@@ -22,8 +22,7 @@ from qgis.PyQt.QtWidgets import (
     QFrame,
     QLabel,
     QToolButton,
-    QVBoxLayout,
-    QWidget
+    QVBoxLayout
 )
 
 from .results_panel_widget import ResultsPanelWidget
