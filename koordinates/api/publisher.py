@@ -3,6 +3,10 @@ from typing import (
     Optional
 )
 
+from qgis.PyQt.QtGui import (
+    QColor
+)
+
 from .enums import PublisherType
 
 
@@ -13,14 +17,14 @@ class PublisherTheme:
     def __init__(self, details: Dict):
         self.details = details
 
-    def background_color(self) -> Optional[str]:
+    def background_color(self) -> Optional[QColor]:
         """
         Returns the background color
         """
         if not self.details.get('background_color'):
             return None
 
-        return '#' + self.details['background_color']
+        return QColor('#' + self.details['background_color'])
 
     def logo(self) -> Optional[str]:
         """

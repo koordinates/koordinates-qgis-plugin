@@ -33,6 +33,7 @@ from ..api import (
     AccessType,
     ExplorePanel
 )
+from .results_panel.filter_banner import PublisherFilterBannerWidget
 
 
 class FilterWidget(QWidget):
@@ -70,6 +71,14 @@ class FilterWidget(QWidget):
             self._filter_widget_changed)
 
         narrow_layout.addWidget(self.advanced_filter_widget)
+        self.publisher_container = QVBoxLayout()
+        self.publisher_container.setContentsMargins(0, 12, 0, 12)
+        self.publisher_widget = QWidget()
+        self.publisher_widget.setLayout(self.publisher_container)
+        self.publisher_widget.hide()
+        narrow_layout.addWidget(self.publisher_widget)
+
+        self._publisher_banner: Optional[PublisherFilterBannerWidget] = None
 
         self.narrow_widget = QWidget()
         self.narrow_widget.setLayout(narrow_layout)
@@ -144,6 +153,9 @@ class FilterWidget(QWidget):
             if self.advanced_filter_widget.isVisible():
                 height += self.advanced_filter_widget.sizeHint().height()
 
+        if self._publisher_banner:
+            height += self.publisher_container.sizeHint().height()
+
         return QSize(width, height)
 
     def set_wide_mode(self, wide_mode: bool):
@@ -154,7 +166,10 @@ class FilterWidget(QWidget):
         if self._wide_mode:
             self.narrow_widget.layout().removeWidget(
                 self.advanced_filter_widget)
+            self.narrow_widget.layout().removeWidget(
+                self.publisher_widget)
             self.wide_mode_filter_layout.addWidget(self.advanced_filter_widget)
+            self.wide_mode_filter_layout.addWidget(self.publisher_widget)
             self.wide_widget.show()
             self.narrow_widget.hide()
             self.advanced_filter_widget.set_appearance(
@@ -163,7 +178,10 @@ class FilterWidget(QWidget):
         else:
             self.wide_mode_filter_layout.removeWidget(
                 self.advanced_filter_widget)
+            self.wide_mode_filter_layout.removeWidget(
+                self.publisher_widget)
             self.narrow_widget.layout().addWidget(self.advanced_filter_widget)
+            self.narrow_widget.layout().addWidget(self.publisher_widget)
             self.wide_widget.hide()
             self.narrow_widget.show()
             self.advanced_filter_widget.set_appearance(
@@ -339,6 +357,27 @@ class FilterWidget(QWidget):
 
     def _update_query(self):
         self.filters_changed.emit()
+
+        publisher = self.advanced_filter_widget.current_publisher()
+        if publisher:
+            if self._publisher_banner and \
+                    self._publisher_banner.publisher.id() == publisher.id():
+                pass
+            else:
+                if self._publisher_banner:
+                    self._publisher_banner.deleteLater()
+
+                self._publisher_banner = PublisherFilterBannerWidget(publisher)
+                self.publisher_container.addWidget(self._publisher_banner)
+                self.publisher_widget.show()
+                self.updateGeometry()
+
+        elif self._publisher_banner:
+            self._publisher_banner.deleteLater()
+            self._publisher_banner = None
+
+            self.publisher_widget.hide()
+            self.updateGeometry()
 
     def set_logged_in(self, logged_in: bool):
         self.advanced_filter_widget.set_logged_in(logged_in)
