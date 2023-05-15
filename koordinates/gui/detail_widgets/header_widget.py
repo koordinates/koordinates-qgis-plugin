@@ -46,7 +46,6 @@ class HeaderWidget(QFrame):
 
         logo = self.publisher_theme.logo() if self.publisher_theme else None
         if logo:
-            logo = 'https:{}'.format(logo)
             logo_widget = ThumbnailLabel(logo, 145, 35)
             hl.addWidget(logo_widget)
 
