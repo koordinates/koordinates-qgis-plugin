@@ -26,8 +26,9 @@ from qgis.PyQt.QtWidgets import (
     QWidget
 )
 
-from .response_table_layout import ResponsiveTableWidget
-from ..api import (
+from .results_panel_widget import ResultsPanelWidget
+from ..response_table_layout import ResponsiveTableWidget
+from ...api import (
     KoordinatesClient,
     PAGE_SIZE,
     DataBrowserQuery
@@ -36,7 +37,7 @@ from ..api import (
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
 
-class DatasetsBrowserWidget(QWidget):
+class DatasetsBrowserWidget(ResultsPanelWidget):
     total_count_changed = pyqtSignal(int)
     visible_count_changed = pyqtSignal(int)
 
@@ -62,9 +63,6 @@ class DatasetsBrowserWidget(QWidget):
         self.setMinimumWidth(370)
 
     def cancel_active_requests(self):
-        """
-        Cancels any active request
-        """
         if self._current_reply is not None and \
                 not sip.isdeleted(self._current_reply):
             self._current_reply.abort()
