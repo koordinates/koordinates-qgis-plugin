@@ -33,8 +33,6 @@ from qgis.PyQt.QtNetwork import (
 from qgis.PyQt.QtWidgets import (
     QWidget,
     QVBoxLayout,
-    QRadioButton,
-    QButtonGroup,
     QStyledItemDelegate,
     QStyleOptionViewItem,
     QAbstractItemView,
@@ -52,7 +50,6 @@ from .thumbnails import GenericThumbnailManager
 from ..api import (
     KoordinatesClient,
     DataBrowserQuery,
-    AccessType,
     Publisher,
 )
 from ..api import PublisherType
@@ -428,7 +425,9 @@ class PublisherSelectionWidget(QWidget):
 
     selection_changed = pyqtSignal(Publisher)
 
-    def __init__(self, highlight_search_box: bool = False, parent: Optional[QWidget] = None):
+    def __init__(self,
+                 highlight_search_box: bool = False,
+                 parent: Optional[QWidget] = None):
         super().__init__(parent)
 
         vl = QVBoxLayout()
@@ -469,7 +468,9 @@ class PublisherSelectionWidget(QWidget):
             QFontMetrics(self.font()).height() * 20
         )
 
-        self.publisher_list.selectionModel().selectionChanged.connect(self._selection_changed)
+        self.publisher_list.selectionModel().selectionChanged.connect(
+            self._selection_changed
+        )
 
         self.filter_edit.textChanged.connect(self._filter_changed)
 
@@ -479,7 +480,9 @@ class PublisherSelectionWidget(QWidget):
 
     def _selection_changed(self, selected, _):
         try:
-            selection: Optional[Publisher] = selected[0].topLeft().data(PublisherModel.PublisherRole)
+            selection: Optional[Publisher] = selected[0].topLeft().data(
+                PublisherModel.PublisherRole
+            )
             self.selection_changed.emit(selection)
         except IndexError:
             return
@@ -511,7 +514,9 @@ class PublisherFilterWidget(FilterWidgetComboBase):
         super().__init__(parent)
 
         self.drop_down_widget = PublisherSelectionWidget()
-        self.drop_down_widget.selection_changed.connect(self._selection_changed)
+        self.drop_down_widget.selection_changed.connect(
+            self._selection_changed
+        )
 
         self.set_contents_widget(self.drop_down_widget)
 

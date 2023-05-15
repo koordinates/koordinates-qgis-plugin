@@ -23,7 +23,7 @@ class RoundedHighlightBox(QWidget):
 
     CORNER_RADIUS = 4
 
-    def __init__(self, parent: Optional[QWidget]=None):
+    def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
 
     def paintEvent(self, event):
@@ -39,6 +39,6 @@ class RoundedHighlightBox(QWidget):
         painter.setPen(Qt.NoPen)
 
         painter.drawRoundedRect(option.rect,
-                                    self.CORNER_RADIUS,
-                                    self.CORNER_RADIUS)
+                                self.CORNER_RADIUS,
+                                self.CORNER_RADIUS)
         painter.restore()
