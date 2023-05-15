@@ -38,6 +38,7 @@ from ..api import (
 class FilterWidget(QWidget):
     filters_changed = pyqtSignal()
     explore = pyqtSignal(ExplorePanel)
+    explore_publishers = pyqtSignal()
     clear_all = pyqtSignal()
 
     def __init__(self, parent):
@@ -246,6 +247,8 @@ class FilterWidget(QWidget):
             self.explore.emit(ExplorePanel.Popular)
         elif mode == ExploreMode.Recent:
             self.explore.emit(ExplorePanel.Recent)
+        elif mode == ExploreMode.Publishers:
+            self.explore_publishers.emit()
         else:
             self._update_query()
 
