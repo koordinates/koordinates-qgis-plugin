@@ -95,6 +95,7 @@ class ResultsPanel(QWidget):
         self.child_items.clear()
 
     def populate(self, query: DataBrowserQuery, context):
+        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         if self.current_mode == ExploreMode.Browse and \
                 self.child_items and \
                 isinstance(self.child_items[0], DatasetsBrowserWidget):
@@ -115,6 +116,7 @@ class ResultsPanel(QWidget):
             self.container_layout.addWidget(item)
 
     def explore(self, panel: ExplorePanel, context):
+        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         if panel == ExploreMode.Recent:
             self.current_mode = ExploreMode.Recent
         elif panel == ExploreMode.Popular:
@@ -125,6 +127,7 @@ class ResultsPanel(QWidget):
         self._start_explore(panel, context)
 
     def show_publishers(self, context):
+        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.cancel_active_requests()
         self.clear_existing_items()
 
