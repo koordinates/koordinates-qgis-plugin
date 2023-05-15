@@ -181,17 +181,22 @@ class FilterWidget(QWidget):
             self.set_explore_mode(ExploreMode.Browse)
             self._filter_widget_changed()
 
-    def set_tabs_visible(self, visible: bool):
+    def set_is_browse_tab(self, is_browse: bool):
         """
-        Sets whether the non-browse tabs should be available
+        Sets whether the current context tab is the browse tab
         """
-        self.explore_tab_bar.setVisible(visible)
-        self.browse_button.setVisible(visible)
-        self.popular_button.setVisible(visible)
-        self.publishers_button.setVisible(visible)
-        self.recent_button.setVisible(visible)
-        if not visible:
-            self.advanced_filter_widget.set_appearance(FilterWidgetAppearance.Horizontal)
+        self.explore_tab_bar.setVisible(is_browse)
+        self.browse_button.setVisible(is_browse)
+        self.popular_button.setVisible(is_browse)
+        self.publishers_button.setVisible(is_browse)
+        self.recent_button.setVisible(is_browse)
+        self.advanced_filter_widget.set_publisher_filter_visible(
+            is_browse
+        )
+        if not is_browse:
+            self.advanced_filter_widget.set_appearance(
+                FilterWidgetAppearance.Horizontal
+            )
         else:
             if self._wide_mode:
                 self.advanced_filter_widget.set_appearance(

@@ -663,11 +663,11 @@ class Koordinates(QgsDockWidget, WIDGET):
         self._prev_tab = current
         self.filter_widget.set_starred(current == self.TAB_STARRED_INDEX)
 
-        tabs_visible = current == self.TAB_BROWSE_INDEX
-        self.filter_widget.set_tabs_visible(
-            tabs_visible
+        is_browse_tab = current == self.TAB_BROWSE_INDEX
+        self.filter_widget.set_is_browse_tab(
+            is_browse_tab
         )
-        if not tabs_visible:
+        if not is_browse_tab:
             # force browse tab
             self.filter_widget.set_explore_mode(ExploreMode.Browse)
         else:
