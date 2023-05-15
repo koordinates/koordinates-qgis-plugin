@@ -26,6 +26,8 @@ from ...api import (
     Publisher,
     PublisherType
 )
+from ..gui_utils import GuiUtils
+
 
 
 class FilterBannerWidget(QWidget):
@@ -111,6 +113,20 @@ class FilterBannerWidget(QWidget):
                                      scaled.width(), scaled.height()),
                               scaled)
 
+        painter = None
+
+        self._draw_content(event)
+
+        painter = QStylePainter(self)
+        painter.setRenderHint(QPainter.Antialiasing, True)
+
+        image = GuiUtils.get_svg_as_image('close-reversed.svg', 16, 16)
+        center_y = (self.height() - image.height()) / 2
+        painter.drawImage(QRectF(option.rect.right() - image.width() - self.HORIZONTAL_MARGIN,
+                                 option.rect.top() + center_y,
+                                 image.width(), image.height()),
+                          image)
+
 
 class PublisherFilterBannerWidget(FilterBannerWidget):
     """
@@ -127,9 +143,7 @@ class PublisherFilterBannerWidget(FilterBannerWidget):
         if self.publisher.theme.logo():
             downloadThumbnail(self.publisher.theme.logo(), self)
 
-    def paintEvent(self, event):
-        super().paintEvent(event)
-
+    def _draw_content(self, event):
         option = QStyleOption()
         option.initFrom(self)
 
