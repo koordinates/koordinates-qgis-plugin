@@ -370,6 +370,7 @@ class FilterWidget(QWidget):
                 self._publisher_banner = PublisherFilterBannerWidget(publisher)
                 self.publisher_container.addWidget(self._publisher_banner)
                 self.publisher_widget.show()
+                self._publisher_banner.closed.connect(self._remove_publisher_filter)
                 self.updateGeometry()
 
         elif self._publisher_banner:
@@ -378,6 +379,9 @@ class FilterWidget(QWidget):
 
             self.publisher_widget.hide()
             self.updateGeometry()
+
+    def _remove_publisher_filter(self):
+        self.advanced_filter_widget.clear_publisher()
 
     def set_logged_in(self, logged_in: bool):
         self.advanced_filter_widget.set_logged_in(logged_in)
