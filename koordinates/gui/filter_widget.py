@@ -132,12 +132,14 @@ class FilterWidget(QWidget):
     def sizeHint(self):
         if not self._wide_mode:
             width = self.width()
-            height = self.explore_tab_bar.sizeHint().height()
+            height = self.explore_tab_bar.sizeHint().height() \
+                if self.explore_tab_bar.isVisible() else 0
             if self.advanced_filter_widget.isVisible():
                 height += self.advanced_filter_widget.sizeHint().height()
         else:
             width = self.advanced_filter_widget.sizeHint().width()
-            height = self.browse_button.sizeHint().height()
+            height = self.browse_button.sizeHint().height() \
+                if self.browse_button.isVisible() else 0
             height += self.popular_button.sizeHint().height()
             if self.advanced_filter_widget.isVisible():
                 height += self.advanced_filter_widget.sizeHint().height()
