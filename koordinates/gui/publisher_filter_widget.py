@@ -130,11 +130,11 @@ class PublisherDelegate(QStyledItemDelegate):
         if publisher.theme:
             background_color = publisher.theme.background_color()
             if not background_color:
-                background_color = '#f5f5f7'
+                background_color = QColor('#f5f5f7')
 
             thumbnail_image = index.data(PublisherModel.ThumbnailRole)
             painter.setPen(Qt.NoPen)
-            painter.setBrush(QBrush(QColor(background_color)))
+            painter.setBrush(QBrush(background_color))
             painter.drawPath(path)
 
             if thumbnail_image and not thumbnail_image.isNull():
@@ -523,6 +523,12 @@ class PublisherFilterWidget(FilterWidgetComboBase):
         self._current_publisher: Optional[Publisher] = None
 
         self.clear()
+
+    def current_publisher(self) -> Optional[Publisher]:
+        """
+        Returns the selected publisher, if one
+        """
+        return self._current_publisher
 
     def _selection_changed(self, publisher: Publisher):
         self._current_publisher = publisher

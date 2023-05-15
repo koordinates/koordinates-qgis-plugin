@@ -1,3 +1,5 @@
+from typing import Optional
+
 from qgis.PyQt.QtCore import (
     Qt,
     QTimer,
@@ -28,7 +30,8 @@ from .license_filter_widget import LicenseFilterWidget
 from .resolution_filter_widget import ResolutionFilterWidget
 from ..api import (
     DataBrowserQuery,
-    DataType
+    DataType,
+    Publisher
 )
 
 
@@ -110,6 +113,12 @@ class AdvancedFilterWidget(QWidget):
         self.publisher_filter_widget.setVisible(visible)
         self.publisher_filter_widget.updateGeometry()
         self.updateGeometry()
+
+    def current_publisher(self) -> Optional[Publisher]:
+        """
+        Returns the selected publisher, if set
+        """
+        return self.publisher_filter_widget.current_publisher()
 
     def paintEvent(self, event):
         option = QStyleOption()
