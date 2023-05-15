@@ -208,7 +208,7 @@ class ResponsiveLayout(QLayout):
                     new_geom
                 )
 
-                top += height + 6
+                top += height
 
             if self.results_layout:
                 self.results_layout.setGeometry(
