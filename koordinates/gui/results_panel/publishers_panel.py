@@ -25,7 +25,9 @@ class PublishersPanelWidget(ResultsPanelWidget):
         vl = QVBoxLayout()
         vl.setContentsMargins(0, 0, 0, 0)
 
-        self.publisher_widget = PublisherSelectionWidget()
+        self.publisher_widget = PublisherSelectionWidget(
+            highlight_search_box=True
+        )
         self.publisher_widget.layout().setContentsMargins(0, 0, 0, 0)
         vl.addWidget(self.publisher_widget)
 

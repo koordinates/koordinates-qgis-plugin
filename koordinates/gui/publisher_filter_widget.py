@@ -56,6 +56,7 @@ from ..api import (
     Publisher,
 )
 from ..api import PublisherType
+from .rounded_highlight_box import RoundedHighlightBox
 
 
 class PublisherDelegate(QStyledItemDelegate):
@@ -427,14 +428,21 @@ class PublisherSelectionWidget(QWidget):
 
     selection_changed = pyqtSignal(Publisher)
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, highlight_search_box: bool = False, parent: Optional[QWidget] = None):
         super().__init__(parent)
 
         vl = QVBoxLayout()
         self.filter_edit = QgsFilterLineEdit()
         self.filter_edit.setShowClearButton(True)
         self.filter_edit.setPlaceholderText(self.tr('Search publishers'))
-        vl.addWidget(self.filter_edit)
+        if not highlight_search_box:
+            vl.addWidget(self.filter_edit)
+        else:
+            search_highlight = RoundedHighlightBox()
+            sub_layout = QVBoxLayout()
+            sub_layout.addWidget(self.filter_edit)
+            search_highlight.setLayout(sub_layout)
+            vl.addWidget(search_highlight)
 
         self.setCursor(Qt.PointingHandCursor)
 
