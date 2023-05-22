@@ -54,6 +54,7 @@ from ..api import (
 )
 from ..api import PublisherType
 from .rounded_highlight_box import RoundedHighlightBox
+from .user_avatar_generator import UserAvatarGenerator
 
 
 class PublisherDelegate(QStyledItemDelegate):
@@ -149,13 +150,18 @@ class PublisherDelegate(QStyledItemDelegate):
                     scaled = DatasetGuiUtils.crop_image_to_circle(
                         thumbnail_image, thumbnail_image.height()
                     )
+            elif publisher.publisher_type == PublisherType.User:
+                scaled = UserAvatarGenerator.get_avatar(publisher.name())
+            else:
+                pass
 
-                center_x = int((thumbnail_rect.width() - scaled.width()) / 2)
-                center_y = int((thumbnail_rect.height() - scaled.height()) / 2)
-                painter.drawImage(QRectF(thumbnail_rect.left() + center_x,
-                                         thumbnail_rect.top() + center_y,
-                                         scaled.width(), scaled.height()),
-                                  scaled)
+
+            center_x = int((thumbnail_rect.width() - scaled.width()) / 2)
+            center_y = int((thumbnail_rect.height() - scaled.height()) / 2)
+            painter.drawImage(QRectF(thumbnail_rect.left() + center_x,
+                                     thumbnail_rect.top() + center_y,
+                                     scaled.width(), scaled.height()),
+                              scaled)
 
         heading_font_size = 10
         if platform.system() == 'Darwin':
