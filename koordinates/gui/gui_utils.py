@@ -161,7 +161,6 @@ class GuiUtils:
 
         return QFont()
 
-
     @staticmethod
     def get_font_path(font: str) -> str:
         """
