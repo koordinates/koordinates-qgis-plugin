@@ -15,6 +15,7 @@ __revision__ = '$Format:%H$'
 
 import math
 import os
+import re
 from typing import Optional
 
 from qgis.PyQt.QtCore import Qt
@@ -145,6 +146,21 @@ class GuiUtils:
         scale = 1.1 * standard_size / 24.0
         return int(math.floor(max(Qgis.UI_SCALE_FACTOR * fm.height() * scale,
                                   float(standard_size))))
+
+    @staticmethod
+    def get_default_font() -> QFont:
+        """
+        Returns the best font match for the Koordinates default font
+        families which is available on the system
+        """
+        for family in FONT_FAMILIES.split(','):
+            family_cleaned = re.match(r'^\s*\'?(.*?)\'?\s*$', family).group(1)
+            font = QFont(family_cleaned)
+            if font.exactMatch():
+                return font
+
+        return QFont()
+
 
     @staticmethod
     def get_font_path(font: str) -> str:
