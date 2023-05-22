@@ -28,6 +28,7 @@ from ...api import (
     Publisher,
     PublisherType
 )
+from ..user_avatar_generator import UserAvatarGenerator
 
 
 class FilterBannerWidget(QWidget):
@@ -161,6 +162,8 @@ class PublisherFilterBannerWidget(FilterBannerWidget):
         self.set_background_color(self.publisher.theme.background_color())
         if self.publisher.theme.logo():
             downloadThumbnail(self.publisher.theme.logo(), self)
+        elif self.publisher.publisher_type == PublisherType.User:
+            self.set_icon(UserAvatarGenerator.get_avatar(publisher.name()))
 
     def _draw_content(self, event):
         option = QStyleOption()
