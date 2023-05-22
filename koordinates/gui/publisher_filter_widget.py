@@ -55,6 +55,7 @@ from ..api import (
 from ..api import PublisherType
 from .rounded_highlight_box import RoundedHighlightBox
 from .user_avatar_generator import UserAvatarGenerator
+from .gui_utils import GuiUtils
 
 
 class PublisherDelegate(QStyledItemDelegate):
@@ -131,7 +132,10 @@ class PublisherDelegate(QStyledItemDelegate):
         if publisher.theme:
             background_color = publisher.theme.background_color()
             if not background_color:
-                background_color = QColor('#f5f5f7')
+                if publisher.publisher_type == PublisherType.User:
+                    background_color = QColor('#f5f5f7')
+                else:
+                    background_color = QColor('#555657')
 
             thumbnail_image = index.data(PublisherModel.ThumbnailRole)
             painter.setPen(Qt.NoPen)
@@ -153,7 +157,8 @@ class PublisherDelegate(QStyledItemDelegate):
             elif publisher.publisher_type == PublisherType.User:
                 scaled = UserAvatarGenerator.get_avatar(publisher.name())
             else:
-                pass
+                scaled = GuiUtils.get_svg_as_image('globe.svg',
+                                                   40, 40)
 
 
             center_x = int((thumbnail_rect.width() - scaled.width()) / 2)

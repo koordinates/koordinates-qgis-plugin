@@ -177,7 +177,11 @@ class PublisherFilterBannerWidget(FilterBannerWidget):
 
         if self.publisher.publisher_type == PublisherType.Publisher:
             self.set_foreground_color(QColor(255, 255, 255))
-            self.set_background_color(self.publisher.theme.background_color())
+            if self.publisher.theme.background_color():
+                self.set_background_color(self.publisher.theme.background_color())
+            else:
+                self.set_background_color(
+                    QColor('#555657'))
         elif self.publisher.publisher_type == PublisherType.User:
             self.set_foreground_color(QColor(0, 0, 0))
             self.set_background_color(QColor(255, 255, 255))
