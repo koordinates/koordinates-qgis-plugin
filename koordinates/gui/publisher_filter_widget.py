@@ -160,7 +160,6 @@ class PublisherDelegate(QStyledItemDelegate):
                 scaled = GuiUtils.get_svg_as_image('globe.svg',
                                                    40, 40)
 
-
             center_x = int((thumbnail_rect.width() - scaled.width()) / 2)
             center_y = int((thumbnail_rect.height() - scaled.height()) / 2)
             painter.drawImage(QRectF(thumbnail_rect.left() + center_x,

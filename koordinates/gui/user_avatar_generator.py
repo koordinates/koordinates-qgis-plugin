@@ -84,4 +84,3 @@ class UserAvatarGenerator:
         painter.end()
 
         return image
-
