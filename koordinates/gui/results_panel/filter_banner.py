@@ -48,6 +48,7 @@ class FilterBannerWidget(QWidget):
         super().__init__(parent)
         self._icon: Optional[QImage] = None
         self._background: Optional[QColor] = None
+        self._foreground: Optional[QColor] = None
         self.setMouseTracking(True)
 
     def set_icon(self, icon: QImage):
@@ -62,6 +63,13 @@ class FilterBannerWidget(QWidget):
         Sets the background color for the banner
         """
         self._background = color
+        self.update()
+
+    def set_foreground_color(self, color: QColor):
+        """
+        Sets the foreground color for the banner
+        """
+        self._foreground = color
         self.update()
 
     def setThumbnail(self, image: QImage):
@@ -93,7 +101,10 @@ class FilterBannerWidget(QWidget):
         painter.setRenderHint(QPainter.Antialiasing, True)
 
         painter.setPen(Qt.NoPen)
-        painter.setBrush(QBrush(QColor(255, 255, 255)))
+        if self._foreground:
+            painter.setBrush(QBrush(self._foreground))
+        else:
+            painter.setBrush(QBrush(QColor(255, 255, 255)))
 
         rect = QRectF(option.rect)
         inner_rect = rect
@@ -139,7 +150,11 @@ class FilterBannerWidget(QWidget):
         painter = QStylePainter(self)
         painter.setRenderHint(QPainter.Antialiasing, True)
 
-        image = GuiUtils.get_svg_as_image('close-reversed.svg', 16, 16)
+        if self._background.lightnessF() < 0.5:
+            image = GuiUtils.get_svg_as_image('close-reversed.svg', 16, 16)
+        else:
+            image = GuiUtils.get_svg_as_image('close.svg', 16, 16)
+
         center_y = (self.height() - image.height()) / 2
         painter.drawImage(QRectF(
             option.rect.right() - image.width() - self.HORIZONTAL_MARGIN,
@@ -153,13 +168,20 @@ class PublisherFilterBannerWidget(FilterBannerWidget):
     Shows a publisher filter as a banner widget
     """
 
-    TEXT_LEFT_EDGE = 130
+    TEXT_LEFT_EDGE_PUBLISHER = 130
+    TEXT_LEFT_EDGE_USER = 70
 
     def __init__(self, publisher: Publisher, parent: Optional[QWidget] = None):
         super().__init__(parent)
         self.publisher = publisher
 
-        self.set_background_color(self.publisher.theme.background_color())
+        if self.publisher.publisher_type == PublisherType.Publisher:
+            self.set_foreground_color(QColor(255, 255, 255))
+            self.set_background_color(self.publisher.theme.background_color())
+        elif self.publisher.publisher_type == PublisherType.User:
+            self.set_foreground_color(QColor(0, 0, 0))
+            self.set_background_color(QColor(255, 255, 255))
+
         if self.publisher.theme.logo():
             downloadThumbnail(self.publisher.theme.logo(), self)
         elif self.publisher.publisher_type == PublisherType.User:
@@ -171,9 +193,14 @@ class PublisherFilterBannerWidget(FilterBannerWidget):
 
         painter = QStylePainter(self)
 
-        heading_font_size = 10
-        if platform.system() == 'Darwin':
+        if self.publisher.publisher_type == PublisherType.Publisher:
+            heading_font_size = 10
+            if platform.system() == 'Darwin':
+                heading_font_size = 12
+        else:
             heading_font_size = 12
+            if platform.system() == 'Darwin':
+                heading_font_size = 14
 
         font = self.font()
         metrics = QFontMetrics(font)
@@ -181,15 +208,18 @@ class PublisherFilterBannerWidget(FilterBannerWidget):
         font.setBold(True)
         painter.setFont(font)
 
-        left_text_edge = option.rect.left() + self.TEXT_LEFT_EDGE
-
         if self.publisher.publisher_type == PublisherType.Publisher:
             line_heights = [1.2, 2.1]
+            left_text_edge = option.rect.left() + self.TEXT_LEFT_EDGE_PUBLISHER
         else:
             line_heights = [1.6, 0]
+            left_text_edge = option.rect.left() + self.TEXT_LEFT_EDGE_USER
 
         painter.setBrush(Qt.NoBrush)
-        painter.setPen(QPen(QColor(255, 255, 255)))
+        if self._foreground:
+            painter.setPen(QPen(self._foreground))
+        else:
+            painter.setPen(QPen(QColor(255, 255, 255)))
         painter.drawText(QPointF(left_text_edge,
                                  option.rect.top() + int(
                                      metrics.height() * line_heights[0])),
