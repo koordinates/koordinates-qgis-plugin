@@ -1,6 +1,7 @@
 from qgis.PyQt.QtCore import (
     Qt
 )
+from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -35,11 +36,11 @@ class HeaderWidget(QFrame):
             if self.dataset.publisher() else None
         background_color = self.publisher_theme.background_color() \
             if self.publisher_theme else None
-        background_color = background_color or '#555657'
+        background_color = background_color or QColor('#555657')
 
         self.setStyleSheet(
             'HeaderWidget {{ background-color: {}; }}'.format(
-                background_color))
+                background_color.name()))
 
         hl = QHBoxLayout()
         hl.setContentsMargins(15, 0, 15, 0)
