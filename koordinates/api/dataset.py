@@ -200,7 +200,11 @@ class Dataset:
                 f"key%3D{apikey}/{LayerUtils.WMTS_ENDPOINT}/"
                 f"{self.id}/WMTSCapabilities.xml"
             )
-            return QgsRasterLayer(uri, self.title(), "wms")
+            res = QgsRasterLayer(uri, self.title(), "wms")
+            # force feature mode for identify results by default --
+            # see https://github.com/koordinates/koordinates-qgis-plugin/issues/239
+            res.setCustomProperty('identify/format', 'Feature')
+            return res
 
         if self.datatype in (DataType.PointClouds,) and self.gridded_extent:
             layer = QgsMemoryProviderUtils.createMemoryLayer(
