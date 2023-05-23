@@ -35,7 +35,8 @@ from qgis.PyQt.QtWidgets import (
     QStyle,
     QLayout,
     QWidgetItem,
-    QToolButton
+    QToolButton,
+    QActionGroup
 )
 from qgis.gui import (
     QgsDockWidget,
@@ -440,6 +441,7 @@ class Koordinates(QgsDockWidget, WIDGET):
                 'QToolButton { padding-right: 30px; padding-left: 0px; }'
             )
         self.sort_menu = QMenu(self.button_sort_order)
+        sort_group = QActionGroup(self)
         for order in (
                 SortOrder.Popularity,
                 SortOrder.RecentlyAdded,
@@ -449,7 +451,9 @@ class Koordinates(QgsDockWidget, WIDGET):
                 SortOrder.Oldest):
             action = QAction(SortOrder.to_text(order), self.sort_menu)
             action.setData(order)
+            action.setCheckable(True)
             action.triggered.connect(partial(self._set_sort_order, order))
+            action.setActionGroup(sort_group)
             self.sort_menu.addAction(action)
 
         self.button_sort_order.setMenu(self.sort_menu)
@@ -530,9 +534,7 @@ class Koordinates(QgsDockWidget, WIDGET):
         """
         for action in self.sort_menu.actions():
             is_checked = action.data() == self.filter_widget.sort_order
-            action.setCheckable(is_checked)
-            if is_checked:
-                action.setChecked(True)
+            action.setChecked(is_checked)
 
     def _set_sort_order(self, order: SortOrder):
         """
