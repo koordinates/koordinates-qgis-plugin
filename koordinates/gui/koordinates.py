@@ -93,11 +93,11 @@ class CustomTab(QTabBar):
             option = QStyleOptionTab()
             self.initStyleOption(option, i)
 
-            if i == 0:
+            if i == Koordinates.TAB_STARRED_INDEX:
                 painter.drawControl(QStyle.CE_TabBarTabShape, option)
                 painter.drawPixmap(option.rect.center().x() - 7, option.rect.center().y() - 8,
                                    GuiUtils.get_icon_pixmap('star_filled.svg'))
-            elif i == 3:
+            elif i == Koordinates.TAB_CONTEXT_SWITCHER_INDEX:
                 painter.drawControl(QStyle.CE_TabBarTabShape, option)
                 painter.drawPixmap(option.rect.center().x() - 7, option.rect.center().y() - 8,
                                    GuiUtils.get_icon_pixmap('context_switcher.svg'))
@@ -255,8 +255,9 @@ class ResponsiveLayout(QLayout):
 
 
 class Koordinates(QgsDockWidget, WIDGET):
-    TAB_STARRED_INDEX = 0
-    TAB_BROWSE_INDEX = 1
+    TAB_STARRED_INDEX = 1
+    TAB_BROWSE_INDEX = 0
+    TAB_CONTEXT_SWITCHER_INDEX = 3
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -338,8 +339,8 @@ class Koordinates(QgsDockWidget, WIDGET):
 
         self.context_tab.show()
 
-        self.context_tab.setTabText(self.TAB_BROWSE_INDEX, 'Browse')
-        self.context_tab.setTabToolTip(self.TAB_BROWSE_INDEX, 'Browse')
+        self.context_tab.setTabText(self.TAB_BROWSE_INDEX, self.tr('Explore'))
+        self.context_tab.setTabToolTip(self.TAB_BROWSE_INDEX, self.tr('Explore'))
 
         self.context_tab.setCurrentIndex(self.TAB_BROWSE_INDEX)
 
