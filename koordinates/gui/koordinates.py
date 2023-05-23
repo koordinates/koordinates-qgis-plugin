@@ -117,6 +117,8 @@ class NoMouseReleaseMenu(QMenu):
 
 class ResponsiveLayout(QLayout):
 
+    WIDE_MODE_WIDTH_THRESHOLD = 770
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -191,7 +193,7 @@ class ResponsiveLayout(QLayout):
 
         advanced_filter_item_rect_changed = False
 
-        if effective_rect.width() < 650:
+        if effective_rect.width() < ResponsiveLayout.WIDE_MODE_WIDTH_THRESHOLD:
             # show advanced filters on top
             self.is_wide_mode = False
 
