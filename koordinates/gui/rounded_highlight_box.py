@@ -34,7 +34,7 @@ class RoundedHighlightBox(QWidget):
         painter.setRenderHint(QPainter.Antialiasing, True)
 
         painter.save()
-        brush = QBrush(QColor(0, 0, 0, 38))
+        brush = QBrush(QColor(219, 219, 219))
         painter.setBrush(brush)
         painter.setPen(Qt.NoPen)
 

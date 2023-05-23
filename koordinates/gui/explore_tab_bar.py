@@ -57,7 +57,7 @@ class FlatTabBar(QTabBar):
 
             if option.state & QStyle.State_Selected:
                 painter.save()
-                brush = QBrush(QColor(0, 0, 0, 38))
+                brush = QBrush(QColor(219, 219, 219))
                 painter.setBrush(brush)
                 painter.setPen(Qt.NoPen)
                 if _bottom_tab_style == TabStyle.Rounded:
@@ -184,7 +184,7 @@ class ExploreTabButton(QPushButton):
 
         if option.state & QStyle.State_On:
             painter.save()
-            brush = QBrush(QColor(0, 0, 0, 38))
+            brush = QBrush(QColor(219, 219, 219))
             painter.setBrush(brush)
             painter.setPen(Qt.NoPen)
             if self.bottom_tab_style == TabStyle.Rounded:
