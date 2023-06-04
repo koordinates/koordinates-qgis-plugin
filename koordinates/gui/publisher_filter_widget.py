@@ -543,6 +543,7 @@ class PublisherFilterWidget(FilterWidgetComboBase):
     def _selection_changed(self, publisher: Publisher):
         self._current_publisher = publisher
         self._update_value()
+        self.collapse()
 
     def _update_visible_frames(self):
         self.drop_down_widget.adjustSize()
