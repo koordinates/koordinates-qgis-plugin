@@ -105,7 +105,7 @@ class FlatUnderlineTabBar(QTabBar):
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
         self.setIconSize(QSize(24, 24))
-        self.setExpanding(True)
+        self.setExpanding(False)
         font = self.font()
         font.setBold(True)
         self.setFont(font)
