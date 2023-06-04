@@ -137,7 +137,8 @@ class FlatUnderlineTabBar(QTabBar):
                 painter.restore()
 
             option.state = option.state & (~QStyle.State_Selected)
-            painter.drawControl(QStyle.CE_TabBarTabLabel, option)
+            painter.setFont(self.font())
+            painter.drawText(option.rect, Qt.AlignLeft | Qt.AlignVCenter, option.text)
 
 
 class ExploreTabBar(FlatTabBar):
