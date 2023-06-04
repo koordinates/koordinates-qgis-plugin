@@ -236,6 +236,9 @@ class FilterWidget(QWidget):
         elif tab_index == 3:
             self.set_explore_mode(ExploreMode.Recent)
 
+        if tab_index != 1:
+            self.advanced_filter_widget.collapse_all()
+
     def _explore_button_toggled(self, button, checked):
         if not checked:
             return

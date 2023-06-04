@@ -217,8 +217,17 @@ class AdvancedFilterWidget(QWidget):
     def set_should_show(self, show):
         self.should_show = show
 
-    def show_advanced(self, show):
+    def collapse_all(self):
+        """
+        Collapses all expanded filter widgets
+        """
+        for w in self.filter_widgets:
+            w.collapse()
+
+    def show_advanced(self, show: bool):
+        """
+        Toggles whether the advanced filter controls are visible
+        """
         if not show:
-            for w in self.filter_widgets:
-                w.collapse()
+            self.collapse_all()
         self.setVisible(show)
