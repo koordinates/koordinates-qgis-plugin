@@ -276,6 +276,12 @@ class FilterWidget(QWidget):
                 ExploreMode.Recent) and self.search_line_edit:
             self.search_line_edit.clear()
 
+        if mode != ExploreMode.Browse:
+            if self._publisher_banner:
+                self._publisher_banner.deleteLater()
+                self._publisher_banner = None
+                self.publisher_widget.hide()
+
         if mode == ExploreMode.Popular:
             self.explore_tab_bar.setCurrentIndex(0)
             self.popular_button.setChecked(True)
