@@ -12,7 +12,8 @@ from qgis.PyQt.QtGui import (
     QBrush,
     QColor,
     QPen,
-    QPainterPath
+    QPainterPath,
+    QFontMetrics
 )
 from qgis.PyQt.QtWidgets import (
     QWidget,
@@ -101,6 +102,8 @@ class FlatUnderlineTabBar(QTabBar):
     """
 
     LINE_WIDTH = 4
+    HORIZONTAL_SPACING = 24
+    LEFT_MARGIN = 8
 
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
@@ -114,6 +117,14 @@ class FlatUnderlineTabBar(QTabBar):
     def sizeHint(self):
         return QSize(0, 36)
 
+    def tabSizeHint(self, index: int):
+        text = self.tabText(index)
+        fm = QFontMetrics(self.font())
+        text_width = int(fm.boundingRect(text).width() * 1.03)
+        margin = self.LEFT_MARGIN if index == 0 else 0
+        return QSize(margin + text_width + self.HORIZONTAL_SPACING,
+                     self.sizeHint().height())
+
     def paintEvent(self, event):
         painter = QStylePainter(self)
 
@@ -122,6 +133,10 @@ class FlatUnderlineTabBar(QTabBar):
         for i in range(self.count()):
             option = QStyleOptionTab()
             self.initStyleOption(option, i)
+            if i == 0:
+                option.rect.setLeft(option.rect.left() + self.LEFT_MARGIN)
+
+            option.rect.setWidth(option.rect.width() - self.HORIZONTAL_SPACING)
 
             if option.state & QStyle.State_Selected:
                 painter.save()
@@ -138,7 +153,9 @@ class FlatUnderlineTabBar(QTabBar):
 
             option.state = option.state & (~QStyle.State_Selected)
             painter.setFont(self.font())
-            painter.drawText(option.rect, Qt.AlignLeft | Qt.AlignVCenter, option.text)
+            painter.drawText(option.rect,
+                             Qt.TextDontClip | Qt.AlignLeft | Qt.AlignVCenter,
+                             option.text)
 
 
 class ExploreTabBar(FlatTabBar):
