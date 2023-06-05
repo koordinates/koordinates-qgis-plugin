@@ -35,7 +35,7 @@ class ExplorePanelWidget(ResultsPanelWidget):
     CORNER_RADIUS = 4
 
     def __init__(self,
-                 content: Dict, 
+                 content: Dict,
                  parent: Optional[QWidget] = None,
                  mode: ExploreMode = ExploreMode.Browse):
         super().__init__(parent)
