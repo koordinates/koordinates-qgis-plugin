@@ -61,6 +61,12 @@ class DatasetsBrowserWidget(ResultsPanelWidget):
         self._datasets = []
         self.setMinimumWidth(370)
 
+    def set_margins(self, left: int, top: int, right: int, bottom: int):
+        """
+        Sets the interior margins for the table
+        """
+        self.table_widget.set_margins(left, top, right, bottom)
+
     def content_height(self) -> int:
         """
         Returns the height of the table's actual content

@@ -219,9 +219,15 @@ class ResponsiveTableWidget(QWidget):
         self.setLayout(ResponsiveTableLayout(parent=None, vspacing=self.VERTICAL_SPACING,
                                              hspacing=self.HORIZONTAL_SPACING))
 
-        self.layout().setContentsMargins(0, 0, 16, 16)
+        self.layout().setContentsMargins(0, 0, 0, 0)
 
         self._widgets = []
+
+    def set_margins(self, left: int, top: int, right: int, bottom: int):
+        """
+        Sets the margins for the table
+        """
+        self.layout().setContentsMargins(left, top, right, bottom)
 
     def content_height(self) -> int:
         """

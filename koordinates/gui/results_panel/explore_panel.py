@@ -78,10 +78,10 @@ class ExplorePanelWidget(ResultsPanelWidget):
         pen.setCosmetic(True)
 
         actual_rect_height = self.title_label.height() \
-                             + self.layout().contentsMargins().top() \
-                             + self.layout().contentsMargins().bottom() \
-                             + self.layout().spacing() \
-                             + self.browser.content_height()
+            + self.layout().contentsMargins().top() \
+            + self.layout().contentsMargins().bottom() \
+            + self.layout().spacing() \
+            + self.browser.content_height()
 
         background_rect = QRect(
             self.rect().left(),
