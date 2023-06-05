@@ -97,6 +97,19 @@ class CustomComboBox(QWidget):
                        self.anchor_widget.height()
                        )
             )
+
+            screen = self.anchor_widget.screen()
+            if screen:
+                screen_width = screen.size().width()
+                pos_on_screen = new_pos.x() - screen.geometry().left()
+                if pos_on_screen + self.width() > screen_width:
+                    # align with right side of anchor widget instead, to
+                    # avoid combo box overflowing outside of screen
+                    right_edge = new_pos.x() + self.anchor_widget.width()
+                    new_pos.setX(
+                        right_edge - self.width()
+                    )
+
             self.move(new_pos)
 
         def showEvent(self, e):
