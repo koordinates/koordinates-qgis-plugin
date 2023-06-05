@@ -90,6 +90,27 @@ class ResponsiveTableLayout(QLayout):
     def column_count(self):
         return self._column_count
 
+    def actual_height(self) -> int:
+        """
+        Returns the actual height of the layout
+        """
+        height = 0
+
+        row_height = 0
+        col = 0
+        for w in self.itemList:
+            row_height = max(row_height, w.widget().height())
+            col += 1
+            if col == self._column_count:
+                height += row_height
+                height += self.vspacing
+
+                col = 0
+                row_height = 0
+        height += row_height
+
+        return height
+
     def minimumSize(self):
         size = QSize()
 
@@ -201,6 +222,12 @@ class ResponsiveTableWidget(QWidget):
         self.layout().setContentsMargins(0, 0, 16, 16)
 
         self._widgets = []
+
+    def content_height(self) -> int:
+        """
+        Returns the actual height of the table's content
+        """
+        return self.layout().actual_height()
 
     def clear(self):
         for w in self._widgets:

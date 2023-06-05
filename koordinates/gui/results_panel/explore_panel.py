@@ -5,6 +5,7 @@ from typing import (
     Dict
 )
 
+from qgis.PyQt.QtCore import QRect
 from qgis.PyQt.QtGui import (
     QPainter,
     QColor,
@@ -34,8 +35,8 @@ class ExplorePanelWidget(ResultsPanelWidget):
     def __init__(self, content: Dict, parent: Optional[QWidget] = None):
         super().__init__(parent)
 
-        title_label = QLabel()
-        title_label.setWordWrap(True)
+        self.title_label = QLabel()
+        self.title_label.setWordWrap(True)
 
         main_title_size = 14
         font_scale = self.screen().logicalDotsPerInch() / 92
@@ -46,7 +47,7 @@ class ExplorePanelWidget(ResultsPanelWidget):
         elif font_scale > 1:
             main_title_size = int(15 / font_scale)
 
-        title_label.setText(
+        self.title_label.setText(
             f"""<p style="line-height: 130%;
                 font-size: {main_title_size}pt;
                 font-family: Arial, Sans"><b>{content['title']}</b>"""
@@ -57,8 +58,8 @@ class ExplorePanelWidget(ResultsPanelWidget):
 
         vl = QVBoxLayout()
         vl.setContentsMargins(12, 12, 12, 0)
-        vl.addWidget(title_label)
-        vl.addWidget(self.browser)
+        vl.addWidget(self.title_label)
+        vl.addWidget(self.browser, 1)
 
         self.setLayout(vl)
 
@@ -74,8 +75,21 @@ class ExplorePanelWidget(ResultsPanelWidget):
         painter.setBrush(brush)
         pen = QPen(QColor('#dddddd'))
 
+        actual_rect_height = self.title_label.height() \
+                             + self.layout().contentsMargins().top() \
+                             + self.layout().contentsMargins().bottom() \
+                             + self.layout().spacing() \
+                             + self.browser.content_height()
+
+        background_rect = QRect(
+            self.rect().left(),
+            self.rect().top(),
+            self.rect().width(),
+            actual_rect_height
+        )
+
         painter.setPen(pen)
-        painter.drawRoundedRect(self.rect(),
+        painter.drawRoundedRect(background_rect,
                                 self.CORNER_RADIUS,
                                 self.CORNER_RADIUS)
         painter.restore()

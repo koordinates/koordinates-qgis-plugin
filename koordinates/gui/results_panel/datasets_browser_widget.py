@@ -61,6 +61,12 @@ class DatasetsBrowserWidget(ResultsPanelWidget):
         self._datasets = []
         self.setMinimumWidth(370)
 
+    def content_height(self) -> int:
+        """
+        Returns the height of the table's actual content
+        """
+        return self.table_widget.content_height()
+
     def cancel_active_requests(self):
         if self._current_reply is not None and \
                 not sip.isdeleted(self._current_reply):
