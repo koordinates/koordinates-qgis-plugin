@@ -24,7 +24,6 @@ from qgis.PyQt.QtWidgets import (
     QVBoxLayout,
     QComboBox,
     QStyleOptionComboBox,
-    QApplication,
     QSizePolicy
 )
 from qgis.core import (
