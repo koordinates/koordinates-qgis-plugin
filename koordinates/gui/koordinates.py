@@ -259,7 +259,7 @@ class ResponsiveLayout(QLayout):
 
 class Koordinates(QgsDockWidget, WIDGET):
     TAB_STARRED_INDEX = 1
-    TAB_BROWSE_INDEX = 0
+    TAB_EXPLORE_INDEX = 0
     TAB_CONTEXT_SWITCHER_INDEX = 3
 
     def __init__(self, parent):
@@ -342,10 +342,10 @@ class Koordinates(QgsDockWidget, WIDGET):
 
         self.context_tab.show()
 
-        self.context_tab.setTabText(self.TAB_BROWSE_INDEX, self.tr('Explore'))
-        self.context_tab.setTabToolTip(self.TAB_BROWSE_INDEX, self.tr('Explore'))
+        self.context_tab.setTabText(self.TAB_EXPLORE_INDEX, self.tr('Explore'))
+        self.context_tab.setTabToolTip(self.TAB_EXPLORE_INDEX, self.tr('Explore'))
 
-        self.context_tab.setCurrentIndex(self.TAB_BROWSE_INDEX)
+        self.context_tab.setCurrentIndex(self.TAB_EXPLORE_INDEX)
 
         # self.context_container.setFixedHeight(self.context_tab.sizeHint().height() + 100)
 
@@ -500,7 +500,7 @@ class Koordinates(QgsDockWidget, WIDGET):
 
         self.button_user.setMenu(self.user_menu)
 
-        self._context_tab_changed(self.TAB_BROWSE_INDEX)
+        self._context_tab_changed(self.TAB_EXPLORE_INDEX)
         self.context_tab_container.setFixedWidth(self.context_container.width())
 
         KoordinatesClient.instance().loginChanged.connect(self._loginChanged)
@@ -601,7 +601,7 @@ class Koordinates(QgsDockWidget, WIDGET):
         if current == self._prev_tab:
             return
 
-        if current in (self.TAB_BROWSE_INDEX, self.TAB_STARRED_INDEX):
+        if current in (self.TAB_EXPLORE_INDEX, self.TAB_STARRED_INDEX):
             self._current_context = {"type": "site", "domain": "all"}
             self.filter_top_frame.layout().setContentsMargins(0, 16, 0, 0)
             self.context_frame.set_color(QColor())
@@ -668,7 +668,7 @@ class Koordinates(QgsDockWidget, WIDGET):
         self._prev_tab = current
         self.filter_widget.set_starred(current == self.TAB_STARRED_INDEX)
 
-        is_browse_tab = current == self.TAB_BROWSE_INDEX
+        is_browse_tab = current == self.TAB_EXPLORE_INDEX
         self.filter_widget.set_is_browse_tab(
             is_browse_tab
         )
@@ -794,7 +794,7 @@ class Koordinates(QgsDockWidget, WIDGET):
         self._contexts = contexts[:]
 
         for i in range(self.context_tab.count() - 1, 0, -1):
-            if i in (self.TAB_BROWSE_INDEX, self.TAB_STARRED_INDEX):
+            if i in (self.TAB_EXPLORE_INDEX, self.TAB_STARRED_INDEX):
                 continue
 
             self.context_tab.removeTab(i)
