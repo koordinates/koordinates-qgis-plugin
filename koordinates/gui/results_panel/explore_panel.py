@@ -74,6 +74,8 @@ class ExplorePanelWidget(ResultsPanelWidget):
         brush = QBrush(QColor(255, 255, 255))
         painter.setBrush(brush)
         pen = QPen(QColor('#dddddd'))
+        pen.setWidth(2)
+        pen.setCosmetic(True)
 
         actual_rect_height = self.title_label.height() \
                              + self.layout().contentsMargins().top() \
