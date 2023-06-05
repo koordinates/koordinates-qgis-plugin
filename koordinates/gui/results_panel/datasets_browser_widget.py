@@ -32,6 +32,7 @@ from ...api import (
     PAGE_SIZE,
     DataBrowserQuery
 )
+from ..enums import ExploreMode
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
@@ -40,13 +41,15 @@ class DatasetsBrowserWidget(ResultsPanelWidget):
     total_count_changed = pyqtSignal(int)
     visible_count_changed = pyqtSignal(int)
 
-    def __init__(self):
+    def __init__(self, mode: ExploreMode = ExploreMode.Browse):
         super().__init__()
 
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
 
-        self.table_widget = ResponsiveTableWidget()
+        self.table_widget = ResponsiveTableWidget(
+            mode=mode
+        )
 
         layout.addWidget(self.table_widget)
         self.setLayout(layout)

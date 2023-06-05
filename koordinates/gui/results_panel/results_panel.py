@@ -162,10 +162,12 @@ class ResultsPanel(QWidget):
             context=self._current_context
         )
         self._current_reply.finished.connect(
-            partial(self._reply_finished, self._current_reply))
+            partial(self._reply_finished, self._current_reply, panel))
         self.setCursor(Qt.WaitCursor)
 
-    def _reply_finished(self, reply: QNetworkReply):
+    def _reply_finished(self,
+                        reply: QNetworkReply,
+                        explore_panel: ExplorePanel):
         if sip.isdeleted(self):
             return
 
@@ -194,8 +196,11 @@ class ResultsPanel(QWidget):
                     in panel['items']]):
                 filtered_panels.append(panel)
 
+        mode = ExploreMode.Popular if explore_panel == ExplorePanel.Popular \
+            else ExplorePanel.Recent
+
         for panel in filtered_panels:
-            item = ExplorePanelWidget(panel)
+            item = ExplorePanelWidget(panel, mode=mode)
             self.child_items.append(item)
             self.container_layout.addWidget(item)
 

@@ -17,6 +17,7 @@ from .dataset_browser_items import (
     EmptyDatasetItemWidget,
     DatasetItemWidget
 )
+from .enums import ExploreMode
 
 
 class ResponsiveTableLayout(QLayout):
@@ -210,13 +211,21 @@ class ResponsiveTableLayout(QLayout):
 
 
 class ResponsiveTableWidget(QWidget):
-    VERTICAL_SPACING = 10
+    BROWSE_VERTICAL_SPACING = 10
+    EXPLORE_VERTICAL_SPACING = 20
     HORIZONTAL_SPACING = 10
 
-    def __init__(self, parent=None):
+    def __init__(self,
+                 parent:Optional[QWidget] = None,
+                 mode: ExploreMode = ExploreMode.Browse):
         super().__init__(parent)
+        self._mode = mode
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
-        self.setLayout(ResponsiveTableLayout(parent=None, vspacing=self.VERTICAL_SPACING,
+
+        vertical_spacing = self.BROWSE_VERTICAL_SPACING \
+            if mode == ExploreMode.Browse else self.EXPLORE_VERTICAL_SPACING
+        self.setLayout(ResponsiveTableLayout(parent=None,
+                                             vspacing=vertical_spacing,
                                              hspacing=self.HORIZONTAL_SPACING))
 
         self.layout().setContentsMargins(0, 0, 0, 0)
@@ -269,7 +278,10 @@ class ResponsiveTableWidget(QWidget):
         self.layout().takeAt(idx + 1)
 
     def push_dataset(self, dataset):
-        dataset_widget = DatasetItemWidget(dataset, self.column_count(), self)
+        dataset_widget = DatasetItemWidget(dataset,
+                                           self.column_count(),
+                                           self,
+                                           mode=self._mode)
 
         next_empty_widget = self.find_next_empty_widget()
         if next_empty_widget is not None:
