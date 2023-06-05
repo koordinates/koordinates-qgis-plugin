@@ -118,7 +118,7 @@ class NoMouseReleaseMenu(QMenu):
 
 class ResponsiveLayout(QLayout):
 
-    WIDE_MODE_WIDTH_THRESHOLD = 770
+    WIDE_MODE_WIDTH_THRESHOLD = 780
 
     def __init__(self, parent=None):
         super().__init__(parent)
