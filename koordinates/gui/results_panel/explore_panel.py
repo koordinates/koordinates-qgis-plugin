@@ -19,6 +19,8 @@ from qgis.PyQt.QtWidgets import (
     QStylePainter
 )
 
+from ..enums import ExploreMode
+
 from .results_panel_widget import ResultsPanelWidget
 from koordinates.gui.results_panel.datasets_browser_widget import DatasetsBrowserWidget
 
@@ -32,7 +34,10 @@ class ExplorePanelWidget(ResultsPanelWidget):
 
     CORNER_RADIUS = 4
 
-    def __init__(self, content: Dict, parent: Optional[QWidget] = None):
+    def __init__(self,
+                 content: Dict, 
+                 parent: Optional[QWidget] = None,
+                 mode: ExploreMode = ExploreMode.Browse):
         super().__init__(parent)
 
         self.title_label = QLabel()
@@ -53,7 +58,9 @@ class ExplorePanelWidget(ResultsPanelWidget):
                 font-family: Arial, Sans"><b>{content['title']}</b>"""
         )
 
-        self.browser = DatasetsBrowserWidget()
+        self.browser = DatasetsBrowserWidget(
+            mode=mode
+        )
         self.browser.set_datasets(item['content'] for item in content['items'])
 
         vl = QVBoxLayout()

@@ -62,6 +62,8 @@ from ..api import (
     Dataset
 )
 
+from .enums import ExploreMode
+
 
 class DatasetItemLayout(QLayout):
 
@@ -330,15 +332,19 @@ class DatasetItemWidgetBase(QFrame):
     CARD_HEIGHT = THUMBNAIL_SIZE + 2  # +2 for 2x1px border
     CARD_HEIGHT_TALL = THUMBNAIL_SIZE + 170 + 2  # +2 for 2x1px border
 
-    def __init__(self, parent=None):
+    def __init__(self,
+                 parent=None,
+                 mode: ExploreMode = ExploreMode.Browse):
         super().__init__(parent)
         self.column_count = 1
-        self.setStyleSheet(
-            """DatasetItemWidgetBase {{
-               border: 1px solid #dddddd;
-               border-radius: {}px; background: white;
-            }}""".format(self.THUMBNAIL_CORNER_RADIUS)
-        )
+        self._mode = mode
+        if self._mode == ExploreMode.Browse:
+            self.setStyleSheet(
+                """DatasetItemWidgetBase {{
+                   border: 1px solid #dddddd;
+                   border-radius: {}px; background: white;
+                }}""".format(self.THUMBNAIL_CORNER_RADIUS)
+            )
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         self.setFixedHeight(self.CARD_HEIGHT)
         self.setLayout(DatasetItemLayout())
@@ -415,8 +421,12 @@ class DatasetItemWidget(DatasetItemWidgetBase):
     Shows details for a dataset item
     """
 
-    def __init__(self, dataset: Dict, column_count, parent):
-        super().__init__(parent)
+    def __init__(self,
+                 dataset: Dict,
+                 column_count,
+                 parent,
+                 mode: ExploreMode = ExploreMode.Browse):
+        super().__init__(parent, mode)
 
         self.setMouseTracking(True)
         self.dataset = Dataset(dataset)
