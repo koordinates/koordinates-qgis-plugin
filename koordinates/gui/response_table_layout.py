@@ -216,7 +216,7 @@ class ResponsiveTableWidget(QWidget):
     HORIZONTAL_SPACING = 10
 
     def __init__(self,
-                 parent:Optional[QWidget] = None,
+                 parent: Optional[QWidget] = None,
                  mode: ExploreMode = ExploreMode.Browse):
         super().__init__(parent)
         self._mode = mode
