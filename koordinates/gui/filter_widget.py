@@ -78,6 +78,11 @@ class FilterWidget(QWidget):
         self.publisher_widget.hide()
         narrow_layout.addWidget(self.publisher_widget)
 
+        self.popular_recent_padding_widget = QWidget()
+        self.popular_recent_padding_widget.setFixedHeight(10)
+        narrow_layout.addWidget(self.popular_recent_padding_widget)
+        self.popular_recent_padding_widget.hide()
+
         self._publisher_banner: Optional[PublisherFilterBannerWidget] = None
 
         self.narrow_widget = QWidget()
@@ -145,6 +150,9 @@ class FilterWidget(QWidget):
                 if self.explore_tab_bar.isVisible() else 0
             if self.advanced_filter_widget.isVisible():
                 height += self.advanced_filter_widget.sizeHint().height()
+            if self.popular_recent_padding_widget.isVisible():
+                height += \
+                    self.popular_recent_padding_widget.height()
         else:
             width = self.advanced_filter_widget.sizeHint().width()
             height = self.browse_button.sizeHint().height() \
@@ -275,6 +283,11 @@ class FilterWidget(QWidget):
                 ExploreMode.Popular,
                 ExploreMode.Recent) and self.search_line_edit:
             self.search_line_edit.clear()
+
+        # add a little bit of padding in popular/recent modes
+        self.popular_recent_padding_widget.setVisible(
+            mode in (ExploreMode.Popular, ExploreMode.Recent)
+        )
 
         if mode != ExploreMode.Browse:
             if self._publisher_banner:
