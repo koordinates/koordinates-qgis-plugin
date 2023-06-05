@@ -1,5 +1,7 @@
 import math
 from enum import Enum
+from typing import Optional
+
 
 from qgis.PyQt import sip
 from qgis.PyQt.QtCore import (
@@ -29,9 +31,6 @@ from qgis.core import (
     Qgis,
     QgsApplication
 )
-from qgis.gui import (
-    QgsFloatingWidget
-)
 
 
 class CustomComboBox(QWidget):
@@ -40,14 +39,15 @@ class CustomComboBox(QWidget):
     and offers a "clear" action to reset the widget
     """
 
-    class ContentsWidget(QgsFloatingWidget):
+    class ContentsWidget(QWidget):
 
-        def __init__(self, parent):
+        def __init__(self, parent: Optional[QWidget]):
             super().__init__(parent.window() if parent else None)
 
-            self.setAnchorWidget(parent)
-            self.setAnchorPoint(QgsFloatingWidget.TopLeft)
-            self.setAnchorWidgetPoint(QgsFloatingWidget.BottomLeft)
+            self.setWindowFlags(Qt.Popup
+                                | Qt.FramelessWindowHint)
+
+            self.anchor_widget = parent
 
             self.frame = QFrame()
             self.frame.setObjectName('base_frame')
@@ -79,8 +79,8 @@ class CustomComboBox(QWidget):
             self.frame.layout().addWidget(widget)
 
         def reflow(self):
-            if self.anchorWidget().width() > self.frame.sizeHint().width():
-                self.frame.setFixedWidth(self.anchorWidget().width())
+            if self.anchor_widget.width() > self.frame.sizeHint().width():
+                self.frame.setFixedWidth(self.anchor_widget.width())
             else:
                 self.frame.setFixedWidth(self.frame.sizeHint().width())
 
@@ -89,8 +89,20 @@ class CustomComboBox(QWidget):
             self.updateGeometry()
             self.adjustSize()
 
+        def move_to_anchor_placement(self):
+            """
+            Moves the popup to the correct anchor placement
+            """
+            new_pos = self.anchor_widget.mapToGlobal(
+                QPoint(0,
+                       self.anchor_widget.height()
+                       )
+            )
+            self.move(new_pos)
+
         def showEvent(self, e):
             super().showEvent(e)
+            self.move_to_anchor_placement()
             if not e.spontaneous():
                 self.ensurePolished()
                 self.reflow()
@@ -103,7 +115,6 @@ class CustomComboBox(QWidget):
         super().__init__(parent)
 
         self.setMouseTracking(True)
-        self.setFocusPolicy(Qt.StrongFocus)
 
         self._clear_icon = QIcon()
 
@@ -127,8 +138,6 @@ class CustomComboBox(QWidget):
         self.setMinimumHeight(cb.sizeHint().height())
 
         self._floating_widget.hide()
-
-        QApplication.instance().focusChanged.connect(self._on_focus_change)
 
     def __del__(self):
         if not sip.isdeleted(self._floating_widget):
@@ -180,24 +189,6 @@ class CustomComboBox(QWidget):
         self._hover_state = None
         super().leaveEvent(event)
         self.update()
-
-    def _on_focus_change(self, old, new):
-        if not self._floating_widget.isVisible():
-            return
-
-        parent = new
-        while parent:
-            if parent == self._floating_widget:
-                break
-            else:
-                try:
-                    parent = parent.parent()
-                except:  # noqa: E722
-                    parent = None
-
-        if not parent and new != self:
-            self._floating_widget.hide()
-            self.parent().update()
 
     def mousePressEvent(self, event):
         component = self.component_for_pos(event.pos())
