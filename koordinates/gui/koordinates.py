@@ -668,15 +668,18 @@ class Koordinates(QgsDockWidget, WIDGET):
         self._prev_tab = current
         self.filter_widget.set_starred(current == self.TAB_STARRED_INDEX)
 
-        is_browse_tab = current == self.TAB_EXPLORE_INDEX
+        is_explore_tab = current == self.TAB_EXPLORE_INDEX
         self.filter_widget.set_is_browse_tab(
-            is_browse_tab
+            is_explore_tab
         )
-        if not is_browse_tab:
+        if not is_explore_tab:
             # force browse tab
             self.filter_widget.set_explore_mode(ExploreMode.Browse)
         else:
-            self.explore()
+            if self.filter_widget.explore_mode() == ExploreMode.Browse:
+                self.search()
+            else:
+                self.explore()
 
     def _user_menu_about_to_show(self):
         """
