@@ -404,7 +404,7 @@ class Koordinates(QgsDockWidget, WIDGET):
         self.responsive_layout.set_results_layout(results_layout)
 
         filter_layout = QVBoxLayout()
-        filter_layout.setContentsMargins(0, 0, 6, 0)
+        filter_layout.setContentsMargins(11, 0, 11, 0)
 
         self.search_line_edit = QgsFilterLineEdit()
         self.search_line_edit.setShowClearButton(True)
