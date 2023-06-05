@@ -113,6 +113,7 @@ class ResultsPanel(QWidget):
             self.current_mode = ExploreMode.Browse
 
             item = DatasetsBrowserWidget()
+            item.set_margins(0, 0, 16, 16)
             item.total_count_changed.connect(self.total_count_changed)
             item.visible_count_changed.connect(self.visible_count_changed)
             item.populate(query, context)
