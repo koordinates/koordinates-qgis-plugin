@@ -31,7 +31,6 @@ from ...api import (
     Publisher,
     PublisherType
 )
-from ..user_avatar_generator import UserAvatarGenerator
 
 
 class FilterBannerWidget(QWidget):

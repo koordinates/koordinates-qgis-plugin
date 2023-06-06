@@ -79,9 +79,10 @@ class PublisherDelegate(QStyledItemDelegate):
         if platform.system() == 'Darwin':
             line_scale = 1.3
 
-        return QSize(option.rect.width(), int(QFontMetrics(option.font).height()
-                            * 4.5
-                            * line_scale))
+        return QSize(
+            option.rect.width(),
+            int(QFontMetrics(option.font).height() * 4.5 * line_scale)
+        )
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem,
               index: QModelIndex):
@@ -192,7 +193,7 @@ class PublisherDelegate(QStyledItemDelegate):
         painter.setFont(font)
 
         left_text_edge = inner_rect.left() + self.THUMBNAIL_WIDTH + \
-                         self.HORIZONTAL_MARGIN * 2
+            self.HORIZONTAL_MARGIN * 2
 
         if publisher.publisher_type == PublisherType.Publisher:
             line_heights = [1.2 * line_scale,
