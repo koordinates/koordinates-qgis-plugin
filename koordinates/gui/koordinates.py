@@ -266,6 +266,7 @@ class Koordinates(QgsDockWidget, WIDGET):
         super().__init__(parent)
         self.setupUi(self)
 
+        self._block_searching = 0
         self._facets = {}
         self._current_facets_reply = None
         self._visible_count = -1
@@ -666,12 +667,17 @@ class Koordinates(QgsDockWidget, WIDGET):
                 self.context_header.setVisible(True)
 
         self._prev_tab = current
+
+        self._block_searching += 1
         self.filter_widget.set_starred(current == self.TAB_STARRED_INDEX)
 
         is_explore_tab = current == self.TAB_EXPLORE_INDEX
         self.filter_widget.set_is_browse_tab(
             is_explore_tab
         )
+        self.filter_widget._clear_all()
+
+        self._block_searching -= 1
         if not is_explore_tab:
             # force browse tab
             self.filter_widget.set_explore_mode(ExploreMode.Browse)
@@ -691,6 +697,9 @@ class Koordinates(QgsDockWidget, WIDGET):
         )
 
     def search(self):
+        if self._block_searching:
+            return
+
         browser_query = self.filter_widget.build_query()
         context = self._current_context
         self.browse_header_widget.show()
