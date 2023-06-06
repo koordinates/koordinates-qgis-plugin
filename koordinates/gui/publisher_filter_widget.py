@@ -73,7 +73,13 @@ class PublisherDelegate(QStyledItemDelegate):
         super().__init__(parent)
 
     def sizeHint(self, option, index):
-        return QSize(0, int(QFontMetrics(option.font).height() * 4.5))
+        line_scale = 1
+        if platform.system() == 'Darwin':
+            line_scale = 1.3
+
+        return QSize(0, int(QFontMetrics(option.font).height()
+                            * 4.5
+                            * line_scale))
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem,
               index: QModelIndex):
@@ -172,8 +178,10 @@ class PublisherDelegate(QStyledItemDelegate):
                               scaled)
 
         heading_font_size = 10
+        line_scale = 1
         if platform.system() == 'Darwin':
             heading_font_size = 12
+            line_scale = 1.3
 
         font = QFont(option.font)
         metrics = QFontMetrics(font)
@@ -185,9 +193,13 @@ class PublisherDelegate(QStyledItemDelegate):
             self.HORIZONTAL_MARGIN * 2
 
         if publisher.publisher_type == PublisherType.Publisher:
-            line_heights = [1.2, 2.1, 3.0]
+            line_heights = [1.2 * line_scale,
+                            2.1 * line_scale,
+                            3.0 * line_scale]
         else:
-            line_heights = [1.6, 0, 2.6]
+            line_heights = [1.6 * line_scale,
+                            0,
+                            2.6 * line_scale]
 
         painter.setBrush(Qt.NoBrush)
         painter.setPen(QPen(QColor(0, 0, 0)))
