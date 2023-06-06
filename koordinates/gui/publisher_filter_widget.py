@@ -3,7 +3,8 @@ import platform
 from functools import partial
 from typing import (
     Optional,
-    List
+    List,
+    Dict
 )
 
 from qgis.PyQt import sip
@@ -28,7 +29,8 @@ from qgis.PyQt.QtGui import (
     QPainterPath
 )
 from qgis.PyQt.QtNetwork import (
-    QNetworkReply
+    QNetworkReply,
+    QNetworkRequest
 )
 from qgis.PyQt.QtWidgets import (
     QWidget,
@@ -226,6 +228,7 @@ class PublisherModel(QAbstractItemModel):
         self._current_reply = None
         self.available_count = 0
         self.publisher_type = PublisherType.Publisher
+        self._filter_string: Optional[str] = None
         self.publishers: List[Publisher] = []
         self.current_page = 1
         self._load_next_results()
@@ -247,9 +250,27 @@ class PublisherModel(QAbstractItemModel):
 
         self._load_next_results()
 
+    def set_filter_string(self, filter_string: str):
+        """
+        Sets a text filter for the view
+        """
+        if filter_string == self._filter_string:
+            return
+
+        self.beginResetModel()
+        self._filter_string = filter_string
+        self.publishers = []
+        self._current_reply = None
+        self.available_count = 0
+        self.current_page = 1
+        self.endResetModel()
+
+        self._load_next_results()
+
     def _load_next_results(self):
         self._current_reply = KoordinatesClient.instance().publishers_async(
             publisher_type=self.publisher_type,
+            filter_string=self._filter_string,
             page=self.current_page
         )
         self._current_reply.finished.connect(
@@ -266,6 +287,10 @@ class PublisherModel(QAbstractItemModel):
         self._current_reply = None
 
         if reply.error() == QNetworkReply.OperationCanceledError:
+            return
+
+        if reply.error() == QNetworkReply.ContentNotFoundError:
+            self.available_count = 0
             return
 
         if reply.error() != QNetworkReply.NoError:
@@ -378,33 +403,6 @@ class PublisherModel(QAbstractItemModel):
                 self.dataChanged.emit(index, index)
 
 
-class PublisherFilterModel(QSortFilterProxyModel):
-    """
-    Sort/filter model for publishers
-    """
-
-    def __init__(self, parent: Optional[QObject] = None):
-        super().__init__(parent)
-        self.setDynamicSortFilter(True)
-
-        self._filter_string: str = ''
-
-    def set_filter_string(self, filter_str: str):
-        self._filter_string = filter_str
-        self.invalidateFilter()
-
-    def filterAcceptsRow(self, row: int, parent: QModelIndex) -> bool:
-        if not self._filter_string:
-            return True
-
-        parent_index = self.sourceModel().index(row, 0, parent)
-        if self._filter_string.upper() in parent_index.data(
-                PublisherModel.TitleRole).upper():
-            return True
-
-        return False
-
-
 class PublisherListView(QListView):
     """
     Custom list view for publishers
@@ -414,10 +412,7 @@ class PublisherListView(QListView):
         super().__init__(parent)
 
         self.publisher_model = PublisherModel(self)
-        self.filter_model = PublisherFilterModel(self)
-        self.filter_model.setSourceModel(self.publisher_model)
-
-        self.setModel(self.filter_model)
+        self.setModel(self.publisher_model)
         delegate = PublisherDelegate(self)
         self.setItemDelegate(delegate)
 
@@ -426,6 +421,12 @@ class PublisherListView(QListView):
             "#qt_scrollarea_viewport{ background: transparent; }")
 
         self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
+
+    def set_filter_string(self, filter_string: str):
+        """
+        Sets a text filter for the view
+        """
+        self.publisher_model.set_filter_string(filter_string)
 
 
 class PublisherSelectionWidget(QWidget):
@@ -494,13 +495,15 @@ class PublisherSelectionWidget(QWidget):
         """
         Loads the total counts for the publisher types
         """
-        if PublisherSelectionWidget.FACETS_REPLY:
-            self._load_facet_reply()
+        if PublisherSelectionWidget.FACETS_REPLY and \
+                not self.filter_edit.text():
+            self._load_facet_reply(PublisherSelectionWidget.FACETS_REPLY)
             return
 
         self._current_facets_reply = \
             KoordinatesClient.instance().publishers_async(
                 publisher_type=None,
+                filter_string=self.filter_edit.text(),
                 is_facets=True
             )
         self._current_facets_reply.finished.connect(
@@ -523,16 +526,22 @@ class PublisherSelectionWidget(QWidget):
             print('error occurred :(')
             return
         # self.error_occurred.emit(request.reply().errorString())
-        PublisherSelectionWidget.FACETS_REPLY = json.loads(
-            reply.readAll().data().decode())
-        self._load_facet_reply()
 
-    def _load_facet_reply(self):
+        reply_content = json.loads(
+                reply.readAll().data().decode())
+        if not self.filter_edit.text():
+            PublisherSelectionWidget.FACETS_REPLY = reply_content
+            self._load_facet_reply(PublisherSelectionWidget.FACETS_REPLY)
+
+        else:
+            self._load_facet_reply(reply_content)
+
+    def _load_facet_reply(self, reply: Dict):
         """
         Updates tab text based on the facet's reply
         """
         overall_total = 0
-        for publisher_type in PublisherSelectionWidget.FACETS_REPLY.get(
+        for publisher_type in reply.get(
                 'type', []
         ):
             publisher_key = publisher_type.get('key', [])
@@ -561,8 +570,9 @@ class PublisherSelectionWidget(QWidget):
         )
 
     def _filter_changed(self, text: str):
-        self.publisher_list.filter_model.set_filter_string(text)
+        self.publisher_list.set_filter_string(text)
         self.tab_bar.setCurrentIndex(0)
+        self._load_total_counts()
 
     def _selection_changed(self, selected, _):
         try:
