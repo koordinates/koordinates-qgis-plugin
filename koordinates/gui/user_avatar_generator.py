@@ -20,7 +20,7 @@ class UserAvatarGenerator:
     Generates user avatar thumbnails
     """
 
-    AVATAR_SIZE = 65
+    AVATAR_SIZE = 50
     BACK_COLOR = QColor(255, 183, 0)
     FORE_COLOR = QColor(119, 119, 119)
     AVATAR_CACHE = {}
