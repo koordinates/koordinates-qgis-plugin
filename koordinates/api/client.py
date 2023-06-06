@@ -158,6 +158,7 @@ class KoordinatesClient(QObject):
 
     def _build_publishers_request(self,
                                   publisher_type: Optional[PublisherType],
+                                  filter_string: Optional[str] = None,
                                   page=1,
                                   context=None,
                                   is_facets: bool = False) -> Tuple[str, Dict[str, str], dict]:
@@ -170,6 +171,9 @@ class KoordinatesClient(QObject):
                   'public': 'true',
                   'sort': 'popularity'
                   }
+
+        if filter_string:
+            params['q'] = filter_string
 
         if not is_facets:
             if publisher_type == PublisherType.Publisher:
@@ -224,16 +228,18 @@ class KoordinatesClient(QObject):
     def publishers_async(self,
                          publisher_type: Optional[PublisherType],
                          page=1,
+                         filter_string: Optional[str] = None,
                          context=None,
                          is_facets: bool = False) -> QNetworkReply:
         """
         Retrieve publishers asynchronously
         """
         endpoint, headers, params = self._build_publishers_request(
-            publisher_type,
-            page,
-            context,
-            is_facets)
+            publisher_type=publisher_type,
+            filter_string=filter_string,
+            page=page,
+            context=context,
+            is_facets=is_facets)
         network_request = self._build_request(endpoint, headers, params)
 
         return QgsNetworkAccessManager.instance().get(network_request)
