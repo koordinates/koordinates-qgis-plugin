@@ -67,7 +67,7 @@ class PublisherDelegate(QStyledItemDelegate):
     VERTICAL_MARGIN = 7
     HORIZONTAL_MARGIN = 5
     THUMBNAIL_WIDTH = 118
-    THUMBNAIL_MARGIN = 5
+    THUMBNAIL_MARGIN = 8
 
     def __init__(self, parent: Optional[QObject] = None):
         super().__init__(parent)
@@ -147,7 +147,7 @@ class PublisherDelegate(QStyledItemDelegate):
                     scaled = thumbnail_image.scaled(
                         QSize(
                             int(thumbnail_rect.width()) - 2 * self.THUMBNAIL_MARGIN,
-                            int(thumbnail_image.height()) - 2 * self.THUMBNAIL_MARGIN),
+                            int(min(thumbnail_rect.height(), thumbnail_image.height())) - 2 * self.THUMBNAIL_MARGIN),
                         Qt.KeepAspectRatio,
                         Qt.SmoothTransformation)
                 else:
