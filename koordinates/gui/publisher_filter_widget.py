@@ -144,10 +144,14 @@ class PublisherDelegate(QStyledItemDelegate):
 
             if thumbnail_image and not thumbnail_image.isNull():
                 if publisher.publisher_type == PublisherType.Publisher:
+                    max_thumbnail_width = int(thumbnail_rect.width()) \
+                                          - 2 * self.THUMBNAIL_MARGIN
+                    max_thumbnail_height = \
+                        int(min(thumbnail_rect.height(),
+                                thumbnail_image.height())) \
+                        - 2 * self.THUMBNAIL_MARGIN
                     scaled = thumbnail_image.scaled(
-                        QSize(
-                            int(thumbnail_rect.width()) - 2 * self.THUMBNAIL_MARGIN,
-                            int(min(thumbnail_rect.height(), thumbnail_image.height())) - 2 * self.THUMBNAIL_MARGIN),
+                        QSize(max_thumbnail_width, max_thumbnail_height),
                         Qt.KeepAspectRatio,
                         Qt.SmoothTransformation)
                 else:
