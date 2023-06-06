@@ -64,6 +64,8 @@ class Publisher:
         # override publisher type
         if self.details.get('id', '').startswith('user:'):
             self.publisher_type = PublisherType.User
+        elif self.details.get('id', '').startswith('koordinates.com:'):
+            self.publisher_type = PublisherType.Mirror
         else:
             self.publisher_type = PublisherType.Publisher
 
