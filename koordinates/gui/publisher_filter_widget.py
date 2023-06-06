@@ -46,13 +46,11 @@ from qgis.gui import (
 from .dataset_utils import DatasetGuiUtils
 from .explore_tab_bar import FlatUnderlineTabBar
 from .filter_widget_combo_base import FilterWidgetComboBase
-from .gui_utils import GuiUtils
 from .rounded_highlight_box import RoundedHighlightBox
 from .thumbnails import (
     GenericThumbnailManager,
     PublisherThumbnailProcessor
 )
-from .user_avatar_generator import UserAvatarGenerator
 from ..api import (
     KoordinatesClient,
     DataBrowserQuery,
@@ -180,7 +178,7 @@ class PublisherDelegate(QStyledItemDelegate):
         painter.setFont(font)
 
         left_text_edge = inner_rect.left() + self.THUMBNAIL_WIDTH + \
-            self.HORIZONTAL_MARGIN * 2
+                         self.HORIZONTAL_MARGIN * 2
 
         if publisher.publisher_type == PublisherType.Publisher:
             line_heights = [1.2 * line_scale,
