@@ -16,7 +16,7 @@ from qgis.core import (
     QgsWkbTypes
 )
 
-from .enums import DataType, PublisherType
+from .enums import DataType
 from .repo import Repo
 from .utils import ApiUtils
 from .publisher import Publisher
