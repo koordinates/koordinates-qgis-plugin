@@ -3,8 +3,7 @@ from qgis.PyQt.QtCore import (
     QSize
 )
 from qgis.PyQt.QtGui import (
-    QColor,
-    QPixmap
+    QColor
 )
 from qgis.PyQt.QtWidgets import (
     QFrame,
@@ -19,10 +18,8 @@ from koordinates.gui.detail_widgets.thumbnail_label_widget import \
     PublisherThumbnailLabel
 from koordinates.gui.gui_utils import FONT_FAMILIES
 from ...api import (
-    Dataset,
-    PublisherType
+    Dataset
 )
-from ..user_avatar_generator import UserAvatarGenerator
 
 
 class HeaderWidget(QFrame):
