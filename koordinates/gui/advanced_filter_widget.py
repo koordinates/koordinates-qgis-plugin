@@ -38,6 +38,8 @@ from ..api import (
 class AdvancedFilterWidget(QWidget):
     filters_changed = pyqtSignal()
 
+    publisher_changed = pyqtSignal(object)
+
     CORNER_RADIUS = 4
 
     def __init__(self, parent):
@@ -92,6 +94,10 @@ class AdvancedFilterWidget(QWidget):
         for w in self.filter_widgets:
             w.changed.connect(self._filter_widget_changed)
 
+        self.publisher_filter_widget.changed.connect(
+            self._publisher_filter_changed
+        )
+
         self.setLayout(filter_widget_layout)
 
     def sizeHint(self):
@@ -105,6 +111,14 @@ class AdvancedFilterWidget(QWidget):
     def set_appearance(self, appearance: FilterWidgetAppearance):
         self.appearance = appearance
         self.update()
+
+    def _publisher_filter_changed(self):
+        """
+        Triggered when the current publisher filter is changed
+        """
+        self.publisher_changed.emit(
+            self.publisher_filter_widget.current_publisher()
+        )
 
     def set_publisher_filter_visible(self, visible: bool):
         """

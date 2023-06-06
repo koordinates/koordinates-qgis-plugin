@@ -20,6 +20,7 @@ from qgis.PyQt.QtWidgets import (
     QWidget,
     QStyleOption,
     QStylePainter,
+    QSizePolicy
 )
 
 from ..gui_utils import GuiUtils
@@ -52,6 +53,10 @@ class FilterBannerWidget(QWidget):
         self._background: Optional[QColor] = None
         self._foreground: Optional[QColor] = None
         self.setMouseTracking(True)
+        self.setSizePolicy(
+            QSizePolicy.Preferred,
+            QSizePolicy.Fixed
+        )
 
     def set_icon(self, icon: QImage):
         """

@@ -31,6 +31,7 @@ from ..enums import ExploreMode
 from .explore_panel import ExplorePanelWidget
 from .publishers_panel import PublishersPanelWidget
 from ...api import Publisher
+from .filter_banner import PublisherFilterBannerWidget
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
@@ -42,6 +43,7 @@ class ResultsPanel(QWidget):
     total_count_changed = pyqtSignal(int)
     visible_count_changed = pyqtSignal(int)
     publisher_selected = pyqtSignal(Publisher)
+    publisher_cleared = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -54,6 +56,17 @@ class ResultsPanel(QWidget):
         self.scroll_area.setWidgetResizable(True)
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
+
+        self.publisher_container = QVBoxLayout()
+        self.publisher_container.setContentsMargins(0, 12, 0, 12)
+        self.publisher_widget = QWidget()
+        self.publisher_widget.setLayout(self.publisher_container)
+        self.publisher_widget.setSizePolicy(QSizePolicy.Preferred,
+                                            QSizePolicy.Maximum)
+        self.publisher_widget.hide()
+        layout.addWidget(self.publisher_widget)
+
+        self._publisher_banner: Optional[PublisherFilterBannerWidget] = None
 
         self.container = QWidget()
         self.container_layout = QVBoxLayout()
@@ -128,9 +141,52 @@ class ResultsPanel(QWidget):
         elif panel == ExploreMode.Popular:
             self.current_mode = ExploreMode.Popular
 
+        if self._publisher_banner:
+            self._publisher_banner.deleteLater()
+            self._publisher_banner = None
+            self.publisher_widget.hide()
+            self.updateGeometry()
+
         self.clear_existing_items()
 
         self._start_explore(panel, context)
+
+    def set_publisher(self, publisher: Optional[Publisher]):
+        """
+        Sets the publisher associated with the results
+        """
+        if publisher:
+            if self._publisher_banner and \
+                    self._publisher_banner.publisher.id() == publisher.id():
+                pass
+            else:
+                if self._publisher_banner:
+                    self._publisher_banner.deleteLater()
+
+                self._publisher_banner = PublisherFilterBannerWidget(
+                    publisher)
+                self.publisher_container.addWidget(
+                    self._publisher_banner)
+                self.publisher_widget.show()
+                self._publisher_banner.closed.connect(
+                    self._remove_publisher_filter)
+                self.updateGeometry()
+        elif self._publisher_banner:
+            self._publisher_banner.deleteLater()
+            self._publisher_banner = None
+
+            self.publisher_widget.hide()
+            self.updateGeometry()
+
+    def _remove_publisher_filter(self):
+        if self._publisher_banner:
+            self._publisher_banner.deleteLater()
+            self._publisher_banner = None
+
+            self.publisher_widget.hide()
+            self.updateGeometry()
+
+        self.publisher_cleared.emit()
 
     def show_publishers(self, context):
         self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -143,8 +199,15 @@ class ResultsPanel(QWidget):
         self.child_items.append(item)
         self.container_layout.addWidget(item)
 
+        if self._publisher_banner:
+            self._publisher_banner.deleteLater()
+            self._publisher_banner = None
+            self.publisher_widget.hide()
+            self.updateGeometry()
+
     def _publisher_selected(self, publisher: Publisher):
         self.publisher_selected.emit(publisher)
+        self.set_publisher(publisher)
 
     def _start_explore(self,
                        panel: ExplorePanel,

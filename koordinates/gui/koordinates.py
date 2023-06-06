@@ -420,6 +420,10 @@ class Koordinates(QgsDockWidget, WIDGET):
         self.filter_widget.set_search_line_edit(self.search_line_edit)
         filter_layout.addSpacing(6)
 
+        self.filter_widget.publisher_changed.connect(
+            self.results_panel.set_publisher
+        )
+
         self.horizontal_filter_container.setLayout(filter_layout)
 
         self.responsive_layout.set_filter_widget(self.filter_widget)
@@ -436,6 +440,8 @@ class Koordinates(QgsDockWidget, WIDGET):
         self.context_tab.tabBarClicked.connect(self._tab_bar_clicked)
 
         self.filter_widget.clear_all.connect(self._clear_all_filters)
+        self.results_panel.publisher_cleared.connect(
+            self.filter_widget.remove_publisher_filter)
 
         if os.name == 'nt' or self.window().screen().devicePixelRatio() > 1:
             self.button_sort_order.setStyleSheet(
@@ -778,6 +784,7 @@ class Koordinates(QgsDockWidget, WIDGET):
         query = DataBrowserQuery()
         query.data_types = {DataType.Vectors, DataType.Rasters, DataType.Grids}
         query.publisher = publisher
+
         self.filter_widget.set_from_query(query)
         self.filter_widget.set_explore_mode(ExploreMode.Browse)
         context = self._current_context
