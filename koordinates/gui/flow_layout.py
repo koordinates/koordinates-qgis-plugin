@@ -76,7 +76,7 @@ class FlowLayout(QLayout):
         size = QSize()
 
         for item in self.itemList:
-            if item.widget().isVisible():
+            if not item.widget().isHidden():
                 size = size.expandedTo(item.minimumSize())
 
         margins = self.contentsMargins()
@@ -124,7 +124,7 @@ class FlowLayout(QLayout):
         assigned_lines = []
         current_line_items = []
 
-        visible_items = [i for i in self.itemList if i.widget().isVisible()]
+        visible_items = [i for i in self.itemList if not i.widget().isHidden()]
 
         if not visible_items:
             return 0
