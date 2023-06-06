@@ -1,7 +1,10 @@
 from qgis.PyQt.QtCore import (
     Qt
 )
-from qgis.PyQt.QtGui import QColor
+from qgis.PyQt.QtGui import (
+    QColor,
+    QPixmap
+)
 from qgis.PyQt.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -15,8 +18,10 @@ from koordinates.gui.detail_widgets.thumbnail_label_widget import \
     ThumbnailLabel
 from koordinates.gui.gui_utils import FONT_FAMILIES
 from ...api import (
-    Dataset
+    Dataset,
+    PublisherType
 )
+from ..user_avatar_generator import UserAvatarGenerator
 
 
 class HeaderWidget(QFrame):
@@ -32,8 +37,10 @@ class HeaderWidget(QFrame):
         self.setFixedHeight(72)
         self.setFrameShape(QFrame.NoFrame)
 
-        self.publisher_theme = self.dataset.publisher().theme \
-            if self.dataset.publisher() else None
+        self.publisher = self.dataset.publisher()
+
+        self.publisher_theme = self.publisher.theme \
+            if self.publisher else None
         background_color = self.publisher_theme.background_color() \
             if self.publisher_theme else None
         background_color = background_color or QColor('#555657')
@@ -45,9 +52,16 @@ class HeaderWidget(QFrame):
         hl = QHBoxLayout()
         hl.setContentsMargins(15, 0, 15, 0)
 
-        logo = self.publisher_theme.logo() if self.publisher_theme else None
-        if logo:
+        if self.publisher_theme and self.publisher_theme.logo():
+            logo = self.publisher_theme.logo()
             logo_widget = ThumbnailLabel(logo, 145, 35)
+            hl.addWidget(logo_widget)
+        elif self.publisher and self.publisher.publisher_type == PublisherType.User:
+            logo_image = UserAvatarGenerator.get_avatar(
+                self.publisher.name()
+            )
+            logo_widget = QLabel()
+            logo_widget.setPixmap(QPixmap.fromImage(logo_image))
             hl.addWidget(logo_widget)
 
         url_frame = QFrame()

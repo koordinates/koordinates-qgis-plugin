@@ -18,7 +18,7 @@ class ThumbnailLabel(QLabel):
     A fixed size label showing a deferred loaded thumbnail image
     """
 
-    def __init__(self, url, width, height, parent=None):
+    def __init__(self, url: str, width, height, parent=None):
         super().__init__(parent)
         self.setFixedSize(QSize(width, height))
 

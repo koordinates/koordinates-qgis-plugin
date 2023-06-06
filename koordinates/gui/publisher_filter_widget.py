@@ -325,11 +325,7 @@ class PublisherModel(QAbstractItemModel):
 
         thumbnail_urls = set()
         for p in result:
-            # hmm, how to know the publisher type when returning All results?
-            if 'user:' in p['id']:
-                publisher = Publisher(PublisherType.User, p)
-            else:
-                publisher = Publisher(PublisherType.Publisher, p)
+            publisher = Publisher(p)
             self.publishers.append(publisher)
             if publisher.theme.logo():
                 thumbnail_urls.add(publisher.theme.logo())

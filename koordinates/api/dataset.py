@@ -104,8 +104,7 @@ class Dataset:
         if not self.details.get("publisher"):
             return None
 
-        return Publisher(PublisherType.Publisher,
-                         self.details["publisher"])
+        return Publisher(self.details["publisher"])
 
     def is_starred(self) -> bool:
         """

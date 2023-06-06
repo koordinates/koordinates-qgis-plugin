@@ -59,9 +59,14 @@ class Publisher:
     Represents a publisher
     """
 
-    def __init__(self, publisher_type: PublisherType, details: Dict):
+    def __init__(self, details: Dict):
         self.details = details
-        self.publisher_type = publisher_type
+        # override publisher type
+        if self.details.get('id', '').startswith('user:'):
+            self.publisher_type = PublisherType.User
+        else:
+            self.publisher_type = PublisherType.Publisher
+
         self.site = PublisherSite(self.details['site']) \
             if self.details.get('site') else None
         self.theme = PublisherTheme(self.details['theme']) \
