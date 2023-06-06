@@ -242,6 +242,8 @@ class PublisherFilterBannerWidget(FilterBannerWidget):
             painter.setPen(QPen(self._foreground))
         else:
             painter.setPen(QPen(QColor(255, 255, 255)))
+
+        max_line_width = metrics.boundingRect(self.publisher.name()).width()
         painter.drawText(QPointF(left_text_edge,
                                  option.rect.top() + int(
                                      metrics.height() * line_heights[0])),
@@ -255,3 +257,15 @@ class PublisherFilterBannerWidget(FilterBannerWidget):
                                      option.rect.top() + int(
                                          metrics.height() * line_heights[1])),
                              'via ' + self.publisher.site.name())
+
+        if self.publisher.publisher_type == PublisherType.Mirror:
+            mirror_image = GuiUtils.get_svg_as_image(
+                'mirror_white.svg', 50, 16
+            )
+            center_y = int((option.rect.height() - mirror_image.height()) / 2)
+            painter.drawImage(QRectF(
+                option.rect.left() + max_line_width + 50,
+                option.rect.top() + center_y,
+                mirror_image.width(),
+                mirror_image.height()),
+                mirror_image)
