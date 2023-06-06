@@ -16,8 +16,7 @@ from qgis.PyQt.QtCore import (
     QModelIndex,
     QSize,
     QRectF,
-    QPointF,
-    QSortFilterProxyModel
+    QPointF
 )
 from qgis.PyQt.QtGui import (
     QFontMetrics,
@@ -29,8 +28,7 @@ from qgis.PyQt.QtGui import (
     QPainterPath
 )
 from qgis.PyQt.QtNetwork import (
-    QNetworkReply,
-    QNetworkRequest
+    QNetworkReply
 )
 from qgis.PyQt.QtWidgets import (
     QWidget,
@@ -48,16 +46,16 @@ from qgis.gui import (
 from .dataset_utils import DatasetGuiUtils
 from .explore_tab_bar import FlatUnderlineTabBar
 from .filter_widget_combo_base import FilterWidgetComboBase
+from .gui_utils import GuiUtils
+from .rounded_highlight_box import RoundedHighlightBox
 from .thumbnails import GenericThumbnailManager
+from .user_avatar_generator import UserAvatarGenerator
 from ..api import (
     KoordinatesClient,
     DataBrowserQuery,
     Publisher,
 )
 from ..api import PublisherType
-from .rounded_highlight_box import RoundedHighlightBox
-from .user_avatar_generator import UserAvatarGenerator
-from .gui_utils import GuiUtils
 
 
 class PublisherDelegate(QStyledItemDelegate):
@@ -528,7 +526,7 @@ class PublisherSelectionWidget(QWidget):
         # self.error_occurred.emit(request.reply().errorString())
 
         reply_content = json.loads(
-                reply.readAll().data().decode())
+            reply.readAll().data().decode())
         if not self.filter_edit.text():
             PublisherSelectionWidget.FACETS_REPLY = reply_content
             self._load_facet_reply(PublisherSelectionWidget.FACETS_REPLY)
