@@ -153,7 +153,7 @@ class FilterBannerWidget(QWidget):
         painter = QStylePainter(self)
         painter.setRenderHint(QPainter.Antialiasing, True)
 
-        if self._background.lightnessF() < 0.5:
+        if background_color.lightnessF() < 0.5:
             image = GuiUtils.get_svg_as_image('close-reversed.svg', 16, 16)
         else:
             image = GuiUtils.get_svg_as_image('close.svg', 16, 16)
@@ -173,6 +173,7 @@ class PublisherFilterBannerWidget(FilterBannerWidget):
 
     TEXT_LEFT_EDGE_PUBLISHER = 130
     TEXT_LEFT_EDGE_USER = 70
+    TEXT_LEFT_EDGE_MIRROR = 20
 
     def __init__(self, publisher: Publisher, parent: Optional[QWidget] = None):
         super().__init__(parent)
@@ -185,21 +186,25 @@ class PublisherFilterBannerWidget(FilterBannerWidget):
             else:
                 self.set_background_color(
                     QColor('#555657'))
+        elif self.publisher.publisher_type == PublisherType.Mirror:
+            self.set_foreground_color(QColor(255, 255, 255))
+            self.set_background_color(QColor('#555658'))
         elif self.publisher.publisher_type == PublisherType.User:
             self.set_foreground_color(QColor(0, 0, 0))
             self.set_background_color(QColor(255, 255, 255))
 
-        thumbnail_processor = PublisherThumbnailProcessor(
-            self.publisher,
-            QSize(self.THUMBNAIL_WIDTH, self.height())
-        )
-        if self.publisher.theme.logo():
-            downloadThumbnail(self.publisher.theme.logo(),
-                              self,
-                              thumbnail_processor
-                              )
-        else:
-            self.set_icon(thumbnail_processor.default_thumbnail())
+        if self.publisher.publisher_type != PublisherType.Mirror:
+            thumbnail_processor = PublisherThumbnailProcessor(
+                self.publisher,
+                QSize(self.THUMBNAIL_WIDTH, self.height())
+            )
+            if self.publisher.theme.logo():
+                downloadThumbnail(self.publisher.theme.logo(),
+                                  self,
+                                  thumbnail_processor
+                                  )
+            else:
+                self.set_icon(thumbnail_processor.default_thumbnail())
 
     def _draw_content(self, event):
         option = QStyleOption()
@@ -225,6 +230,9 @@ class PublisherFilterBannerWidget(FilterBannerWidget):
         if self.publisher.publisher_type == PublisherType.Publisher:
             line_heights = [1.2, 2.1]
             left_text_edge = option.rect.left() + self.TEXT_LEFT_EDGE_PUBLISHER
+        elif self.publisher.publisher_type == PublisherType.Mirror:
+            line_heights = [1.7, 0]
+            left_text_edge = option.rect.left() + self.TEXT_LEFT_EDGE_MIRROR
         else:
             line_heights = [1.6, 0]
             left_text_edge = option.rect.left() + self.TEXT_LEFT_EDGE_USER
