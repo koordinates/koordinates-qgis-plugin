@@ -433,12 +433,16 @@ class PublisherSelectionWidget(QWidget):
     Custom widget for selecting publishers
     """
 
+    FACETS_REPLY = {}
+
     selection_changed = pyqtSignal(Publisher)
 
     def __init__(self,
                  highlight_search_box: bool = False,
                  parent: Optional[QWidget] = None):
         super().__init__(parent)
+
+        self._current_facets_reply: Optional[QNetworkReply] = None
 
         vl = QVBoxLayout()
         self.filter_edit = QgsFilterLineEdit()
@@ -472,7 +476,7 @@ class PublisherSelectionWidget(QWidget):
         self.setLayout(vl)
 
         self.setMinimumWidth(
-            QFontMetrics(self.font()).horizontalAdvance('x') * 60
+            QFontMetrics(self.font()).horizontalAdvance('x') * 68
         )
         self.setMinimumHeight(
             QFontMetrics(self.font()).height() * 20
@@ -483,6 +487,78 @@ class PublisherSelectionWidget(QWidget):
         )
 
         self.filter_edit.textChanged.connect(self._filter_changed)
+
+        self._load_total_counts()
+
+    def _load_total_counts(self):
+        """
+        Loads the total counts for the publisher types
+        """
+        if PublisherSelectionWidget.FACETS_REPLY:
+            self._load_facet_reply()
+            return
+
+        self._current_facets_reply = \
+            KoordinatesClient.instance().publishers_async(
+                publisher_type=None,
+                is_facets=True
+            )
+        self._current_facets_reply.finished.connect(
+            partial(self._facets_reply_finished, self._current_facets_reply))
+
+    def _facets_reply_finished(self, reply: QNetworkReply):
+        if sip.isdeleted(self):
+            return
+
+        if reply != self._current_facets_reply:
+            # an old reply we don't care about anymore
+            return
+
+        self._current_facets_reply = None
+
+        if reply.error() == QNetworkReply.OperationCanceledError:
+            return
+
+        if reply.error() != QNetworkReply.NoError:
+            print('error occurred :(')
+            return
+        # self.error_occurred.emit(request.reply().errorString())
+        PublisherSelectionWidget.FACETS_REPLY = json.loads(
+            reply.readAll().data().decode())
+        self._load_facet_reply()
+
+    def _load_facet_reply(self):
+        """
+        Updates tab text based on the facet's reply
+        """
+        overall_total = 0
+        for publisher_type in PublisherSelectionWidget.FACETS_REPLY.get(
+                'type', []
+        ):
+            publisher_key = publisher_type.get('key', [])
+            total_count = publisher_type.get('total', 0)
+            overall_total += total_count
+
+            if publisher_key == 'site':
+                self.tab_bar.setTabText(
+                    1,
+                    self.tr('Publishers ({})'.format(total_count))
+                )
+            elif publisher_key == 'mirror':
+                self.tab_bar.setTabText(
+                    3,
+                    self.tr('Mirrored ({})'.format(total_count))
+                )
+            elif publisher_key == 'user':
+                self.tab_bar.setTabText(
+                    2,
+                    self.tr('Users ({})'.format(total_count))
+                )
+
+        self.tab_bar.setTabText(
+            0,
+            self.tr('All ({})'.format(overall_total))
+        )
 
     def _filter_changed(self, text: str):
         self.publisher_list.filter_model.set_filter_string(text)

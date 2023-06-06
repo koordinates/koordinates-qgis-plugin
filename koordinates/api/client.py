@@ -157,9 +157,10 @@ class KoordinatesClient(QObject):
         return endpoint, headers, params
 
     def _build_publishers_request(self,
-                                  publisher_type: PublisherType,
+                                  publisher_type: Optional[PublisherType],
                                   page=1,
-                                  context=None) -> Tuple[str, Dict[str, str], dict]:
+                                  context=None,
+                                  is_facets: bool = False) -> Tuple[str, Dict[str, str], dict]:
         """
         Builds the parameters used for a publishers request
         """
@@ -170,14 +171,16 @@ class KoordinatesClient(QObject):
                   'sort': 'popularity'
                   }
 
-        if publisher_type == PublisherType.Publisher:
-            params['type'] = 'site'
-        elif publisher_type == PublisherType.User:
-            params['type'] = 'user'
-        elif publisher_type == PublisherType.Mirror:
-            params['type'] = 'mirror'
-
-        params.update({"page_size": PAGE_SIZE, "page": page})
+        if not is_facets:
+            if publisher_type == PublisherType.Publisher:
+                params['type'] = 'site'
+            elif publisher_type == PublisherType.User:
+                params['type'] = 'user'
+            elif publisher_type == PublisherType.Mirror:
+                params['type'] = 'mirror'
+            params.update({"page_size": PAGE_SIZE, "page": page})
+        else:
+            params['facets'] = True
         endpoint = "publishers/"
 
         return endpoint, headers, params
@@ -219,13 +222,18 @@ class KoordinatesClient(QObject):
         return QgsNetworkAccessManager.instance().get(network_request)
 
     def publishers_async(self,
-                         publisher_type: PublisherType,
+                         publisher_type: Optional[PublisherType],
                          page=1,
-                         context=None) -> QNetworkReply:
+                         context=None,
+                         is_facets: bool = False) -> QNetworkReply:
         """
         Retrieve publishers asynchronously
         """
-        endpoint, headers, params = self._build_publishers_request(publisher_type, page, context)
+        endpoint, headers, params = self._build_publishers_request(
+            publisher_type,
+            page,
+            context,
+            is_facets)
         network_request = self._build_request(endpoint, headers, params)
 
         return QgsNetworkAccessManager.instance().get(network_request)
