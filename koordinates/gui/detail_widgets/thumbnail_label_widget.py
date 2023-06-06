@@ -10,19 +10,36 @@ from qgis.PyQt.QtWidgets import (
     QLabel
 )
 
-from koordinates.gui.thumbnails import downloadThumbnail
+from ...api import Publisher
+from ..thumbnails import (
+    PublisherThumbnailProcessor,
+    downloadThumbnail
+)
 
 
-class ThumbnailLabel(QLabel):
+class PublisherThumbnailLabel(QLabel):
     """
     A fixed size label showing a deferred loaded thumbnail image
     """
 
-    def __init__(self, url: str, width, height, parent=None):
+    def __init__(self,
+                 publisher: Publisher,
+                 size: QSize,
+                 parent=None):
         super().__init__(parent)
-        self.setFixedSize(QSize(width, height))
+        self.setFixedSize(size)
 
-        downloadThumbnail(url, self)
+        thumbnail_processor = PublisherThumbnailProcessor(
+            publisher,
+            size
+        )
+        if publisher.theme.logo():
+            downloadThumbnail(publisher.theme.logo(),
+                              self,
+                              thumbnail_processor
+                              )
+        else:
+            self.setThumbnail(thumbnail_processor.default_thumbnail())
 
     def setThumbnail(self, image: QImage):
         image = image.convertToFormat(QImage.Format_ARGB32)

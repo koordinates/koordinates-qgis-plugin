@@ -48,7 +48,10 @@ from .explore_tab_bar import FlatUnderlineTabBar
 from .filter_widget_combo_base import FilterWidgetComboBase
 from .gui_utils import GuiUtils
 from .rounded_highlight_box import RoundedHighlightBox
-from .thumbnails import GenericThumbnailManager
+from .thumbnails import (
+    GenericThumbnailManager,
+    PublisherThumbnailProcessor
+)
 from .user_avatar_generator import UserAvatarGenerator
 from ..api import (
     KoordinatesClient,
@@ -148,27 +151,14 @@ class PublisherDelegate(QStyledItemDelegate):
             painter.setBrush(QBrush(background_color))
             painter.drawPath(path)
 
-            if thumbnail_image and not thumbnail_image.isNull():
-                if publisher.publisher_type == PublisherType.Publisher:
-                    max_thumbnail_width = int(thumbnail_rect.width()) \
-                                          - 2 * self.THUMBNAIL_MARGIN
-                    max_thumbnail_height = \
-                        int(min(thumbnail_rect.height(),
-                                thumbnail_image.height())) \
-                        - 2 * self.THUMBNAIL_MARGIN
-                    scaled = thumbnail_image.scaled(
-                        QSize(max_thumbnail_width, max_thumbnail_height),
-                        Qt.KeepAspectRatio,
-                        Qt.SmoothTransformation)
-                else:
-                    scaled = DatasetGuiUtils.crop_image_to_circle(
-                        thumbnail_image, thumbnail_image.height()
-                    )
-            elif publisher.publisher_type == PublisherType.User:
-                scaled = UserAvatarGenerator.get_avatar(publisher.name())
-            else:
-                scaled = GuiUtils.get_svg_as_image('globe.svg',
-                                                   40, 40)
+            processor = PublisherThumbnailProcessor(
+                publisher,
+                QSize(
+                    int(thumbnail_rect.width()) - 2 * self.THUMBNAIL_MARGIN,
+                    int(thumbnail_rect.height()) - 2 * self.THUMBNAIL_MARGIN,
+                )
+            )
+            scaled = processor.process_thumbnail(thumbnail_image)
 
             center_x = int((thumbnail_rect.width() - scaled.width()) / 2)
             center_y = int((thumbnail_rect.height() - scaled.height()) / 2)
