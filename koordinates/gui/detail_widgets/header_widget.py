@@ -1,5 +1,6 @@
 from qgis.PyQt.QtCore import (
-    Qt
+    Qt,
+    QSize
 )
 from qgis.PyQt.QtGui import (
     QColor,
@@ -15,7 +16,7 @@ from qgis.PyQt.QtWidgets import (
 
 from koordinates.gui.detail_widgets.svg_framed_button import SvgFramedButton
 from koordinates.gui.detail_widgets.thumbnail_label_widget import \
-    ThumbnailLabel
+    PublisherThumbnailLabel
 from koordinates.gui.gui_utils import FONT_FAMILIES
 from ...api import (
     Dataset,
@@ -52,17 +53,8 @@ class HeaderWidget(QFrame):
         hl = QHBoxLayout()
         hl.setContentsMargins(15, 0, 15, 0)
 
-        if self.publisher_theme and self.publisher_theme.logo():
-            logo = self.publisher_theme.logo()
-            logo_widget = ThumbnailLabel(logo, 145, 35)
-            hl.addWidget(logo_widget)
-        elif self.publisher and self.publisher.publisher_type == PublisherType.User:
-            logo_image = UserAvatarGenerator.get_avatar(
-                self.publisher.name()
-            )
-            logo_widget = QLabel()
-            logo_widget.setPixmap(QPixmap.fromImage(logo_image))
-            hl.addWidget(logo_widget)
+        logo_widget = PublisherThumbnailLabel(self.publisher, QSize(145, 35))
+        hl.addWidget(logo_widget)
 
         url_frame = QFrame()
         url_frame.setFrameShape(QFrame.NoFrame)

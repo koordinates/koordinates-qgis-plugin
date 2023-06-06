@@ -23,7 +23,10 @@ from qgis.PyQt.QtWidgets import (
 )
 
 from ..gui_utils import GuiUtils
-from ..thumbnails import downloadThumbnail
+from ..thumbnails import (
+    downloadThumbnail,
+    PublisherThumbnailProcessor
+)
 from ...api import (
     Publisher,
     PublisherType
@@ -186,10 +189,17 @@ class PublisherFilterBannerWidget(FilterBannerWidget):
             self.set_foreground_color(QColor(0, 0, 0))
             self.set_background_color(QColor(255, 255, 255))
 
+        thumbnail_processor = PublisherThumbnailProcessor(
+            self.publisher,
+            QSize(self.THUMBNAIL_WIDTH, self.height())
+        )
         if self.publisher.theme.logo():
-            downloadThumbnail(self.publisher.theme.logo(), self)
-        elif self.publisher.publisher_type == PublisherType.User:
-            self.set_icon(UserAvatarGenerator.get_avatar(publisher.name()))
+            downloadThumbnail(self.publisher.theme.logo(),
+                              self,
+                              thumbnail_processor
+                              )
+        else:
+            self.set_icon(thumbnail_processor.default_thumbnail())
 
     def _draw_content(self, event):
         option = QStyleOption()
