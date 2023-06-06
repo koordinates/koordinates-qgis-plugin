@@ -582,9 +582,6 @@ class PublisherSelectionWidget(QWidget):
             return
 
     def _tab_changed(self, index: int):
-        if index > 0:
-            self.filter_edit.clear()
-
         if index == 0:
             self.publisher_list.publisher_model.set_publisher_type(
                 PublisherType.All)
