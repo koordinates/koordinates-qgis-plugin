@@ -57,6 +57,7 @@ from ..api import (
     Publisher,
 )
 from ..api import PublisherType
+from .gui_utils import GuiUtils
 
 
 class PublisherDelegate(QStyledItemDelegate):
@@ -78,7 +79,7 @@ class PublisherDelegate(QStyledItemDelegate):
         if platform.system() == 'Darwin':
             line_scale = 1.3
 
-        return QSize(0, int(QFontMetrics(option.font).height()
+        return QSize(option.rect.width(), int(QFontMetrics(option.font).height()
                             * 4.5
                             * line_scale))
 
@@ -98,6 +99,7 @@ class PublisherDelegate(QStyledItemDelegate):
         painter.setBrush(QBrush(QColor(255, 255, 255)))
 
         rect = QRectF(option.rect)
+        total_width = option.rect.width()
         inner_rect = rect
         inner_rect.adjust(self.HORIZONTAL_MARGIN,
                           self.VERTICAL_MARGIN,
@@ -164,6 +166,18 @@ class PublisherDelegate(QStyledItemDelegate):
                                      thumbnail_rect.top() + center_y,
                                      scaled.width(), scaled.height()),
                               scaled)
+
+        if publisher.publisher_type == PublisherType.Mirror:
+            mirror_image = GuiUtils.get_svg_as_image(
+                'mirror_grey.svg', 50, 16
+            )
+            center_y = int((inner_rect.height() - mirror_image.height()) / 2)
+            painter.drawImage(QRectF(
+                inner_rect.left() + total_width - mirror_image.width() - 30,
+                inner_rect.top() + center_y,
+                mirror_image.width(),
+                mirror_image.height()),
+                mirror_image)
 
         heading_font_size = 10
         line_scale = 1
