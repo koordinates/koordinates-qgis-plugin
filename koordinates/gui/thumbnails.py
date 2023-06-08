@@ -107,8 +107,6 @@ class PublisherTypeThumbnailProcessor(ThumbnailProcessor):
             x_center = int((self.size.width() - scaled.width()) / 2)
             y_center = int((self.size.height() - scaled.height()) / 2)
             painter.drawImage(x_center, y_center, scaled)
-
-
             painter.end()
 
             scaled = with_background
