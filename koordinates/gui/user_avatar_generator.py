@@ -1,3 +1,5 @@
+from typing import Optional
+
 from qgis.PyQt.QtCore import (
     Qt,
     QRectF,
@@ -26,20 +28,22 @@ class UserAvatarGenerator:
     AVATAR_CACHE = {}
 
     @classmethod
-    def get_avatar(cls, name: str) -> QImage:
+    def get_avatar(cls, name: str, size: Optional[int] = None) -> QImage:
         """
         Returns the avatar image for the given initials
         """
         initials = UserAvatarGenerator.name_to_initials(name)
-        if initials in cls.AVATAR_CACHE:
+        if size is None and initials in cls.AVATAR_CACHE:
             return cls.AVATAR_CACHE[initials]
 
         image = UserAvatarGenerator.generate_avatar(
             initials,
             UserAvatarGenerator.FORE_COLOR,
             UserAvatarGenerator.BACK_COLOR,
-            UserAvatarGenerator.AVATAR_SIZE)
-        cls.AVATAR_CACHE[initials] = image
+            size or UserAvatarGenerator.AVATAR_SIZE)
+
+        if size is None:
+            cls.AVATAR_CACHE[initials] = image
         return image
 
     @staticmethod

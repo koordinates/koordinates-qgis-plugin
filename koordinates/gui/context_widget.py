@@ -32,8 +32,11 @@ from qgis.gui import (
 )
 
 from .gui_utils import GuiUtils
-from .thumbnails import downloadThumbnail
-from ..api import KoordinatesClient
+from .thumbnails import (
+    downloadThumbnail,
+    UserThumbnailProcessor,
+    PublisherTypeThumbnailProcessor
+)
 from .dataset_utils import DatasetGuiUtils
 
 
@@ -43,17 +46,12 @@ class ContextIcon(QLabel):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.circle = False
         self.setFixedSize(QSize(ContextIcon.SIZE, ContextIcon.SIZE))
 
     def setThumbnail(self, image: QImage):
         self.setPixmap(
             QPixmap.fromImage(
-                DatasetGuiUtils.crop_image_to_circle(
-                    image,
-                    ContextIcon.SIZE,
-                    ContextIcon.CORNER_RADIUS
-                )
+                image
             )
         )
 
@@ -113,13 +111,31 @@ class ContextItem(QFrame):
                     QColor(0, 0, 0)
                 ))
         elif self._details.get('type') == 'user':
-            self.icon_label.circle = True
-            downloadThumbnail(KoordinatesClient.instance().user_details()["avatar_url"],
-                              self.icon_label)
-        elif self._details.get('org') and self._details['org'].get('logo_square_url'):
-            downloadThumbnail(self._details["org"]["logo_square_url"], self.icon_label)
-        elif self._details.get('logo'):
-            downloadThumbnail(self._details["logo"], self.icon_label)
+            processor = UserThumbnailProcessor(
+                self._details.get('name'),
+                QSize(ContextIcon.SIZE, ContextIcon.SIZE)
+            )
+            downloadThumbnail(
+                self._details.get('logo'),
+                self.icon_label,
+                processor
+            )
+        else:
+            logo_url = self._details['org'].get('logo_square_url') or \
+                       self._details.get('logo')
+            if logo_url:
+                background_color = \
+                    self._details['org'].get('background_color') or \
+                    self._details.get('background_color')
+                processor = PublisherTypeThumbnailProcessor(
+                    QSize(ContextIcon.SIZE, ContextIcon.SIZE),
+                    background_color=QColor('#' + background_color) if background_color else None
+                )
+                downloadThumbnail(
+                    logo_url,
+                    self.icon_label,
+                    processor
+                )
 
         hl.addWidget(self.icon_label)
         self.name_label = QLabel(self._details['name'])
@@ -314,6 +330,7 @@ class ContextWidget(QWidget):
 
         self._reset_contexts()
         self._contexts.extend(contexts)
+        print(self._contexts)
 
         for c in self._contexts:
             w = ContextItem(c)
