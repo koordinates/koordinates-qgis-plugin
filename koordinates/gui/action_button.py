@@ -131,10 +131,17 @@ class CloneButton(ActionButton):
 
         if UserDatasetCapability.Clone not in \
                 self.dataset.repository().user_capabilities():
+
+            message_text = """
+<h1>Cloning of published data is in private beta</h1>
+<p>We're still working on the user experience of cloning published data from
+authoritative publishers.</p>
+<p>You can request access to the private beta below.</p>
+            """
             dlg = ActionDialog(
                 title='Get Data Repository — {}'.format(title),
-                message='To clone cloud-hosted data to your local drive, please request access.',
-                action='Request access',
+                message=message_text,
+                action='Request Kart beta access',
                 url='https://m.koordinates.com/request-kart-features')
             dlg.exec_()
             return
