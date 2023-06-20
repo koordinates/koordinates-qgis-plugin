@@ -1,7 +1,10 @@
 from typing import (
     Dict,
-    Optional
+    Optional,
+    Set
 )
+
+from .enums import UserDatasetCapability
 
 
 class Repo:
@@ -18,6 +21,23 @@ class Repo:
         Returns the repository title
         """
         return self.definition.get('title')
+
+    def user_capabilities(self) -> set[UserDatasetCapability]:
+        """
+        Returns user capabilities for the dataset
+        """
+        res = set()
+
+        for capability_string, capability_flag in {
+            'can-star': UserDatasetCapability.Star,
+            'can-clone': UserDatasetCapability.Clone
+        }.items():
+            if capability_string in self.definition.get(
+                    'user_capabilities', []
+            ):
+                res.add(capability_flag)
+
+        return res
 
     def clone_url(self) -> str:
         """

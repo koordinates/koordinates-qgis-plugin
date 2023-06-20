@@ -33,6 +33,14 @@ class Capability(Enum):
     RevisionCount = 2
 
 
+class UserDatasetCapability(Enum):
+    """
+    User dataset capabilities
+    """
+    Star = 0
+    Clone = 1
+
+
 class DataType(Enum):
     """
     Data types
