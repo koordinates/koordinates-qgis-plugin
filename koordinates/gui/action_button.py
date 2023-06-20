@@ -16,7 +16,8 @@ from ..api import (
     KoordinatesClient,
     UserCapability,
     LayerUtils,
-    Dataset
+    Dataset,
+    UserDatasetCapability
 )
 from ..core import (
     KartOperationManager
@@ -128,7 +129,9 @@ class CloneButton(ActionButton):
         title = self.dataset.title()
 
         from .action_dialog import ActionDialog
-        if UserCapability.EnableKartClone not in KoordinatesClient.instance().user_capabilities():
+
+        if UserDatasetCapability.Clone not in \
+                self.dataset.repository().user_capabilities():
             dlg = ActionDialog(
                 title='Get Data Repository — {}'.format(title),
                 message='To clone cloud-hosted data to your local drive, please request access.',

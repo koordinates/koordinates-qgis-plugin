@@ -19,7 +19,8 @@ from .enums import (  # NOQA
     Capability,
     PublicAccessType,
     ExplorePanel,
-    PublisherType
+    PublisherType,
+    UserDatasetCapability
 )
 from .layer_utils import LayerUtils  # NOQA
 from .repo import Repo  # NOQA
