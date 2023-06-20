@@ -14,7 +14,6 @@ from qgis.utils import iface
 from .gui_utils import GuiUtils
 from ..api import (
     KoordinatesClient,
-    UserCapability,
     LayerUtils,
     Dataset,
     UserDatasetCapability

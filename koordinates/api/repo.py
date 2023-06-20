@@ -22,7 +22,7 @@ class Repo:
         """
         return self.definition.get('title')
 
-    def user_capabilities(self) -> set[UserDatasetCapability]:
+    def user_capabilities(self) -> Set[UserDatasetCapability]:
         """
         Returns user capabilities for the dataset
         """
