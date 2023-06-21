@@ -11,7 +11,8 @@ from qgis.PyQt.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QTableView,
-    QDialog
+    QDialog,
+    QAbstractItemView
 )
 from qgis.gui import QgsGui
 
@@ -60,6 +61,7 @@ class TaskDetailsWidget(QWidget):
 
         hl = QHBoxLayout()
         self.details_label = QLabel()
+        self.details_label.setWordWrap(True)
         hl.addWidget(self.details_label, 1)
         self.retry_button = QPushButton(self.tr('Retry'))
         hl.addWidget(self.retry_button)
@@ -70,7 +72,6 @@ class TaskDetailsWidget(QWidget):
         self.details_label.hide()
         self.retry_button.hide()
 
-        self.setMinimumHeight(self.sizeHint().height())
         self.update_from_model()
 
     def update_from_model(self):
@@ -115,6 +116,8 @@ class TaskDetailsWidget(QWidget):
             self.retry_button.show()
             self.progress_bar.hide()
             self.cancel_button.hide()
+        self.setMinimumHeight(self.sizeHint().height())
+        self.updateGeometry()
 
     def _cancel(self):
         """
@@ -140,6 +143,7 @@ class TaskDetailsTable(QTableView):
         super().__init__(parent)
         self._manager = operations_manager
         self.setModel(self._manager)
+        self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
         self.horizontalHeader().setStretchLastSection(True)
         self.horizontalHeader().setVisible(False)
         self.verticalHeader().setVisible(False)
@@ -177,6 +181,7 @@ class TaskDetailsTable(QTableView):
                 continue
 
             widget.update_from_model()
+            self.setRowHeight(row, widget.minimumHeight())
 
 
 class TaskDetailsDialog(QDialog):
