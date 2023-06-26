@@ -14,9 +14,7 @@ from qgis.PyQt.QtWidgets import (
     QDialog,
     QHBoxLayout,
     QVBoxLayout,
-    QLabel,
-    QSizePolicy,
-    QLayout
+    QLabel
 )
 
 from .action_button import ActionButton
@@ -32,7 +30,8 @@ class ActionDialog(QDialog):
         self.setWindowTitle(title)
         layout = QVBoxLayout()
         hl = QHBoxLayout()
-        koordinates_logo_widget = QSvgWidget(GuiUtils.get_icon_svg('koordinates_logo.svg'))
+        koordinates_logo_widget = QSvgWidget(
+            GuiUtils.get_icon_svg('koordinates_logo.svg'))
         koordinates_logo_widget.setFixedSize(QSize(100, 28))
         hl.addWidget(koordinates_logo_widget)
         hl.addStretch()
@@ -42,7 +41,8 @@ class ActionDialog(QDialog):
 
         font = self.font()
         font.setPointSize(font.pointSize() - 1)
-        message_label = QLabel("""<div style="line-height: 1.2;">{}</div>""".format(message))
+        message_label = QLabel(
+            """<div style="line-height: 1.2;">{}</div>""".format(message))
         message_label.setWordWrap(True)
         message_label.setAlignment(
             Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop
