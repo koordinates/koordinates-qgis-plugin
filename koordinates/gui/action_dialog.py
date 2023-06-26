@@ -6,7 +6,10 @@ from qgis.PyQt.QtCore import (
     QUrl
 )
 from qgis.PyQt.QtSvg import QSvgWidget
-from qgis.PyQt.QtGui import QDesktopServices
+from qgis.PyQt.QtGui import (
+    QDesktopServices,
+    QFontMetrics
+)
 from qgis.PyQt.QtWidgets import (
     QDialog,
     QHBoxLayout,
@@ -28,41 +31,38 @@ class ActionDialog(QDialog):
 
         self.setWindowTitle(title)
         layout = QVBoxLayout()
-        layout.addSpacing(28)
         hl = QHBoxLayout()
         koordinates_logo_widget = QSvgWidget(GuiUtils.get_icon_svg('koordinates_logo.svg'))
-        koordinates_logo_widget.setFixedSize(QSize(161, 46))
-        hl.addStretch()
+        koordinates_logo_widget.setFixedSize(QSize(100, 28))
         hl.addWidget(koordinates_logo_widget)
         hl.addStretch()
 
         layout.addLayout(hl)
-        layout.addSpacing(25)
+        layout.addSpacing(16)
 
-        hl = QHBoxLayout()
-        hl.addStretch()
         font = self.font()
         font.setPointSize(font.pointSize() - 1)
         message_label = QLabel("""<div style="line-height: 1.2;">{}</div>""".format(message))
         message_label.setWordWrap(True)
-        message_label.setFixedWidth(280)
-        message_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
-        message_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        message_label.setAlignment(
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop
+        )
         message_label.setFont(font)
-        hl.addWidget(message_label)
-        hl.addStretch()
-
-        layout.addLayout(hl)
+        layout.addWidget(message_label)
 
         layout.addSpacing(22)
 
         hl = QHBoxLayout()
-        hl.addStretch()
 
         button = ActionButton()
         button.setText(action)
         button.setFixedHeight(32)
         button.setFont(self.font())
+        button.setStyleSheet(
+            button.styleSheet() + """
+            QToolButton { padding-left: 10px; padding-right: 10px }
+            """
+        )
 
         if url:
             def open_url():
@@ -73,8 +73,14 @@ class ActionDialog(QDialog):
         hl.addStretch()
 
         layout.addLayout(hl)
-        layout.addSpacing(22)
+
+        fm = QFontMetrics(message_label.font())
+
+        layout.setContentsMargins(fm.width('x') * 7,
+                                  fm.width('x') * 5,
+                                  fm.width('x') * 7,
+                                  fm.width('x') * 7)
 
         self.setLayout(layout)
 
-        self.window().layout().setSizeConstraint(QLayout.SetFixedSize)
+        self.window().setFixedWidth(fm.width('x') * 70)
