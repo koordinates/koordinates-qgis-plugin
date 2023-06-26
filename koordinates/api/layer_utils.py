@@ -11,7 +11,7 @@ class LayerUtils:
     Layer handling utility functions
     """
 
-    WMTS_URL_BASE = 'https://data.linz.govt.nz/services'
+    WMTS_URL_BASE = 'https://koordinates.com/services'
     WMTS_ENDPOINT = 'wmts/1.0.0/layer'
 
     @staticmethod
