@@ -12,7 +12,7 @@ about=<div style="max-width:33em">The <a href="https://koordinates.com/explore/"
     Transfer authoritative data directly to your local drive for analysis and visualisation. Powered by <a href="https://kartproject.org">Kart</a></li>
     </ul>
     </div>
-version=1.0.3
+version=2.0.0
 author=Koordinates
 email=support@koordinates.com
 tags=versioning, data, cloning, collections, access, discoverablity, open data
@@ -22,4 +22,4 @@ tracker=https://github.com/koordinates/koordinates-qgis-plugin/issues
 icon=img/koordinates.png
 category=Plugins
 plugin_dependencies=Kart
-changelog=Version 1.0.3 (2023-01-17) - Minor fixes
+changelog=Version 2.0.0  (2023-06-27) - Point cloud support, new explore UI, many fixes
