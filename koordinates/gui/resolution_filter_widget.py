@@ -6,10 +6,10 @@ from qgis.PyQt.QtWidgets import (
     QHBoxLayout,
     QLabel
 )
-from qgis.gui import QgsRangeSlider
 
 from .filter_widget_combo_base import FilterWidgetComboBase
 from ..api import DataBrowserQuery
+from .range_slider import RangeSlider
 
 
 class ResolutionFilterWidget(FilterWidgetComboBase):
@@ -22,7 +22,7 @@ class ResolutionFilterWidget(FilterWidgetComboBase):
 
         self.drop_down_widget = QWidget()
         vl = QVBoxLayout()
-        self.slider = QgsRangeSlider()
+        self.slider = RangeSlider()
         self.slider.setMinimumHeight(self.fontMetrics().height())
         vl.addWidget(self.slider)
 

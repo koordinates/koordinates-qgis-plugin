@@ -14,12 +14,12 @@ from qgis.PyQt.QtWidgets import (
     QSizePolicy
 )
 from qgis.gui import (
-    QgsRangeSlider,
     QgsDateEdit
 )
 
 from .filter_widget_combo_base import FilterWidgetComboBase
 from ..api import DataBrowserQuery
+from .range_slider import RangeSlider
 
 DATE_FORMAT = 'dd MMM yyyy'
 
@@ -66,7 +66,7 @@ class DateFilterWidget(FilterWidgetComboBase):
         published_date_label.setFont(bold_font)
         vl.addWidget(published_date_label)
 
-        self.published_date_slider = QgsRangeSlider()
+        self.published_date_slider = RangeSlider()
         self.published_date_slider.setMinimumHeight(self.fontMetrics().height())
         vl.addWidget(self.published_date_slider)
 
@@ -94,7 +94,7 @@ class DateFilterWidget(FilterWidgetComboBase):
         updated_date_label.setFont(bold_font)
         vl.addWidget(updated_date_label)
 
-        self.updated_date_slider = QgsRangeSlider()
+        self.updated_date_slider = RangeSlider()
         self.updated_date_slider.setMinimumHeight(self.fontMetrics().height())
         vl.addWidget(self.updated_date_slider)
 
