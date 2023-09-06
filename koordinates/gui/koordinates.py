@@ -443,7 +443,13 @@ class Koordinates(QgsDockWidget, WIDGET):
         self.results_panel.publisher_cleared.connect(
             self.filter_widget.remove_publisher_filter)
 
-        if os.name == 'nt' or self.window().screen().devicePixelRatio() > 1:
+        try:
+            device_pixel_ratio = self.window().screen().devicePixelRatio()
+        except AttributeError:
+            # requires Qt 5.14+
+            device_pixel_ratio = 1
+
+        if os.name == 'nt' or device_pixel_ratio > 1:
             self.button_sort_order.setStyleSheet(
                 'QToolButton { padding-right: 30px; padding-left: 0px; }'
             )

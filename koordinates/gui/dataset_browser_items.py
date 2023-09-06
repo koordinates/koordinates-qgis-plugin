@@ -433,7 +433,11 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         self.raw_thumbnail = None
 
-        font_scale = self.screen().logicalDotsPerInch() / 92
+        try:
+            font_scale = self.screen().logicalDotsPerInch() / 92
+        except AttributeError:
+            # requires Qt 5.14+
+            font_scale = 1
 
         self.thumbnail_label = Label()
         self.thumbnail_label.setFixedHeight(150)
@@ -597,7 +601,11 @@ class DatasetItemWidget(DatasetItemWidgetBase):
                 thumbnail_svg, size, size)
 
         thumbnail = self.process_thumbnail(self.raw_thumbnail)
-        dpi_ratio = self.window().screen().devicePixelRatio()
+        try:
+            dpi_ratio = self.window().screen().devicePixelRatio()
+        except AttributeError:
+            # requires Qt 5.14
+            dpi_ratio = 1
         width = int(thumbnail.width() / dpi_ratio)
         height = int(thumbnail.height() / dpi_ratio)
         self.thumbnail_label.setFixedSize(QSize(width, height))
@@ -611,7 +619,12 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             size = QSize(self.width(), self.THUMBNAIL_SIZE)
 
         image_size = size
-        scale_factor = self.window().screen().devicePixelRatio()
+        try:
+            scale_factor = self.window().screen().devicePixelRatio()
+        except AttributeError:
+            # requires Qt 5.14+
+            scale_factor = 1
+
         if scale_factor > 1:
             image_size *= scale_factor
 
@@ -720,7 +733,11 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             self.dataset
         )
 
-        font_scale = self.screen().logicalDotsPerInch() / 92
+        try:
+            font_scale = self.screen().logicalDotsPerInch() / 92
+        except AttributeError:
+            # requires Qt 5.14 +
+            font_scale = 1
 
         overlay_font_size = 7.5
         if platform.system() == 'Darwin':

@@ -94,7 +94,12 @@ class HeaderWidget(QFrame):
 
         hl.addWidget(url_frame, 1)
 
-        font_scale = self.screen().logicalDotsPerInch() / 92
+        try:
+            font_scale = self.screen().logicalDotsPerInch() / 92
+        except AttributeError:
+            # requires Qt 5.14+
+            font_scale = 1
+
         org_font_size = 10
         if font_scale > 1:
             org_font_size = int(12 / font_scale)
