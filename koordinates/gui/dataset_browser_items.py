@@ -81,7 +81,7 @@ class DatasetItemLayout(QLayout):
         self.private_icon = None
         self.private_icon_item = None
 
-        self.use_narrow_cards = False
+        self._columns: int = 1
 
     def set_thumbnail_widget(self, widget):
         self.thumbnail_widget = widget
@@ -188,22 +188,38 @@ class DatasetItemLayout(QLayout):
     def hasHeightForWidth(self):
         return False
 
-    def set_use_narrow_cards(self, narrow):
-        self.use_narrow_cards = narrow
+    def set_table_column_count(self, columns: int):
+        """
+        Sets the number of columns shown in the parent table
+        """
+        self._columns = columns
 
     def sizeHint(self):
         return self.minimumSize()
 
+    def has_narrow_cards(self) -> bool:
+        """
+        Returns True if the layout will utilise narrow card layouts
+        """
+        if self.geometry().width() < 450:
+            return True
+
+        return False
+
     def minimumSize(self):
-        if self.use_narrow_cards:
+        return QSize(150, DatasetItemWidgetBase.CARD_HEIGHT)
+
+        if self.force_narrow_cards:
             return QSize(330, DatasetItemWidgetBase.CARD_HEIGHT_TALL)
         else:
-            return QSize(330, DatasetItemWidgetBase.CARD_HEIGHT)
+            return QSize(150, DatasetItemWidgetBase.CARD_HEIGHT)
 
     def setGeometry(self, rect):
         super().setGeometry(rect)
 
-        if self.use_narrow_cards:
+        use_narrow_cards = self._columns > 1 or rect.width() < 450
+
+        if use_narrow_cards:
             if self.thumbnail_item:
                 self.thumbnail_widget.show()
                 self.thumbnail_item.setGeometry(
@@ -347,22 +363,19 @@ class DatasetItemWidgetBase(QFrame):
             )
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         self.setFixedHeight(self.CARD_HEIGHT)
-        self.setLayout(DatasetItemLayout())
+        self.dataset_layout = DatasetItemLayout()
+        self.setLayout(self.dataset_layout)
 
     def set_column_count(self, count: int):
-        use_narrow_cards = count > 1
-        is_using_narrow_cards = self.column_count > 1
-
-        if self.column_count >= 1 and use_narrow_cards == is_using_narrow_cards:
-            return
+        #if self.column_count >= 1 and use_narrow_cards == is_using_narrow_cards:
+        #    return
 
         self.column_count = count
 
-        self.layout().set_use_narrow_cards(use_narrow_cards)
+        self.dataset_layout.set_table_column_count(count)
 
-        if use_narrow_cards:
+        if self.dataset_layout.has_narrow_cards():
             self.setFixedHeight(self.CARD_HEIGHT_TALL)
-
         else:
             self.setFixedHeight(self.CARD_HEIGHT)
             self.setMinimumWidth(1)
@@ -389,7 +402,7 @@ class EmptyDatasetItemWidget(DatasetItemWidgetBase):
                 self.THUMBNAIL_CORNER_RADIUS
             )
         )
-        self.layout().set_thumbnail_widget(self.thumbnail)
+        self.dataset_layout.set_thumbnail_widget(self.thumbnail)
 
         self.title_layout = QHBoxLayout()
         self.title_frame = QFrame()
@@ -401,7 +414,7 @@ class EmptyDatasetItemWidget(DatasetItemWidgetBase):
         self.title_layout.setContentsMargins(0, 0, 0, 0)
         self.title_layout.addWidget(self.title_frame)
 
-        self.layout().set_title_layout(self.title_layout)
+        self.dataset_layout.set_title_layout(self.title_layout)
 
         self.details_layout = QHBoxLayout()
         self.details_frame = QFrame()
@@ -413,7 +426,7 @@ class EmptyDatasetItemWidget(DatasetItemWidgetBase):
         self.details_layout.setContentsMargins(0, 0, 0, 0)
         self.details_layout.addWidget(self.details_frame)
 
-        self.layout().set_details_layout(self.details_layout)
+        self.dataset_layout.set_details_layout(self.details_layout)
 
 
 class DatasetItemWidget(DatasetItemWidgetBase):
@@ -441,7 +454,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         self.thumbnail_label = Label()
         self.thumbnail_label.setFixedHeight(150)
-        self.layout().set_thumbnail_widget(self.thumbnail_label)
+        self.dataset_layout.set_thumbnail_widget(self.thumbnail_label)
 
         self.title_label = QLabel()
         self.title_label.setWordWrap(True)
@@ -462,15 +475,15 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             private_icon = QSvgWidget(GuiUtils.get_icon_svg('private.svg'))
             private_icon.setFixedSize(QSize(24, 24))
             private_icon.setToolTip(self.tr('Private'))
-            self.layout().set_private_icon(private_icon)
+            self.dataset_layout.set_private_icon(private_icon)
 
         self.star_button = StarButton(self.dataset)
-        self.layout().set_star_button(self.star_button)
+        self.dataset_layout.set_star_button(self.star_button)
 
         title_layout = QHBoxLayout()
         title_layout.setContentsMargins(0, 0, 0, 0)
         title_layout.addWidget(self.title_label, 1)
-        self.layout().set_title_layout(title_layout)
+        self.dataset_layout.set_title_layout(title_layout)
 
         main_title_size = 11
         title_font_size = 11
@@ -534,7 +547,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         updated_layout.addWidget(self.labelUpdated)
         details_layout.addLayout(updated_layout)
 
-        self.layout().set_details_layout(details_layout)
+        self.dataset_layout.set_details_layout(details_layout)
 
         buttons_layout = QHBoxLayout()
         buttons_layout.setContentsMargins(0, 0, 0, 0)
@@ -561,7 +574,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         else:
             self.btnAdd = None
 
-        self.layout().set_button_layout(buttons_layout)
+        self.dataset_layout.set_button_layout(buttons_layout)
 
         self.bbox: Optional[QgsGeometry] = self._geomFromGeoJson(
             self.dataset.details.get("data", {}).get("extent"))
@@ -578,12 +591,6 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.set_column_count(column_count)
 
     def set_column_count(self, count: int):
-        use_narrow_cards = count > 1
-        is_using_narrow_cards = self.column_count > 1
-
-        if self.column_count >= 1 and use_narrow_cards == is_using_narrow_cards:
-            return
-
         super().set_column_count(count)
         self.update_thumbnail()
 
@@ -612,7 +619,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.thumbnail_label.setPixmap(QPixmap.fromImage(thumbnail))
 
     def process_thumbnail(self, img: Optional[QImage]) -> QImage:
-        if self.column_count == 1:
+        if not self.dataset_layout.has_narrow_cards():
             # sizes here account for borders, hence height is + 2
             size = QSize(self.THUMBNAIL_SIZE, self.THUMBNAIL_SIZE + 2)
         else:
@@ -641,7 +648,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         painter.setBrush(QBrush(QColor(255, 0, 0)))
 
         path = QPainterPath()
-        if self.column_count == 1:
+        if not self.dataset_layout.has_narrow_cards():
             path.moveTo(self.THUMBNAIL_CORNER_RADIUS, 0)
             path.lineTo(size.width(), 0)
             path.lineTo(size.width(), size.height())
@@ -773,7 +780,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
     def resizeEvent(self, event):
         super().resizeEvent(event)
 
-        if self.column_count > 1:
+        if self.dataset_layout.has_narrow_cards():
             self.update_thumbnail()
 
     def mousePressEvent(self, event):
