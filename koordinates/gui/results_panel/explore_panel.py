@@ -44,7 +44,11 @@ class ExplorePanelWidget(ResultsPanelWidget):
         self.title_label.setWordWrap(True)
 
         main_title_size = 14
-        font_scale = self.screen().logicalDotsPerInch() / 92
+        try:
+            font_scale = self.screen().logicalDotsPerInch() / 92
+        except AttributeError:
+            # requires Qt 5.14+
+            font_scale = 1
 
         if platform.system() == 'Darwin':
             # fonts looks smaller on a mac, where things "just work" :P
