@@ -209,11 +209,6 @@ class DatasetItemLayout(QLayout):
     def minimumSize(self):
         return QSize(150, DatasetItemWidgetBase.CARD_HEIGHT)
 
-        if self.force_narrow_cards:
-            return QSize(330, DatasetItemWidgetBase.CARD_HEIGHT_TALL)
-        else:
-            return QSize(150, DatasetItemWidgetBase.CARD_HEIGHT)
-
     def setGeometry(self, rect):
         super().setGeometry(rect)
 
@@ -367,7 +362,12 @@ class DatasetItemWidgetBase(QFrame):
         self.setLayout(self.dataset_layout)
 
     def set_column_count(self, count: int):
-        #if self.column_count >= 1 and use_narrow_cards == is_using_narrow_cards:
+        """
+        Sets the number of table columns in the parent table, so that
+        the item can rearrange layout accordingly
+        """
+        # if self.column_count >= 1 and \
+        # use_narrow_cards == is_using_narrow_cards:
         #    return
 
         self.column_count = count
