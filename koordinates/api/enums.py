@@ -40,6 +40,7 @@ class UserDatasetCapability(Enum):
     """
     Star = 0
     Clone = 1
+    RequestClone = 2
 
 
 class DataType(Enum):

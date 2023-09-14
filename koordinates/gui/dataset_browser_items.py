@@ -665,7 +665,8 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         """
         self.setStyleSheet(base_style)
 
-        if Capability.Clone in self.dataset.capabilities:
+        if (Capability.Clone in self.dataset.capabilities
+                or Capability.RequestClone in self.dataset.capabilities):
             self.btnClone = CloneButton(self.dataset)
             buttons_layout.addWidget(self.btnClone)
         else:

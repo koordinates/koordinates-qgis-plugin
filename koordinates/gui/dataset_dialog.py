@@ -128,7 +128,8 @@ class DatasetDialog(QDialog):
         self.star_button = StarButton(self.dataset)
         title_hl.addWidget(self.star_button)
 
-        if Capability.Clone in self.dataset.capabilities:
+        if (Capability.Clone in self.dataset.capabilities
+                or Capability.RequestClone in self.dataset.capabilities):
             self.clone_button = CloneButton(self.dataset,
                                             close_parent_on_clone=True)
             title_hl.addWidget(self.clone_button)
