@@ -11,7 +11,6 @@ from typing import (
 
 from qgis.PyQt.QtCore import (
     Qt,
-    QPoint,
     QPointF,
     QRect,
     QRectF,
@@ -59,6 +58,7 @@ from .dataset_utils import (
     DatasetGuiUtils,
     IconStyle
 )
+from .enums import ExploreMode
 from .gui_utils import GuiUtils
 from .star_button import StarButton
 from ..api import (
@@ -67,8 +67,6 @@ from ..api import (
     PublicAccessType,
     Dataset
 )
-
-from .enums import ExploreMode
 
 
 class CardLayout(Enum):
@@ -236,7 +234,7 @@ class DatasetItemLayout(QLayout):
         else:
             return DatasetItemWidgetBase.CARD_HEIGHT
 
-    def thumbnail_size_for_rect(self, rect: Optional[QRect]=None) -> QSize:
+    def thumbnail_size_for_rect(self, rect: Optional[QRect] = None) -> QSize:
         """
         Returns the thumbnail size for the given item rect
         """
@@ -436,6 +434,7 @@ class DatasetItemLayout(QLayout):
                     )
                 )
 
+
 class DatasetItemWidgetBase(QFrame):
     """
     Base class for dataset items
@@ -489,6 +488,7 @@ class DatasetItemWidgetBase(QFrame):
         # might not be needed anymore...
         if arrangement != CardLayout.Tall:
             self.setMinimumWidth(1)
+
 
 class Label(QLabel):
     def __init__(self):
@@ -606,7 +606,8 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         self._update_title()
 
-        self.labelUpdatedIcon = QSvgWidget(GuiUtils.get_icon_svg("history_gray.svg"))
+        self.labelUpdatedIcon = QSvgWidget(
+            GuiUtils.get_icon_svg("history_gray.svg"))
         self.labelUpdatedIcon.setFixedSize(13, 12)
         self.labelUpdated = QLabel()
 
@@ -702,8 +703,12 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             main_title_size = 14 if arrangement != CardLayout.Compact else 12
             title_font_size = 14 if arrangement != CardLayout.Compact else 12
         elif font_scale > 1:
-            main_title_size = int(12 / font_scale) if arrangement != CardLayout.Compact else int(11 / font_scale)
-            title_font_size = int(12 / font_scale) if arrangement != CardLayout.Compact else int(11 / font_scale)
+            main_title_size = int(
+                12 / font_scale) if arrangement != CardLayout.Compact else int(
+                11 / font_scale)
+            title_font_size = int(
+                12 / font_scale) if arrangement != CardLayout.Compact else int(
+                11 / font_scale)
 
         publisher_name = self.dataset.publisher().name() if \
             self.dataset.publisher() else ''
@@ -855,7 +860,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
                                  Qt.SmoothTransformation)
 
             if resized.width() > image_size.width():
-                left = int((resized.width() - image_size.width())/2)
+                left = int((resized.width() - image_size.width()) / 2)
             else:
                 left = 0
             if resized.height() > image_size.height():
@@ -863,7 +868,8 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             else:
                 top = 0
 
-            cropped = resized.copy(QRect(left, top, image_size.width(), image_size.height()))
+            cropped = resized.copy(
+                QRect(left, top, image_size.width(), image_size.height()))
             painter.drawImage(0, 0, cropped)
         else:
             painter.setBrush(QBrush(QColor('#cccccc')))
