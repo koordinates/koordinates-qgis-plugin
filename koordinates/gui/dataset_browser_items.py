@@ -597,29 +597,14 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         title_layout.addWidget(self.title_label, 1)
         self.dataset_layout.set_title_layout(title_layout)
 
-        main_title_size = 11
-        title_font_size = 11
         detail_font_size = 9
         if platform.system() == 'Darwin':
             # fonts looks smaller on a mac, where things "just work" :P
-            main_title_size = 14
-            title_font_size = 14
             detail_font_size = 10
         elif font_scale > 1:
-            main_title_size = int(12 / font_scale)
-            title_font_size = int(12 / font_scale)
             detail_font_size = int(10 / font_scale)
 
-        publisher_name = self.dataset.publisher().name() if \
-            self.dataset.publisher() else ''
-        self.title_label.setText(
-            f"""<p style="line-height: 130%;
-                font-size: {main_title_size}pt;
-                font-family: Arial, Sans"><b>{self.dataset.title()}</b><br>"""
-            f"""<span style="color: #868889;
-            font-size: {title_font_size}pt;
-            font-family: Arial, Sans">{publisher_name}</span></p>"""
-        )
+        self._update_title()
 
         license = self.dataset.details.get('license')
         self.license_label = None
@@ -702,6 +687,38 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         self.set_column_count(column_count)
 
+    def _update_title(self):
+        arrangement = self.dataset_layout.arrangement()
+        try:
+            font_scale = self.screen().logicalDotsPerInch() / 92
+        except AttributeError:
+            # requires Qt 5.14+
+            font_scale = 1
+
+        main_title_size = 11 if arrangement != CardLayout.Compact else 10
+        title_font_size = 11 if arrangement != CardLayout.Compact else 10
+        if platform.system() == 'Darwin':
+            # fonts looks smaller on a mac, where things "just work" :P
+            main_title_size = 14 if arrangement != CardLayout.Compact else 12
+            title_font_size = 14 if arrangement != CardLayout.Compact else 12
+        elif font_scale > 1:
+            main_title_size = int(12 / font_scale) if arrangement != CardLayout.Compact else int(11 / font_scale)
+            title_font_size = int(12 / font_scale) if arrangement != CardLayout.Compact else int(11 / font_scale)
+
+        publisher_name = self.dataset.publisher().name() if \
+            self.dataset.publisher() else ''
+        self.title_label.setText(
+            f"""<p style="line-height: 130%;
+                font-size: {main_title_size}pt;
+                font-family: Arial, Sans"><b>{self.dataset.title()}</b><br>"""
+            f"""<span style="color: #868889;
+            font-size: {title_font_size}pt;
+            font-family: Arial, Sans">{publisher_name}</span></p>"""
+        )
+
+    def _update_arrangement(self):
+        self._update_title()
+
     def set_column_count(self, count: int):
         if count == self.column_count:
             return
@@ -713,6 +730,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             self.defer_update_thumbnail()
 
         self.old_arrangement = arrangement
+        self._update_arrangement()
 
     def defer_update_thumbnail(self):
         if self.timer is not None:
@@ -924,6 +942,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             self.defer_update_thumbnail()
 
         self.old_arrangement = arrangement
+        self._update_arrangement()
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
