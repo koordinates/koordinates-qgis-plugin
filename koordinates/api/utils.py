@@ -95,6 +95,14 @@ class ApiUtils:
 
         if not dataset.get("repository"):
             capabilities.remove(Capability.Clone)
+        else:
+            repo_user_capabilities = dataset["repository"].get(
+                "user_capabilities", []
+            )
+            if 'can-clone' not in repo_user_capabilities:
+                capabilities.remove(Capability.Clone)
+            if 'can-request-clone' in repo_user_capabilities:
+                capabilities.add(Capability.RequestClone)
 
         return capabilities
 
