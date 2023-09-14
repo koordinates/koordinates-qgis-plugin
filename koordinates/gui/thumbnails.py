@@ -1,33 +1,32 @@
+from abc import ABC, abstractmethod
+from collections import defaultdict
+from functools import partial
 from typing import (
     Dict,
     Optional
 )
-from abc import ABC, abstractmethod
-from collections import defaultdict
-from functools import partial
 
+from qgis.PyQt.QtCore import QUrl
 from qgis.PyQt.QtCore import (
     Qt,
     QObject,
     pyqtSignal,
     QSize
 )
-
-from qgis.PyQt.QtNetwork import QNetworkReply, QNetworkRequest
-from qgis.core import QgsNetworkAccessManager
-from qgis.PyQt.QtCore import QUrl
 from qgis.PyQt.QtGui import (
     QImage,
     QColor,
     QPainter,
     QBrush
 )
+from qgis.PyQt.QtNetwork import QNetworkReply, QNetworkRequest
+from qgis.core import QgsNetworkAccessManager
 
+from .gui_utils import GuiUtils
 from ..api import (
     Publisher,
     PublisherType
 )
-from .gui_utils import GuiUtils
 
 
 class ThumbnailProcessor(ABC):
@@ -176,14 +175,16 @@ class GenericThumbnailManager(QObject):
             return self.thumbnails[url]
         else:
             req = QNetworkRequest(QUrl(url))
-            req.setAttribute(QNetworkRequest.CacheLoadControlAttribute, QNetworkRequest.PreferCache)
+            req.setAttribute(QNetworkRequest.CacheLoadControlAttribute,
+                             QNetworkRequest.PreferCache)
             req.setAttribute(QNetworkRequest.CacheSaveControlAttribute, True)
             reply = QgsNetworkAccessManager.instance().get(req)
             self.queued_replies.add(reply)
             if reply.isFinished():
                 self.thumbnail_downloaded(reply)
             else:
-                reply.finished.connect(partial(self.thumbnail_downloaded, reply))
+                reply.finished.connect(
+                    partial(self.thumbnail_downloaded, reply))
 
     def thumbnail_downloaded(self, reply):
         self.queued_replies.remove(reply)
@@ -222,14 +223,16 @@ class ThumbnailManager:
                 self.widget_processors[widget] = processor
 
             req = QNetworkRequest(QUrl(url))
-            req.setAttribute(QNetworkRequest.CacheLoadControlAttribute, QNetworkRequest.PreferCache)
+            req.setAttribute(QNetworkRequest.CacheLoadControlAttribute,
+                             QNetworkRequest.PreferCache)
             req.setAttribute(QNetworkRequest.CacheSaveControlAttribute, True)
             reply = QgsNetworkAccessManager.instance().get(req)
             self.queued_replies.add(reply)
             if reply.isFinished():
                 self.thumbnailDownloaded(reply)
             else:
-                reply.finished.connect(partial(self.thumbnailDownloaded, reply))
+                reply.finished.connect(
+                    partial(self.thumbnailDownloaded, reply))
 
     def thumbnailDownloaded(self, reply):
         self.queued_replies.remove(reply)
