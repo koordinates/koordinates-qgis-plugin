@@ -175,7 +175,10 @@ class GenericThumbnailManager(QObject):
         if url in self.thumbnails:
             return self.thumbnails[url]
         else:
-            reply = QgsNetworkAccessManager.instance().get(QNetworkRequest(QUrl(url)))
+            req = QNetworkRequest(QUrl(url))
+            req.setAttribute(QNetworkRequest.CacheLoadControlAttribute, QNetworkRequest.PreferCache)
+            req.setAttribute(QNetworkRequest.CacheSaveControlAttribute, True)
+            reply = QgsNetworkAccessManager.instance().get(req)
             self.queued_replies.add(reply)
             if reply.isFinished():
                 self.thumbnail_downloaded(reply)
@@ -217,7 +220,11 @@ class ThumbnailManager:
             self.widgets[url].append(widget)
             if processor:
                 self.widget_processors[widget] = processor
-            reply = QgsNetworkAccessManager.instance().get(QNetworkRequest(QUrl(url)))
+
+            req = QNetworkRequest(QUrl(url))
+            req.setAttribute(QNetworkRequest.CacheLoadControlAttribute, QNetworkRequest.PreferCache)
+            req.setAttribute(QNetworkRequest.CacheSaveControlAttribute, True)
+            reply = QgsNetworkAccessManager.instance().get(req)
             self.queued_replies.add(reply)
             if reply.isFinished():
                 self.thumbnailDownloaded(reply)
