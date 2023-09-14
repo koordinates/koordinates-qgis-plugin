@@ -96,7 +96,13 @@ class ApiUtils:
         if not dataset.get("repository"):
             capabilities.remove(Capability.Clone)
         else:
-            repo_user_capabilities = dataset["repository"].get(
+            repo = dataset["repository"]
+            if repo and not isinstance(repo, dict):
+                from .client import KoordinatesClient
+                repo = KoordinatesClient.instance().get_json(
+                    repo
+                )
+            repo_user_capabilities = repo.get(
                 "user_capabilities", []
             )
             if 'can-clone' not in repo_user_capabilities:
