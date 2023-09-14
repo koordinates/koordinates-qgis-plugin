@@ -31,6 +31,7 @@ class Capability(Enum):
     Clone = 0
     Add = 1
     RevisionCount = 2
+    RequestClone = 3
 
 
 class UserDatasetCapability(Enum):

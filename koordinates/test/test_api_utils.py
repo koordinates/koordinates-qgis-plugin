@@ -86,8 +86,24 @@ class TestApiUtils(unittest.TestCase):
             {
                 'type': 'layer',
                 'kind': 'vector',
-                'repository': 'something'
-            }), {Capability.Clone, Capability.Add, Capability.RevisionCount})
+                'repository': {'id': 'something'}
+            }), {Capability.Add, Capability.RevisionCount})
+        self.assertEqual(ApiUtils.capabilities_from_dataset_response(
+            {
+                'type': 'layer',
+                'kind': 'vector',
+                'repository': {'id': 'something',
+                               'user_capabilities': []}
+            }), {Capability.Add, Capability.RevisionCount})
+        self.assertEqual(ApiUtils.capabilities_from_dataset_response(
+            {
+                'type': 'layer',
+                'kind': 'vector',
+                'repository': {'id': 'something',
+                               'user_capabilities': ['can-clone',
+                                                     'can-request-clone']}
+            }), {Capability.Clone, Capability.RequestClone, Capability.Add,
+                 Capability.RevisionCount})
         self.assertEqual(ApiUtils.capabilities_from_dataset_response(
             {
                 'type': 'layer',
@@ -98,7 +114,8 @@ class TestApiUtils(unittest.TestCase):
             {
                 'type': 'layer',
                 'kind': 'raster',
-                'repository': 'something'
+                'repository': {'id': 'something',
+                               'user_capabilities': ['can-clone']}
             }), {Capability.Clone, Capability.Add, Capability.RevisionCount})
         self.assertEqual(ApiUtils.capabilities_from_dataset_response(
             {
@@ -114,7 +131,8 @@ class TestApiUtils(unittest.TestCase):
             {
                 'type': 'layer',
                 'kind': 'grid',
-                'repository': 'something'
+                'repository': {'id': 'something',
+                               'user_capabilities': ['can-clone']}
             }), {Capability.Clone, Capability.Add, Capability.RevisionCount})
         self.assertEqual(ApiUtils.capabilities_from_dataset_response(
             {
@@ -123,7 +141,8 @@ class TestApiUtils(unittest.TestCase):
         self.assertEqual(ApiUtils.capabilities_from_dataset_response(
             {
                 'type': 'table',
-                'repository': 'something'
+                'repository': {'id': 'something',
+                               'user_capabilities': ['can-clone']}
             }), {Capability.Clone, Capability.RevisionCount})
         self.assertEqual(ApiUtils.capabilities_from_dataset_response(
             {
@@ -132,7 +151,8 @@ class TestApiUtils(unittest.TestCase):
         self.assertEqual(ApiUtils.capabilities_from_dataset_response(
             {
                 'type': 'document',
-                'repository': 'something'
+                'repository': {'id': 'something',
+                               'user_capabilities': ['can-clone']}
             }), {Capability.Clone, Capability.RevisionCount})
         self.assertEqual(ApiUtils.capabilities_from_dataset_response(
             {
@@ -141,7 +161,8 @@ class TestApiUtils(unittest.TestCase):
         self.assertEqual(ApiUtils.capabilities_from_dataset_response(
             {
                 'type': 'set',
-                'repository': 'something'
+                'repository': {'id': 'something',
+                               'user_capabilities': ['can-clone']}
             }), {Capability.Clone, Capability.RevisionCount})
         self.assertEqual(ApiUtils.capabilities_from_dataset_response(
             {
@@ -150,13 +171,15 @@ class TestApiUtils(unittest.TestCase):
         self.assertEqual(ApiUtils.capabilities_from_dataset_response(
             {
                 'type': 'repo',
-                'repository': 'something'
+                'repository': {'id': 'something',
+                               'user_capabilities': ['can-clone']}
             }), {Capability.Clone, Capability.RevisionCount})
         self.assertEqual(ApiUtils.capabilities_from_dataset_response(
             {
                 'type': 'layer',
                 'kind': 'pointcloud',
-                'repository': 'something'
+                'repository': {'id': 'something',
+                               'user_capabilities': ['can-clone']}
             }), {Capability.Clone, Capability.Add})
 
 
