@@ -721,7 +721,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.timer = QTimer()
         self.timer.setSingleShot(True)
         self.timer.timeout.connect(self.update_thumbnail)
-        self.timer.start(1)
+        self.timer.start(10)
 
     def setThumbnail(self, img: Optional[QImage]):
         self.raw_thumbnail = img
