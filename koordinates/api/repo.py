@@ -30,7 +30,8 @@ class Repo:
 
         for capability_string, capability_flag in {
             'can-star': UserDatasetCapability.Star,
-            'can-clone': UserDatasetCapability.Clone
+            'can-clone': UserDatasetCapability.Clone,
+            'can-request-clone': UserDatasetCapability.RequestClone
         }.items():
             if capability_string in self.definition.get(
                     'user_capabilities', []
