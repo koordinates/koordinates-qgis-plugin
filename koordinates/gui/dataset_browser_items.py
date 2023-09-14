@@ -1,5 +1,9 @@
 import json
 import platform
+from enum import (
+    Enum,
+    auto
+)
 from typing import (
     Optional,
     Dict
@@ -7,10 +11,12 @@ from typing import (
 
 from qgis.PyQt.QtCore import (
     Qt,
+    QPoint,
     QPointF,
     QRect,
     QRectF,
-    QSize
+    QSize,
+    QTimer
 )
 from qgis.PyQt.QtGui import (
     QColor,
@@ -63,6 +69,15 @@ from ..api import (
 )
 
 from .enums import ExploreMode
+
+
+class CardLayout(Enum):
+    """
+    Dataset card layout arrangements
+    """
+    Tall = auto()
+    Wide = auto()
+    Compact = auto()
 
 
 class DatasetItemLayout(QLayout):
@@ -197,14 +212,48 @@ class DatasetItemLayout(QLayout):
     def sizeHint(self):
         return self.minimumSize()
 
-    def has_narrow_cards(self) -> bool:
+    def arrangement(self, rect: Optional[QRect] = None) -> CardLayout:
         """
-        Returns True if the layout will utilise narrow card layouts
+        Returns the arrangement of cards
         """
-        if self.geometry().width() < 450:
-            return True
+        if rect is None:
+            rect = self.geometry()
 
-        return False
+        if self._columns > 1:
+            return CardLayout.Tall
+        elif rect.width() < 450:
+            return CardLayout.Compact
+        else:
+            return CardLayout.Wide
+
+    @staticmethod
+    def fixed_height_for_arrangement(arrangement: CardLayout) -> int:
+        """
+        Returns the fixed height for an arrangement
+        """
+        if arrangement == CardLayout.Tall:
+            return DatasetItemWidgetBase.CARD_HEIGHT_TALL
+        else:
+            return DatasetItemWidgetBase.CARD_HEIGHT
+
+    def thumbnail_size_for_rect(self, rect: Optional[QRect]=None) -> QSize:
+        """
+        Returns the thumbnail size for the given item rect
+        """
+        if rect is None:
+            rect = self.geometry()
+        _arrangement = self.arrangement(rect)
+
+        if _arrangement == CardLayout.Wide:
+            # sizes here account for borders, hence height is + 2
+            size = QSize(DatasetItemWidgetBase.THUMBNAIL_SIZE,
+                         DatasetItemWidgetBase.THUMBNAIL_SIZE + 2)
+        elif _arrangement == CardLayout.Tall:
+            size = QSize(rect.width(), DatasetItemWidgetBase.THUMBNAIL_SIZE)
+        else:
+            size = QSize(111, rect.height())
+
+        return size
 
     def minimumSize(self):
         return QSize(150, DatasetItemWidgetBase.CARD_HEIGHT)
@@ -212,9 +261,11 @@ class DatasetItemLayout(QLayout):
     def setGeometry(self, rect):
         super().setGeometry(rect)
 
-        use_narrow_cards = self._columns > 1 or rect.width() < 450
+        new_arrangement = self.arrangement(rect)
+        if new_arrangement is None:
+            return
 
-        if use_narrow_cards:
+        if new_arrangement == CardLayout.Tall:
             if self.thumbnail_item:
                 self.thumbnail_widget.show()
                 self.thumbnail_item.setGeometry(
@@ -234,6 +285,7 @@ class DatasetItemLayout(QLayout):
                 )
 
             if self.private_icon_item:
+                self.private_icon_item.widget().show()
                 self.private_icon_item.setGeometry(
                     QRect(
                         rect.width() - 64, 162,
@@ -268,21 +320,18 @@ class DatasetItemLayout(QLayout):
                         32
                     )
                 )
-        else:
+        elif new_arrangement == CardLayout.Wide:
             has_thumbnail = False
             if self.thumbnail_item:
-                if rect.width() < 440:
-                    self.thumbnail_widget.hide()
-                else:
-                    self.thumbnail_widget.show()
-                    has_thumbnail = True
-                    self.thumbnail_item.setGeometry(
-                        QRect(
-                            0, 0,
-                            DatasetItemWidgetBase.THUMBNAIL_SIZE + 1,
-                            DatasetItemWidgetBase.THUMBNAIL_SIZE + 1
-                        )
+                self.thumbnail_widget.show()
+                has_thumbnail = True
+                self.thumbnail_item.setGeometry(
+                    QRect(
+                        0, 0,
+                        DatasetItemWidgetBase.THUMBNAIL_SIZE + 1,
+                        DatasetItemWidgetBase.THUMBNAIL_SIZE + 1
                     )
+                )
 
             left = 160 if has_thumbnail else 16
             if self.title_container:
@@ -296,6 +345,7 @@ class DatasetItemLayout(QLayout):
                 )
 
             if self.private_icon_item:
+                self.private_icon_item.widget().show()
                 self.private_icon_item.setGeometry(
                     QRect(
                         rect.width() - 64, 12,
@@ -330,7 +380,61 @@ class DatasetItemLayout(QLayout):
                         38
                     )
                 )
+        elif new_arrangement == CardLayout.Compact:
+            has_thumbnail = False
+            left = 11
+            if self.thumbnail_item:
+                self.thumbnail_widget.show()
+                has_thumbnail = True
+                size = self.thumbnail_size_for_rect(rect)
+                self.thumbnail_item.setGeometry(
+                    QRect(
+                        0, 0,
+                        size.width(),
+                        size.height()
+                    )
+                )
+                left += size.width()
 
+            if self.title_container:
+                self.title_container.setGeometry(
+                    QRect(
+                        left, 15,
+                        rect.width() - left - 40 -
+                        (24 if self.private_icon_item else 0),
+                        90
+                    )
+                )
+
+            if self.private_icon_item:
+                self.private_icon_item.widget().hide()
+
+            if self.star_button_item:
+                self.star_button_item.setGeometry(
+                    QRect(
+                        rect.width() - 40, 12,
+                        30,
+                        20
+                    )
+                )
+
+            if self.details_container:
+                self.details_container.setGeometry(
+                    QRect(
+                        9999, 80,
+                        105,
+                        61
+                    )
+                )
+
+            if self.button_container:
+                self.button_container.setGeometry(
+                    QRect(
+                        left, 103,
+                        rect.width() - left - 10,
+                        38
+                    )
+                )
 
 class DatasetItemWidgetBase(QFrame):
     """
@@ -347,7 +451,7 @@ class DatasetItemWidgetBase(QFrame):
                  parent=None,
                  mode: ExploreMode = ExploreMode.Browse):
         super().__init__(parent)
-        self.column_count = 1
+        self.column_count = None
         self._mode = mode
         if self._mode == ExploreMode.Browse:
             self.setStyleSheet(
@@ -374,12 +478,17 @@ class DatasetItemWidgetBase(QFrame):
 
         self.dataset_layout.set_table_column_count(count)
 
-        if self.dataset_layout.has_narrow_cards():
-            self.setFixedHeight(self.CARD_HEIGHT_TALL)
-        else:
-            self.setFixedHeight(self.CARD_HEIGHT)
-            self.setMinimumWidth(1)
+        arrangement = self.dataset_layout.arrangement()
+        if arrangement is None:
+            return
 
+        self.setFixedHeight(self.dataset_layout.fixed_height_for_arrangement(
+            arrangement
+        ))
+
+        # might not be needed anymore...
+        if arrangement != CardLayout.Tall:
+            self.setMinimumWidth(1)
 
 class Label(QLabel):
     def __init__(self):
@@ -443,6 +552,8 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         self.setMouseTracking(True)
         self.dataset = Dataset(dataset)
+
+        self.old_arrangement = None
 
         self.raw_thumbnail = None
 
@@ -591,12 +702,24 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.set_column_count(column_count)
 
     def set_column_count(self, count: int):
+        if count == self.column_count:
+            return
+
         super().set_column_count(count)
-        self.update_thumbnail()
+
+        arrangement = self.dataset_layout.arrangement()
+        if arrangement != self.old_arrangement:
+            self.update_thumbnail()
+
+        self.old_arrangement = arrangement
 
     def setThumbnail(self, img: Optional[QImage]):
         self.raw_thumbnail = img
-        self.update_thumbnail()
+        self.timer = QTimer()
+        self.timer.setSingleShot(True)
+        self.timer.timeout.connect(self.update_thumbnail)
+        self.timer.start(1)
+#        self.update_thumbnail()
 
     def update_thumbnail(self):
         thumbnail_svg = DatasetGuiUtils.thumbnail_icon_for_dataset(
@@ -608,6 +731,9 @@ class DatasetItemWidget(DatasetItemWidgetBase):
                 thumbnail_svg, size, size)
 
         thumbnail = self.process_thumbnail(self.raw_thumbnail)
+        if not thumbnail:
+            return
+
         try:
             dpi_ratio = self.window().screen().devicePixelRatio()
         except AttributeError:
@@ -619,11 +745,11 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.thumbnail_label.setPixmap(QPixmap.fromImage(thumbnail))
 
     def process_thumbnail(self, img: Optional[QImage]) -> QImage:
-        if not self.dataset_layout.has_narrow_cards():
-            # sizes here account for borders, hence height is + 2
-            size = QSize(self.THUMBNAIL_SIZE, self.THUMBNAIL_SIZE + 2)
-        else:
-            size = QSize(self.width(), self.THUMBNAIL_SIZE)
+        size = self.dataset_layout.thumbnail_size_for_rect()
+        if size.width() == 0 or size.height() == 0:
+            return
+
+        arrangement = self.dataset_layout.arrangement()
 
         image_size = size
         try:
@@ -648,7 +774,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         painter.setBrush(QBrush(QColor(255, 0, 0)))
 
         path = QPainterPath()
-        if not self.dataset_layout.has_narrow_cards():
+        if arrangement in (CardLayout.Wide, CardLayout.Compact):
             path.moveTo(self.THUMBNAIL_CORNER_RADIUS, 0)
             path.lineTo(size.width(), 0)
             path.lineTo(size.width(), size.height())
@@ -719,6 +845,9 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             target.dotsPerMeterY() * scale_factor))
         base = target
 
+        if arrangement == CardLayout.Compact:
+            return base
+
         painter = QPainter(base)
         painter.setRenderHint(QPainter.Antialiasing, True)
         painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
@@ -780,8 +909,12 @@ class DatasetItemWidget(DatasetItemWidgetBase):
     def resizeEvent(self, event):
         super().resizeEvent(event)
 
-        if self.dataset_layout.has_narrow_cards():
+        arrangement = self.dataset_layout.arrangement()
+        if arrangement != self.old_arrangement or \
+                arrangement == CardLayout.Tall:
             self.update_thumbnail()
+
+        self.old_arrangement = arrangement
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
