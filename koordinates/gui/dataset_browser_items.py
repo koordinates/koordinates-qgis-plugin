@@ -421,7 +421,7 @@ class DatasetItemLayout(QLayout):
             if self.details_container:
                 self.details_container.setGeometry(
                     QRect(
-                        9999, 80,
+                        left, 35,
                         105,
                         61
                     )
@@ -606,6 +606,10 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         self._update_title()
 
+        self.labelUpdatedIcon = QSvgWidget(GuiUtils.get_icon_svg("history_gray.svg"))
+        self.labelUpdatedIcon.setFixedSize(13, 12)
+        self.labelUpdated = QLabel()
+
         license = self.dataset.details.get('license')
         self.license_label = None
         if license:
@@ -618,10 +622,6 @@ class DatasetItemWidget(DatasetItemWidgetBase):
                         font-family: Arial, Sans;
                         font-size: {detail_font_size}pt">{license_type}</span>"""
                 )
-
-        self.labelUpdatedIcon = QSvgWidget(GuiUtils.get_icon_svg("history_gray.svg"))
-        self.labelUpdatedIcon.setFixedSize(13, 12)
-        self.labelUpdated = QLabel()
 
         changed_date = self.dataset.updated_at_date()
         if changed_date is not None:
@@ -718,6 +718,13 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
     def _update_arrangement(self):
         self._update_title()
+        arrangement = self.dataset_layout.arrangement()
+        if arrangement in (CardLayout.Tall, CardLayout.Wide):
+            self.labelUpdated.show()
+            self.labelUpdatedIcon.show()
+        else:
+            self.labelUpdated.hide()
+            self.labelUpdatedIcon.hide()
 
     def set_column_count(self, count: int):
         if count == self.column_count:
