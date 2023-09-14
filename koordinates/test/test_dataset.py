@@ -59,6 +59,10 @@ class TestDataset(unittest.TestCase):
         "download",
         "write"
     ],
+    "user_capabilities": [
+      "can-star",
+      "can-clone"
+    ],
     "name": "some repo name",
     "description": ""
 }
