@@ -556,6 +556,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.old_arrangement = None
 
         self.raw_thumbnail = None
+        self.timer = None
 
         try:
             font_scale = self.screen().logicalDotsPerInch() / 92
@@ -709,19 +710,27 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         arrangement = self.dataset_layout.arrangement()
         if arrangement != self.old_arrangement:
-            self.update_thumbnail()
+            self.defer_update_thumbnail()
 
         self.old_arrangement = arrangement
 
-    def setThumbnail(self, img: Optional[QImage]):
-        self.raw_thumbnail = img
+    def defer_update_thumbnail(self):
+        if self.timer is not None:
+            return
+
         self.timer = QTimer()
         self.timer.setSingleShot(True)
         self.timer.timeout.connect(self.update_thumbnail)
         self.timer.start(1)
-#        self.update_thumbnail()
+
+    def setThumbnail(self, img: Optional[QImage]):
+        self.raw_thumbnail = img
+        # defer updating thumbnail, as we need the widget to be initially
+        # sized first
+        self.defer_update_thumbnail()
 
     def update_thumbnail(self):
+        self.timer = None
         thumbnail_svg = DatasetGuiUtils.thumbnail_icon_for_dataset(
             self.dataset
         )
@@ -912,7 +921,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         arrangement = self.dataset_layout.arrangement()
         if arrangement != self.old_arrangement or \
                 arrangement == CardLayout.Tall:
-            self.update_thumbnail()
+            self.defer_update_thumbnail()
 
         self.old_arrangement = arrangement
 
