@@ -252,9 +252,9 @@ class DatasetItemLayout(QLayout):
             size = QSize(DatasetItemWidgetBase.THUMBNAIL_SIZE,
                          DatasetItemWidgetBase.THUMBNAIL_SIZE + 2)
         elif _arrangement == CardLayout.Tall:
-            size = QSize(rect.width(), DatasetItemWidgetBase.THUMBNAIL_SIZE)
+            size = QSize(rect.width() + 2, DatasetItemWidgetBase.THUMBNAIL_SIZE)
         else:
-            size = QSize(111, rect.height())
+            size = QSize(111, rect.height() + 2)
 
         return size
 
