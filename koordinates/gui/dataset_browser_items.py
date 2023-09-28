@@ -76,9 +76,12 @@ class CardLayout(Enum):
     Tall = auto()
     Wide = auto()
     Compact = auto()
+    Empty = auto()
 
 
 class DatasetItemLayout(QLayout):
+
+    COMPACT_WIDTH_THRESHOLD = 430
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -219,7 +222,9 @@ class DatasetItemLayout(QLayout):
 
         if self._columns > 1:
             return CardLayout.Tall
-        elif rect.width() < 450:
+        elif not rect.width():
+            return CardLayout.Empty
+        elif rect.width() < DatasetItemLayout.COMPACT_WIDTH_THRESHOLD:
             return CardLayout.Compact
         else:
             return CardLayout.Wide
