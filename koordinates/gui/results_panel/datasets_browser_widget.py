@@ -62,7 +62,7 @@ class DatasetsBrowserWidget(ResultsPanelWidget):
         self._load_more_widget = None
         self._no_records_widget = None
         self._datasets = []
-        self.setMinimumWidth(370)
+        self.setMinimumWidth(340)
 
     def set_margins(self, left: int, top: int, right: int, bottom: int):
         """
