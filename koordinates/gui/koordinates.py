@@ -518,6 +518,8 @@ class Koordinates(QgsDockWidget, WIDGET):
 
         KoordinatesClient.instance().loginChanged.connect(self._loginChanged)
 
+        self.setMinimumWidth(430)
+
         self._loginChanged(False)
 
     def cancel_active_requests(self):
