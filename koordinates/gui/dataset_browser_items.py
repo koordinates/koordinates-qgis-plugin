@@ -701,19 +701,17 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             # requires Qt 5.14+
             font_scale = 1
 
-        main_title_size = 11 if arrangement != CardLayout.Compact else 10
-        title_font_size = 11 if arrangement != CardLayout.Compact else 10
+        main_title_size = 11
+        title_font_size = 11
         if platform.system() == 'Darwin':
             # fonts looks smaller on a mac, where things "just work" :P
-            main_title_size = 14 if arrangement != CardLayout.Compact else 12
-            title_font_size = 14 if arrangement != CardLayout.Compact else 12
+            main_title_size = 14
+            title_font_size = 14
         elif font_scale > 1:
             main_title_size = int(
-                12 / font_scale) if arrangement != CardLayout.Compact else int(
-                11 / font_scale)
+                12 / font_scale)
             title_font_size = int(
-                12 / font_scale) if arrangement != CardLayout.Compact else int(
-                11 / font_scale)
+                12 / font_scale)
 
         publisher_name = self.dataset.publisher().name() if \
             self.dataset.publisher() else ''
