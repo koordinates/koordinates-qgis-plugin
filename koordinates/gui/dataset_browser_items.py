@@ -694,7 +694,6 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.set_column_count(column_count)
 
     def _update_title(self):
-        arrangement = self.dataset_layout.arrangement()
         try:
             font_scale = self.screen().logicalDotsPerInch() / 92
         except AttributeError:
