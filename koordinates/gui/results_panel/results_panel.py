@@ -253,16 +253,10 @@ class ResultsPanel(QWidget):
             print('error occurred :(')
             return
 
-        filtered_panels = []
-        for panel in result['panels']:
-            if any([item['kind'] in ('layer.vector', 'layer.raster') for item
-                    in panel['items']]):
-                filtered_panels.append(panel)
-
         mode = ExploreMode.Popular if explore_panel == ExplorePanel.Popular \
             else ExplorePanel.Recent
 
-        for panel in filtered_panels:
+        for panel in result['panels']:
             item = ExplorePanelWidget(panel, mode=mode)
             self.child_items.append(item)
             self.container_layout.addWidget(item)
