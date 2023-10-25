@@ -6,7 +6,9 @@ from typing import (
     Dict,
     Set
 )
+from functools import partial
 
+from qgis.PyQt import sip
 from qgis.PyQt.QtCore import (
     pyqtSignal,
     QObject,
@@ -45,6 +47,7 @@ class UserCapability(Enum):
 class KoordinatesClient(QObject):
     loginChanged = pyqtSignal(bool)
     error_occurred = pyqtSignal(str)
+    explore_sections_retrieved = pyqtSignal(object)
 
     BASE64_ENCODED_SVG_HEADER = 'data:image/svg+xml;base64,'
 
@@ -64,6 +67,8 @@ class KoordinatesClient(QObject):
         QObject.__init__(self)
 
         KoordinatesClient.__instance = self
+
+        self._explore_sections_reply: Optional[QNetworkReply] = None
 
         self.layers = {}
         self._dataset_details = {}
@@ -94,6 +99,10 @@ class KoordinatesClient(QObject):
         self.apiKey = apiKey
         self.loginChanged.emit(True)
 
+        self._explore_sections_reply = self.explore_sections_async()
+        self._explore_sections_reply.finished.connect(
+            partial(self._sections_reply_finished, self._explore_sections_reply))
+
     def logout(self):
         oldKey = self.apiKey
 
@@ -104,6 +113,31 @@ class KoordinatesClient(QObject):
 
     def isLoggedIn(self):
         return self.apiKey is not None
+
+    def _sections_reply_finished(self, reply: QNetworkReply):
+        if sip.isdeleted(self):
+            return
+
+        if reply != self._explore_sections_reply:
+            # an old reply we don't care about anymore
+            return
+
+        self._explore_sections_reply = None
+        if reply.error() == QNetworkReply.OperationCanceledError:
+            return
+
+        if reply.error() != QNetworkReply.NoError:
+            print('error occurred :(')
+            return
+
+        content = json.loads(reply.readAll().data().decode())
+
+        sections = []
+        from .explore_section import ExploreSection
+        for section in content:
+            sections.append(ExploreSection(section))
+
+        self.explore_sections_retrieved.emit(sections)
 
     def _build_datasets_request(self,
                                 page=1,
