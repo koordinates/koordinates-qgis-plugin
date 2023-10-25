@@ -1,7 +1,11 @@
+import json
 from typing import (
     Optional
 )
+from functools import partial
+import base64
 
+from qgis.PyQt import sip
 from qgis.PyQt.QtCore import (
     Qt,
     QSize
@@ -23,12 +27,14 @@ from qgis.PyQt.QtWidgets import (
     QStyleOptionButton,
     QPushButton
 )
+from qgis.PyQt.QtNetwork import QNetworkReply
 
 from .gui_utils import GuiUtils
 from .enums import (
     TabStyle,
     StandardExploreModes
 )
+from ..api import KoordinatesClient
 
 
 class FlatTabBar(QTabBar):
@@ -171,14 +177,15 @@ class ExploreTabBar(FlatTabBar):
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
 
-        self.addTab(GuiUtils.get_icon('popular.svg'), self.tr('Popular'))
-        self.setTabData(0, StandardExploreModes.Popular)
         self.addTab(GuiUtils.get_icon('browse.svg'), self.tr('Browse'))
-        self.setTabData(1, StandardExploreModes.Browse)
+        self.setTabData(0, StandardExploreModes.Browse)
         self.addTab(GuiUtils.get_icon('publishers.svg'), self.tr('Publishers'))
-        self.setTabData(2, StandardExploreModes.Publishers)
-        self.addTab(GuiUtils.get_icon('recent.svg'), self.tr('Recent'))
-        self.setTabData(3, StandardExploreModes.Recent)
+        self.setTabData(1, StandardExploreModes.Publishers)
+
+        self._explore_sections_reply = (
+            KoordinatesClient.instance().explore_sections_async())
+        self._explore_sections_reply.finished.connect(
+            partial(self._sections_reply_finished, self._explore_sections_reply))
 
     def bottom_tab_style(self, index: int) -> TabStyle:
         current_mode: str = self.tabData(index)
@@ -200,6 +207,50 @@ class ExploreTabBar(FlatTabBar):
         for i in range(self.count()):
             if self.tabData(i) == mode:
                 self.setCurrentIndex(i)
+
+    def _sections_reply_finished(self, reply: QNetworkReply):
+        if sip.isdeleted(self):
+            return
+
+        if reply != self._explore_sections_reply:
+            # an old reply we don't care about anymore
+            return
+
+        self._explore_sections_reply = None
+        if reply.error() == QNetworkReply.OperationCanceledError:
+            return
+
+        if reply.error() != QNetworkReply.NoError:
+            print('error occurred :(')
+            return
+
+        content = json.loads(reply.readAll().data().decode())
+        for section in content:
+
+            icon_url = section.get('icon_url')
+            icon = None
+            if isinstance(icon_url, str) and \
+                icon_url.startswith(
+                    KoordinatesClient.BASE64_ENCODED_SVG_HEADER):
+                base64_content = icon_url[
+                    len(KoordinatesClient.BASE64_ENCODED_SVG_HEADER):]
+                svg_content = base64.b64decode(base64_content)
+                icon = GuiUtils.svg_to_icon(svg_content)
+
+            if section.get('slug') == 'popular':
+                # special case for popular, should always be first tab
+                self.insertTab(
+                    0,
+                    icon or GuiUtils.get_icon('popular.svg'), section['label']
+                )
+                self.setTabData(0, StandardExploreModes.Popular)
+            else:
+                self.addTab(
+                    icon or GuiUtils.get_icon('popular.svg'),
+                    section['label']
+                )
+                tab_index = self.count() - 1
+                self.setTabData(tab_index, section.get('slug'))
 
 
 class ExploreTabButton(QPushButton):
