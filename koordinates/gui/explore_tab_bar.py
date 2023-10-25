@@ -1,6 +1,5 @@
 from typing import (
-    Optional,
-    Dict
+    Optional
 )
 
 from qgis.PyQt.QtCore import (
