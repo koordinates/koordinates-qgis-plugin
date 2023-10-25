@@ -1,6 +1,7 @@
 import json
 from typing import (
-    Optional
+    Optional,
+    List
 )
 from functools import partial
 import base64
@@ -35,7 +36,10 @@ from .enums import (
     TabStyle,
     StandardExploreModes
 )
-from ..api import KoordinatesClient
+from ..api import (
+    KoordinatesClient,
+    ExploreSection
+)
 
 
 class FlatTabBar(QTabBar):
@@ -185,10 +189,9 @@ class ExploreTabBar(FlatTabBar):
         self.addTab(GuiUtils.get_icon('publishers.svg'), self.tr('Publishers'))
         self.setTabData(1, StandardExploreModes.Publishers)
 
-        self._explore_sections_reply = (
-            KoordinatesClient.instance().explore_sections_async())
-        self._explore_sections_reply.finished.connect(
-            partial(self._sections_reply_finished, self._explore_sections_reply))
+        KoordinatesClient.instance().explore_sections_retrieved.connect(
+            self._explore_sections_retrieved
+        )
 
         self.currentChanged.connect(self._tab_changed)
 
@@ -219,49 +222,28 @@ class ExploreTabBar(FlatTabBar):
             if self.tabData(i) == mode:
                 self.setCurrentIndex(i)
 
-    def _sections_reply_finished(self, reply: QNetworkReply):
+    def _explore_sections_retrieved(self, sections: List[ExploreSection]):
         if sip.isdeleted(self):
             return
 
-        if reply != self._explore_sections_reply:
-            # an old reply we don't care about anymore
-            return
-
-        self._explore_sections_reply = None
-        if reply.error() == QNetworkReply.OperationCanceledError:
-            return
-
-        if reply.error() != QNetworkReply.NoError:
-            print('error occurred :(')
-            return
-
-        content = json.loads(reply.readAll().data().decode())
-        for section in content:
-
-            icon_url = section.get('icon_url')
-            icon = None
-            if isinstance(icon_url, str) and \
-                icon_url.startswith(
-                    KoordinatesClient.BASE64_ENCODED_SVG_HEADER):
-                base64_content = icon_url[
-                    len(KoordinatesClient.BASE64_ENCODED_SVG_HEADER):]
-                svg_content = base64.b64decode(base64_content)
-                icon = GuiUtils.svg_to_icon(svg_content)
-
-            if section.get('slug') == 'popular':
+        for section in sections:
+            if section.slug == 'popular':
                 # special case for popular, should always be first tab
                 self.insertTab(
                     0,
-                    icon or GuiUtils.get_icon('popular.svg'), section['label']
+                    section.icon or GuiUtils.get_icon('popular.svg'),
+                    section.label
                 )
+                self.setTabToolTip(0, section.description)
                 self.setTabData(0, StandardExploreModes.Popular)
             else:
                 self.addTab(
-                    icon or GuiUtils.get_icon('popular.svg'),
-                    section['label']
+                    section.icon or GuiUtils.get_icon('popular.svg'),
+                    section.label
                 )
                 tab_index = self.count() - 1
-                self.setTabData(tab_index, section.get('slug'))
+                self.setTabToolTip(tab_index, section.description)
+                self.setTabData(tab_index, section.slug)
 
 
 class ExploreTabButton(QPushButton):

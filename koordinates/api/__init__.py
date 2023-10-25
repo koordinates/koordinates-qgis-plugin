@@ -24,3 +24,4 @@ from .enums import (  # NOQA
 from .layer_utils import LayerUtils  # NOQA
 from .repo import Repo  # NOQA
 from .utils import ApiUtils  # NOQA
+from .explore_section import ExploreSection  # NOQA
