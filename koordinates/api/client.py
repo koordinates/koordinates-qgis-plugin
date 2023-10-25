@@ -27,7 +27,6 @@ from .utils import ApiUtils
 from .repo import Repo
 from .enums import (
     DataType,
-    ExplorePanel,
     PublisherType
 )
 from .dataset import Dataset
@@ -151,7 +150,7 @@ class KoordinatesClient(QObject):
         return endpoint, headers, params
 
     def _build_explore_request(self,
-                               panel: ExplorePanel,
+                               section_slug: str,
                                context=None) -> Tuple[str, Dict[str, str], dict]:
         """
         Builds the parameters used for a datasets request
@@ -162,10 +161,8 @@ class KoordinatesClient(QObject):
         params.update({"page_size": PAGE_SIZE})
 
         endpoint = "explore-sections/"
-        if panel == ExplorePanel.Popular:
-            endpoint += "popular/"
-        elif panel == ExplorePanel.Recent:
-            endpoint += "recent/"
+        if section_slug not in ('browse', 'publishers'):
+            endpoint += section_slug + "/"
 
         params["item_type"] = ['layer.*']
 
@@ -246,12 +243,13 @@ class KoordinatesClient(QObject):
         return QgsNetworkAccessManager.instance().get(network_request)
 
     def explore_async(self,
-                      panel: ExplorePanel,
+                      section_slug: str,
                       context=None) -> QNetworkReply:
         """
         Retrieve datasets asynchronously
         """
-        endpoint, headers, params = self._build_explore_request(panel, context)
+        endpoint, headers, params = self._build_explore_request(
+            section_slug, context)
         network_request = self._build_request(endpoint, headers, params)
 
         return QgsNetworkAccessManager.instance().get(network_request)

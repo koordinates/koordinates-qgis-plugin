@@ -30,14 +30,13 @@ from ..api import (
     DataBrowserQuery,
     SortOrder,
     DataType,
-    AccessType,
-    ExplorePanel
+    AccessType
 )
 
 
 class FilterWidget(QWidget):
     filters_changed = pyqtSignal()
-    explore = pyqtSignal(ExplorePanel)
+    explore = pyqtSignal(str)
     explore_publishers = pyqtSignal()
     publisher_changed = pyqtSignal(object)
     clear_all = pyqtSignal()
@@ -65,7 +64,7 @@ class FilterWidget(QWidget):
                                            QSizePolicy.Fixed)
         narrow_layout.addWidget(self.explore_tab_bar)
 
-        self.explore_tab_bar.currentChanged.connect(self._explore_tab_changed)
+        self.explore_tab_bar.mode_changed.connect(self._explore_mode_changed)
         self.advanced_filter_widget = AdvancedFilterWidget(self)
         self.advanced_filter_widget.filters_changed.connect(
             self._filter_widget_changed)
@@ -135,7 +134,7 @@ class FilterWidget(QWidget):
 
         self.search_line_edit: Optional[QgsFilterLineEdit] = None
 
-        self._explore_tab_changed(0)
+        self._explore_mode_changed()
 
     def sizeHint(self):
         if not self._wide_mode:
@@ -216,7 +215,7 @@ class FilterWidget(QWidget):
                 self.advanced_filter_widget.set_appearance(
                     FilterWidgetAppearance.Horizontal)
 
-    def _explore_tab_changed(self, tab_index: int):
+    def _explore_mode_changed(self):
         """
         Called when the active explore tab is changed
         """
@@ -274,14 +273,12 @@ class FilterWidget(QWidget):
             self.recent_button.setChecked(True)
 
         self.updateGeometry()
-        if mode == StandardExploreModes.Popular:
-            self.explore.emit(ExplorePanel.Popular)
-        elif mode == StandardExploreModes.Recent:
-            self.explore.emit(ExplorePanel.Recent)
-        elif mode == StandardExploreModes.Publishers:
+        if mode == StandardExploreModes.Publishers:
             self.explore_publishers.emit()
-        else:
+        elif mode == StandardExploreModes.Browse:
             self._update_query()
+        else:
+            self.explore.emit(mode)
 
     def _clear_all(self):
         self.search_line_edit.clear()

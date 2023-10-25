@@ -18,7 +18,6 @@ from .enums import (  # NOQA
     SortOrder,
     Capability,
     PublicAccessType,
-    ExplorePanel,
     PublisherType,
     UserDatasetCapability
 )
