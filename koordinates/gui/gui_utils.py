@@ -18,7 +18,10 @@ import os
 import re
 from typing import Optional
 
-from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtCore import (
+    Qt,
+    QTemporaryDir
+)
 from qgis.PyQt.QtGui import (
     QIcon,
     QFont,
@@ -48,6 +51,9 @@ class GuiUtils:
     """
 
     APPLICATION_FONT_MAP = {}
+
+    TEMP_DIR = QTemporaryDir()
+    TEMP_FILE_COUNTER = 1
 
     @staticmethod
     def get_icon(icon: str) -> QIcon:
@@ -119,6 +125,20 @@ class GuiUtils:
         painter.end()
 
         return image
+
+    @staticmethod
+    def svg_to_icon(svg_content: bytes) -> QIcon:
+        """
+        Returns SVG content as a QIcon
+        """
+        icon_path = GuiUtils.TEMP_DIR.filePath(
+            'icon{}.svg'.format(GuiUtils.TEMP_FILE_COUNTER))
+        GuiUtils.TEMP_FILE_COUNTER += 1
+
+        with open(icon_path, 'wt', encoding='utf8') as f:
+            f.write(svg_content.decode())
+
+        return QIcon(icon_path)
 
     @staticmethod
     def get_ui_file_path(file: str) -> str:
