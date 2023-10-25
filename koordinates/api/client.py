@@ -47,6 +47,8 @@ class KoordinatesClient(QObject):
     loginChanged = pyqtSignal(bool)
     error_occurred = pyqtSignal(str)
 
+    BASE64_ENCODED_SVG_HEADER = 'data:image/svg+xml;base64,'
+
     __instance = None
 
     @staticmethod
