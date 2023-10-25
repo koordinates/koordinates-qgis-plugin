@@ -1,10 +1,7 @@
-import json
 from typing import (
     Optional,
     List
 )
-from functools import partial
-import base64
 
 from qgis.PyQt import sip
 from qgis.PyQt.QtCore import (
@@ -29,13 +26,12 @@ from qgis.PyQt.QtWidgets import (
     QStyleOptionButton,
     QPushButton
 )
-from qgis.PyQt.QtNetwork import QNetworkReply
 
-from .gui_utils import GuiUtils
 from .enums import (
     TabStyle,
     StandardExploreModes
 )
+from .gui_utils import GuiUtils
 from ..api import (
     KoordinatesClient,
     ExploreSection
