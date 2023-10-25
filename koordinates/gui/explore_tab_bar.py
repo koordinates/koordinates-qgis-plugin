@@ -26,7 +26,10 @@ from qgis.PyQt.QtWidgets import (
 )
 
 from .gui_utils import GuiUtils
-from .enums import TabStyle
+from .enums import (
+    TabStyle,
+    ExploreMode
+)
 
 
 class FlatTabBar(QTabBar):
@@ -40,11 +43,14 @@ class FlatTabBar(QTabBar):
         super().__init__(parent)
         self.setIconSize(QSize(24, 24))
         self.setExpanding(False)
-        self._bottom_tab_style: Dict[int, TabStyle] = {}
 
-    def set_bottom_tab_style(self, index: int, style: TabStyle):
-        self._bottom_tab_style[index] = style
-        self.update()
+    def bottom_tab_style(self, index: int) -> TabStyle:
+        """
+        Returns the bottom tab style for the tab at the given index
+
+        The default implementation always uses rounded tab bottoms
+        """
+        return TabStyle.Rounded
 
     def paintEvent(self, event):
         painter = QStylePainter(self)
@@ -54,7 +60,7 @@ class FlatTabBar(QTabBar):
             option = QStyleOptionTab()
             self.initStyleOption(option, i)
 
-            _bottom_tab_style = self._bottom_tab_style.get(i, TabStyle.Rounded)
+            _bottom_tab_style = self.bottom_tab_style(i)
 
             if option.state & QStyle.State_Selected:
                 painter.save()
