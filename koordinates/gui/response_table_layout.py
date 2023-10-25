@@ -17,7 +17,7 @@ from .dataset_browser_items import (
     EmptyDatasetItemWidget,
     DatasetItemWidget
 )
-from .enums import ExploreMode
+from .enums import StandardExploreModes
 
 
 class ResponsiveTableLayout(QLayout):
@@ -217,13 +217,14 @@ class ResponsiveTableWidget(QWidget):
 
     def __init__(self,
                  parent: Optional[QWidget] = None,
-                 mode: ExploreMode = ExploreMode.Browse):
+                 mode: str = StandardExploreModes.Browse):
         super().__init__(parent)
-        self._mode = mode
+        self._mode: str = mode
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
 
         vertical_spacing = self.BROWSE_VERTICAL_SPACING \
-            if mode == ExploreMode.Browse else self.EXPLORE_VERTICAL_SPACING
+            if mode == StandardExploreModes.Browse else \
+            self.EXPLORE_VERTICAL_SPACING
         self.setLayout(ResponsiveTableLayout(parent=None,
                                              vspacing=vertical_spacing,
                                              hspacing=self.HORIZONTAL_SPACING))

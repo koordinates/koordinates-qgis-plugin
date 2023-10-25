@@ -28,7 +28,7 @@ from qgis.PyQt.QtWidgets import (
 from .gui_utils import GuiUtils
 from .enums import (
     TabStyle,
-    ExploreMode
+    StandardExploreModes
 )
 
 
@@ -173,35 +173,33 @@ class ExploreTabBar(FlatTabBar):
         super().__init__(parent)
 
         self.addTab(GuiUtils.get_icon('popular.svg'), self.tr('Popular'))
-        self.setTabData(0, ExploreMode.Popular.value)
+        self.setTabData(0, StandardExploreModes.Popular)
         self.addTab(GuiUtils.get_icon('browse.svg'), self.tr('Browse'))
-        self.setTabData(1, ExploreMode.Browse.value)
+        self.setTabData(1, StandardExploreModes.Browse)
         self.addTab(GuiUtils.get_icon('publishers.svg'), self.tr('Publishers'))
-        self.setTabData(2, ExploreMode.Publishers.value)
+        self.setTabData(2, StandardExploreModes.Publishers)
         self.addTab(GuiUtils.get_icon('recent.svg'), self.tr('Recent'))
-        self.setTabData(3, ExploreMode.Recent.value)
+        self.setTabData(3, StandardExploreModes.Recent)
 
     def bottom_tab_style(self, index: int) -> TabStyle:
-        current_mode = ExploreMode(self.tabData(index))
+        current_mode: str = self.tabData(index)
         return {
-            ExploreMode.Browse: TabStyle.Flat,
-            ExploreMode.Publishers: TabStyle.Flat
-        }.get(current_mode)
+            StandardExploreModes.Browse: TabStyle.Flat,
+            StandardExploreModes.Publishers: TabStyle.Flat
+        }.get(current_mode, TabStyle.Rounded)
 
-    def current_mode(self) -> ExploreMode:
+    def current_mode(self) -> str:
         """
         Returns the current explore mode
         """
-        return ExploreMode(
-            self.tabData(self.currentIndex())
-        )
+        return self.tabData(self.currentIndex())
 
-    def set_mode(self, mode: ExploreMode):
+    def set_mode(self, mode: str):
         """
         Sets the current explore mode
         """
         for i in range(self.count()):
-            if self.tabData(i) == mode.value:
+            if self.tabData(i) == mode:
                 self.setCurrentIndex(i)
 
 
