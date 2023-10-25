@@ -1,5 +1,9 @@
-from typing import Optional
+from typing import (
+    Optional,
+    List
+)
 
+from qgis.PyQt import sip
 from qgis.PyQt.QtCore import (
     QTimer,
     pyqtSignal,
@@ -27,10 +31,12 @@ from .explore_tab_bar import (
 )
 from .gui_utils import GuiUtils
 from ..api import (
+    KoordinatesClient,
     DataBrowserQuery,
     SortOrder,
     DataType,
-    AccessType
+    AccessType,
+    ExploreSection
 )
 
 
@@ -89,9 +95,7 @@ class FilterWidget(QWidget):
         self._update_query_timeout.setSingleShot(True)
         self._update_query_timeout.timeout.connect(self._update_query)
 
-        self.popular_button = ExploreTabButton()
-        self.popular_button.setIcon(GuiUtils.get_icon('popular.svg'))
-        self.popular_button.setText(self.tr('Popular'))
+        self.explore_buttons: List[ExploreTabButton] = []
 
         self.browse_button = ExploreTabButton()
         self.browse_button.setIcon(GuiUtils.get_icon('browse.svg'))
@@ -102,24 +106,24 @@ class FilterWidget(QWidget):
         self.publishers_button.setIcon(GuiUtils.get_icon('publishers.svg'))
         self.publishers_button.setText(self.tr('Publishers'))
 
-        self.recent_button = ExploreTabButton()
-        self.recent_button.setIcon(GuiUtils.get_icon('recent.svg'))
-        self.recent_button.setText(self.tr('Recent'))
+        self.explore_button_group = QButtonGroup(self)
+        self.explore_button_group.addButton(self.browse_button)
+        self.explore_button_group.addButton(self.publishers_button)
 
-        button_group = QButtonGroup(self)
-        button_group.addButton(self.popular_button)
-        button_group.addButton(self.browse_button)
-        button_group.addButton(self.publishers_button)
-        button_group.addButton(self.recent_button)
-
-        button_group.buttonToggled.connect(self._explore_button_toggled)
+        self.explore_button_group.buttonToggled.connect(self._explore_button_toggled)
 
         wide_mode_layout = QVBoxLayout()
         wide_mode_layout.setContentsMargins(0, 0, 0, 0)
         wide_mode_layout.setSpacing(0)
-        wide_mode_layout.addWidget(self.popular_button)
-        wide_mode_layout.addWidget(self.publishers_button)
-        wide_mode_layout.addWidget(self.recent_button)
+
+        self.explore_buttons_layout = QVBoxLayout()
+        self.explore_buttons_layout.setContentsMargins(0, 0, 0, 0)
+        self.explore_buttons_layout.setSpacing(0)
+
+        self.explore_buttons_layout.addWidget(self.publishers_button)
+
+        wide_mode_layout.addLayout(self.explore_buttons_layout)
+
         wide_mode_layout.addWidget(self.browse_button)
         self.wide_mode_filter_layout = QVBoxLayout()
         self.wide_mode_filter_layout.setContentsMargins(0, 0, 0, 0)
@@ -134,7 +138,34 @@ class FilterWidget(QWidget):
 
         self.search_line_edit: Optional[QgsFilterLineEdit] = None
 
+        KoordinatesClient.instance().explore_sections_retrieved.connect(
+            self._explore_sections_retrieved
+        )
+
         self._explore_mode_changed()
+
+    def _explore_sections_retrieved(self, sections: List[ExploreSection]):
+        if sip.isdeleted(self):
+            return
+
+        for section in sections:
+
+            explore_button = ExploreTabButton()
+            explore_button.setIcon(
+                section.icon or GuiUtils.get_icon('popular.svg')
+            )
+            explore_button.setText(section.label)
+            explore_button.setToolTip(section.description)
+            explore_button.setProperty('slug', section.slug)
+
+            if section.slug == 'popular':
+                # special case for popular, should always be first button
+                self.explore_buttons_layout.insertWidget(0, explore_button)
+            else:
+                self.explore_buttons_layout.addWidget(explore_button)
+
+            self.explore_button_group.addButton(explore_button)
+            self.explore_buttons.append(explore_button)
 
     def sizeHint(self):
         if not self._wide_mode:
@@ -150,7 +181,7 @@ class FilterWidget(QWidget):
             width = self.advanced_filter_widget.sizeHint().width()
             height = self.browse_button.sizeHint().height() \
                 if self.browse_button.isVisible() else 0
-            height += self.popular_button.sizeHint().height()
+            height += self.explore_buttons_layout.sizeHint().height()
             if self.advanced_filter_widget.isVisible():
                 height += self.advanced_filter_widget.sizeHint().height()
 
@@ -197,9 +228,9 @@ class FilterWidget(QWidget):
         """
         self.explore_tab_bar.setVisible(is_browse)
         self.browse_button.setVisible(is_browse)
-        self.popular_button.setVisible(is_browse)
+        for button in self.explore_buttons:
+            button.setVisible(is_browse)
         self.publishers_button.setVisible(is_browse)
-        self.recent_button.setVisible(is_browse)
         self.advanced_filter_widget.set_publisher_filter_visible(
             is_browse
         )
@@ -229,14 +260,14 @@ class FilterWidget(QWidget):
         if not checked:
             return
 
-        if button == self.popular_button:
-            self.set_explore_mode(StandardExploreModes.Popular)
-        elif button == self.browse_button:
+        if button == self.browse_button:
             self.set_explore_mode(StandardExploreModes.Browse)
         elif button == self.publishers_button:
             self.set_explore_mode(StandardExploreModes.Publishers)
-        elif button == self.recent_button:
-            self.set_explore_mode(StandardExploreModes.Recent)
+        else:
+            self.set_explore_mode(
+                button.property('slug')
+            )
 
     def explore_mode(self) -> str:
         """
@@ -263,14 +294,15 @@ class FilterWidget(QWidget):
         )
 
         self.explore_tab_bar.set_mode(mode)
-        if mode == StandardExploreModes.Popular:
-            self.popular_button.setChecked(True)
-        elif mode == StandardExploreModes.Browse:
+        if mode == StandardExploreModes.Browse:
             self.browse_button.setChecked(True)
         elif mode == StandardExploreModes.Publishers:
             self.publishers_button.setChecked(True)
-        elif mode == StandardExploreModes.Recent:
-            self.recent_button.setChecked(True)
+        else:
+            for button in self.explore_buttons:
+                if button.property('slug') == mode:
+                    button.setChecked(True)
+                    break
 
         self.updateGeometry()
         if mode == StandardExploreModes.Publishers:
