@@ -135,6 +135,19 @@ class KoordinatesClient(QObject):
 
         return endpoint, headers, params
 
+    def _build_explore_sections_request(self,
+                                        context=None) -> Tuple[str, Dict[str, str], dict]:
+        """
+        Builds the parameters used for a datasets request
+        """
+        headers = {"Expand": "list,list.publisher,list.styles,list.data.source_summary"}
+
+        params = {}
+
+        endpoint = "explore-sections/"
+
+        return endpoint, headers, params
+
     def _build_explore_request(self,
                                panel: ExplorePanel,
                                context=None) -> Tuple[str, Dict[str, str], dict]:
@@ -212,6 +225,22 @@ class KoordinatesClient(QObject):
                                                                  is_facets=True)
         network_request = self._build_request(endpoint, headers, params)
 
+        return QgsNetworkAccessManager.instance().get(network_request)
+
+    def explore_sections_async(self,
+                               context=None) -> QNetworkReply:
+        """
+        Retrieve explore sections asynchronously
+        """
+        endpoint, headers, params = self._build_explore_sections_request(context)
+        network_request = self._build_request(endpoint, headers, params)
+        network_request.setAttribute(
+            QNetworkRequest.CacheLoadControlAttribute,
+            QNetworkRequest.PreferCache)
+        network_request.setAttribute(
+            QNetworkRequest.CacheSaveControlAttribute,
+            True
+        )
         return QgsNetworkAccessManager.instance().get(network_request)
 
     def explore_async(self,
