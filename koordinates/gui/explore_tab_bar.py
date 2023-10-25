@@ -173,11 +173,36 @@ class ExploreTabBar(FlatTabBar):
         super().__init__(parent)
 
         self.addTab(GuiUtils.get_icon('popular.svg'), self.tr('Popular'))
+        self.setTabData(0, ExploreMode.Popular.value)
         self.addTab(GuiUtils.get_icon('browse.svg'), self.tr('Browse'))
-        self.set_bottom_tab_style(1, TabStyle.Flat)
+        self.setTabData(1, ExploreMode.Browse.value)
         self.addTab(GuiUtils.get_icon('publishers.svg'), self.tr('Publishers'))
-        self.set_bottom_tab_style(2, TabStyle.Flat)
+        self.setTabData(2, ExploreMode.Publishers.value)
         self.addTab(GuiUtils.get_icon('recent.svg'), self.tr('Recent'))
+        self.setTabData(3, ExploreMode.Recent.value)
+
+    def bottom_tab_style(self, index: int) -> TabStyle:
+        current_mode = ExploreMode(self.tabData(index))
+        return {
+            ExploreMode.Browse: TabStyle.Flat,
+            ExploreMode.Publishers: TabStyle.Flat
+        }.get(current_mode)
+
+    def current_mode(self) -> ExploreMode:
+        """
+        Returns the current explore mode
+        """
+        return ExploreMode(
+            self.tabData(self.currentIndex())
+        )
+
+    def set_mode(self, mode: ExploreMode):
+        """
+        Sets the current explore mode
+        """
+        for i in range(self.count()):
+            if self.tabData(i) == mode.value:
+                self.setCurrentIndex(i)
 
 
 class ExploreTabButton(QPushButton):
