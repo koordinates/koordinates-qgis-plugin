@@ -27,7 +27,7 @@ from koordinates.api import (
     ExplorePanel
 )
 from .datasets_browser_widget import DatasetsBrowserWidget
-from ..enums import ExploreMode
+from ..enums import StandardExploreModes
 from .explore_panel import ExplorePanelWidget
 from .publishers_panel import PublishersPanelWidget
 from ...api import Publisher
@@ -85,7 +85,7 @@ class ResultsPanel(QWidget):
             Union[DatasetsBrowserWidget, ExplorePanelWidget]] = []
 
         self.setMinimumWidth(370)
-        self.current_mode: Optional[ExploreMode] = None
+        self.current_mode: Optional[str] = None
 
         self._current_reply: Optional[QNetworkReply] = None
         self._current_context = None
@@ -113,7 +113,7 @@ class ResultsPanel(QWidget):
         self.cancel_active_requests()
         self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.container_layout.setContentsMargins(0, 6, 6, 6)
-        if self.current_mode == ExploreMode.Browse and \
+        if self.current_mode == StandardExploreModes.Browse and \
                 self.child_items and \
                 isinstance(self.child_items[0], DatasetsBrowserWidget):
             self.child_items[0].populate(query, context)
@@ -123,7 +123,7 @@ class ResultsPanel(QWidget):
             self.cancel_active_requests()
             self.clear_existing_items()
 
-            self.current_mode = ExploreMode.Browse
+            self.current_mode = StandardExploreModes.Browse
 
             item = DatasetsBrowserWidget()
             item.set_margins(0, 0, 16, 16)
@@ -136,10 +136,10 @@ class ResultsPanel(QWidget):
     def explore(self, panel: ExplorePanel, context):
         self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.container_layout.setContentsMargins(0, 6, 6, 6)
-        if panel == ExploreMode.Recent:
-            self.current_mode = ExploreMode.Recent
-        elif panel == ExploreMode.Popular:
-            self.current_mode = ExploreMode.Popular
+        if panel == ExplorePanel.Recent:
+            self.current_mode = StandardExploreModes.Recent
+        elif panel == ExplorePanel.Popular:
+            self.current_mode = StandardExploreModes.Popular
 
         if self._publisher_banner:
             self._publisher_banner.deleteLater()
@@ -265,8 +265,9 @@ class ResultsPanel(QWidget):
             if panel['items']:
                 filtered_panels.append(panel)
 
-        mode = ExploreMode.Popular if explore_panel == ExplorePanel.Popular \
-            else ExplorePanel.Recent
+        mode = StandardExploreModes.Popular \
+            if explore_panel == ExplorePanel.Popular \
+            else StandardExploreModes.Recent
 
         for panel in filtered_panels:
             item = ExplorePanelWidget(panel, mode=mode)

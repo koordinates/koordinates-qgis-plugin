@@ -19,10 +19,10 @@ from qgis.PyQt.QtWidgets import (
     QStylePainter
 )
 
-from ..enums import ExploreMode
+from ..enums import StandardExploreModes
 
 from .results_panel_widget import ResultsPanelWidget
-from koordinates.gui.results_panel.datasets_browser_widget import DatasetsBrowserWidget
+from .datasets_browser_widget import DatasetsBrowserWidget
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
@@ -37,7 +37,7 @@ class ExplorePanelWidget(ResultsPanelWidget):
     def __init__(self,
                  content: Dict,
                  parent: Optional[QWidget] = None,
-                 mode: ExploreMode = ExploreMode.Browse):
+                 mode: str = StandardExploreModes.Browse):
         super().__init__(parent)
 
         self.title_label = QLabel()
@@ -51,7 +51,7 @@ class ExplorePanelWidget(ResultsPanelWidget):
             font_scale = 1
 
         if platform.system() == 'Darwin':
-            # fonts looks smaller on a mac, where things "just work" :P
+            # fonts looks smaller on a Mac, where things "just work" :P
             main_title_size = 17
         elif font_scale > 1:
             main_title_size = int(15 / font_scale)

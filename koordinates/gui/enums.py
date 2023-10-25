@@ -14,6 +14,19 @@ class FilterWidgetAppearance(Enum):
     Vertical = auto()
 
 
+class StandardExploreModes:
+    """
+    Standard explore modes.
+
+    Any string can be accepted as an explore mode, but these are current
+    well known ones...
+    """
+    Popular = 'popular'
+    Recent = 'recent'
+    Browse = 'browse'
+    Publishers = 'publishers'
+
+
 class ExploreMode(Enum):
     Popular = auto()
     Browse = auto()

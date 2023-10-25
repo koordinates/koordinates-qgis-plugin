@@ -58,7 +58,7 @@ from .dataset_utils import (
     DatasetGuiUtils,
     IconStyle
 )
-from .enums import ExploreMode
+from .enums import StandardExploreModes
 from .gui_utils import GuiUtils
 from .star_button import StarButton
 from ..api import (
@@ -453,11 +453,11 @@ class DatasetItemWidgetBase(QFrame):
 
     def __init__(self,
                  parent=None,
-                 mode: ExploreMode = ExploreMode.Browse):
+                 mode: str = StandardExploreModes.Browse):
         super().__init__(parent)
         self.column_count = None
         self._mode = mode
-        if self._mode == ExploreMode.Browse:
+        if self._mode == StandardExploreModes.Browse:
             self.setStyleSheet(
                 """DatasetItemWidgetBase {{
                    border: 1px solid #dddddd;
@@ -552,7 +552,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
                  dataset: Dict,
                  column_count,
                  parent,
-                 mode: ExploreMode = ExploreMode.Browse):
+                 mode: str = StandardExploreModes.Browse):
         super().__init__(parent, mode)
 
         self.setMouseTracking(True)

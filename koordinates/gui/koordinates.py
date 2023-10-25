@@ -64,7 +64,7 @@ from ..api import (
     DataType
 )
 from .enums import (
-    ExploreMode
+    StandardExploreModes
 )
 from ..auth import OAuthWorkflow
 
@@ -694,9 +694,10 @@ class Koordinates(QgsDockWidget, WIDGET):
         self._block_searching -= 1
         if not is_explore_tab:
             # force browse tab
-            self.filter_widget.set_explore_mode(ExploreMode.Browse)
+            self.filter_widget.set_explore_mode(StandardExploreModes.Browse)
         else:
-            if self.filter_widget.explore_mode() == ExploreMode.Browse:
+            if self.filter_widget.explore_mode() == \
+                    StandardExploreModes.Browse:
                 self.search()
             else:
                 self.explore()
@@ -794,7 +795,7 @@ class Koordinates(QgsDockWidget, WIDGET):
         query.publisher = publisher
 
         self.filter_widget.set_from_query(query)
-        self.filter_widget.set_explore_mode(ExploreMode.Browse)
+        self.filter_widget.set_explore_mode(StandardExploreModes.Browse)
         context = self._current_context
 
         self.results_panel.populate(query, context)

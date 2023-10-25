@@ -19,7 +19,7 @@ from .advanced_filter_widget import AdvancedFilterWidget
 from .enums import (
     TabStyle,
     FilterWidgetAppearance,
-    ExploreMode
+    StandardExploreModes
 )
 from .explore_tab_bar import (
     ExploreTabBar,
@@ -189,7 +189,7 @@ class FilterWidget(QWidget):
 
     def _search_text_changed(self):
         if self.search_line_edit.text().strip():
-            self.set_explore_mode(ExploreMode.Browse)
+            self.set_explore_mode(StandardExploreModes.Browse)
             self._filter_widget_changed()
 
     def set_is_browse_tab(self, is_browse: bool):
@@ -220,16 +220,10 @@ class FilterWidget(QWidget):
         """
         Called when the active explore tab is changed
         """
-        if tab_index == 0:
-            self.set_explore_mode(ExploreMode.Popular)
-        elif tab_index == 1:
-            self.set_explore_mode(ExploreMode.Browse)
-        elif tab_index == 2:
-            self.set_explore_mode(ExploreMode.Publishers)
-        elif tab_index == 3:
-            self.set_explore_mode(ExploreMode.Recent)
+        mode = self.explore_tab_bar.current_mode()
+        self.set_explore_mode(mode)
 
-        if tab_index != 1:
+        if mode != StandardExploreModes.Browse:
             self.advanced_filter_widget.collapse_all()
 
     def _explore_button_toggled(self, button, checked):
@@ -237,27 +231,22 @@ class FilterWidget(QWidget):
             return
 
         if button == self.popular_button:
-            self.set_explore_mode(ExploreMode.Popular)
+            self.set_explore_mode(StandardExploreModes.Popular)
         elif button == self.browse_button:
-            self.set_explore_mode(ExploreMode.Browse)
+            self.set_explore_mode(StandardExploreModes.Browse)
         elif button == self.publishers_button:
-            self.set_explore_mode(ExploreMode.Publishers)
+            self.set_explore_mode(StandardExploreModes.Publishers)
         elif button == self.recent_button:
-            self.set_explore_mode(ExploreMode.Recent)
+            self.set_explore_mode(StandardExploreModes.Recent)
 
-    def explore_mode(self) -> ExploreMode:
-        tab_index = self.explore_tab_bar.currentIndex()
-        if tab_index == 0:
-            return ExploreMode.Popular
-        elif tab_index == 1:
-            return ExploreMode.Browse
-        elif tab_index == 2:
-            return ExploreMode.Publishers
-        else:
-            return ExploreMode.Recent
+    def explore_mode(self) -> str:
+        """
+        Returns the current explore mode
+        """
+        return self.explore_tab_bar.current_mode()
 
-    def set_explore_mode(self, mode: ExploreMode):
-        show_filters = mode == ExploreMode.Browse
+    def set_explore_mode(self, mode: str):
+        show_filters = mode == StandardExploreModes.Browse
         self.advanced_filter_widget.setVisible(
             show_filters
         )
@@ -265,34 +254,31 @@ class FilterWidget(QWidget):
             self.advanced_filter_widget.updateGeometry()
 
         if mode in (
-                ExploreMode.Popular,
-                ExploreMode.Recent) and self.search_line_edit:
+                StandardExploreModes.Popular,
+                StandardExploreModes.Recent) and self.search_line_edit:
             self.search_line_edit.clear()
 
         # add a little bit of padding in popular/recent modes
         self.popular_recent_padding_widget.setVisible(
-            mode in (ExploreMode.Popular, ExploreMode.Recent)
+            mode in (StandardExploreModes.Popular, StandardExploreModes.Recent)
         )
 
-        if mode == ExploreMode.Popular:
-            self.explore_tab_bar.setCurrentIndex(0)
+        self.explore_tab_bar.set_mode(mode)
+        if mode == StandardExploreModes.Popular:
             self.popular_button.setChecked(True)
-        elif mode == ExploreMode.Browse:
-            self.explore_tab_bar.setCurrentIndex(1)
+        elif mode == StandardExploreModes.Browse:
             self.browse_button.setChecked(True)
-        elif mode == ExploreMode.Publishers:
-            self.explore_tab_bar.setCurrentIndex(2)
+        elif mode == StandardExploreModes.Publishers:
             self.publishers_button.setChecked(True)
-        elif mode == ExploreMode.Recent:
-            self.explore_tab_bar.setCurrentIndex(3)
+        elif mode == StandardExploreModes.Recent:
             self.recent_button.setChecked(True)
 
         self.updateGeometry()
-        if mode == ExploreMode.Popular:
+        if mode == StandardExploreModes.Popular:
             self.explore.emit(ExplorePanel.Popular)
-        elif mode == ExploreMode.Recent:
+        elif mode == StandardExploreModes.Recent:
             self.explore.emit(ExplorePanel.Recent)
-        elif mode == ExploreMode.Publishers:
+        elif mode == StandardExploreModes.Publishers:
             self.explore_publishers.emit()
         else:
             self._update_query()
@@ -323,7 +309,7 @@ class FilterWidget(QWidget):
         """
         query = DataBrowserQuery()
         mode = self.explore_mode()
-        if mode == ExploreMode.Browse:
+        if mode == StandardExploreModes.Browse:
             query.starred = self._starred
             query.order = self.sort_order
 
@@ -331,7 +317,7 @@ class FilterWidget(QWidget):
                 query.search = self.search_line_edit.text().strip()
 
             self.advanced_filter_widget.apply_constraints_to_query(query)
-        elif mode == ExploreMode.Popular:
+        elif mode == StandardExploreModes.Popular:
             query.order = SortOrder.Popularity
             query.access_type = AccessType.Public
             query.data_types = {DataType.Tables,
@@ -339,7 +325,7 @@ class FilterWidget(QWidget):
                                 DataType.Rasters,
                                 DataType.Grids,
                                 DataType.PointClouds}
-        elif mode == ExploreMode.Recent:
+        elif mode == StandardExploreModes.Recent:
             query.order = SortOrder.RecentlyUpdated
             query.access_type = AccessType.Public
             query.data_types = {DataType.Tables,
