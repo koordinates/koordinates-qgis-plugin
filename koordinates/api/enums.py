@@ -198,14 +198,6 @@ class SortOrder(Enum):
                 SortOrder.Oldest: 'Oldest'}[order]
 
 
-class ExplorePanel(Enum):
-    """
-    Explore panels
-    """
-    Popular = auto()
-    Recent = auto()
-
-
 class PublisherType(Enum):
     """
     Publisher types

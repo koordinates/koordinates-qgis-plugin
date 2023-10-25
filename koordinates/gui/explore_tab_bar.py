@@ -8,7 +8,8 @@ import base64
 from qgis.PyQt import sip
 from qgis.PyQt.QtCore import (
     Qt,
-    QSize
+    QSize,
+    pyqtSignal
 )
 from qgis.PyQt.QtGui import (
     QPainter,
@@ -174,6 +175,8 @@ class ExploreTabBar(FlatTabBar):
     Custom tab bar widget for explore actions
     """
 
+    mode_changed = pyqtSignal()
+
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
 
@@ -186,6 +189,14 @@ class ExploreTabBar(FlatTabBar):
             KoordinatesClient.instance().explore_sections_async())
         self._explore_sections_reply.finished.connect(
             partial(self._sections_reply_finished, self._explore_sections_reply))
+
+        self.currentChanged.connect(self._tab_changed)
+
+    def _tab_changed(self, index):
+        """
+        Called when the tab is changed
+        """
+        self.mode_changed.emit()
 
     def bottom_tab_style(self, index: int) -> TabStyle:
         current_mode: str = self.tabData(index)

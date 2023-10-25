@@ -59,7 +59,6 @@ from ..api import (
     KoordinatesClient,
     SortOrder,
     DataBrowserQuery,
-    ExplorePanel,
     Publisher,
     DataType
 )
@@ -722,10 +721,10 @@ class Koordinates(QgsDockWidget, WIDGET):
 
         self.results_panel.populate(browser_query, context)
 
-    def explore(self, panel: ExplorePanel = ExplorePanel.Popular):
+    def explore(self, section_slug: str = StandardExploreModes.Popular):
         context = self._current_context
         self.browse_header_widget.hide()
-        self.results_panel.explore(panel, context)
+        self.results_panel.explore(section_slug, context)
 
     def explore_publishers(self):
         context = self._current_context

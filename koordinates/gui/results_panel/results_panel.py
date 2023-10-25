@@ -23,8 +23,7 @@ from qgis.gui import QgsScrollArea
 
 from koordinates.api import (
     KoordinatesClient,
-    DataBrowserQuery,
-    ExplorePanel
+    DataBrowserQuery
 )
 from .datasets_browser_widget import DatasetsBrowserWidget
 from ..enums import StandardExploreModes
@@ -133,13 +132,13 @@ class ResultsPanel(QWidget):
             self.child_items.append(item)
             self.container_layout.addWidget(item)
 
-    def explore(self, panel: ExplorePanel, context):
+    def explore(self, section_slug: str, context):
         self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.container_layout.setContentsMargins(0, 6, 6, 6)
-        if panel == ExplorePanel.Recent:
-            self.current_mode = StandardExploreModes.Recent
-        elif panel == ExplorePanel.Popular:
-            self.current_mode = StandardExploreModes.Popular
+        if section_slug not in (
+                StandardExploreModes.Browse,
+                StandardExploreModes.Publishers):
+            self.current_mode = section_slug
 
         if self._publisher_banner:
             self._publisher_banner.deleteLater()
@@ -149,7 +148,7 @@ class ResultsPanel(QWidget):
 
         self.clear_existing_items()
 
-        self._start_explore(panel, context)
+        self._start_explore(section_slug, context)
 
     def set_publisher(self, publisher: Optional[Publisher]):
         """
@@ -210,7 +209,7 @@ class ResultsPanel(QWidget):
         self.set_publisher(publisher)
 
     def _start_explore(self,
-                       panel: ExplorePanel,
+                       section_slug: str,
                        context: Optional[str] = None):
         if self._current_reply is not None and \
                 not sip.isdeleted(self._current_reply):
@@ -221,16 +220,16 @@ class ResultsPanel(QWidget):
             self._current_context = context
 
         self._current_reply = KoordinatesClient.instance().explore_async(
-            panel=panel,
+            section_slug=section_slug,
             context=self._current_context
         )
         self._current_reply.finished.connect(
-            partial(self._reply_finished, self._current_reply, panel))
+            partial(self._reply_finished, self._current_reply, section_slug))
         self.setCursor(Qt.WaitCursor)
 
     def _reply_finished(self,
                         reply: QNetworkReply,
-                        explore_panel: ExplorePanel):
+                        section_slug: str):
         if sip.isdeleted(self):
             return
 
@@ -265,12 +264,8 @@ class ResultsPanel(QWidget):
             if panel['items']:
                 filtered_panels.append(panel)
 
-        mode = StandardExploreModes.Popular \
-            if explore_panel == ExplorePanel.Popular \
-            else StandardExploreModes.Recent
-
         for panel in filtered_panels:
-            item = ExplorePanelWidget(panel, mode=mode)
+            item = ExplorePanelWidget(panel, mode=section_slug)
             self.child_items.append(item)
             self.container_layout.addWidget(item)
 
