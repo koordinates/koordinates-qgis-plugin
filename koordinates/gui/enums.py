@@ -25,10 +25,3 @@ class StandardExploreModes:
     Recent = 'recent'
     Browse = 'browse'
     Publishers = 'publishers'
-
-
-class ExploreMode(Enum):
-    Popular = auto()
-    Browse = auto()
-    Publishers = auto()
-    Recent = auto()
