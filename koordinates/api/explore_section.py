@@ -12,6 +12,8 @@ class ExploreSection:
     Represents an explore section
     """
 
+    DEFAULT_SECTION = 'popular'
+
     def __init__(self, details: Dict):
         self.details = details
 

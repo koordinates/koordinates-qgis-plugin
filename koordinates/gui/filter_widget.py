@@ -148,6 +148,7 @@ class FilterWidget(QWidget):
         if sip.isdeleted(self):
             return
 
+        default_section = None
         for section in sections:
 
             explore_button = ExploreTabButton()
@@ -164,8 +165,14 @@ class FilterWidget(QWidget):
             else:
                 self.explore_buttons_layout.addWidget(explore_button)
 
+            if section.slug == ExploreSection.DEFAULT_SECTION:
+                default_section = section.slug
+
             self.explore_button_group.addButton(explore_button)
             self.explore_buttons.append(explore_button)
+
+        if default_section:
+            self.set_explore_mode(default_section)
 
     def sizeHint(self):
         if not self._wide_mode:
