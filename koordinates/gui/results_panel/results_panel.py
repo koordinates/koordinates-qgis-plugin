@@ -119,7 +119,6 @@ class ResultsPanel(QWidget):
             # scroll to top on new search
             self.scroll_area.verticalScrollBar().setValue(0)
         else:
-            self.cancel_active_requests()
             self.clear_existing_items()
 
             self.current_mode = StandardExploreModes.Browse
@@ -213,6 +212,9 @@ class ResultsPanel(QWidget):
                        context: Optional[str] = None):
         if self._current_reply is not None and \
                 not sip.isdeleted(self._current_reply):
+            if self._current_reply.property('slug' ) == section_slug:
+                return
+
             self._current_reply.abort()
             self._current_reply = None
 
@@ -223,6 +225,7 @@ class ResultsPanel(QWidget):
             section_slug=section_slug,
             context=self._current_context
         )
+        self._current_reply.setProperty('slug', section_slug)
         self._current_reply.finished.connect(
             partial(self._reply_finished, self._current_reply, section_slug))
         self.setCursor(Qt.WaitCursor)
