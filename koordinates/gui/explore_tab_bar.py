@@ -214,6 +214,9 @@ class ExploreTabBar(FlatTabBar):
         """
         Sets the current explore mode
         """
+        if self.current_mode() == mode:
+            return
+
         for i in range(self.count()):
             if self.tabData(i) == mode:
                 self.setCurrentIndex(i)
