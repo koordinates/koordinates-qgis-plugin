@@ -152,7 +152,7 @@ class KoordinatesClient(QObject):
         elif panel == ExplorePanel.Recent:
             endpoint += "recent/"
 
-        params["item_type"] = ['layer.*', 'publisher.*']
+        params["item_type"] = ['layer.*']
 
         return endpoint, headers, params
 
