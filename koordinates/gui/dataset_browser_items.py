@@ -424,8 +424,8 @@ class DatasetItemLayout(QLayout):
             if self.details_container:
                 self.details_container.setGeometry(
                     QRect(
-                        left, 35,
-                        105,
+                        left, 60,
+                        85,
                         61
                     )
                 )
