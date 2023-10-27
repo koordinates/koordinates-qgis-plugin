@@ -212,7 +212,7 @@ class ResultsPanel(QWidget):
                        context: Optional[str] = None):
         if self._current_reply is not None and \
                 not sip.isdeleted(self._current_reply):
-            if self._current_reply.property('slug' ) == section_slug:
+            if self._current_reply.property('slug') == section_slug:
                 return
 
             self._current_reply.abort()
