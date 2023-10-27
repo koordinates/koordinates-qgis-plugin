@@ -254,11 +254,13 @@ class ResultsPanel(QWidget):
             return
 
         filtered_panels = []
+
+        # we shouldn't need this logic, but the API currently returns
+        # some items which are not present in the filter param!
         for panel in result['panels']:
             # filter panel items to supported ones
             panel['items'] = [item for item in panel['items']
-                              if item['kind'] not in ('publisher.site',
-                                                      'publisher.mirror')]
+                              if item['kind'].startswith('layer.')]
             # and then completely skip any empty panels
             if panel['items']:
                 filtered_panels.append(panel)
