@@ -148,6 +148,12 @@ class FilterWidget(QWidget):
         if sip.isdeleted(self):
             return
 
+        # clear out old explore section tabs
+        for button in self.explore_buttons:
+            self.explore_buttons_layout.removeWidget(button)
+            button.deleteLater()
+        self.explore_buttons = []
+
         default_section = None
         for section in sections:
 

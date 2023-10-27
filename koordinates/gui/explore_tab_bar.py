@@ -225,6 +225,14 @@ class ExploreTabBar(FlatTabBar):
         if sip.isdeleted(self):
             return
 
+        # clear out old explore section tabs
+        for i in range(self.count()-1, -1, -1):
+            if self.tabData(i) not in (
+                    StandardExploreModes.Browse,
+                    StandardExploreModes.Publishers
+            ):
+                self.removeTab(i)
+
         for section in sections:
             if section.slug == 'popular':
                 # special case for popular, should always be first tab
