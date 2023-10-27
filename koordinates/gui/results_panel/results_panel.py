@@ -253,10 +253,20 @@ class ResultsPanel(QWidget):
             print('error occurred :(')
             return
 
+        filtered_panels = []
+        for panel in result['panels']:
+            # filter panel items to supported ones
+            panel['items'] = [item for item in panel['items']
+                              if item['kind'] not in ('publisher.site',
+                                                      'publisher.mirror')]
+            # and then completely skip any empty panels
+            if panel['items']:
+                filtered_panels.append(panel)
+
         mode = ExploreMode.Popular if explore_panel == ExplorePanel.Popular \
             else ExplorePanel.Recent
 
-        for panel in result['panels']:
+        for panel in filtered_panels:
             item = ExplorePanelWidget(panel, mode=mode)
             self.child_items.append(item)
             self.container_layout.addWidget(item)
