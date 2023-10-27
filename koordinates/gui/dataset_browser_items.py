@@ -715,10 +715,14 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         publisher_name = self.dataset.publisher().name() if \
             self.dataset.publisher() else ''
+        title = self.dataset.title()
+        max_title_length = 70
+        if len(title) > max_title_length:
+            title = title[:max_title_length - 3] + '...'
         self.title_label.setText(
             f"""<p style="line-height: 130%;
                 font-size: {main_title_size}pt;
-                font-family: Arial, Sans"><b>{self.dataset.title()}</b><br>"""
+                font-family: Arial, Sans"><b>{title}</b><br>"""
             f"""<span style="color: #868889;
             font-size: {title_font_size}pt;
             font-family: Arial, Sans">{publisher_name}</span></p>"""
