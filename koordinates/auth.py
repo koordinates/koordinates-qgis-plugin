@@ -21,7 +21,7 @@ from qgis.core import (
 
 from .pkce import generate_pkce_pair
 
-AUTH_HANDLER_REDIRECT = "https://id-design.kx.gd/o/authorize/qgis/"
+AUTH_HANDLER_REDIRECT = "https://id.koordinates.com/o/authorize/qgis/"
 AUTH_HANDLER_REDIRECT_CANCELLED = "https://id.koordinates.com/o/authorize/qgis/cancelled/"
 
 AUTH_HANDLER_RESPONSE = """\
