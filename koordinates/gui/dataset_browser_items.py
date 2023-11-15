@@ -458,15 +458,16 @@ class DatasetItemWidgetBase(QFrame):
         self.column_count = None
         self._mode = mode
 
-        style_sheet = """DatasetItemWidgetBase {{
-               border-radius: {}px; background: white;
-            }}""".format(self.THUMBNAIL_CORNER_RADIUS)
+        item_style_sheet = "border-radius: {}px; background: white;".format(
+            self.THUMBNAIL_CORNER_RADIUS)
 
         if self._mode == StandardExploreModes.Browse:
-            style_sheet += """
-            DatasetItemWidgetBase {{
-                   border: 1px solid #dddddd;
-                }}"""
+            item_style_sheet += "\nborder: 1px solid #dddddd;"
+
+        style_sheet = f"""DatasetItemWidgetBase
+        {{
+            {item_style_sheet}
+        }}"""
 
         self.setStyleSheet(style_sheet)
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
