@@ -457,13 +457,18 @@ class DatasetItemWidgetBase(QFrame):
         super().__init__(parent)
         self.column_count = None
         self._mode = mode
+
+        style_sheet = """DatasetItemWidgetBase {{
+               border-radius: {}px; background: white;
+            }}""".format(self.THUMBNAIL_CORNER_RADIUS)
+
         if self._mode == StandardExploreModes.Browse:
-            self.setStyleSheet(
-                """DatasetItemWidgetBase {{
-                   border: 1px solid #dddddd;
-                   border-radius: {}px; background: white;
+            style_sheet += """
+            DatasetItemWidgetBase {{
+                   border: 1px solid #ff0000;
                 }}""".format(self.THUMBNAIL_CORNER_RADIUS)
-            )
+
+        self.setStyleSheet(style_sheet)
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         self.setFixedHeight(self.CARD_HEIGHT)
         self.dataset_layout = DatasetItemLayout()
