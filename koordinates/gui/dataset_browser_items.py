@@ -463,6 +463,8 @@ class DatasetItemWidgetBase(QFrame):
 
         if self._mode == StandardExploreModes.Browse:
             item_style_sheet += "\nborder: 1px solid #dddddd;"
+        else:
+            item_style_sheet += "\nborder: 1px solid rgba(0,0,0,0);"
 
         style_sheet = f"""DatasetItemWidgetBase
         {{
