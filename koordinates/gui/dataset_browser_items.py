@@ -248,13 +248,12 @@ class DatasetItemLayout(QLayout):
         _arrangement = self.arrangement(rect)
 
         if _arrangement == CardLayout.Wide:
-            # sizes here account for borders, hence height is + 2
             size = QSize(DatasetItemWidgetBase.THUMBNAIL_SIZE,
-                         DatasetItemWidgetBase.THUMBNAIL_SIZE + 2)
+                         DatasetItemWidgetBase.THUMBNAIL_SIZE)
         elif _arrangement == CardLayout.Tall:
-            size = QSize(rect.width() + 2, DatasetItemWidgetBase.THUMBNAIL_SIZE)
+            size = QSize(rect.width(), DatasetItemWidgetBase.THUMBNAIL_SIZE)
         else:
-            size = QSize(111, rect.height() + 2)
+            size = QSize(111, rect.height())
 
         return size
 
@@ -273,8 +272,9 @@ class DatasetItemLayout(QLayout):
                 self.thumbnail_widget.show()
                 self.thumbnail_item.setGeometry(
                     QRect(
-                        0, 0,
-                        rect.width() + 1, DatasetItemWidgetBase.THUMBNAIL_SIZE
+                        1, 1,
+                        rect.width(),
+                        DatasetItemWidgetBase.THUMBNAIL_SIZE
                     )
                 )
             if self.title_container:
@@ -330,9 +330,9 @@ class DatasetItemLayout(QLayout):
                 has_thumbnail = True
                 self.thumbnail_item.setGeometry(
                     QRect(
-                        0, 0,
-                        DatasetItemWidgetBase.THUMBNAIL_SIZE + 1,
-                        DatasetItemWidgetBase.THUMBNAIL_SIZE + 1
+                        1, 1,
+                        DatasetItemWidgetBase.THUMBNAIL_SIZE,
+                        DatasetItemWidgetBase.THUMBNAIL_SIZE
                     )
                 )
 
@@ -392,7 +392,7 @@ class DatasetItemLayout(QLayout):
                 size = self.thumbnail_size_for_rect(rect)
                 self.thumbnail_item.setGeometry(
                     QRect(
-                        0, 0,
+                        1, 1,
                         size.width(),
                         size.height()
                     )
@@ -465,7 +465,7 @@ class DatasetItemWidgetBase(QFrame):
         if self._mode == StandardExploreModes.Browse:
             style_sheet += """
             DatasetItemWidgetBase {{
-                   border: 1px solid #ff0000;
+                   border: 1px solid #dddddd;
                 }}""".format(self.THUMBNAIL_CORNER_RADIUS)
 
         self.setStyleSheet(style_sheet)
