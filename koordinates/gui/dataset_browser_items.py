@@ -466,7 +466,7 @@ class DatasetItemWidgetBase(QFrame):
             style_sheet += """
             DatasetItemWidgetBase {{
                    border: 1px solid #dddddd;
-                }}""".format(self.THUMBNAIL_CORNER_RADIUS)
+                }}"""
 
         self.setStyleSheet(style_sheet)
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
