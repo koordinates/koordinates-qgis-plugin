@@ -2,6 +2,11 @@ from qgis.PyQt.QtCore import (
     Qt,
     QSize
 )
+from qgis.PyQt.QtGui import (
+    QPainter,
+    QColor,
+    QPen
+)
 from qgis.PyQt.QtWidgets import (
     QToolButton,
     QSizePolicy
@@ -169,13 +174,37 @@ class AddButton(ActionButton):
 
         self.dataset = dataset
 
-        self.setText("+Add")
+        self.styles = self.dataset.styles()
 
-        icon = GuiUtils.get_icon('add_button.svg')
+        self.setText("+Add")
+        self._show_divider = False
+        if len(self.styles) > 1:
+            icon = GuiUtils.get_icon('add_button_with_menu.svg')
+            self._show_divider = True
+        else:
+            icon = GuiUtils.get_icon('add_button.svg')
         self.setIcon(icon)
         self.setIconSize(QSize(53, 11))
         self.clicked.connect(self.add_layer)
         self.setFixedSize(72, self.BUTTON_HEIGHT)
+
+    def paintEvent(self, event):
+        super().paintEvent(event)
+        if self._show_divider:
+            painter = QPainter(self)
+
+            pen = QPen()
+            pen.setWidth(1)
+            pen.setColor(QColor(self.BUTTON_OUTLINE))
+
+            painter.setPen(pen)
+            painter.setBrush(Qt.NoBrush)
+
+            divider_x = int(self.width() * 0.65)
+            painter.drawLine(divider_x, 1,
+                             divider_x, self.height()-1)
+
+            painter.end()
 
     def add_layer(self):
         """
