@@ -106,8 +106,6 @@ class CustomTab(QTabBar):
                 painter.drawControl(QStyle.CE_TabBarTab, option)
 
 
-
-
 class ResponsiveLayout(QLayout):
 
     WIDE_MODE_WIDTH_THRESHOLD = 780
