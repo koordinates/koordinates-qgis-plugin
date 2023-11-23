@@ -46,7 +46,8 @@ from qgis.gui import (
 from .colored_frame import ColoredFrame
 from .context_widget import (
     ContextItemMenuAction,
-    ContextLogo
+    ContextLogo,
+    NoMouseReleaseMenu
 )
 from .country_widget import CountryWidgetAction
 from .results_panel import ResultsPanel
@@ -105,14 +106,6 @@ class CustomTab(QTabBar):
                 painter.drawControl(QStyle.CE_TabBarTab, option)
 
 
-class NoMouseReleaseMenu(QMenu):
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-    def mouseReleaseEvent(self, event):
-        # don't dismiss menu on release events
-        event.accept()
 
 
 class ResponsiveLayout(QLayout):

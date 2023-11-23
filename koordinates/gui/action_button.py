@@ -1,3 +1,6 @@
+from functools import partial
+from typing import Optional
+
 from qgis.PyQt.QtCore import (
     Qt,
     QSize
@@ -9,7 +12,9 @@ from qgis.PyQt.QtGui import (
 )
 from qgis.PyQt.QtWidgets import (
     QToolButton,
-    QSizePolicy
+    QSizePolicy,
+    QMenu,
+    QAction
 )
 from qgis.core import (
     Qgis
@@ -51,6 +56,7 @@ class ActionButton(QToolButton):
             QToolButton:hover{{
                 background-color: {};
             }}
+            QToolButton::menu-indicator {{ image: none; }}
             """
 
     BUTTON_COLOR = "#0a9b46"
@@ -181,11 +187,23 @@ class AddButton(ActionButton):
         if len(self.styles) > 1:
             icon = GuiUtils.get_icon('add_button_with_menu.svg')
             self._show_divider = True
+
+            menu = QMenu(self)
+
+            for idx, style in enumerate(self.styles):
+                a = QAction(style.name(), menu)
+                menu.addAction(a)
+                a.triggered.connect(partial(self.add_layer, style.id()))
+
+            self.setMenu(menu)
+            self.setPopupMode(QToolButton.InstantPopup)
+
         else:
             icon = GuiUtils.get_icon('add_button.svg')
+            self.clicked.connect(self.add_layer)
+
         self.setIcon(icon)
         self.setIconSize(QSize(53, 11))
-        self.clicked.connect(self.add_layer)
         self.setFixedSize(72, self.BUTTON_HEIGHT)
 
     def paintEvent(self, event):
@@ -206,8 +224,15 @@ class AddButton(ActionButton):
 
             painter.end()
 
-    def add_layer(self):
+    def add_layer(self, style_id: Optional[int] = None):
         """
         Adds the layer to the current project
         """
-        LayerUtils.add_layer_to_project(self.dataset)
+        if style_id:
+            LayerUtils.add_layer_to_project(self.dataset,
+                                            style_id)
+        elif not self.styles:
+            LayerUtils.add_layer_to_project(self.dataset)
+        else:
+            LayerUtils.add_layer_to_project(self.dataset,
+                                            self.styles[0].id())

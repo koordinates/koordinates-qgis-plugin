@@ -26,6 +26,7 @@ from qgis.PyQt.QtWidgets import (
     QToolButton,
     QHBoxLayout,
     QWidgetAction,
+    QMenu
 )
 from qgis.gui import (
     QgsFloatingWidget
@@ -177,6 +178,17 @@ class ContextItem(QFrame):
             return
 
         self.selected.emit(self._details['name'])
+
+
+class NoMouseReleaseMenu(QMenu):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def mouseReleaseEvent(self, event):
+        # don't dismiss menu on release events
+        event.accept()
+
 
 
 class ContextItemMenuAction(QWidgetAction):
