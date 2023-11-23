@@ -1,6 +1,7 @@
 import datetime
 from typing import (
     Dict,
+    List,
     Optional
 )
 
@@ -49,6 +50,74 @@ class Crs:
         return self.details.get('url_external')
 
 
+class Style:
+    """
+    Represents a dataset's style
+    """
+
+    def __init__(self, details: Dict):
+        self.details = details
+        self.url: str = details['url']
+        self.state: str = details['url']
+        self.description: Optional[str] = details['description'] or None
+
+    def id(self) -> int:
+        """
+        Returns the style ID
+        """
+        return self.details['id']
+
+    def name(self) -> str:
+        """
+        Returns the style's name
+        """
+        return self.details['name']
+
+    def url(self) -> str:
+        """
+        Returns the style's URL
+        """
+        return self.details['url']
+
+    def description(self) -> Optional[str]:
+        """
+        Returns the optional style description
+        """
+        return self.details.get("description") or None
+
+    def is_default(self) -> bool:
+        """
+        Returns True if the style is the default
+        """
+        return self.details.get('is_default', False)
+
+    def created_at_date(self) -> Optional[datetime.date]:
+        """
+        Returns the created at date
+        """
+        created_at_date_str: Optional[str] = self.details.get(
+            "created_at"
+        )
+
+        if created_at_date_str:
+            return parser.parse(created_at_date_str)
+
+        return None
+
+    def published_at_date(self) -> Optional[datetime.date]:
+        """
+        Returns the published at date
+        """
+        published_at_date_str: Optional[str] = self.details.get(
+            "published_at"
+        )
+
+        if published_at_date_str:
+            return parser.parse(published_at_date_str)
+
+        return None
+
+
 class Dataset:
     """
     Represents a dataset
@@ -68,6 +137,8 @@ class Dataset:
         )
         self.access = ApiUtils.access_from_dataset_response(self.details)
         self._repository: Optional[Repo] = None
+        self._styles_retrieved = False
+        self._styles: List[Style] = []
 
         self.gridded_extent: Optional[QgsGeometry] = None
         if 'data' in self.details and self.details['data'].get(
@@ -175,6 +246,33 @@ class Dataset:
             )
 
         return self._repository
+
+    def styles(self) -> List[Style]:
+        """
+        Returns styles for the dataset
+        """
+        if self._styles_retrieved:
+            return self._styles
+
+        if isinstance(self.details.get('styles'), list):
+            for result in self.details['styles']:
+                self._styles.append(Style(result))
+            self._styles_retrieved = True
+            return self._styles
+
+        style_url = self.details.get('styles')
+        if not style_url:
+            self._styles_retrieved = True
+            return self._styles
+
+        from .client import KoordinatesClient
+        results = KoordinatesClient.instance().layer_styles(
+            style_url
+        )
+        for result in results:
+            self._styles.append(Style(result))
+        self._styles_retrieved = True
+        return self._styles
 
     def to_map_layer(self) -> Optional[QgsMapLayer]:
         """
