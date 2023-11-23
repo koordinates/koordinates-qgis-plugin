@@ -190,7 +190,6 @@ class NoMouseReleaseMenu(QMenu):
         event.accept()
 
 
-
 class ContextItemMenuAction(QWidgetAction):
     selected = pyqtSignal(str)
 
