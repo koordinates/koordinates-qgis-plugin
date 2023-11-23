@@ -339,6 +339,19 @@ class KoordinatesClient(QObject):
 
         return total
 
+    def layer_styles(self, style_url) -> Dict:
+        """
+        Retrieve layer styles blocking
+        """
+        params = {}
+
+        headers = {}
+        headers.update(self.headers)
+
+        ret = self._get(style_url, headers, params)
+
+        return ret['json']
+
     def total_revisions_count(self, id) -> Optional[int]:
         """
         Retrieve total revisions blocking
@@ -429,7 +442,10 @@ class KoordinatesClient(QObject):
         """
         Builds a network request
         """
-        url = QUrl(f"https://{self.domain}/services/api/v1.x/{endpoint}")
+        if 'http' in endpoint:
+            url = QUrl(endpoint)
+        else:
+            url = QUrl(f"https://{self.domain}/services/api/v1.x/{endpoint}")
 
         if params:
             url.setQuery(ApiUtils.to_url_query(params))
