@@ -274,7 +274,7 @@ class Dataset:
         self._styles_retrieved = True
         return self._styles
 
-    def to_map_layer(self) -> Optional[QgsMapLayer]:
+    def to_map_layer(self, style_id: Optional[int] = None) -> Optional[QgsMapLayer]:
         """
         Converts the dataset to a map layer, if possible
         """
@@ -289,9 +289,11 @@ class Dataset:
             from .client import KoordinatesClient
             apikey = KoordinatesClient.instance().apiKey
 
+            style = 'auto' if style_id is None else str(style_id)
+
             uri = (
                 "contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&format=image/png"
-                f"&layers=layer-{self.id}&styles=style%3Dauto,"
+                f"&layers=layer-{self.id}&styles=style%3D{style},"
                 f"color%3D{color_name}&tileMatrixSet=EPSG:3857&"
                 f"tilePixelRatio=0&url={LayerUtils.WMTS_URL_BASE};"
                 f"key%3D{apikey}/{LayerUtils.WMTS_ENDPOINT}/"

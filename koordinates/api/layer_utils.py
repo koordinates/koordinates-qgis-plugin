@@ -1,3 +1,5 @@
+from typing import Optional
+
 from qgis.core import (
     QgsApplication,
     QgsProject
@@ -24,10 +26,12 @@ class LayerUtils:
         return color.name()[1:]
 
     @staticmethod
-    def add_layer_to_project(dataset: Dataset):
+    def add_layer_to_project(
+            dataset: Dataset,
+            style_id: Optional[int] = None):
         """
         Adds the layer to the current project from a dataset definition
         """
-        layer = dataset.to_map_layer()
+        layer = dataset.to_map_layer(style_id=style_id)
         if layer:
             QgsProject.instance().addMapLayer(layer)
