@@ -329,7 +329,7 @@ class TestDataBrowser(unittest.TestCase):
                          {'sort': 'popularity', 'kind': ['layer', 'table', 'set', 'document']})
         query.popular_order_string = 'AU'
         self.assertEqual(query.build_query(),
-                         {'sort': 'popularity', 'country':'AU',
+                         {'sort': 'popularity', 'country': 'AU',
                           'country_boost': 6, 'multiplier_boost': True,
                           'kind': ['layer', 'table', 'set', 'document']})
         query.order = SortOrder.RecentlyAdded

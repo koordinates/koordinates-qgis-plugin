@@ -112,7 +112,6 @@ class CustomTab(QTabBar):
 
 
 class ResponsiveLayout(QLayout):
-
     WIDE_MODE_WIDTH_THRESHOLD = 780
 
     def __init__(self, parent=None):
@@ -253,14 +252,13 @@ class ResponsiveLayout(QLayout):
 
 
 class CustomLabelWidgetAction(QWidgetAction):
-
     selected = pyqtSignal()
 
     def __init__(self, text: str,
                  enabled: bool = True,
-                 checkable: bool=False,
-                 indent: int=0,
-                 parent: Optional[QWidget]=None):
+                 checkable: bool = False,
+                 indent: int = 0,
+                 parent: Optional[QWidget] = None):
         super().__init__(parent)
         self._text = text
         self._widget = None
@@ -510,7 +508,7 @@ class Koordinates(QgsDockWidget, WIDGET):
         self.search_line_edit.setShowSearchIcon(True)
         self.search_line_edit.setPlaceholderText('Search')
         self.search_line_edit.setFixedHeight(
-                    int(self.search_line_edit.sizeHint().height() * 1.2)
+            int(self.search_line_edit.sizeHint().height() * 1.2)
         )
         filter_layout.addWidget(self.search_line_edit)
 
@@ -560,9 +558,9 @@ class Koordinates(QgsDockWidget, WIDGET):
         self.sort_menu.installEventFilter(self._sort_menu_event_filter)
 
         self.sort_by_popular_action = CustomLabelWidgetAction(self.tr('Popular'),
-                                                 enabled=False,
-                                                 checkable=True,
-                                                 parent=self.sort_menu)
+                                                              enabled=False,
+                                                              checkable=True,
+                                                              parent=self.sort_menu)
         self.sort_menu.addAction(self.sort_by_popular_action)
         for country, code in (
                 (self.tr('New Zealand'), 'NZ'),
