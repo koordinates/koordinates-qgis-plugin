@@ -304,9 +304,10 @@ class CustomLabelWidgetAction(QWidgetAction):
                 self._action_group.addButton(check_box)
             check_box.installEventFilter(self)
             check_box.setStyleSheet(
-                'margin-top: 10px; margin-right:30px; margin-bottom:10px; margin-left:{}px;'.format(
-                15 + self._indent * 20
-            ))
+                """margin-top: 10px; margin-right:30px;
+                 margin-bottom:10px; margin-left:{}px;""".format(
+                    15 + self._indent * 20
+                ))
             check_box.toggled.connect(self._on_radio_button_toggled)
             self._widget = check_box
         else:
