@@ -18,7 +18,8 @@ from qgis.PyQt.QtCore import (
 from qgis.PyQt.QtGui import (
     QDesktopServices,
     QPalette,
-    QColor
+    QColor,
+    QIcon
 )
 from qgis.PyQt.QtNetwork import QNetworkReply
 from qgis.PyQt.QtWidgets import (
@@ -71,6 +72,8 @@ from ..api import (
 from .enums import (
     StandardExploreModes
 )
+from .country_widget import EmojiToIconRenderer
+
 from ..auth import OAuthWorkflow
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
@@ -259,6 +262,7 @@ class CustomLabelWidgetAction(QWidgetAction):
                  checkable: bool = False,
                  indent: int = 0,
                  sub_text: Optional[str] = None,
+                 icon: Optional[QIcon] = None,
                  parent: Optional[QWidget] = None):
         super().__init__(parent)
         self._text = text
@@ -269,6 +273,7 @@ class CustomLabelWidgetAction(QWidgetAction):
         self._action_group = None
         self._indent = indent
         self._sub_text = sub_text
+        self._icon = icon
 
     def set_widget_checked(self, checked: bool):
         if self._checkable:
@@ -300,6 +305,8 @@ class CustomLabelWidgetAction(QWidgetAction):
     def createWidget(self, parent):
         if self._checkable:
             check_box = QRadioButton(self._text, parent)
+            if self._icon:
+                check_box.setIcon(self._icon)
             if self._enabled:
                 check_box.setMouseTracking(True)
             else:
@@ -1003,12 +1010,18 @@ class Koordinates(QgsDockWidget, WIDGET):
             if user_country_code == code:
                 sub_text = "Your Koordinates ID country"
 
+            if code:
+                icon = EmojiToIconRenderer.render_flag_to_icon(code)
+            else:
+                icon = QIcon()
             sort_by_action = CustomLabelWidgetAction(country,
                                                      enabled=True,
                                                      checkable=True,
                                                      indent=1,
                                                      sub_text=sub_text,
+                                                     icon=icon,
                                                      parent=self.sort_menu)
+
             self.sort_menu.addAction(sort_by_action)
             sort_by_action.setData(code)
             sort_by_action.selected.connect(partial(self._set_popular_sort_order, code))
