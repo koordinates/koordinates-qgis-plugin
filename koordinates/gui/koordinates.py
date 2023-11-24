@@ -317,7 +317,7 @@ class CustomLabelWidgetAction(QWidgetAction):
 
             if self._sub_text:
                 vl = QVBoxLayout()
-                vl.setContentsMargins(0,0,0,0)
+                vl.setContentsMargins(0, 0, 0, 0)
                 vl.addWidget(self._widget)
                 sub_text_label = QLabel(self._sub_text)
                 sub_text_label.setStyleSheet(
