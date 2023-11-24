@@ -25,6 +25,7 @@ class DataBrowserQuery:
     def __init__(self):
 
         self.order = SortOrder.Popularity
+        self.popular_order_string: Optional[str] = None
 
         self.search: Optional[str] = None
         self.starred = False
@@ -217,6 +218,10 @@ class DataBrowserQuery:
 
         if self.order == SortOrder.Popularity:
             params['sort'] = 'popularity'
+            if self.popular_order_string:
+                params['country'] = self.popular_order_string
+                params['country_boost'] = 6
+                params['multiplier_boost'] = True
         elif self.order == SortOrder.RecentlyAdded:
             params['sort'] = 'created_at'
         elif self.order == SortOrder.RecentlyUpdated:
