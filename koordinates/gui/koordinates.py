@@ -274,7 +274,9 @@ class CustomLabelWidgetAction(QWidgetAction):
         if not self._enabled:
             # swallow clicks, we don't want to user to dismiss the menu by clicking
             # disabled actions
-            if event.type() in (QEvent.MouseButtonPress, QEvent.MouseButtonDblClick, QEvent.MouseButtonRelease):
+            if event.type() in (QEvent.MouseButtonPress,
+                                QEvent.MouseButtonDblClick,
+                                QEvent.MouseButtonRelease):
                 return True
         else:
             if event.type() == QEvent.HoverEnter:
@@ -301,7 +303,8 @@ class CustomLabelWidgetAction(QWidgetAction):
                 self._action_group.setExclusive(False)
                 self._action_group.addButton(check_box)
             check_box.installEventFilter(self)
-            check_box.setStyleSheet('margin-top: 10px; margin-right:30px; margin-bottom:10px; margin-left:{}px;'.format(
+            check_box.setStyleSheet(
+                'margin-top: 10px; margin-right:30px; margin-bottom:10px; margin-left:{}px;'.format(
                 15 + self._indent * 20
             ))
             check_box.toggled.connect(self._on_radio_button_toggled)
@@ -551,7 +554,9 @@ class Koordinates(QgsDockWidget, WIDGET):
             )
         self.sort_menu = QMenu(self.button_sort_order)
 
-        sort_by_action = CustomLabelWidgetAction(self.tr('Sort by'), enabled=False, parent=self.sort_menu)
+        sort_by_action = CustomLabelWidgetAction(
+            self.tr('Sort by'), enabled=False,
+            parent=self.sort_menu)
         self.sort_menu.addAction(sort_by_action)
 
         self._sort_menu_event_filter = WidgetActionMenuHoverEventFilter(self.sort_menu)
