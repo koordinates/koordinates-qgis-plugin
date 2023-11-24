@@ -995,10 +995,10 @@ class Koordinates(QgsDockWidget, WIDGET):
                                                               parent=self.sort_menu)
         self.sort_menu.addAction(self.sort_by_popular_action)
         for country, sub_text, code in (
-                (self.tr('New Zealand'), None, 'NZ'),
-                (self.tr('Australia'), None, 'AU'),
-                (self.tr('United Kingdom'), None, 'GB'),
-                (self.tr('United States'), None, 'US'),
+                (self.tr('For New Zealand'), None, 'NZ'),
+                (self.tr('For Australia'), None, 'AU'),
+                (self.tr('For United Kingdom'), None, 'GB'),
+                (self.tr('For United States'), None, 'US'),
                 (self.tr('Anywhere'), self.tr("Don't bias results by location"), '')):
             if user_country_code == code:
                 sub_text = "Your Koordinates ID country"
