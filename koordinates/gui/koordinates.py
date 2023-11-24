@@ -10,7 +10,9 @@ from qgis.PyQt.QtCore import (
     QUrl,
     QRect,
     Qt,
-    QSize
+    QSize,
+    QObject,
+    QEvent
 )
 from qgis.PyQt.QtGui import (
     QDesktopServices,
@@ -36,7 +38,8 @@ from qgis.PyQt.QtWidgets import (
     QLayout,
     QWidgetItem,
     QToolButton,
-    QActionGroup
+    QActionGroup,
+    QWidgetAction
 )
 from qgis.gui import (
     QgsDockWidget,
@@ -247,6 +250,68 @@ class ResponsiveLayout(QLayout):
             self.filter_widget.update()
 
 
+class CustomLabelWidgetAction(QWidgetAction):
+
+    def __init__(self, text: str, enabled: bool = True, parent: Optional[QWidget]=None):
+        super().__init__(parent)
+        self._text = text
+        self._widget = None
+        self._enabled = enabled
+
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.HoverEnter:
+            self.highlight(True)
+        elif event.type() == QEvent.HoverLeave:
+            self.highlight(False)
+
+        return super().eventFilter(obj, event)
+
+    def createWidget(self, parent):
+        label = QLabel(self._text, parent)
+        if self._enabled:
+            label.setMouseTracking(True)
+            label.installEventFilter(self)
+
+        palette = label.palette()
+        text_color = palette.color(QPalette.WindowText)
+        text_color.setAlphaF(0.7)
+        palette.setColor(QPalette.WindowText, text_color)
+        label.setPalette(palette)
+        label.setStyleSheet('margin: 10px;')
+        font = label.font()
+        font.setPointSizeF(font.pointSizeF() * 0.9)
+        label.setFont(font)
+        self._widget = label
+        return label
+
+    def highlight(self, enabled: bool):
+        self._widget.setBackgroundRole(QPalette.Highlight if enabled else QPalette.Window)
+        self._widget.setAutoFillBackground(enabled)
+
+
+class WidgetActionMenuHoverEventFilter(QObject):
+
+    def __init__(self, parent: Optional[QObject] = None):
+        super().__init__(parent)
+        self._last_widget_action = None
+
+    def eventFilter(self, obj: QObject, event: QEvent):
+        if event.type() == QEvent.MouseMove:
+            action = obj.actionAt(event.pos())
+            if isinstance(action, CustomLabelWidgetAction):
+                if self._last_widget_action and action != self._last_widget_action:
+                    self._last_widget_action.highlight(False)
+
+                action.highlight(True)
+                self._last_widget_action = action
+            else:
+                if self._last_widget_action:
+                    self._last_widget_action.highlight(False)
+                    self._last_widget_action = None
+
+        return super().eventFilter(obj, event)
+
+
 class Koordinates(QgsDockWidget, WIDGET):
     TAB_STARRED_INDEX = 1
     TAB_EXPLORE_INDEX = 0
@@ -444,9 +509,15 @@ class Koordinates(QgsDockWidget, WIDGET):
                 'QToolButton { padding-right: 30px; padding-left: 0px; }'
             )
         self.sort_menu = QMenu(self.button_sort_order)
+
+        sort_by_action = CustomLabelWidgetAction(self.tr('Sort by'), enabled=False, parent=self.sort_menu)
+        self.sort_menu.addAction(sort_by_action)
+
+        self._sort_menu_event_filter = WidgetActionMenuHoverEventFilter(self.sort_menu)
+        self.sort_menu.installEventFilter(self._sort_menu_event_filter)
+
         sort_group = QActionGroup(self)
         for order in (
-                SortOrder.Popularity,
                 SortOrder.RecentlyAdded,
                 SortOrder.RecentlyUpdated,
                 SortOrder.AlphabeticalAZ,
