@@ -1,6 +1,7 @@
 from typing import (
     Optional,
-    List
+    List,
+    Union
 )
 
 from qgis.PyQt import sip
@@ -54,7 +55,7 @@ class FilterWidget(QWidget):
 
         self._wide_mode = False
 
-        self.sort_order = SortOrder.Popularity
+        self.sort_order: Union[str, SortOrder] = SortOrder.Popularity
 
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Minimum)
 

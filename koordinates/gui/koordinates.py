@@ -39,7 +39,7 @@ from qgis.PyQt.QtWidgets import (
     QLayout,
     QWidgetItem,
     QToolButton,
-    QActionGroup,
+    QButtonGroup,
     QWidgetAction,
     QRadioButton
 )
@@ -266,13 +266,23 @@ class CustomLabelWidgetAction(QWidgetAction):
         self._widget = None
         self._enabled = enabled
         self._checkable = checkable
+        self._action_group = None
         self._indent = indent
 
+    def set_widget_checked(self, checked: bool):
+        self._widget.setChecked(checked)
+
     def eventFilter(self, obj, event):
-        if event.type() == QEvent.HoverEnter:
-            self.highlight(True)
-        elif event.type() == QEvent.HoverLeave:
-            self.highlight(False)
+        if not self._enabled:
+            # swallow clicks, we don't want to user to dismiss the menu by clicking
+            # disabled actions
+            if event.type() in (QEvent.MouseButtonPress, QEvent.MouseButtonDblClick, QEvent.MouseButtonRelease):
+                return True
+        else:
+            if event.type() == QEvent.HoverEnter:
+                self.highlight(True)
+            elif event.type() == QEvent.HoverLeave:
+                self.highlight(False)
 
         return super().eventFilter(obj, event)
 
@@ -288,18 +298,21 @@ class CustomLabelWidgetAction(QWidgetAction):
             check_box = QRadioButton(self._text, parent)
             if self._enabled:
                 check_box.setMouseTracking(True)
-                check_box.installEventFilter(self)
+            else:
+                self._action_group = QButtonGroup(self)
+                self._action_group.setExclusive(False)
+                self._action_group.addButton(check_box)
+            check_box.installEventFilter(self)
             check_box.setStyleSheet('margin-top: 10px; margin-right:30px; margin-bottom:10px; margin-left:{}px;'.format(
                 15 + self._indent * 20
             ))
             check_box.toggled.connect(self._on_radio_button_toggled)
             self._widget = check_box
-
         else:
             label = QLabel(self._text, parent)
             if self._enabled:
                 label.setMouseTracking(True)
-                label.installEventFilter(self)
+            label.installEventFilter(self)
 
             palette = label.palette()
             text_color = palette.color(QPalette.WindowText)
@@ -328,7 +341,7 @@ class WidgetActionMenuHoverEventFilter(QObject):
     def eventFilter(self, obj: QObject, event: QEvent):
         if event.type() == QEvent.MouseMove:
             action = obj.actionAt(event.pos())
-            if isinstance(action, CustomLabelWidgetAction):
+            if isinstance(action, CustomLabelWidgetAction) and action._enabled:
                 if self._last_widget_action and action != self._last_widget_action:
                     self._last_widget_action.highlight(False)
 
@@ -546,6 +559,11 @@ class Koordinates(QgsDockWidget, WIDGET):
         self._sort_menu_event_filter = WidgetActionMenuHoverEventFilter(self.sort_menu)
         self.sort_menu.installEventFilter(self._sort_menu_event_filter)
 
+        self.sort_by_popular_action = CustomLabelWidgetAction(self.tr('Popular'),
+                                                 enabled=False,
+                                                 checkable=True,
+                                                 parent=self.sort_menu)
+        self.sort_menu.addAction(self.sort_by_popular_action)
         for country, code in (
                 (self.tr('New Zealand'), 'NZ'),
                 (self.tr('Australia'), 'AU'),
@@ -558,6 +576,8 @@ class Koordinates(QgsDockWidget, WIDGET):
                                                      indent=1,
                                                      parent=self.sort_menu)
             self.sort_menu.addAction(sort_by_action)
+            sort_by_action.setData(code)
+            sort_by_action.selected.connect(partial(self._set_popular_sort_order, code))
 
         for order in (
                 SortOrder.RecentlyAdded,
@@ -651,6 +671,9 @@ class Koordinates(QgsDockWidget, WIDGET):
         """
         Called when the sort order menu is about to show
         """
+        self.sort_by_popular_action.set_widget_checked(
+            isinstance(self.filter_widget.sort_order, str)
+        )
         for action in self.sort_menu.actions():
             is_checked = action.data() == self.filter_widget.sort_order
             action.setChecked(is_checked)
@@ -667,13 +690,30 @@ class Koordinates(QgsDockWidget, WIDGET):
         self._set_sort_order_button_text()
         self.search()
 
+    def _set_popular_sort_order(self, code: str):
+        """
+        Triggered when the popular sort order is selected
+        """
+        self.sort_menu.close()
+        if self.filter_widget.sort_order == code:
+            return
+
+        self.filter_widget.sort_order = code
+        self._set_sort_order_button_text()
+        self.search()
+
     def _set_sort_order_button_text(self):
         """
         Sets the correct text for the sort order button
         """
-        self.button_sort_order.setText(
-            'Sort by {}'.format(SortOrder.to_text(self.filter_widget.sort_order))
-        )
+        if isinstance(self.filter_widget.sort_order, str):
+            self.button_sort_order.setText(
+                'Sort by {}'.format(self.filter_widget.sort_order)
+            )
+        else:
+            self.button_sort_order.setText(
+                'Sort by {}'.format(SortOrder.to_text(self.filter_widget.sort_order))
+            )
 
     def _show_context_switcher_menu(self):
         # because this menu will be shown in a fix location (center of tab), we
