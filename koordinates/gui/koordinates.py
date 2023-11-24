@@ -12,7 +12,8 @@ from qgis.PyQt.QtCore import (
     Qt,
     QSize,
     QObject,
-    QEvent
+    QEvent,
+    pyqtSignal
 )
 from qgis.PyQt.QtGui import (
     QDesktopServices,
@@ -39,7 +40,8 @@ from qgis.PyQt.QtWidgets import (
     QWidgetItem,
     QToolButton,
     QActionGroup,
-    QWidgetAction
+    QWidgetAction,
+    QRadioButton
 )
 from qgis.gui import (
     QgsDockWidget,
@@ -252,11 +254,19 @@ class ResponsiveLayout(QLayout):
 
 class CustomLabelWidgetAction(QWidgetAction):
 
-    def __init__(self, text: str, enabled: bool = True, parent: Optional[QWidget]=None):
+    selected = pyqtSignal()
+
+    def __init__(self, text: str,
+                 enabled: bool = True,
+                 checkable: bool=False,
+                 indent: int=0,
+                 parent: Optional[QWidget]=None):
         super().__init__(parent)
         self._text = text
         self._widget = None
         self._enabled = enabled
+        self._checkable = checkable
+        self._indent = indent
 
     def eventFilter(self, obj, event):
         if event.type() == QEvent.HoverEnter:
@@ -266,23 +276,43 @@ class CustomLabelWidgetAction(QWidgetAction):
 
         return super().eventFilter(obj, event)
 
-    def createWidget(self, parent):
-        label = QLabel(self._text, parent)
-        if self._enabled:
-            label.setMouseTracking(True)
-            label.installEventFilter(self)
+    def _on_radio_button_toggled(self):
+        """
+        Called when the radio button is ticked
+        """
+        if self._widget.isChecked():
+            self.selected.emit()
 
-        palette = label.palette()
-        text_color = palette.color(QPalette.WindowText)
-        text_color.setAlphaF(0.7)
-        palette.setColor(QPalette.WindowText, text_color)
-        label.setPalette(palette)
-        label.setStyleSheet('margin: 10px;')
-        font = label.font()
-        font.setPointSizeF(font.pointSizeF() * 0.9)
-        label.setFont(font)
-        self._widget = label
-        return label
+    def createWidget(self, parent):
+        if self._checkable:
+            check_box = QRadioButton(self._text, parent)
+            if self._enabled:
+                check_box.setMouseTracking(True)
+                check_box.installEventFilter(self)
+            check_box.setStyleSheet('margin-top: 10px; margin-right:30px; margin-bottom:10px; margin-left:{}px;'.format(
+                15 + self._indent * 20
+            ))
+            check_box.toggled.connect(self._on_radio_button_toggled)
+            self._widget = check_box
+
+        else:
+            label = QLabel(self._text, parent)
+            if self._enabled:
+                label.setMouseTracking(True)
+                label.installEventFilter(self)
+
+            palette = label.palette()
+            text_color = palette.color(QPalette.WindowText)
+            text_color.setAlphaF(0.7)
+            palette.setColor(QPalette.WindowText, text_color)
+            label.setPalette(palette)
+            label.setStyleSheet('margin: 10px;')
+            font = label.font()
+            font.setPointSizeF(font.pointSizeF() * 0.9)
+            label.setFont(font)
+            self._widget = label
+
+        return self._widget
 
     def highlight(self, enabled: bool):
         self._widget.setBackgroundRole(QPalette.Highlight if enabled else QPalette.Window)
@@ -516,19 +546,32 @@ class Koordinates(QgsDockWidget, WIDGET):
         self._sort_menu_event_filter = WidgetActionMenuHoverEventFilter(self.sort_menu)
         self.sort_menu.installEventFilter(self._sort_menu_event_filter)
 
-        sort_group = QActionGroup(self)
+        for country, code in (
+                (self.tr('New Zealand'), 'NZ'),
+                (self.tr('Australia'), 'AU'),
+                (self.tr('United Kingdom'), 'GB'),
+                (self.tr('United States'), 'US'),
+                (self.tr('Anywhere'), '')):
+            sort_by_action = CustomLabelWidgetAction(country,
+                                                     enabled=True,
+                                                     checkable=True,
+                                                     indent=1,
+                                                     parent=self.sort_menu)
+            self.sort_menu.addAction(sort_by_action)
+
         for order in (
                 SortOrder.RecentlyAdded,
                 SortOrder.RecentlyUpdated,
                 SortOrder.AlphabeticalAZ,
                 SortOrder.AlphabeticalZA,
                 SortOrder.Oldest):
-            action = QAction(SortOrder.to_text(order), self.sort_menu)
-            action.setData(order)
-            action.setCheckable(True)
-            action.triggered.connect(partial(self._set_sort_order, order))
-            action.setActionGroup(sort_group)
-            self.sort_menu.addAction(action)
+            sort_by_action = CustomLabelWidgetAction(SortOrder.to_text(order),
+                                                     enabled=True,
+                                                     checkable=True,
+                                                     parent=self.sort_menu)
+            self.sort_menu.addAction(sort_by_action)
+            sort_by_action.selected.connect(partial(self._set_sort_order, order))
+            sort_by_action.setData(order)
 
         self.button_sort_order.setMenu(self.sort_menu)
         smaller_font = self.button_sort_order.font()
@@ -616,6 +659,7 @@ class Koordinates(QgsDockWidget, WIDGET):
         """
         Triggered when the sort order is changed
         """
+        self.sort_menu.close()
         if self.filter_widget.sort_order == order:
             return
 
