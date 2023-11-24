@@ -1013,7 +1013,7 @@ class Koordinates(QgsDockWidget, WIDGET):
             if code:
                 icon = EmojiToIconRenderer.render_flag_to_icon(code)
             else:
-                icon = QIcon()
+                icon = EmojiToIconRenderer.render_emoji_to_icon('🌎')
             sort_by_action = CustomLabelWidgetAction(country,
                                                      enabled=True,
                                                      checkable=True,
