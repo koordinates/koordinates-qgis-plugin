@@ -354,7 +354,11 @@ class FilterWidget(QWidget):
         mode = self.explore_mode()
         if mode == StandardExploreModes.Browse:
             query.starred = self._starred
-            query.order = self.sort_order
+            if isinstance(self.sort_order, str):
+                query.order = SortOrder.Popularity
+                query.popular_order_string = self.sort_order
+            else:
+                query.order = self.sort_order
 
             if self.search_line_edit.text().strip():
                 query.search = self.search_line_edit.text().strip()
