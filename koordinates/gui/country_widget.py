@@ -20,7 +20,6 @@ from qgis.PyQt.QtWidgets import (
     QWidgetAction
 )
 
-
 from .gui_utils import GuiUtils
 from ..external import flag
 
@@ -148,6 +147,7 @@ STANDARD_EMOJI_FONTS = (
     'Segoe UI Emoji',
     'Noto Color Emoji',
 )
+
 
 class EmojiToIconRenderer:
     """
