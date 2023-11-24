@@ -707,9 +707,20 @@ class Koordinates(QgsDockWidget, WIDGET):
         Sets the correct text for the sort order button
         """
         if isinstance(self.filter_widget.sort_order, str):
-            self.button_sort_order.setText(
-                'Sort by {}'.format(self.filter_widget.sort_order)
-            )
+            region_string = {
+                'AU': 'AU',
+                'NZ': 'NZ',
+                'GB': 'UK',
+                'US': 'US'
+            }.get(self.filter_widget.sort_order)
+            if region_string:
+                self.button_sort_order.setText(
+                    'Popular for {}'.format(region_string)
+                )
+            else:
+                self.button_sort_order.setText(
+                    'Popular'
+                )
         else:
             self.button_sort_order.setText(
                 'Sort by {}'.format(SortOrder.to_text(self.filter_widget.sort_order))
