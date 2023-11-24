@@ -10,12 +10,16 @@ from qgis.PyQt.QtGui import (
     QFontMetrics,
     QPainter,
     QFont,
-    QFontDatabase
+    QFontDatabase,
+    QIcon,
+    QImage,
+    QPixmap
 )
 from qgis.PyQt.QtWidgets import (
     QWidget,
     QWidgetAction
 )
+
 
 from .gui_utils import GuiUtils
 from ..external import flag
@@ -144,6 +148,56 @@ STANDARD_EMOJI_FONTS = (
     'Segoe UI Emoji',
     'Noto Color Emoji',
 )
+
+class EmojiToIconRenderer:
+    """
+    Renders emoji to Icons
+    """
+
+    EMOJI_FONT = None
+
+    @staticmethod
+    def _init_font():
+        if EmojiToIconRenderer.EMOJI_FONT:
+            return
+
+        families = set(QFontDatabase().families())
+
+        found = False
+        for candidate in STANDARD_EMOJI_FONTS:
+            if candidate in families:
+                EmojiToIconRenderer.EMOJI_FONT = QFont(candidate)
+                found = True
+                break
+
+        if not found:
+            # load from the embedded Noto Emoji subset, which doesn't always work cross-platform...
+            EmojiToIconRenderer.EMOJI_FONT = GuiUtils.get_embedded_font('NotoEmojiSubset.ttf')
+
+        EmojiToIconRenderer.EMOJI_FONT.setPointSize(50)
+
+    @staticmethod
+    def render_flag_to_icon(code: str) -> QIcon:
+        """
+        Renders a flag to a icon
+        """
+        if platform.system() == 'Windows':
+            return QIcon()
+
+        EmojiToIconRenderer._init_font()
+        fm = QFontMetrics(EmojiToIconRenderer.EMOJI_FONT)
+
+        image = QImage(fm.boundingRect(flag.flag(code)).width(),
+                       fm.boundingRect(flag.flag(code)).height(),
+                       QImage.Format_ARGB32)
+        image.fill(Qt.transparent)
+        painter = QPainter(image)
+        painter.setFont(EmojiToIconRenderer.EMOJI_FONT)
+        painter.drawText(0, 0, image.width(), image.height(), 0, flag.flag(code))
+
+        painter.end()
+
+        return QIcon(QPixmap.fromImage(image))
 
 
 class CountryWidget(QWidget):
