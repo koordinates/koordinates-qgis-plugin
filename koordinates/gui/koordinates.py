@@ -258,14 +258,17 @@ class CustomLabelWidgetAction(QWidgetAction):
                  enabled: bool = True,
                  checkable: bool = False,
                  indent: int = 0,
+                 sub_text: Optional[str] = None,
                  parent: Optional[QWidget] = None):
         super().__init__(parent)
         self._text = text
         self._widget = None
+        self._container = None
         self._enabled = enabled
         self._checkable = checkable
         self._action_group = None
         self._indent = indent
+        self._sub_text = sub_text
 
     def set_widget_checked(self, checked: bool):
         self._widget.setChecked(checked)
@@ -304,12 +307,40 @@ class CustomLabelWidgetAction(QWidgetAction):
                 self._action_group.addButton(check_box)
             check_box.installEventFilter(self)
             check_box.setStyleSheet(
-                """margin-top: 10px; margin-right:30px;
-                 margin-bottom:10px; margin-left:{}px;""".format(
+                """margin-top: 8px; margin-right:30px;
+                 margin-bottom:{}px; margin-left:{}px;""".format(
+                    8 if not self._sub_text else 0,
                     15 + self._indent * 20
                 ))
             check_box.toggled.connect(self._on_radio_button_toggled)
             self._widget = check_box
+
+            if self._sub_text:
+                vl = QVBoxLayout()
+                vl.setContentsMargins(0,0,0,0)
+                vl.addWidget(self._widget)
+                sub_text_label = QLabel(self._sub_text)
+                sub_text_label.setStyleSheet(
+                    """margin-top: 0px; margin-right:20px;
+                     margin-bottom: 8px; margin-left:{}px;""".format(
+                        35 + self._indent * 20
+                    ))
+                palette = sub_text_label.palette()
+                text_color = palette.color(QPalette.WindowText)
+                text_color.setAlphaF(0.7)
+                palette.setColor(QPalette.WindowText, text_color)
+                sub_text_label.setPalette(palette)
+                font = sub_text_label.font()
+                font.setPointSizeF(font.pointSizeF() * 0.85)
+                sub_text_label.setFont(font)
+
+                vl.addWidget(sub_text_label)
+                self._container = QWidget(parent)
+                self._container.setLayout(vl)
+                return self._container
+            else:
+                self._container = self._widget
+                return self._widget
         else:
             label = QLabel(self._text, parent)
             if self._enabled:
@@ -326,12 +357,13 @@ class CustomLabelWidgetAction(QWidgetAction):
             font.setPointSizeF(font.pointSizeF() * 0.9)
             label.setFont(font)
             self._widget = label
+            self._container = self._widget
 
-        return self._widget
+            return self._widget
 
     def highlight(self, enabled: bool):
-        self._widget.setBackgroundRole(QPalette.Highlight if enabled else QPalette.Window)
-        self._widget.setAutoFillBackground(enabled)
+        self._container.setBackgroundRole(QPalette.Highlight if enabled else QPalette.Window)
+        self._container.setAutoFillBackground(enabled)
 
 
 class WidgetActionMenuHoverEventFilter(QObject):
@@ -568,16 +600,17 @@ class Koordinates(QgsDockWidget, WIDGET):
                                                               checkable=True,
                                                               parent=self.sort_menu)
         self.sort_menu.addAction(self.sort_by_popular_action)
-        for country, code in (
-                (self.tr('New Zealand'), 'NZ'),
-                (self.tr('Australia'), 'AU'),
-                (self.tr('United Kingdom'), 'GB'),
-                (self.tr('United States'), 'US'),
-                (self.tr('Anywhere'), '')):
+        for country, sub_text, code in (
+                (self.tr('New Zealand'), None, 'NZ'),
+                (self.tr('Australia'), None, 'AU'),
+                (self.tr('United Kingdom'), None, 'GB'),
+                (self.tr('United States'), None, 'US'),
+                (self.tr('Anywhere'), self.tr("Don't bias results by location"), '')):
             sort_by_action = CustomLabelWidgetAction(country,
                                                      enabled=True,
                                                      checkable=True,
                                                      indent=1,
+                                                     sub_text=sub_text,
                                                      parent=self.sort_menu)
             self.sort_menu.addAction(sort_by_action)
             sort_by_action.setData(code)
