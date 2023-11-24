@@ -181,19 +181,26 @@ class EmojiToIconRenderer:
         """
         Renders a flag to a icon
         """
+        return EmojiToIconRenderer.render_emoji_to_icon(flag.flag(code))
+
+    @staticmethod
+    def render_emoji_to_icon(char: str) -> QIcon:
+        """
+        Renders an emoji to a icon
+        """
         if platform.system() == 'Windows':
             return QIcon()
 
         EmojiToIconRenderer._init_font()
         fm = QFontMetrics(EmojiToIconRenderer.EMOJI_FONT)
 
-        image = QImage(fm.boundingRect(flag.flag(code)).width(),
-                       fm.boundingRect(flag.flag(code)).height(),
+        image = QImage(fm.boundingRect(char).width(),
+                       fm.boundingRect(char).height(),
                        QImage.Format_ARGB32)
         image.fill(Qt.transparent)
         painter = QPainter(image)
         painter.setFont(EmojiToIconRenderer.EMOJI_FONT)
-        painter.drawText(0, 0, image.width(), image.height(), 0, flag.flag(code))
+        painter.drawText(0, 0, image.width(), image.height(), 0, char)
 
         painter.end()
 
