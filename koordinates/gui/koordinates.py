@@ -271,7 +271,8 @@ class CustomLabelWidgetAction(QWidgetAction):
         self._sub_text = sub_text
 
     def set_widget_checked(self, checked: bool):
-        self._widget.setChecked(checked)
+        if self._checkable:
+            self._widget.setChecked(checked)
 
     def eventFilter(self, obj, event):
         if not self._enabled:
@@ -668,12 +669,15 @@ class Koordinates(QgsDockWidget, WIDGET):
         """
         Called when the sort order menu is about to show
         """
-        self.sort_by_popular_action.set_widget_checked(
-            isinstance(self.filter_widget.sort_order, str)
-        )
         for action in self.sort_menu.actions():
-            is_checked = action.data() == self.filter_widget.sort_order
-            action.setChecked(is_checked)
+            if action == self.sort_by_popular_action:
+                action.set_widget_checked(
+                    isinstance(self.filter_widget.sort_order, str)
+                )
+            else:
+                is_checked = action.data() == self.filter_widget.sort_order
+                if isinstance(action, CustomLabelWidgetAction):
+                    action.set_widget_checked(is_checked)
 
     def _set_sort_order(self, order: SortOrder):
         """
@@ -1022,6 +1026,8 @@ class Koordinates(QgsDockWidget, WIDGET):
             self.sort_menu.addAction(sort_by_action)
             sort_by_action.selected.connect(partial(self._set_sort_order, order))
             sort_by_action.setData(order)
+
+        self._set_popular_sort_order('')
 
     def _create_context_tabs(self, contexts: List):
         """
