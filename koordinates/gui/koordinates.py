@@ -586,49 +586,9 @@ class Koordinates(QgsDockWidget, WIDGET):
                 'QToolButton { padding-right: 30px; padding-left: 0px; }'
             )
         self.sort_menu = QMenu(self.button_sort_order)
-
-        sort_by_action = CustomLabelWidgetAction(
-            self.tr('Sort by'), enabled=False,
-            parent=self.sort_menu)
-        self.sort_menu.addAction(sort_by_action)
-
+        self.sort_by_popular_action: Optional[QAction] = None
         self._sort_menu_event_filter = WidgetActionMenuHoverEventFilter(self.sort_menu)
         self.sort_menu.installEventFilter(self._sort_menu_event_filter)
-
-        self.sort_by_popular_action = CustomLabelWidgetAction(self.tr('Popular'),
-                                                              enabled=False,
-                                                              checkable=True,
-                                                              parent=self.sort_menu)
-        self.sort_menu.addAction(self.sort_by_popular_action)
-        for country, sub_text, code in (
-                (self.tr('New Zealand'), None, 'NZ'),
-                (self.tr('Australia'), None, 'AU'),
-                (self.tr('United Kingdom'), None, 'GB'),
-                (self.tr('United States'), None, 'US'),
-                (self.tr('Anywhere'), self.tr("Don't bias results by location"), '')):
-            sort_by_action = CustomLabelWidgetAction(country,
-                                                     enabled=True,
-                                                     checkable=True,
-                                                     indent=1,
-                                                     sub_text=sub_text,
-                                                     parent=self.sort_menu)
-            self.sort_menu.addAction(sort_by_action)
-            sort_by_action.setData(code)
-            sort_by_action.selected.connect(partial(self._set_popular_sort_order, code))
-
-        for order in (
-                SortOrder.RecentlyAdded,
-                SortOrder.RecentlyUpdated,
-                SortOrder.AlphabeticalAZ,
-                SortOrder.AlphabeticalZA,
-                SortOrder.Oldest):
-            sort_by_action = CustomLabelWidgetAction(SortOrder.to_text(order),
-                                                     enabled=True,
-                                                     checkable=True,
-                                                     parent=self.sort_menu)
-            self.sort_menu.addAction(sort_by_action)
-            sort_by_action.selected.connect(partial(self._set_sort_order, order))
-            sort_by_action.setData(order)
 
         self.button_sort_order.setMenu(self.sort_menu)
         smaller_font = self.button_sort_order.font()
@@ -1000,6 +960,8 @@ class Koordinates(QgsDockWidget, WIDGET):
             user = KoordinatesClient.instance().user_details()
             self.user_country_action.set_country_code(user['country'])
 
+            self._build_sort_menu(user)
+
             self._create_context_tabs(user.get('contexts', []))
 
             self.filter_widget.set_logged_in(True)
@@ -1007,6 +969,59 @@ class Koordinates(QgsDockWidget, WIDGET):
             self.explore()
         else:
             self.stackedWidget.setCurrentWidget(self.pageAuth)
+
+    def _build_sort_menu(self, user_details: dict):
+        """
+        Builds the dataset sorting options menu.
+
+        This can only be done after a login event
+        """
+        self.sort_menu.clear()
+
+        user_country_code = user_details['country']
+
+        sort_by_action = CustomLabelWidgetAction(
+            self.tr('Sort by'), enabled=False,
+            parent=self.sort_menu)
+        self.sort_menu.addAction(sort_by_action)
+
+        self.sort_by_popular_action = CustomLabelWidgetAction(self.tr('Popular'),
+                                                              enabled=False,
+                                                              checkable=True,
+                                                              parent=self.sort_menu)
+        self.sort_menu.addAction(self.sort_by_popular_action)
+        for country, sub_text, code in (
+                (self.tr('New Zealand'), None, 'NZ'),
+                (self.tr('Australia'), None, 'AU'),
+                (self.tr('United Kingdom'), None, 'GB'),
+                (self.tr('United States'), None, 'US'),
+                (self.tr('Anywhere'), self.tr("Don't bias results by location"), '')):
+            if user_country_code == code:
+                sub_text = "Your Koordinates ID country"
+
+            sort_by_action = CustomLabelWidgetAction(country,
+                                                     enabled=True,
+                                                     checkable=True,
+                                                     indent=1,
+                                                     sub_text=sub_text,
+                                                     parent=self.sort_menu)
+            self.sort_menu.addAction(sort_by_action)
+            sort_by_action.setData(code)
+            sort_by_action.selected.connect(partial(self._set_popular_sort_order, code))
+
+        for order in (
+                SortOrder.RecentlyAdded,
+                SortOrder.RecentlyUpdated,
+                SortOrder.AlphabeticalAZ,
+                SortOrder.AlphabeticalZA,
+                SortOrder.Oldest):
+            sort_by_action = CustomLabelWidgetAction(SortOrder.to_text(order),
+                                                     enabled=True,
+                                                     checkable=True,
+                                                     parent=self.sort_menu)
+            self.sort_menu.addAction(sort_by_action)
+            sort_by_action.selected.connect(partial(self._set_sort_order, order))
+            sort_by_action.setData(order)
 
     def _create_context_tabs(self, contexts: List):
         """
