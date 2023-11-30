@@ -186,7 +186,7 @@ class SortOrder(Enum):
     Oldest = 6
 
     @staticmethod
-    def to_text(order: 'SortOrder'):
+    def to_text(order: 'SortOrder') -> str:
         """
         Converts sort order to user-friendly text
         """
@@ -196,6 +196,17 @@ class SortOrder(Enum):
                 SortOrder.AlphabeticalAZ: 'Alphabetical (A-Z)',
                 SortOrder.AlphabeticalZA: 'Alphabetical (Z-A)',
                 SortOrder.Oldest: 'Oldest'}[order]
+
+    def to_button_text(self) -> str:
+        """
+        Converts sort order to user-friendly text for buttons
+        """
+        return {SortOrder.Popularity: 'Popular',
+                SortOrder.RecentlyAdded: 'Recently Added',
+                SortOrder.RecentlyUpdated: 'Recently Updated',
+                SortOrder.AlphabeticalAZ: 'Sort by Alphabetical (A-Z)',
+                SortOrder.AlphabeticalZA: 'Sort by Alphabetical (Z-A)',
+                SortOrder.Oldest: 'Oldest'}[self]
 
 
 class PublisherType(Enum):
