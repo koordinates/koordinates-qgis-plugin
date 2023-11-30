@@ -48,6 +48,7 @@ class KoordinatesClient(QObject):
     loginChanged = pyqtSignal(bool)
     error_occurred = pyqtSignal(str)
     explore_sections_retrieved = pyqtSignal(object)
+    data_options_retrieved = pyqtSignal(dict)
 
     BASE64_ENCODED_SVG_HEADER = 'data:image/svg+xml;base64,'
 
@@ -69,6 +70,7 @@ class KoordinatesClient(QObject):
         KoordinatesClient.__instance = self
 
         self._explore_sections_reply: Optional[QNetworkReply] = None
+        self._data_options_reply: Optional[QNetworkReply] = None
 
         self.layers = {}
         self._dataset_details = {}
@@ -102,6 +104,10 @@ class KoordinatesClient(QObject):
         self._explore_sections_reply = self.explore_sections_async()
         self._explore_sections_reply.finished.connect(
             partial(self._sections_reply_finished, self._explore_sections_reply))
+
+        self._data_options_reply = self.data_options_async()
+        self._data_options_reply.finished.connect(
+            partial(self._data_options_reply_finished, self._data_options_reply))
 
     def logout(self):
         oldKey = self.apiKey
@@ -138,6 +144,25 @@ class KoordinatesClient(QObject):
             sections.append(ExploreSection(section))
 
         self.explore_sections_retrieved.emit(sections)
+
+    def _data_options_reply_finished(self, reply: QNetworkReply):
+        if sip.isdeleted(self):
+            return
+
+        if reply != self._data_options_reply:
+            # an old reply we don't care about anymore
+            return
+
+        self._data_options_reply = None
+        if reply.error() == QNetworkReply.OperationCanceledError:
+            return
+
+        if reply.error() != QNetworkReply.NoError:
+            print('error occurred :(')
+            return
+
+        content = json.loads(reply.readAll().data().decode())
+        self.data_options_retrieved.emit(content)
 
     def _build_datasets_request(self,
                                 page=1,
@@ -234,6 +259,20 @@ class KoordinatesClient(QObject):
         endpoint = "publishers/"
 
         return endpoint, headers, params
+
+    def data_options_async(self) -> QNetworkReply:
+        """
+        Retrieve data OPTIONS request asynchronously
+        """
+        headers = {}
+        params = {}
+        endpoint = "data/"
+
+        network_request = self._build_request(endpoint, headers, params)
+
+        return QgsNetworkAccessManager.instance().sendCustomRequest(
+            network_request, b"OPTIONS", None
+        )
 
     def datasets_async(self,
                        page=1,
