@@ -739,7 +739,7 @@ class Koordinates(QgsDockWidget, WIDGET):
                 )
         else:
             self.button_sort_order.setText(
-                'Sort by {}'.format(SortOrder.to_text(self.filter_widget.sort_order))
+                self.filter_widget.sort_order.to_button_text()
             )
 
     def _show_context_switcher_menu(self):
