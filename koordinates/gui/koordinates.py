@@ -593,10 +593,11 @@ class Koordinates(QgsDockWidget, WIDGET):
             # requires Qt 5.14+
             device_pixel_ratio = 1
 
-        if os.name == 'nt' or device_pixel_ratio > 1:
-            self.button_sort_order.setStyleSheet(
-                'QToolButton { padding-right: 30px; padding-left: 0px; }'
-            )
+        self.button_sort_order.setStyleSheet(
+            """QToolButton::menu-indicator { image: none }
+            QToolButton { margin-top: 2px; }
+            """
+        )
         self.sort_menu = QMenu(self.button_sort_order)
         self.sort_by_popular_action: Optional[QAction] = None
         self._sort_menu_event_filter = WidgetActionMenuHoverEventFilter(self.sort_menu)
