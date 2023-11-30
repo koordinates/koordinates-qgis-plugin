@@ -988,8 +988,6 @@ class Koordinates(QgsDockWidget, WIDGET):
             self._create_context_tabs(user.get('contexts', []))
 
             self.filter_widget.set_logged_in(True)
-
-            self.explore()
         else:
             self.stackedWidget.setCurrentWidget(self.pageAuth)
 
@@ -1073,7 +1071,8 @@ class Koordinates(QgsDockWidget, WIDGET):
             sort_by_action.selected.connect(partial(self._set_sort_order, order))
             sort_by_action.setData(order)
 
-        self._set_popular_sort_order('')
+        self.filter_widget.sort_order = ''
+        self._set_sort_order_button_text()
 
     def _create_context_tabs(self, contexts: List):
         """
