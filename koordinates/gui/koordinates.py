@@ -688,9 +688,12 @@ class Koordinates(QgsDockWidget, WIDGET):
             if action == self.sort_by_popular_action:
                 action.set_widget_checked(
                     isinstance(self.filter_widget.sort_order, str)
+                    or self.filter_widget.sort_order == SortOrder.Popularity
                 )
             else:
-                is_checked = action.data() == self.filter_widget.sort_order
+                is_checked = (action.data() == self.filter_widget.sort_order or
+                              (self.filter_widget.sort_order == SortOrder.Popularity and
+                               not action.data()))
                 if isinstance(action, CustomLabelWidgetAction):
                     action.set_widget_checked(is_checked)
 
