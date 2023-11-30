@@ -587,12 +587,6 @@ class Koordinates(QgsDockWidget, WIDGET):
         self.results_panel.publisher_cleared.connect(
             self.filter_widget.remove_publisher_filter)
 
-        try:
-            device_pixel_ratio = self.window().screen().devicePixelRatio()
-        except AttributeError:
-            # requires Qt 5.14+
-            device_pixel_ratio = 1
-
         self.button_sort_order.setStyleSheet(
             """QToolButton::menu-indicator { image: none }
             QToolButton { margin-top: 2px; }
