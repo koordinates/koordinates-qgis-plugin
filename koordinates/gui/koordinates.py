@@ -2,7 +2,11 @@ import json
 import locale
 import os
 from functools import partial
-from typing import Optional, List
+from typing import (
+    Dict,
+    Optional,
+    List
+)
 
 from qgis.PyQt import sip
 from qgis.PyQt import uic
@@ -646,6 +650,10 @@ class Koordinates(QgsDockWidget, WIDGET):
         self.context_tab_container.setFixedWidth(self.context_container.width())
 
         KoordinatesClient.instance().loginChanged.connect(self._loginChanged)
+        self._data_options: Optional[Dict] = None
+        KoordinatesClient.instance().data_options_retrieved.connect(
+            self._data_options_retrieved
+        )
 
         self.setMinimumWidth(430)
 
@@ -971,7 +979,7 @@ class Koordinates(QgsDockWidget, WIDGET):
             user = KoordinatesClient.instance().user_details()
             self.user_country_action.set_country_code(user['country'])
 
-            self._build_sort_menu(user)
+            self._build_sort_menu()
 
             self._create_context_tabs(user.get('contexts', []))
 
@@ -981,13 +989,29 @@ class Koordinates(QgsDockWidget, WIDGET):
         else:
             self.stackedWidget.setCurrentWidget(self.pageAuth)
 
-    def _build_sort_menu(self, user_details: dict):
+    def _data_options_retrieved(self, options: dict):
+        """
+        Called when the data options request is finished
+        """
+        self._data_options = options
+        self._build_sort_menu()
+
+    def _build_sort_menu(self):
         """
         Builds the dataset sorting options menu.
 
         This can only be done after a login event
         """
+        user_details = KoordinatesClient.instance().user_details()
+        if not user_details or not self._data_options:
+            return
+
         self.sort_menu.clear()
+
+        country_choices = (self._data_options
+                           .get('filters', {})
+                           .get('country', {})
+                           .get('choices', []))
 
         user_country_code = user_details['country']
 
@@ -1001,14 +1025,19 @@ class Koordinates(QgsDockWidget, WIDGET):
                                                               checkable=True,
                                                               parent=self.sort_menu)
         self.sort_menu.addAction(self.sort_by_popular_action)
-        for country, sub_text, code in (
-                (self.tr('For New Zealand'), None, 'NZ'),
-                (self.tr('For Australia'), None, 'AU'),
-                (self.tr('For United Kingdom'), None, 'GB'),
-                (self.tr('For United States'), None, 'US'),
-                (self.tr('Anywhere'), self.tr("Don't bias results by location"), '')):
-            if user_country_code == code:
+        for country_choice in country_choices:
+            country = country_choice['display_name']
+            code = country_choice['value']
+
+            if code == 'global':
+                code = ''
+
+            if not code:
+                sub_text = self.tr("Don't bias results by location")
+            elif user_country_code == code:
                 sub_text = "Your Koordinates ID country"
+            else:
+                sub_text = None
 
             if code:
                 icon = EmojiToIconRenderer.render_flag_to_icon(code)
