@@ -17,6 +17,7 @@ from qgis.PyQt.QtCore import (
     QSize,
     QObject,
     QEvent,
+    QUrlQuery,
     pyqtSignal
 )
 from qgis.PyQt.QtGui import (
@@ -934,7 +935,12 @@ class Koordinates(QgsDockWidget, WIDGET):
             return
         #            self.error_occurred.emit(request.reply().errorString())
 
+        # inject context into facets, so that this is accessible to widgets
+        request_url = reply.request().url()
+        from_context = QUrlQuery(request_url.query()).queryItemValue('from')
+
         self._facets = json.loads(reply.readAll().data().decode())
+        self._facets['from'] = from_context
         self.filter_widget.set_facets(self._facets)
 
     def _visible_count_changed(self, count):

@@ -31,6 +31,7 @@ class DataBrowserQuery:
         self.starred = False
         self.access_type: Optional[AccessType] = None
         self.category: Optional[str] = None
+        self.group: Optional[str] = None
 
         self.publisher: Optional[Publisher] = None
 
@@ -74,6 +75,9 @@ class DataBrowserQuery:
 
         if self.category:
             params['category'] = self.category
+
+        if self.group:
+            params['group'] = self.group
 
         if self.publisher:
             if self.publisher.publisher_type == PublisherType.User:
