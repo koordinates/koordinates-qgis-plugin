@@ -102,9 +102,14 @@ class GroupFilterWidget(FilterWidgetComboBase):
             r.deleteLater()
         self._radios = []
 
-        for group in groups:
-            radio = QRadioButton(group['name'])
-            radio.setProperty('key', str(group['key']))
-            self._radios.append(radio)
-            self.button_group.addButton(radio)
-            self.radio_layout.addWidget(radio)
+        if not groups:
+            self.hide()
+        else:
+            self.show()
+            for group in groups:
+                radio = QRadioButton(group['name'])
+                radio.setProperty('key', str(group['key']))
+                self._radios.append(radio)
+                self.button_group.addButton(radio)
+                self.radio_layout.addWidget(radio)
+
