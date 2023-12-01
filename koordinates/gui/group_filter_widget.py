@@ -112,4 +112,3 @@ class GroupFilterWidget(FilterWidgetComboBase):
                 self._radios.append(radio)
                 self.button_group.addButton(radio)
                 self.radio_layout.addWidget(radio)
-
