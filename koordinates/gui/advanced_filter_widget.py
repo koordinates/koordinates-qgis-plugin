@@ -26,6 +26,7 @@ from .date_filter_widget import DateFilterWidget
 from .publisher_filter_widget import PublisherFilterWidget
 from .enums import FilterWidgetAppearance
 from .flow_layout import FlowLayout
+from .group_filter_widget import GroupFilterWidget
 from .license_filter_widget import LicenseFilterWidget
 from .resolution_filter_widget import ResolutionFilterWidget
 from ..api import (
@@ -54,28 +55,8 @@ class AdvancedFilterWidget(QWidget):
         self.resolution_widget = ResolutionFilterWidget(self)
         self.date_filter_widget = DateFilterWidget(self)
         self.license_widget = LicenseFilterWidget(self)
+        self.group_widget = GroupFilterWidget(self)
         self.access_widget = AccessFilterWidget(self)
-
-        min_filter_widget_width = QFontMetrics(self.font()).width('x') * 25
-        # self.category_filter_widget.setMinimumWidth(min_filter_widget_width)
-        self.data_type_filter_widget.setMinimumWidth(min_filter_widget_width)
-        self.publisher_filter_widget.setMinimumWidth(min_filter_widget_width)
-        self.resolution_widget.setMinimumWidth(min_filter_widget_width)
-        self.date_filter_widget.setMinimumWidth(min_filter_widget_width)
-        self.license_widget.setMinimumWidth(min_filter_widget_width)
-        self.access_widget.setMinimumWidth(min_filter_widget_width)
-
-        self.resolution_widget.hide()
-
-        filter_widget_layout = FlowLayout()
-        filter_widget_layout.setContentsMargins(10, 10, 10, 10)
-        # filter_widget_layout.addWidget(self.category_filter_widget)
-        filter_widget_layout.addWidget(self.data_type_filter_widget)
-        filter_widget_layout.addWidget(self.publisher_filter_widget)
-        filter_widget_layout.addWidget(self.resolution_widget)
-        filter_widget_layout.addWidget(self.date_filter_widget)
-        filter_widget_layout.addWidget(self.license_widget)
-        filter_widget_layout.addWidget(self.access_widget)
 
         self.filter_widgets = (  # self.category_filter_widget,
             self.data_type_filter_widget,
@@ -83,7 +64,21 @@ class AdvancedFilterWidget(QWidget):
             self.resolution_widget,
             self.date_filter_widget,
             self.license_widget,
+            self.group_widget,
             self.access_widget,)
+
+        min_filter_widget_width = QFontMetrics(self.font()).width('x') * 25
+        # self.category_filter_widget.setMinimumWidth(min_filter_widget_width)
+        for w in self.filter_widgets:
+            w.setMinimumWidth(min_filter_widget_width)
+
+        self.resolution_widget.hide()
+
+        filter_widget_layout = FlowLayout()
+        filter_widget_layout.setContentsMargins(10, 10, 10, 10)
+        # filter_widget_layout.addWidget(self.category_filter_widget)
+        for w in self.filter_widgets:
+            filter_widget_layout.addWidget(w)
 
         # changes to filter parameters are deferred to a small timeout, to avoid
         # starting lots of queries while a user is mid-operation (such as dragging a slider)

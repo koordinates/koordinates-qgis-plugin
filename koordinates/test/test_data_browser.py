@@ -73,6 +73,13 @@ class TestDataBrowser(unittest.TestCase):
                          {'sort': 'popularity', 'category': 'my filter',
                           'kind': ['layer', 'table', 'set', 'document']})
 
+    def test_group(self):
+        query = DataBrowserQuery()
+        query.group = '4326'
+        self.assertEqual(query.build_query(),
+                         {'sort': 'popularity', 'group': '4326',
+                          'kind': ['layer', 'table', 'set', 'document']})
+
     def test_data_type_to_string(self):
         self.assertEqual(DataType.to_filter_strings(DataType.Vectors),
                          ['vector'])
