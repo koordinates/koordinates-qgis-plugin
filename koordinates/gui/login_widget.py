@@ -1,4 +1,7 @@
-from typing import Optional
+from typing import (
+    Optional,
+    Tuple
+)
 import platform
 
 from qgis.PyQt import sip
@@ -14,6 +17,7 @@ from ..api import KoordinatesClient
 from ..auth import OAuthWorkflow, AuthState
 
 AUTH_CONFIG_ID = "koordinates_auth_id"
+AUTH_CONFIG_REFRESH_TOKEN = "koordinates_refresh_token"
 
 
 class LoginButton(ActionButton):
@@ -189,9 +193,22 @@ class LoginWidget(QFrame):
         self._close_auth_server(force_close=True)
 
     def login_clicked(self):
-        key = self.retrieve_api_key()
+        key, refresh_token = self.retrieve_api_key()
+
+        if refresh_token:
+            if self.oauth is not None:
+                self._close_auth_server()
+
+            self.oauth = OAuthWorkflow()
+            self.oauth.finished.connect(self._auth_finished)
+            self.oauth.error_occurred.connect(self._auth_error_occurred)
+
+            self.oauth.refresh(refresh_token)
+
+            return
+
         if key is not None:
-            self._auth_finished(key)
+            self._auth_finished(key, refresh_token)
         else:
             self.login_button.set_state(AuthState.LoggingIn)
 
@@ -234,7 +251,7 @@ class LoginWidget(QFrame):
 
         self.oauth = None
 
-    def _auth_finished(self, key):
+    def _auth_finished(self, key: str, refresh_token: Optional[str]):
         if self.oauth and not sip.isdeleted(self.oauth):
             self.oauth_close_timer = QTimer(self)
             self.oauth_close_timer.setSingleShot(True)
@@ -247,7 +264,7 @@ class LoginWidget(QFrame):
 
         try:
             KoordinatesClient.instance().login(key)
-            self.store_api_key()
+            self.store_api_key(key, refresh_token)
             self.login_button.set_state(AuthState.LoggedIn)
             self.open_login_window_label.hide()
         except FileExistsError:
@@ -282,35 +299,47 @@ class LoginWidget(QFrame):
         if platform.system() == "Darwin":
             # remove stored plain text tokens on MacOS
             QgsSettings().remove("koordinates/token", QgsSettings.Plugins)
+            QgsSettings().remove("koordinates/refresh_token",
+                                 QgsSettings.Plugins)
         else:
             QgsApplication.authManager().removeAuthSetting(AUTH_CONFIG_ID)
+            QgsApplication.authManager().removeAuthSetting(
+                AUTH_CONFIG_REFRESH_TOKEN)
 
-    def store_api_key(self) -> bool:
+    def store_api_key(self, key: str, refresh_token: Optional[str]) -> bool:
         """
         Stores the API key in the secure QGIS password store, IF available
 
         Returns True if the key could be stored
         """
-        key = KoordinatesClient.instance().apiKey
         if platform.system() == "Darwin":
             # store tokens in plain text on MacOS as keychain isn't available due to MacOS security
-            QgsSettings().setValue("koordinates/token", key, QgsSettings.Plugins)
+            QgsSettings().setValue("koordinates/token", key,
+                                   QgsSettings.Plugins)
+            if refresh_token:
+                QgsSettings().setValue("koordinates/refresh_token",
+                                       refresh_token,
+                                       QgsSettings.Plugins)
         else:
-            QgsApplication.authManager().storeAuthSetting(AUTH_CONFIG_ID, key, True)
+            QgsApplication.authManager().storeAuthSetting(
+                AUTH_CONFIG_ID, key, True)
+            QgsApplication.authManager().storeAuthSetting(
+                AUTH_CONFIG_REFRESH_TOKEN, refresh_token or '', True)
         return True
 
-    def retrieve_api_key(self) -> Optional[str]:
+    def retrieve_api_key(self) -> Tuple[Optional[str], Optional[str]]:
         """
-        Retrieves a previously stored API key, if available
+        Retrieves a previously stored API key and refresh token, if available
 
         Returns None if no stored key is available
         """
         if platform.system() == "Darwin":
             api_key = QgsSettings().value(
                 "koordinates/token", None, str, QgsSettings.Plugins
-            )
-            if not api_key:
-                api_key = None
+            ) or None
+            refresh_token = QgsSettings().value(
+                "koordinates/refresh_token", None, str, QgsSettings.Plugins
+            ) or None
         else:
             api_key = (
                 QgsApplication.authManager().authSetting(
@@ -318,4 +347,10 @@ class LoginWidget(QFrame):
                 )
                 or None
             )
-        return api_key
+            refresh_token = (
+                    QgsApplication.authManager().authSetting(
+                        AUTH_CONFIG_REFRESH_TOKEN, defaultValue="", decrypt=True
+                    )
+                    or None
+            )
+        return api_key, refresh_token

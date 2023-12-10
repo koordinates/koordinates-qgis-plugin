@@ -341,7 +341,6 @@ class ContextWidget(QWidget):
 
         self._reset_contexts()
         self._contexts.extend(contexts)
-        print(self._contexts)
 
         for c in self._contexts:
             w = ContextItem(c)

@@ -1,22 +1,29 @@
 import json
 import platform
 import urllib
+from typing import Optional
 from enum import Enum
+from functools import partial
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from random import choice
 from string import ascii_lowercase
 from urllib.parse import parse_qs, urlsplit
 
 import requests
+from qgis.PyQt import sip
 from qgis.PyQt.QtCore import (
     QThread,
     pyqtSignal,
     QUrl
 )
 from qgis.PyQt.QtGui import QDesktopServices
-from qgis.PyQt.QtNetwork import QNetworkRequest
+from qgis.PyQt.QtNetwork import (
+    QNetworkRequest,
+    QNetworkReply
+)
 from qgis.core import (
-    QgsBlockingNetworkRequest
+    QgsBlockingNetworkRequest,
+    QgsNetworkAccessManager
 )
 
 from .pkce import generate_pkce_pair
@@ -114,12 +121,15 @@ class _Handler(BaseHTTPRequestHandler):
 
         access_token = resp.get("access_token")
         expires_in = resp.get("expires_in")
+        refresh_token = resp.get("refresh_token")
 
-        if not access_token or not expires_in:
+        if not access_token or not expires_in or not refresh_token:
             if not access_token:
                 self.server.error = 'Could not find access_token in reply'
             elif not expires_in:
                 self.server.error = 'Could not find expires_in in reply'
+            elif not refresh_token:
+                self.server.error = 'Could not find refresh_token in reply'
 
             self._send_response()
             return
@@ -147,6 +157,7 @@ class _Handler(BaseHTTPRequestHandler):
         resp = json.loads(request.reply().content().data().decode())
 
         self.server.apikey = resp["key"]
+        self.server.refresh_token = refresh_token
         self._send_response()
 
     def _send_response(self):
@@ -170,7 +181,7 @@ class _Handler(BaseHTTPRequestHandler):
 
 
 class OAuthWorkflow(QThread):
-    finished = pyqtSignal(str)
+    finished = pyqtSignal(str, str)
     error_occurred = pyqtSignal(str)
 
     def __init__(self):
@@ -194,12 +205,89 @@ class OAuthWorkflow(QThread):
         )
         self.code_verifier, self.code_challenge = generate_pkce_pair()
         self.authorization_url = f"{self.authorization_url}&code_challenge={self.code_challenge}&code_challenge_method=S256"  # noqa: E501
+        self._refresh_reply: Optional[QNetworkReply] = None
+        self._refresh_kx_key_reply: Optional[QNetworkReply] = None
+
+    def refresh(self, refresh_token: str):
+        body = (f"grant_type=refresh_token&"
+                f"client_id={CLIENT_ID}&"
+                f"refresh_token={refresh_token}")
+
+        network_request = QNetworkRequest(QUrl(TOKEN_URL))
+        network_request.setHeader(QNetworkRequest.ContentTypeHeader,
+                                  'application/x-www-form-urlencoded')
+        self._refresh_reply = QgsNetworkAccessManager.instance().post(
+            network_request,
+            body.encode()
+        )
+        self._refresh_reply.finished.connect(
+            partial(self._refresh_oauth_finished, self._refresh_reply))
+
+    def _refresh_oauth_finished(self, reply: QNetworkReply):
+        if (self._refresh_reply is None or
+                reply != self._refresh_reply or
+                sip.isdeleted(self._refresh_reply)):
+            return
+
+        result = json.loads(self._refresh_reply.readAll().data())
+        self._refresh_reply = None
+
+        if 'error' in result:
+            # assume refresh token is expired
+            self.run()
+            return
+
+        access_token = result['access_token']
+        refresh_token = result['refresh_token']
+
+        body = {
+            "scope": SCOPE_KX,
+            "name": "koordinates-qgis-plugin-token",
+            "site": "*",
+        }
+        api_token_body = urllib.parse.urlencode(body).encode()
+
+        network_request = QNetworkRequest(QUrl(API_TOKEN_URL))
+        network_request.setHeader(QNetworkRequest.ContentTypeHeader,
+                                  'application/x-www-form-urlencoded')
+        network_request.setRawHeader(b"Authorization",
+                                     f"Bearer {access_token}".encode())
+
+        self._refresh_kx_key_reply = QgsNetworkAccessManager.instance().post(
+            network_request,
+            api_token_body)
+        self._refresh_kx_key_reply.finished.connect(
+            partial(self._refresh_kx_key_finished,
+                    self._refresh_kx_key_reply,
+                    refresh_token))
+
+    def _refresh_kx_key_finished(self,
+                                 reply: QNetworkReply,
+                                 refresh_token: str):
+        if (reply != self._refresh_kx_key_reply or
+                sip.isdeleted(self._refresh_kx_key_reply)):
+            return
+
+        result = json.loads(self._refresh_kx_key_reply.readAll().data())
+        self._refresh_kx_key_reply = None
+
+        if 'error' in result:
+            # assume refresh token is expired
+            self.run()
+            return
+
+        kx_key = result['key']
+
+        self.finished.emit(kx_key, refresh_token)
 
     def force_stop(self):
         # we have to dummy a dummy request in order to abort the blocking handle_request() loop
         requests.get("http://127.0.0.1:{}".format(REDIRECT_PORT))
 
     def close_server(self):
+        if not self.server:
+            return
+
         self.server.server_close()
 
         del self.server
@@ -209,6 +297,7 @@ class OAuthWorkflow(QThread):
         self.server = HTTPServer(("127.0.0.1", REDIRECT_PORT), _Handler)
         self.server.code_verifier = self.code_verifier
         self.server.apikey = None
+        self.server.refresh_token = None
         self.server.error = None
         QDesktopServices.openUrl(QUrl(self.authorization_url))
 
@@ -216,8 +305,9 @@ class OAuthWorkflow(QThread):
 
         err = self.server.error
         apikey = self.server.apikey
+        refresh_token = self.server.refresh_token
 
         if err:
             self.error_occurred.emit(err)
 
-        self.finished.emit(apikey)
+        self.finished.emit(apikey, refresh_token)
