@@ -75,7 +75,8 @@ class LoginWidget(QFrame):
         super().__init__(parent)
 
         self.oauth = None
-        self.oauth_close_timer = None
+        self.oauth_close_timer: Optional[QTimer] = None
+        self.oauth_refresh_timer: Optional[QTimer] = None
 
         self.setFrameShape(QFrame.NoFrame)
 
@@ -252,6 +253,26 @@ class LoginWidget(QFrame):
 
         self.oauth = None
 
+    def _refresh_auth(self):
+        if (self.oauth_refresh_timer and
+                not sip.isdeleted(self.oauth_refresh_timer)):
+            self.oauth_refresh_timer.timeout.disconnect(self._refresh_auth)
+            self.oauth_refresh_timer.deleteLater()
+            self.oauth_refresh_timer = None
+
+        key, refresh_token = self.retrieve_api_key()
+
+        if refresh_token:
+            if self.oauth is not None:
+                self._close_auth_server()
+
+            self.oauth = OAuthWorkflow()
+            self.oauth.finished.connect(self._auth_finished)
+            self.oauth.error_occurred.connect(self._auth_error_occurred)
+
+            self.login_button.set_state(AuthState.LoggingIn)
+            self.oauth.refresh(refresh_token)
+
     def _auth_finished(self, key: str, refresh_token: Optional[str]):
         if self.oauth and not sip.isdeleted(self.oauth):
             self.oauth_close_timer = QTimer(self)
@@ -268,6 +289,15 @@ class LoginWidget(QFrame):
             self.store_api_key(key, refresh_token)
             self.login_button.set_state(AuthState.LoggedIn)
             self.open_login_window_label.hide()
+
+            self.oauth_refresh_timer = QTimer(self)
+            self.oauth_refresh_timer.setSingleShot(True)
+            # request refresh after 9 hours, even though the token
+            # expires after 10...
+            self.oauth_refresh_timer.setInterval(32400*1000)
+            self.oauth_refresh_timer.timeout.connect(self._refresh_auth)
+            self.oauth_refresh_timer.start()
+
         except FileExistsError:
             iface.messageBar().pushMessage(
                 "Could not log in. Check your connection and your API Key value",
