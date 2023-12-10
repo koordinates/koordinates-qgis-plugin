@@ -203,6 +203,7 @@ class LoginWidget(QFrame):
             self.oauth.finished.connect(self._auth_finished)
             self.oauth.error_occurred.connect(self._auth_error_occurred)
 
+            self.login_button.set_state(AuthState.LoggingIn)
             self.oauth.refresh(refresh_token)
 
             return
