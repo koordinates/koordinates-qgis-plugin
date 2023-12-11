@@ -158,6 +158,7 @@ class _Handler(BaseHTTPRequestHandler):
 
         self.server.apikey = resp["key"]
         self.server.refresh_token = refresh_token
+        self.server.expires_in = expires_in
         self._send_response()
 
     def _send_response(self):
@@ -183,6 +184,8 @@ class _Handler(BaseHTTPRequestHandler):
 class OAuthWorkflow(QThread):
     finished = pyqtSignal(str, str)
     error_occurred = pyqtSignal(str)
+
+    EXPIRY_DURATION_SECONDS = 0
 
     def __init__(self):
         super().__init__()
@@ -239,6 +242,7 @@ class OAuthWorkflow(QThread):
 
         access_token = result['access_token']
         refresh_token = result['refresh_token']
+        expires_in = result['expires_in']
 
         body = {
             "scope": SCOPE_KX,
@@ -259,11 +263,13 @@ class OAuthWorkflow(QThread):
         self._refresh_kx_key_reply.finished.connect(
             partial(self._refresh_kx_key_finished,
                     self._refresh_kx_key_reply,
-                    refresh_token))
+                    refresh_token,
+                    expires_in))
 
     def _refresh_kx_key_finished(self,
                                  reply: QNetworkReply,
-                                 refresh_token: str):
+                                 refresh_token: str,
+                                 expires_in: int):
         if (reply != self._refresh_kx_key_reply or
                 sip.isdeleted(self._refresh_kx_key_reply)):
             return
@@ -277,7 +283,7 @@ class OAuthWorkflow(QThread):
             return
 
         kx_key = result['key']
-
+        OAuthWorkflow.EXPIRY_DURATION_SECONDS = expires_in
         self.finished.emit(kx_key, refresh_token)
 
     def force_stop(self):
@@ -298,6 +304,7 @@ class OAuthWorkflow(QThread):
         self.server.code_verifier = self.code_verifier
         self.server.apikey = None
         self.server.refresh_token = None
+        self.server.expires_in = None
         self.server.error = None
         QDesktopServices.openUrl(QUrl(self.authorization_url))
 
@@ -306,6 +313,7 @@ class OAuthWorkflow(QThread):
         err = self.server.error
         apikey = self.server.apikey
         refresh_token = self.server.refresh_token
+        OAuthWorkflow.EXPIRY_DURATION_SECONDS = self.server.expires_in or 0
 
         if err:
             self.error_occurred.emit(err)

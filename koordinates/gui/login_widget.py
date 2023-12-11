@@ -290,13 +290,14 @@ class LoginWidget(QFrame):
             self.login_button.set_state(AuthState.LoggedIn)
             self.open_login_window_label.hide()
 
-            self.oauth_refresh_timer = QTimer(self)
-            self.oauth_refresh_timer.setSingleShot(True)
-            # request refresh after 9 hours, even though the token
-            # expires after 10...
-            self.oauth_refresh_timer.setInterval(32400*1000)
-            self.oauth_refresh_timer.timeout.connect(self._refresh_auth)
-            self.oauth_refresh_timer.start()
+            if OAuthWorkflow.EXPIRY_DURATION_SECONDS > 0:
+                self.oauth_refresh_timer = QTimer(self)
+                self.oauth_refresh_timer.setSingleShot(True)
+                # request refresh 30 mins before expiry
+                self.oauth_refresh_timer.setInterval(
+                    (OAuthWorkflow.EXPIRY_DURATION_SECONDS - 1800) * 1000)
+                self.oauth_refresh_timer.timeout.connect(self._refresh_auth)
+                self.oauth_refresh_timer.start()
 
         except FileExistsError:
             iface.messageBar().pushMessage(
