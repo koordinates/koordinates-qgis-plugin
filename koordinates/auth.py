@@ -14,7 +14,8 @@ from qgis.PyQt import sip
 from qgis.PyQt.QtCore import (
     QThread,
     pyqtSignal,
-    QUrl
+    QUrl,
+    QUrlQuery
 )
 from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtNetwork import (
@@ -212,16 +213,17 @@ class OAuthWorkflow(QThread):
         self._refresh_kx_key_reply: Optional[QNetworkReply] = None
 
     def refresh(self, refresh_token: str):
-        body = (f"grant_type=refresh_token&"
-                f"client_id={CLIENT_ID}&"
-                f"refresh_token={refresh_token}")
+        query = QUrlQuery()
+        query.addQueryItem('grant_type', 'refresh_token')
+        query.addQueryItem('client_id', CLIENT_ID)
+        query.addQueryItem('refresh_token', refresh_token)
 
         network_request = QNetworkRequest(QUrl(TOKEN_URL))
         network_request.setHeader(QNetworkRequest.ContentTypeHeader,
                                   'application/x-www-form-urlencoded')
         self._refresh_reply = QgsNetworkAccessManager.instance().post(
             network_request,
-            body.encode()
+            query.toString(QUrl.FullyEncoded).encode()
         )
         self._refresh_reply.finished.connect(
             partial(self._refresh_oauth_finished, self._refresh_reply))
