@@ -19,16 +19,18 @@ from qgis.PyQt.QtWidgets import (
     QStyleOption
 )
 
-from .access_filter_widget import AccessFilterWidget
-#  from .category_filter_widget import CategoryFilterWidget
-from .data_type_filter_widget import DataTypeFilterWidget
-from .date_filter_widget import DateFilterWidget
-from .publisher_filter_widget import PublisherFilterWidget
+from .filter_widgets import (
+    AccessFilterWidget,
+    #  CategoryFilterWidget,
+    DataTypeFilterWidget,
+    DateFilterWidget,
+    PublisherFilterWidget,
+    GroupFilterWidget,
+    LicenseFilterWidget,
+    ResolutionFilterWidget
+)
 from .enums import FilterWidgetAppearance
 from .flow_layout import FlowLayout
-from .group_filter_widget import GroupFilterWidget
-from .license_filter_widget import LicenseFilterWidget
-from .resolution_filter_widget import ResolutionFilterWidget
 from ..api import (
     DataBrowserQuery,
     DataType,

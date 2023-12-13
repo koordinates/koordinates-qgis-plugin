@@ -10,7 +10,7 @@ from qgis.PyQt.QtWidgets import (
 )
 
 from .results_panel_widget import ResultsPanelWidget
-from ..publisher_filter_widget import PublisherSelectionWidget
+from ..filter_widgets import PublisherSelectionWidget
 from ...api import Publisher
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]

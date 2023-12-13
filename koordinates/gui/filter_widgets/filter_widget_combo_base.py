@@ -1,7 +1,7 @@
 from qgis.PyQt.QtCore import pyqtSignal
 
 from .custom_combo_box import CustomComboBox
-from ..api import DataBrowserQuery
+from ...api import DataBrowserQuery
 
 
 class FilterWidgetComboBase(CustomComboBox):

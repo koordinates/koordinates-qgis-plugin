@@ -17,8 +17,8 @@ from qgis.gui import (
     QgsDateEdit
 )
 
+from ...api import DataBrowserQuery
 from .filter_widget_combo_base import FilterWidgetComboBase
-from ..api import DataBrowserQuery
 from .range_slider import RangeSlider
 
 DATE_FORMAT = 'dd MMM yyyy'

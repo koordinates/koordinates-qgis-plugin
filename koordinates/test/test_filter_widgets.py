@@ -10,34 +10,25 @@ import unittest
 
 from qgis.PyQt.QtCore import (
     QDate,
-    QTime,
     QDateTime
 )
 from qgis.PyQt.QtTest import QSignalSpy
 
+from .utilities import get_qgis_app
 from ..api import (
     DataBrowserQuery,
     Publisher,
-    VectorFilter,
-    RasterFilter,
-    RasterFilterOptions,
-    RasterBandFilter,
-    GridFilterOptions,
     CreativeCommonLicenseVersions,
-    AccessType,
-    SortOrder,
-    Capability
+    AccessType
 )
-from ..gui.access_filter_widget import AccessFilterWidget
-from ..gui.group_filter_widget import GroupFilterWidget
-from ..gui.date_filter_widget import DateFilterWidget
-from ..gui.license_filter_widget import LicenseFilterWidget
-from ..gui.publisher_filter_widget import PublisherFilterWidget
-
-
-from .utilities import get_qgis_app
+from ..gui.filter_widgets.access_filter_widget import AccessFilterWidget
+from ..gui.filter_widgets.date_filter_widget import DateFilterWidget
+from ..gui.filter_widgets.group_filter_widget import GroupFilterWidget
+from ..gui.filter_widgets.license_filter_widget import LicenseFilterWidget
+from ..gui.filter_widgets.publisher_filter_widget import PublisherFilterWidget
 
 QGIS_APP = get_qgis_app()
+
 
 class TestFilterWidgets(unittest.TestCase):
     """
@@ -242,26 +233,26 @@ class TestFilterWidgets(unittest.TestCase):
                 'max': '2021-05-01T00:00'},
         })
 
-        w.min_updated_date_edit.setDate(QDate(2022,3,4))
+        w.min_updated_date_edit.setDate(QDate(2022, 3, 4))
         self.assertEqual(len(spy), 1)
         self.assertTrue(w.should_show_clear())
         query.updated_minimum = None
         w.apply_constraints_to_query(query)
-        self.assertEqual(query.updated_minimum, QDateTime(2022,3,4,0,0))
+        self.assertEqual(query.updated_minimum, QDateTime(2022, 3, 4, 0, 0))
 
         # reapply same, should be no signal
-        w.min_updated_date_edit.setDate(QDate(2022,3,4))
+        w.min_updated_date_edit.setDate(QDate(2022, 3, 4))
         self.assertEqual(len(spy), 1)
         w.set_from_query(query)
         self.assertEqual(len(spy), 1)
 
-        w.max_updated_date_edit.setDate(QDate(2022,3,6))
+        w.max_updated_date_edit.setDate(QDate(2022, 3, 6))
         self.assertEqual(len(spy), 2)
         self.assertTrue(w.should_show_clear())
         query.updated_maximum = None
         w.apply_constraints_to_query(query)
-        self.assertEqual(query.updated_minimum, QDateTime(2022,3,4,0,0))
-        self.assertEqual(query.updated_maximum, QDateTime(2022,3,6,0,0))
+        self.assertEqual(query.updated_minimum, QDateTime(2022, 3, 4, 0, 0))
+        self.assertEqual(query.updated_maximum, QDateTime(2022, 3, 6, 0, 0))
         w.set_from_query(query)
         self.assertEqual(len(spy), 2)
 
@@ -276,7 +267,7 @@ class TestFilterWidgets(unittest.TestCase):
         self.assertIsNone(query.created_maximum)
         self.assertIsNone(query.updated_minimum)
         self.assertIsNone(query.updated_maximum)
-        query.updated_minimum = QDateTime(2022,2,4,0,0)
+        query.updated_minimum = QDateTime(2022, 2, 4, 0, 0)
         query.updated_maximum = QDateTime(2022, 2, 6, 0, 0)
         w.apply_constraints_to_query(query)
         self.assertIsNone(query.created_minimum)
@@ -285,7 +276,7 @@ class TestFilterWidgets(unittest.TestCase):
         self.assertIsNone(query.updated_maximum)
 
         # clear using clear button
-        w.max_updated_date_edit.setDate(QDate(2022,3,6))
+        w.max_updated_date_edit.setDate(QDate(2022, 3, 6))
         self.assertEqual(len(spy), 3)
         self.assertTrue(w.should_show_clear())
         w.clear()
@@ -318,7 +309,7 @@ class TestFilterWidgets(unittest.TestCase):
         self.assertIsNone(query.created_minimum)
         self.assertIsNone(query.created_maximum)
         self.assertIsNone(query.updated_minimum)
-        self.assertEqual(query.updated_maximum, QDateTime(2022,3,6,0,0))
+        self.assertEqual(query.updated_maximum, QDateTime(2022, 3, 6, 0, 0))
 
     def test_license_widget(self):
         w = LicenseFilterWidget()

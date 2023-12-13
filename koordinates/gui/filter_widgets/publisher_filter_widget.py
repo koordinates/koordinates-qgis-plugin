@@ -43,21 +43,21 @@ from qgis.gui import (
     QgsFilterLineEdit
 )
 
-from .dataset_utils import DatasetGuiUtils
-from .explore_tab_bar import FlatUnderlineTabBar
+from ..dataset_utils import DatasetGuiUtils
+from ..explore_tab_bar import FlatUnderlineTabBar
 from .filter_widget_combo_base import FilterWidgetComboBase
 from .rounded_highlight_box import RoundedHighlightBox
-from .thumbnails import (
+from ..thumbnails import (
     GenericThumbnailManager,
     PublisherThumbnailProcessor
 )
-from ..api import (
+from ...api import (
     KoordinatesClient,
     DataBrowserQuery,
     Publisher,
+    PublisherType
 )
-from ..api import PublisherType
-from .gui_utils import GuiUtils
+from ..gui_utils import GuiUtils
 
 
 class PublisherDelegate(QStyledItemDelegate):
