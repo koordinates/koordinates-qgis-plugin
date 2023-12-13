@@ -145,7 +145,7 @@ class CustomComboBox(QWidget):
         self._show_clear_button = True
         self._clear_action = None
 
-        self._current_text = ''
+        self._current_text: str = ''
         self._hover_state = None
 
         self._floating_widget = CustomComboBox.ContentsWidget(self)
@@ -249,9 +249,18 @@ class CustomComboBox(QWidget):
         if self.parent() and self.parent().parent():
             self.parent().parent().update()
 
-    def set_current_text(self, text):
+    def set_current_text(self, text: str):
+        """
+        Sets the current text shown in the collapsed combo box
+        """
         self._current_text = text
         self.update()
+
+    def current_text(self) -> str:
+        """
+        Returns the current text shown in the collapsed combo box
+        """
+        return self._current_text
 
     def paintEvent(self, event):
         super().paintEvent(event)

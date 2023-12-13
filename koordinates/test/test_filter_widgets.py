@@ -37,6 +37,7 @@ class TestFilterWidgets(unittest.TestCase):
 
     def test_access_widget(self):
         w = AccessFilterWidget()
+        self.assertEqual(w.current_text(), 'Access')
 
         # should start cleared
         self.assertFalse(w.should_show_clear())
@@ -50,6 +51,7 @@ class TestFilterWidgets(unittest.TestCase):
         w.clear()
         self.assertEqual(len(spy), 0)
         self.assertFalse(w.should_show_clear())
+        self.assertEqual(w.current_text(), 'Access')
 
         # apply same query to widget, should be no signals
         w.set_from_query(query)
@@ -57,6 +59,7 @@ class TestFilterWidgets(unittest.TestCase):
         w.apply_constraints_to_query(query)
         self.assertIsNone(query.access_type)
         self.assertFalse(w.should_show_clear())
+        self.assertEqual(w.current_text(), 'Access')
 
         w.public_radio.click()
         self.assertEqual(len(spy), 1)
@@ -64,6 +67,7 @@ class TestFilterWidgets(unittest.TestCase):
         query.access_type = None
         w.apply_constraints_to_query(query)
         self.assertEqual(query.access_type, AccessType.Public)
+        self.assertEqual(w.current_text(), 'Only public data')
 
         # reapply same, should be no signal
         w.set_from_query(query)
@@ -77,6 +81,7 @@ class TestFilterWidgets(unittest.TestCase):
         self.assertEqual(query.access_type, AccessType.Private)
         w.set_from_query(query)
         self.assertEqual(len(spy), 2)
+        self.assertEqual(w.current_text(), 'Shared with me')
 
         # clear using query params
         # this should never raise signals
@@ -86,6 +91,7 @@ class TestFilterWidgets(unittest.TestCase):
         query.access_type = AccessType.Private
         w.apply_constraints_to_query(query)
         self.assertIsNone(query.access_type)
+        self.assertEqual(w.current_text(), 'Access')
 
         # clear using clear button
         query.access_type = AccessType.Private
@@ -99,9 +105,11 @@ class TestFilterWidgets(unittest.TestCase):
         self.assertIsNone(query.access_type)
         w.clear()
         self.assertEqual(len(spy), 3)
+        self.assertEqual(w.current_text(), 'Access')
 
     def test_group_widget(self):
         w = GroupFilterWidget()
+        self.assertEqual(w.current_text(), 'Group')
 
         # should start cleared
         self.assertFalse(w.should_show_clear())
@@ -109,12 +117,14 @@ class TestFilterWidgets(unittest.TestCase):
         self.assertIsNone(query.group)
         w.apply_constraints_to_query(query)
         self.assertIsNone(query.group)
+        self.assertEqual(w.current_text(), 'Group')
 
         spy = QSignalSpy(w.changed)
         # re-clearing already cleared should not emit signals
         w.clear()
         self.assertEqual(len(spy), 0)
         self.assertFalse(w.should_show_clear())
+        self.assertEqual(w.current_text(), 'Group')
 
         # apply same query to widget, should be no signals
         w.set_from_query(query)
@@ -122,6 +132,7 @@ class TestFilterWidgets(unittest.TestCase):
         w.apply_constraints_to_query(query)
         self.assertIsNone(query.group)
         self.assertFalse(w.should_show_clear())
+        self.assertEqual(w.current_text(), 'Group')
 
         # set facets to build buttons
         w.set_facets({
@@ -139,6 +150,7 @@ class TestFilterWidgets(unittest.TestCase):
         query.group = None
         w.apply_constraints_to_query(query)
         self.assertEqual(query.group, 'transport')
+        self.assertEqual(w.current_text(), 'Transport')
 
         # reapply same, should be no signal
         w.set_from_query(query)
@@ -152,6 +164,7 @@ class TestFilterWidgets(unittest.TestCase):
         self.assertEqual(query.group, 'water')
         w.set_from_query(query)
         self.assertEqual(len(spy), 2)
+        self.assertEqual(w.current_text(), 'Water')
 
         # clear using query params
         # this should never raise signals
@@ -161,6 +174,7 @@ class TestFilterWidgets(unittest.TestCase):
         query.group = 'water'
         w.apply_constraints_to_query(query)
         self.assertIsNone(query.group)
+        self.assertEqual(w.current_text(), 'Group')
 
         # clear using clear button
         w._radios[0].click()
@@ -171,6 +185,7 @@ class TestFilterWidgets(unittest.TestCase):
         self.assertFalse(w.should_show_clear())
         w.apply_constraints_to_query(query)
         self.assertIsNone(query.group)
+        self.assertEqual(w.current_text(), 'Group')
 
         w.clear()
         self.assertEqual(len(spy), 4)
@@ -190,9 +205,11 @@ class TestFilterWidgets(unittest.TestCase):
         query.group = None
         w.apply_constraints_to_query(query)
         self.assertEqual(query.group, 'transport')
+        self.assertEqual(w.current_text(), 'Transport')
 
     def test_date_widget(self):
         w = DateFilterWidget()
+        self.assertEqual(w.current_text(), 'Date')
 
         # should start cleared
         self.assertFalse(w.should_show_clear())
@@ -206,12 +223,14 @@ class TestFilterWidgets(unittest.TestCase):
         self.assertIsNone(query.created_maximum)
         self.assertIsNone(query.updated_minimum)
         self.assertIsNone(query.updated_maximum)
+        self.assertEqual(w.current_text(), 'Date')
 
         spy = QSignalSpy(w.changed)
         # re-clearing already cleared should not emit signals
         w.clear()
         self.assertEqual(len(spy), 0)
         self.assertFalse(w.should_show_clear())
+        self.assertEqual(w.current_text(), 'Date')
 
         # apply same query to widget, should be no signals
         w.set_from_query(query)
@@ -222,6 +241,7 @@ class TestFilterWidgets(unittest.TestCase):
         self.assertIsNone(query.updated_minimum)
         self.assertIsNone(query.updated_maximum)
         self.assertFalse(w.should_show_clear())
+        self.assertEqual(w.current_text(), 'Date')
 
         # set facets to ranges
         w.set_facets({
@@ -239,12 +259,14 @@ class TestFilterWidgets(unittest.TestCase):
         query.updated_minimum = None
         w.apply_constraints_to_query(query)
         self.assertEqual(query.updated_minimum, QDateTime(2022, 3, 4, 0, 0))
+        self.assertEqual(w.current_text(), '04 Mar 2022 - 01 May 2022')
 
         # reapply same, should be no signal
         w.min_updated_date_edit.setDate(QDate(2022, 3, 4))
         self.assertEqual(len(spy), 1)
         w.set_from_query(query)
         self.assertEqual(len(spy), 1)
+        self.assertEqual(w.current_text(), '04 Mar 2022 - 01 May 2022')
 
         w.max_updated_date_edit.setDate(QDate(2022, 3, 6))
         self.assertEqual(len(spy), 2)
@@ -255,6 +277,7 @@ class TestFilterWidgets(unittest.TestCase):
         self.assertEqual(query.updated_maximum, QDateTime(2022, 3, 6, 0, 0))
         w.set_from_query(query)
         self.assertEqual(len(spy), 2)
+        self.assertEqual(w.current_text(), '04 Mar 2022 - 06 Mar 2022')
 
         # clear using query params
         # this should never raise signals
@@ -274,6 +297,7 @@ class TestFilterWidgets(unittest.TestCase):
         self.assertIsNone(query.created_maximum)
         self.assertIsNone(query.updated_minimum)
         self.assertIsNone(query.updated_maximum)
+        self.assertEqual(w.current_text(), 'Date')
 
         # clear using clear button
         w.max_updated_date_edit.setDate(QDate(2022, 3, 6))
@@ -287,6 +311,7 @@ class TestFilterWidgets(unittest.TestCase):
         self.assertIsNone(query.created_maximum)
         self.assertIsNone(query.updated_minimum)
         self.assertIsNone(query.updated_maximum)
+        self.assertEqual(w.current_text(), 'Date')
 
         w.clear()
         self.assertEqual(len(spy), 4)
@@ -310,9 +335,11 @@ class TestFilterWidgets(unittest.TestCase):
         self.assertIsNone(query.created_maximum)
         self.assertIsNone(query.updated_minimum)
         self.assertEqual(query.updated_maximum, QDateTime(2022, 3, 6, 0, 0))
+        self.assertEqual(w.current_text(), '01 Jan 2022 - 06 Mar 2022')
 
     def test_license_widget(self):
         w = LicenseFilterWidget()
+        self.assertEqual(w.current_text(), 'License')
 
         # should start cleared
         self.assertFalse(w.should_show_clear())
@@ -326,12 +353,14 @@ class TestFilterWidgets(unittest.TestCase):
         self.assertFalse(query.cc_license_allow_derivates)
         self.assertFalse(query.cc_license_allow_commercial)
         self.assertFalse(query.cc_license_changes_must_be_shared)
+        self.assertEqual(w.current_text(), 'License')
 
         spy = QSignalSpy(w.changed)
         # re-clearing already cleared should not emit signals
         w.clear()
         self.assertEqual(len(spy), 0)
         self.assertFalse(w.should_show_clear())
+        self.assertEqual(w.current_text(), 'License')
 
         # apply same query to widget, should be no signals
         w.set_from_query(query)
@@ -342,6 +371,7 @@ class TestFilterWidgets(unittest.TestCase):
         self.assertFalse(query.cc_license_allow_commercial)
         self.assertFalse(query.cc_license_changes_must_be_shared)
         self.assertFalse(w.should_show_clear())
+        self.assertEqual(w.current_text(), 'License')
 
         w.cc_3_checkbox.setChecked(True)
         self.assertEqual(len(spy), 1)
@@ -357,10 +387,12 @@ class TestFilterWidgets(unittest.TestCase):
         self.assertFalse(query.cc_license_allow_derivates)
         self.assertFalse(query.cc_license_allow_commercial)
         self.assertFalse(query.cc_license_changes_must_be_shared)
+        self.assertEqual(w.current_text(), 'CC3 BY-NC-ND')
 
         # reapply same, should be no signal
         w.set_from_query(query)
         self.assertEqual(len(spy), 1)
+        self.assertEqual(w.current_text(), 'CC3 BY-NC-ND')
 
         w.cc_4_checkbox.setChecked(True)
         self.assertEqual(len(spy), 2)
@@ -379,6 +411,7 @@ class TestFilterWidgets(unittest.TestCase):
         self.assertFalse(query.cc_license_changes_must_be_shared)
         w.set_from_query(query)
         self.assertEqual(len(spy), 2)
+        self.assertEqual(w.current_text(), 'CC4 + CC3 BY-NC-ND')
 
         # clear using query params
         # this should never raise signals
@@ -393,6 +426,7 @@ class TestFilterWidgets(unittest.TestCase):
         }
         w.apply_constraints_to_query(query)
         self.assertFalse(query.cc_license_versions)
+        self.assertEqual(w.current_text(), 'License')
 
         # clear using clear button
         w.cc_4_checkbox.setChecked(True)
@@ -406,9 +440,11 @@ class TestFilterWidgets(unittest.TestCase):
         self.assertFalse(query.cc_license_allow_derivates)
         self.assertFalse(query.cc_license_allow_commercial)
         self.assertFalse(query.cc_license_changes_must_be_shared)
+        self.assertEqual(w.current_text(), 'License')
 
         w.clear()
         self.assertEqual(len(spy), 4)
+        self.assertEqual(w.current_text(), 'License')
 
         # try options
         w.cc_3_checkbox.setChecked(True)
@@ -422,11 +458,14 @@ class TestFilterWidgets(unittest.TestCase):
         self.assertTrue(query.cc_license_allow_derivates)
         w.set_from_query(query)
         self.assertEqual(len(spy), 6)
+        self.assertEqual(w.current_text(), 'CC3 BY')
         w.clear()
         self.assertEqual(len(spy), 7)
+        self.assertEqual(w.current_text(), 'License')
 
     def test_publisher_widget(self):
         w = PublisherFilterWidget()
+        self.assertEqual(w.current_text(), 'Publishers')
 
         # should start cleared
         self.assertFalse(w.should_show_clear())
@@ -434,12 +473,14 @@ class TestFilterWidgets(unittest.TestCase):
         self.assertIsNone(query.publisher)
         w.apply_constraints_to_query(query)
         self.assertIsNone(query.publisher)
+        self.assertEqual(w.current_text(), 'Publishers')
 
         spy = QSignalSpy(w.changed)
         # re-clearing already cleared should not emit signals
         w.clear()
         self.assertEqual(len(spy), 0)
         self.assertFalse(w.should_show_clear())
+        self.assertEqual(w.current_text(), 'Publishers')
 
         # apply same query to widget, should be no signals
         w.set_from_query(query)
@@ -447,12 +488,15 @@ class TestFilterWidgets(unittest.TestCase):
         w.apply_constraints_to_query(query)
         self.assertIsNone(query.publisher)
         self.assertFalse(w.should_show_clear())
+        self.assertEqual(w.current_text(), 'Publishers')
 
         publisher1 = Publisher({
-            'id': 'site:1'
+            'id': 'site:1',
+            'name': 'Site 1'
         })
         publisher2 = Publisher({
-            'id': 'site:2'
+            'id': 'site:2',
+            'name': 'Site 2'
         })
         w._selection_changed(publisher1)
 
@@ -461,13 +505,16 @@ class TestFilterWidgets(unittest.TestCase):
         query.publisher = None
         w.apply_constraints_to_query(query)
         self.assertEqual(query.publisher.id(), 'site:1')
+        self.assertEqual(w.current_text(), 'Site 1')
 
         # reapply same, should be no signal
         w.set_from_query(query)
         self.assertEqual(len(spy), 1)
+        self.assertEqual(w.current_text(), 'Site 1')
 
         w._selection_changed(publisher1)
         self.assertEqual(len(spy), 1)
+        self.assertEqual(w.current_text(), 'Site 1')
 
         w._selection_changed(publisher2)
         self.assertEqual(len(spy), 2)
@@ -477,6 +524,7 @@ class TestFilterWidgets(unittest.TestCase):
         self.assertEqual(query.publisher.id(), 'site:2')
         w.set_from_query(query)
         self.assertEqual(len(spy), 2)
+        self.assertEqual(w.current_text(), 'Site 2')
 
         # clear using query params
         # this should never raise signals
@@ -486,6 +534,7 @@ class TestFilterWidgets(unittest.TestCase):
         query.publisher = publisher1
         w.apply_constraints_to_query(query)
         self.assertIsNone(query.publisher)
+        self.assertEqual(w.current_text(), 'Publishers')
 
         # clear using clear button
         w._selection_changed(publisher2)
@@ -496,9 +545,11 @@ class TestFilterWidgets(unittest.TestCase):
         self.assertFalse(w.should_show_clear())
         w.apply_constraints_to_query(query)
         self.assertIsNone(query.publisher)
+        self.assertEqual(w.current_text(), 'Publishers')
 
         w.clear()
         self.assertEqual(len(spy), 4)
+        self.assertEqual(w.current_text(), 'Publishers')
 
         w._selection_changed(publisher1)
         self.assertEqual(len(spy), 5)
@@ -507,6 +558,7 @@ class TestFilterWidgets(unittest.TestCase):
         query.publisher = None
         w.apply_constraints_to_query(query)
         self.assertEqual(query.publisher.id(), 'site:1')
+        self.assertEqual(w.current_text(), 'Site 1')
 
 
 if __name__ == '__main__':

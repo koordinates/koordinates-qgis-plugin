@@ -35,7 +35,7 @@ class GroupFilterWidget(FilterWidgetComboBase):
 
         self.set_contents_widget(self.drop_down_widget)
 
-        self.clear()
+        self._update_value()
 
     def _group_member_clicked(self, clicked_button):
         self._block_changes += 1
