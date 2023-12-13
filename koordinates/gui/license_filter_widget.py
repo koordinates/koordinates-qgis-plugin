@@ -1,3 +1,4 @@
+from typing import Optional
 from qgis.PyQt.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -18,7 +19,7 @@ class LicenseFilterWidget(FilterWidgetComboBase):
     Custom widget for license filtering
     """
 
-    def __init__(self, parent):
+    def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
 
         self.drop_down_widget = QWidget()
@@ -80,7 +81,7 @@ class LicenseFilterWidget(FilterWidgetComboBase):
         self.cc_4_checkbox.toggled.connect(self._update_value)
         self.cc_3_checkbox.toggled.connect(self._update_value)
 
-        self.clear()
+        self._update_value()
 
     def _update_visible_frames(self):
         self.cc_options_widget.setVisible(self.cc_3_checkbox.isChecked()
@@ -90,11 +91,16 @@ class LicenseFilterWidget(FilterWidgetComboBase):
         self._floating_widget.reflow()
 
     def clear(self):
+        if not self.cc_4_checkbox.isChecked() and not self.cc_3_checkbox.isChecked():
+            return
+
+        self._block_changes = True
         self.cc_4_checkbox.setChecked(False)
         self.cc_3_checkbox.setChecked(False)
         self.derivatives_allowed_radio.setChecked(True)
         self.commercial_use_allowed_radio.setChecked(True)
         self.no_changes_need_to_be_shared_radio.setChecked(True)
+        self._block_changes = False
         self._update_visible_frames()
         self._update_value()
 
@@ -143,8 +149,12 @@ class LicenseFilterWidget(FilterWidgetComboBase):
 
         if self.cc_3_checkbox.isChecked():
             query.cc_license_versions.add(CreativeCommonLicenseVersions.Version3)
+        elif CreativeCommonLicenseVersions.Version3 in query.cc_license_versions:
+            query.cc_license_versions.remove(CreativeCommonLicenseVersions.Version3)
         if self.cc_4_checkbox.isChecked():
             query.cc_license_versions.add(CreativeCommonLicenseVersions.Version4)
+        elif CreativeCommonLicenseVersions.Version4 in query.cc_license_versions:
+            query.cc_license_versions.remove(CreativeCommonLicenseVersions.Version4)
 
     def set_from_query(self, query: DataBrowserQuery):
         self._block_changes += 1

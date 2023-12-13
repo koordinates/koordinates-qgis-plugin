@@ -55,7 +55,7 @@ class DateFilterWidget(FilterWidgetComboBase):
     Custom widget for date selection
     """
 
-    def __init__(self, parent):
+    def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
 
         self.drop_down_widget = QWidget()
@@ -393,6 +393,14 @@ class DateFilterWidget(FilterWidgetComboBase):
         self.set_published_range(prev_min_created, prev_max_created)
 
     def clear(self):
+        if self.published_date_slider.lowerValue() == self.published_date_slider.minimum() and \
+                self.published_date_slider.upperValue() == \
+                self.published_date_slider.maximum() and \
+                self.updated_date_slider.lowerValue() == self.updated_date_slider.minimum() and \
+                self.updated_date_slider.upperValue() == self.updated_date_slider.maximum():
+            return
+
+        self._block_changes += 1
         self.updated_date_slider.setRange(
             self.updated_date_slider.minimum(),
             self.updated_date_slider.maximum()
@@ -401,6 +409,7 @@ class DateFilterWidget(FilterWidgetComboBase):
             self.published_date_slider.minimum(),
             self.published_date_slider.maximum()
         )
+        self._block_changes -= 1
         self._update_labels()
 
     def should_show_clear(self):
@@ -416,12 +425,20 @@ class DateFilterWidget(FilterWidgetComboBase):
     def apply_constraints_to_query(self, query: DataBrowserQuery):
         if self.min_published_date_edit.date() != self.min_published_date_edit.default_date():
             query.created_minimum = QDateTime(self.min_published_date_edit.date())
+        else:
+            query.created_minimum = None
         if self.max_published_date_edit.date() != self.max_published_date_edit.default_date():
             query.created_maximum = QDateTime(self.max_published_date_edit.date())
+        else:
+            query.created_maximum = None
         if self.min_updated_date_edit.date() != self.min_updated_date_edit.default_date():
             query.updated_minimum = QDateTime(self.min_updated_date_edit.date())
+        else:
+            query.updated_minimum = None
         if self.max_updated_date_edit.date() != self.max_updated_date_edit.default_date():
             query.updated_maximum = QDateTime(self.max_updated_date_edit.date())
+        else:
+            query.updated_maximum = None
 
     def set_from_query(self, query: DataBrowserQuery):
         self._block_changes += 1

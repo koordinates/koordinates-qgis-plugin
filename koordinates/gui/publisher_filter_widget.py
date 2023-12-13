@@ -616,7 +616,7 @@ class PublisherFilterWidget(FilterWidgetComboBase):
     Custom widget for publisher based filtering
     """
 
-    def __init__(self, parent):
+    def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
 
         self.drop_down_widget = PublisherSelectionWidget()
@@ -628,7 +628,7 @@ class PublisherFilterWidget(FilterWidgetComboBase):
 
         self._current_publisher: Optional[Publisher] = None
 
-        self.clear()
+        self._update_value()
 
     def current_publisher(self) -> Optional[Publisher]:
         """
@@ -637,6 +637,9 @@ class PublisherFilterWidget(FilterWidgetComboBase):
         return self._current_publisher
 
     def _selection_changed(self, publisher: Publisher):
+        if self._current_publisher is not None and self._current_publisher.id() == publisher.id():
+            return
+
         self._current_publisher = publisher
         self._update_value()
         self.collapse()
@@ -646,6 +649,9 @@ class PublisherFilterWidget(FilterWidgetComboBase):
         self._floating_widget.reflow()
 
     def clear(self):
+        if self._current_publisher is None:
+            return
+
         self._current_publisher = None
         self._update_value()
 
@@ -666,14 +672,12 @@ class PublisherFilterWidget(FilterWidgetComboBase):
             self.changed.emit()
 
     def apply_constraints_to_query(self, query: DataBrowserQuery):
-        if self._current_publisher:
-            query.publisher = self._current_publisher
+        query.publisher = self._current_publisher
 
     def set_from_query(self, query: DataBrowserQuery):
         self._block_changes += 1
 
-        if query.publisher:
-            self._current_publisher = query.publisher
+        self._current_publisher = query.publisher
 
         self._update_value()
         self._update_visible_frames()
