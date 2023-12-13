@@ -9,7 +9,7 @@ from qgis.PyQt.QtWidgets import (
 )
 
 from .filter_widget_combo_base import FilterWidgetComboBase
-from ..api import (
+from ...api import (
     DataBrowserQuery,
     DataType,
     RasterFilter,

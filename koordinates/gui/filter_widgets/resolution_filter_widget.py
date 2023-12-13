@@ -8,7 +8,7 @@ from qgis.PyQt.QtWidgets import (
 )
 
 from .filter_widget_combo_base import FilterWidgetComboBase
-from ..api import DataBrowserQuery
+from ...api import DataBrowserQuery
 from .range_slider import RangeSlider
 
 
