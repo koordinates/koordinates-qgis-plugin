@@ -1,3 +1,4 @@
+from typing import Optional
 from qgis.PyQt.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -17,7 +18,7 @@ class AccessFilterWidget(FilterWidgetComboBase):
     Custom widget for access based filtering
     """
 
-    def __init__(self, parent):
+    def __init__(self, parent: Optional[QWidget]=None):
         super().__init__(parent)
 
         self.drop_down_widget = QWidget()
@@ -39,7 +40,10 @@ class AccessFilterWidget(FilterWidgetComboBase):
 
         self.set_contents_widget(self.drop_down_widget)
 
-        self.clear()
+        self._update_visible_frames()
+        self._block_changes += 1
+        self._update_value()
+        self._block_changes -= 1
 
     def _access_group_member_clicked(self, clicked_button):
         self._block_changes += 1
@@ -56,6 +60,10 @@ class AccessFilterWidget(FilterWidgetComboBase):
         self._floating_widget.reflow()
 
     def clear(self):
+        if not any((self.public_radio.isChecked(),
+                   self.private_radio.isChecked())):
+            return
+
         self.public_radio.setChecked(False)
         self.private_radio.setChecked(False)
         self._update_visible_frames()

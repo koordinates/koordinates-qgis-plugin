@@ -18,7 +18,7 @@ class GroupFilterWidget(FilterWidgetComboBase):
     Custom widget for group based filtering
     """
 
-    def __init__(self, parent):
+    def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
         self._current_context: Optional[str] = None
 
@@ -51,6 +51,9 @@ class GroupFilterWidget(FilterWidgetComboBase):
         self._floating_widget.reflow()
 
     def clear(self):
+        if not any(radio.isChecked() for radio in self._radios):
+            return
+
         for radio in self._radios:
             radio.setChecked(False)
 
