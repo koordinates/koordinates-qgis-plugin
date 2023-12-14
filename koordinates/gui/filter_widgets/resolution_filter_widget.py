@@ -118,7 +118,7 @@ class ResolutionFilterWidget(FilterWidgetComboBase):
         return super().should_show_clear()
 
     def apply_constraints_to_query(self, query: DataBrowserQuery):
-        mapped_lower_value =self.map_slider_value_to_resolution(self.slider.lowerValue())
+        mapped_lower_value = self.map_slider_value_to_resolution(self.slider.lowerValue())
         mapped_minimum = self.map_slider_value_to_resolution(self.slider.minimum())
         if mapped_lower_value != mapped_minimum:
             query.minimum_resolution = mapped_lower_value
