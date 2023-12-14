@@ -450,6 +450,8 @@ class Koordinates(QgsDockWidget, WIDGET):
         self.context_tab_container.setFixedHeight(self.context_tab.sizeHint().height())
 
         self.context_frame = ColoredFrame()
+        self.context_frame.set_color(QColor())
+        self.context_frame.setObjectName('context_frame')
         context_frame_layout = QVBoxLayout()
         context_frame_layout.setContentsMargins(0, 0, 0, 0)
 
@@ -642,7 +644,6 @@ class Koordinates(QgsDockWidget, WIDGET):
 
         self.button_user.setMenu(self.user_menu)
 
-        self._context_tab_changed(self.TAB_EXPLORE_INDEX)
         self.context_tab_container.setFixedWidth(self.context_container.width())
 
         KoordinatesClient.instance().loginChanged.connect(self._loginChanged)
