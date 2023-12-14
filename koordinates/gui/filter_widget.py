@@ -20,7 +20,7 @@ from qgis.gui import (
     QgsFilterLineEdit
 )
 
-from .advanced_filter_widget import AdvancedFilterWidget
+from .filter_widgets import AdvancedFilterWidget
 from .enums import (
     TabStyle,
     FilterWidgetAppearance,
