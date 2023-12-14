@@ -617,6 +617,7 @@ class PublisherFilterWidget(FilterWidgetComboBase):
     """
 
     def __init__(self, parent: Optional[QWidget] = None):
+        self._current_publisher: Optional[Publisher] = None
         super().__init__(parent)
 
         self.drop_down_widget = PublisherSelectionWidget()
@@ -625,9 +626,6 @@ class PublisherFilterWidget(FilterWidgetComboBase):
         )
 
         self.set_contents_widget(self.drop_down_widget)
-
-        self._current_publisher: Optional[Publisher] = None
-
         self._update_value()
 
     def current_publisher(self) -> Optional[Publisher]:
