@@ -30,7 +30,8 @@ from ..gui.filter_widgets import (
     GroupFilterWidget,
     LicenseFilterWidget,
     PublisherFilterWidget,
-    ResolutionFilterWidget
+    ResolutionFilterWidget,
+    AdvancedFilterWidget
 )
 
 QGIS_APP = get_qgis_app()
@@ -852,6 +853,60 @@ class TestFilterWidgets(unittest.TestCase):
         self.assertIsNone(query.minimum_resolution)
         self.assertEqual(query.maximum_resolution, 19998.92)
         self.assertEqual(w.current_text(), 'Resolution 5.0 m - 19998.92 m')
+
+    def test_advanced_filter_widget(self):
+        w = AdvancedFilterWidget()
+        spy = QSignalSpy(w.filters_changed)
+
+        # should start cleared
+        w.clear_all()
+        self.assertFalse(spy.wait(1))
+        self.assertEqual(len(spy), 0)
+
+        # change access filter
+        spy2 = QSignalSpy(w.access_widget.changed)
+        w.access_widget.public_radio.click()
+        spy.wait()
+        self.assertEqual(len(spy2), 1)
+        self.assertEqual(len(spy), 1)
+        self.assertFalse(spy.wait(1))
+
+        # change license filter
+        spy3 = QSignalSpy(w.license_widget.changed)
+        w.license_widget.cc_3_checkbox.setChecked(True)
+        spy.wait()
+        self.assertEqual(len(spy2), 1)
+        self.assertEqual(len(spy3), 1)
+        self.assertEqual(len(spy), 2)
+        self.assertFalse(spy.wait(1))
+
+        query = DataBrowserQuery()
+        w.apply_constraints_to_query(query)
+        self.assertEqual(query.cc_license_versions,
+                         {CreativeCommonLicenseVersions.Version3})
+        self.assertEqual(query.access_type, AccessType.Public)
+
+        query.access_type = AccessType.Private
+        query.cc_license_versions = {CreativeCommonLicenseVersions.Version4}
+        w.set_from_query(query)
+        # should be NO signals when setting from query
+        self.assertFalse(spy.wait(1))
+        self.assertEqual(len(spy), 2)
+        query.access_type = None
+        query.cc_license_versions = set()
+        w.apply_constraints_to_query(query)
+        self.assertEqual(query.cc_license_versions,
+                         {CreativeCommonLicenseVersions.Version4})
+        self.assertEqual(query.access_type, AccessType.Private)
+
+        # clear all
+        w.clear_all()
+        self.assertEqual(len(spy2), 2)
+        self.assertEqual(len(spy3), 2)
+        spy.wait()
+        # should only be ONE clear signal for the composite widget
+        self.assertEqual(len(spy), 3)
+        self.assertFalse(spy.wait(1))
 
 
 if __name__ == '__main__':

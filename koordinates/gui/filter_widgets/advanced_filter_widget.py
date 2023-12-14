@@ -19,19 +19,16 @@ from qgis.PyQt.QtWidgets import (
     QStyleOption
 )
 
-from .filter_widgets import (
-    AccessFilterWidget,
-    #  CategoryFilterWidget,
-    DataTypeFilterWidget,
-    DateFilterWidget,
-    PublisherFilterWidget,
-    GroupFilterWidget,
-    LicenseFilterWidget,
-    ResolutionFilterWidget
-)
-from .enums import FilterWidgetAppearance
-from .flow_layout import FlowLayout
-from ..api import (
+from .access_filter_widget import AccessFilterWidget
+from .data_type_filter_widget import DataTypeFilterWidget
+from .date_filter_widget import DateFilterWidget
+from .publisher_filter_widget import PublisherFilterWidget
+from .group_filter_widget import GroupFilterWidget
+from .license_filter_widget import LicenseFilterWidget
+from .resolution_filter_widget import ResolutionFilterWidget
+from ..enums import FilterWidgetAppearance
+from ..flow_layout import FlowLayout
+from ...api import (
     DataBrowserQuery,
     DataType,
     Publisher
@@ -45,7 +42,7 @@ class AdvancedFilterWidget(QWidget):
 
     CORNER_RADIUS = 4
 
-    def __init__(self, parent):
+    def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
 
         self.should_show = False
@@ -201,7 +198,7 @@ class AdvancedFilterWidget(QWidget):
         Updates a query to reflect the current widget state
         """
         for w in self.filter_widgets:
-            if w.isVisible():
+            if not w.isHidden():
                 w.apply_constraints_to_query(query)
 
     def set_from_query(self, query: DataBrowserQuery):
