@@ -18,7 +18,7 @@ class AccessFilterWidget(FilterWidgetComboBase):
     Custom widget for access based filtering
     """
 
-    def __init__(self, parent: Optional[QWidget]=None):
+    def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
 
         self.drop_down_widget = QWidget()

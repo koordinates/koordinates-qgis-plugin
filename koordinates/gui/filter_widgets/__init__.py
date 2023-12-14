@@ -8,4 +8,3 @@ from .publisher_filter_widget import PublisherFilterWidget  # NOQA
 from .publisher_filter_widget import PublisherSelectionWidget  # NOQA
 from .resolution_filter_widget import ResolutionFilterWidget  # NOQA
 from .advanced_filter_widget import AdvancedFilterWidget  # NOQA
-
