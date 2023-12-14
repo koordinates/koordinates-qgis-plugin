@@ -1,3 +1,4 @@
+from typing import Optional
 import math
 
 from qgis.PyQt.QtWidgets import (
@@ -17,7 +18,7 @@ class ResolutionFilterWidget(FilterWidgetComboBase):
     Custom widget for resolution selection
     """
 
-    def __init__(self, parent):
+    def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
 
         self.drop_down_widget = QWidget()
@@ -44,7 +45,8 @@ class ResolutionFilterWidget(FilterWidgetComboBase):
 
         self._range = (0.03, 2000)
         self.slider.setRangeLimits(0, 100000)
-        self.clear()
+        self.slider.setRange(self.slider.minimum(), self.slider.maximum())
+        self._update_labels()
 
     @staticmethod
     def scale(value, domain, range):
@@ -99,7 +101,13 @@ class ResolutionFilterWidget(FilterWidgetComboBase):
             self.changed.emit()
 
     def clear(self):
+        if self.slider.lowerValue() == self.slider.minimum() and \
+                self.slider.upperValue() == self.slider.maximum():
+            return
+
+        self._block_changes += 1
         self.slider.setRange(self.slider.minimum(), self.slider.maximum())
+        self._block_changes -= 1
         self._update_labels()
 
     def should_show_clear(self):
@@ -110,26 +118,31 @@ class ResolutionFilterWidget(FilterWidgetComboBase):
         return super().should_show_clear()
 
     def apply_constraints_to_query(self, query: DataBrowserQuery):
-        if self.map_slider_value_to_resolution(self.slider.lowerValue()) \
-                != self.map_slider_value_to_resolution(self.slider.minimum()):
-            query.minimum_resolution = self.map_slider_value_to_resolution(
-                self.slider.lowerValue()
-            )
-        if self.map_slider_value_to_resolution(self.slider.upperValue()) != \
-                self.map_slider_value_to_resolution(self.slider.maximum()):
-            query.maximum_resolution = self.map_slider_value_to_resolution(
-                self.slider.upperValue()
-            )
+        mapped_lower_value =self.map_slider_value_to_resolution(self.slider.lowerValue())
+        mapped_minimum = self.map_slider_value_to_resolution(self.slider.minimum())
+        if mapped_lower_value != mapped_minimum:
+            query.minimum_resolution = mapped_lower_value
+        else:
+            query.minimum_resolution = None
+        mapped_upper_value = self.map_slider_value_to_resolution(self.slider.upperValue())
+        mapped_maximum = self.map_slider_value_to_resolution(self.slider.maximum())
+        if mapped_upper_value != mapped_maximum:
+            query.maximum_resolution = mapped_upper_value
+        else:
+            query.maximum_resolution = None
 
     def set_from_query(self, query: DataBrowserQuery):
         self._block_changes += 1
 
         if query.minimum_resolution is not None:
-            self.slider.setLowerValue(int(query.minimum_resolution))
+            self.slider.setLowerValue(
+                self.map_value_to_slider(query.minimum_resolution)
+            )
         else:
             self.slider.setLowerValue(self.slider.minimum())
         if query.maximum_resolution is not None:
-            self.slider.setUpperValue(int(query.maximum_resolution))
+            self.slider.setUpperValue(
+                self.map_value_to_slider(query.maximum_resolution))
         else:
             self.slider.setUpperValue(self.slider.maximum())
 
@@ -140,17 +153,31 @@ class ResolutionFilterWidget(FilterWidgetComboBase):
         min_res = facets.get('raster_resolution', {}).get('min')
         max_res = facets.get('raster_resolution', {}).get('max')
 
-        prev_range = self.current_range()
+        prev_range = list(self.current_range())
+        if prev_range[0] == self._range[0]:
+            prev_range[0] = None
+        if prev_range[1] == self._range[1]:
+            prev_range[1] = None
 
         if min_res is not None and max_res is not None:
             self._range = (min_res, max_res)
-            new_range = (max(prev_range[0], min_res), min(prev_range[1], max_res))
+            new_range = prev_range[:]
+            if prev_range[0] is not None:
+                new_range[0] = max(prev_range[0], min_res)
+            else:
+                new_range[0] = min_res
+            if prev_range[1] is not None:
+                new_range[1] = min(prev_range[1], max_res)
+            else:
+                new_range[1] = max_res
         else:
             self._range = (0.03, 2000)
             new_range = self._range
 
         self._block_changes += 1
-        self.slider.setRange(self.map_value_to_slider(new_range[0]),
-                             self.map_value_to_slider(new_range[1]))
+        slider_min = self.map_value_to_slider(new_range[0])
+        slider_max = self.map_value_to_slider(new_range[1])
+        self.slider.setRange(slider_min, slider_max)
+
         self._update_labels()
         self._block_changes -= 1
