@@ -1,4 +1,7 @@
-from typing import Set
+from typing import (
+    Optional,
+    Set
+)
 
 from qgis.PyQt.QtWidgets import (
     QWidget,
@@ -27,7 +30,7 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
 
     WITH_SETS = False
 
-    def __init__(self, parent):
+    def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
 
         self._block_geometry_type_constraint_update = 0
@@ -194,7 +197,7 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
         self.has_z_elevation_checkbox.toggled.connect(self._update_value)
         self.vector_has_primary_key_checkbox.toggled.connect(self._update_value)
 
-        self.clear()
+        self._update_value()
 
     def _type_group_member_clicked(self, clicked_button):
         self._block_changes += 1
@@ -258,6 +261,9 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
             self._block_geometry_type_constraint_update -= 1
 
     def clear(self):
+        if self.layers_radio.isChecked():
+            return
+
         self._block_changes += 1
         self.layers_radio.setChecked(True)
         self.raster_radio.setChecked(False)
