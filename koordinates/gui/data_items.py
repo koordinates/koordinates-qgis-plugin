@@ -81,7 +81,7 @@ class KoordinatesDataItemProvider(QgsDataItemProvider):
         return 'koordinates'
 
     def capabilities(self):
-        return int(QgsDataProvider.Dir)
+        return QgsDataProvider.Dir
 
     def createDataItem(self, path, parentItem):
         if not path:
