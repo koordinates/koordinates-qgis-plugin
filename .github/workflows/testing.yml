@@ -26,7 +26,7 @@ jobs:
 
     strategy:
       matrix:
-        docker_tags: [release-3_22, release-3_28, release-3_30]
+        docker_tags: [release-3_22, release-3_28, release-3_30, latest]
 
     steps:
 
