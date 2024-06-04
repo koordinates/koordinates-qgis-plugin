@@ -28,6 +28,9 @@ jobs:
     #     sudo apt-get update
     #     sudo apt-get install qttools5-dev-tools
 
+    - name: Install Python requirements
+      run: pip install -r requirements/packaging.txt
+
     - name: Set plugin version environment variables
       run: |
         TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
