@@ -31,5 +31,5 @@ jobs:
 
     - uses: actions/upload-artifact@v2
       with:
-        name: koordinates_package
+        name: koordinates_package.${{ env.VERSION }}
         path: tmp
