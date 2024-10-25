@@ -66,10 +66,21 @@ else:
 REDIRECT_PORT = 8989
 REDIRECT_URL = f"http://127.0.0.1:{REDIRECT_PORT}/"
 SCOPE = "read"
-SCOPE_KX = (
-    "query tiles catalog users:read sets:read layers:read repos:read viewers:read"
-    " viewers:write wxs:wfs exports:write notifications:read"
-)
+SCOPE_KX = " ".join([
+    "query",
+    "tiles",
+    "catalog",
+    "users:read",
+    "sets:read",
+    "layers:read",
+    "repos:read",
+    "repos:push",
+    "viewers:read",
+    "viewers:write",
+    "wxs:wfs",
+    "exports:write",
+    "notifications:read",
+])
 
 
 class AuthState(Enum):
