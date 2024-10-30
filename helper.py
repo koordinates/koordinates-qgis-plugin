@@ -37,6 +37,7 @@ def package(version=None):
         buf = StringIO()
         cfg.write(buf)
         zipFile.writestr("koordinates/metadata.txt", buf.getvalue())
+        zipFile.write("LICENSE", "koordinates/LICENSE")
 
         def filter_excludes(files):
             if not files:

@@ -15,7 +15,7 @@ about=<div style="max-width:33em">The <a href="https://koordinates.com/explore/"
 version=2.1.0
 author=Koordinates
 email=support@koordinates.com
-tags=versioning, data, cloning, collections, access, discoverablity, open data
+tags=versioning, data, cloning, collections, access, discoverability, open data
 homepage=https://koordinates.com
 repository=https://github.com/koordinates/koordinates-qgis-plugin
 tracker=https://github.com/koordinates/koordinates-qgis-plugin/issues
