@@ -1,4 +1,5 @@
 import re
+import sys
 from typing import (
     List,
     Optional,
@@ -86,7 +87,14 @@ class KartTask(QgsTask):
         """
         Called when the kart process emits messages on stdout
         """
-        val = ba.data().decode('UTF-8')
+        try:
+            val = ba.data().decode('UTF-8')
+        except UnicodeDecodeError:
+            try:
+                val = ba.data().decode(sys.getdefaultencoding())
+            except UnicodeDecodeError:
+                val = str(ba.data())
+
         self._stdout_buffer += val
 
         if self._stdout_buffer.endswith('\n') or self._stdout_buffer.endswith(
