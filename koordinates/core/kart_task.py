@@ -86,7 +86,7 @@ class KartTask(QgsTask):
         """
         Called when the kart process emits messages on stdout
         """
-        val = ba.data().decode('UTF-8')
+        val = ba.data().decode('UTF-8', errors='replace')
         self._stdout_buffer += val
 
         if self._stdout_buffer.endswith('\n') or self._stdout_buffer.endswith(
@@ -182,7 +182,7 @@ class KartCloneTask(KartTask):
         ).format(self.title)
 
     def on_stdout(self, ba):
-        val = ba.data().decode('UTF-8')
+        val = ba.data().decode('UTF-8', errors='replace')
 
         counting_regex = re.compile(r'.*Counting objects:?\s*(\d+)%.*')
         receiving_regex = re.compile(r'.*Receiving objects:?\s*(\d+)%.*')
