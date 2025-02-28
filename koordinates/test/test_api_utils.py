@@ -171,8 +171,7 @@ class TestApiUtils(unittest.TestCase):
         self.assertEqual(ApiUtils.capabilities_from_dataset_response(
             {
                 'type': 'repo',
-                'repository': {'id': 'something',
-                               'user_capabilities': ['can-clone']}
+                'user_capabilities': ['can-clone']
             }), {Capability.Clone, Capability.RevisionCount})
         self.assertEqual(ApiUtils.capabilities_from_dataset_response(
             {
