@@ -93,21 +93,26 @@ class ApiUtils:
         datatype = ApiUtils.data_type_from_dataset_response(dataset)
         capabilities = DataType.capabilities(datatype)
 
-        if not dataset.get("repository"):
+        if datatype == DataType.Repositories:
+            repo_user_capabilities = dataset.get("user_capabilities", [])
+            if "can-clone" not in repo_user_capabilities:
+                capabilities.remove(Capability.Clone)
+            if "can-request-clone" in repo_user_capabilities:
+                capabilities.add(Capability.RequestClone)
+
+        elif not dataset.get("repository"):
             capabilities.remove(Capability.Clone)
+
         else:
             repo = dataset["repository"]
             if repo and not isinstance(repo, dict):
                 from .client import KoordinatesClient
-                repo = KoordinatesClient.instance().get_json(
-                    repo
-                )
-            repo_user_capabilities = repo.get(
-                "user_capabilities", []
-            )
-            if 'can-clone' not in repo_user_capabilities:
+
+                repo = KoordinatesClient.instance().get_json(repo)
+            repo_user_capabilities = repo.get("user_capabilities", [])
+            if "can-clone" not in repo_user_capabilities:
                 capabilities.remove(Capability.Clone)
-            if 'can-request-clone' in repo_user_capabilities:
+            if "can-request-clone" in repo_user_capabilities:
                 capabilities.add(Capability.RequestClone)
 
         return capabilities
