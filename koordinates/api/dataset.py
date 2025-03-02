@@ -233,17 +233,26 @@ class Dataset:
         """
         Returns the repository information for the dataset
         """
+
         if self._repository is not None:
             return self._repository
 
-        repo_detail_url = self.details.get('repository')
-        if repo_detail_url and isinstance(repo_detail_url, dict):
-            self._repository = Repo(repo_detail_url)
-        elif repo_detail_url:
-            from .client import KoordinatesClient
-            self._repository = KoordinatesClient.instance().retrieve_repository(
-                repo_detail_url
-            )
+        if self.datatype == DataType.Repositories:
+            # Set repository for the existing dataset detail:
+            self._repository = Repo(self.details)
+
+        else:
+            repo_detail_url = self.details.get("repository")
+            if repo_detail_url and isinstance(repo_detail_url, dict):
+                # Set repository from the already available repo detail:
+                self._repository = Repo(repo_detail_url)
+            elif repo_detail_url:
+                # Set the repsository from the fetched repo detail response:
+                from .client import KoordinatesClient
+
+                self._repository = KoordinatesClient.instance().retrieve_repository(
+                    repo_detail_url
+                )
 
         return self._repository
 
