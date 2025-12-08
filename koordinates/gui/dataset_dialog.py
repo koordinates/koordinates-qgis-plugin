@@ -18,7 +18,7 @@ from qgis.PyQt.QtGui import (
     QBrush,
     QColor
 )
-from qgis.PyQt.QtSvg import QSvgWidget
+from .compat import QSvgWidget
 from qgis.PyQt.QtWidgets import (
     QFrame,
     QLabel,

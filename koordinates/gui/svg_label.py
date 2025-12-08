@@ -1,6 +1,6 @@
 from qgis.PyQt.QtCore import QSize
-from qgis.PyQt.QtSvg import QSvgWidget
 
+from .compat import QSvgWidget
 from .gui_utils import GuiUtils
 
 

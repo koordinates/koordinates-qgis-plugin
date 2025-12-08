@@ -6,12 +6,12 @@ import platform
 
 from qgis.PyQt import sip
 from qgis.PyQt.QtCore import QSize, QTimer
-from qgis.PyQt.QtSvg import QSvgWidget
 from qgis.PyQt.QtWidgets import QFrame, QVBoxLayout, QHBoxLayout, QLabel, QWidget
 from qgis.core import Qgis, QgsApplication, QgsSettings
 from qgis.utils import iface
 
 from .action_button import ActionButton
+from .compat import QSvgWidget
 from .gui_utils import GuiUtils
 from ..api import KoordinatesClient
 from ..auth import OAuthWorkflow, AuthState

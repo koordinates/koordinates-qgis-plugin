@@ -28,7 +28,7 @@ from qgis.PyQt.QtGui import (
     QFont,
     QPen
 )
-from qgis.PyQt.QtSvg import QSvgWidget
+from .compat import QSvgWidget
 from qgis.PyQt.QtWidgets import (
     QHBoxLayout,
     QFrame,

@@ -13,7 +13,7 @@ from qgis.PyQt.QtGui import (
     QCursor,
     QColor
 )
-from qgis.PyQt.QtSvg import QSvgWidget
+from .compat import QSvgWidget
 from qgis.PyQt.QtWidgets import (
     QWidget,
     QLabel,

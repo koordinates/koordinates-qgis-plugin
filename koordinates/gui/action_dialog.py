@@ -5,7 +5,6 @@ from qgis.PyQt.QtCore import (
     QSize,
     QUrl
 )
-from qgis.PyQt.QtSvg import QSvgWidget
 from qgis.PyQt.QtGui import (
     QDesktopServices,
     QFontMetrics
@@ -18,6 +17,7 @@ from qgis.PyQt.QtWidgets import (
 )
 
 from .action_button import ActionButton
+from .compat import QSvgWidget, fontmetric_width
 from .gui_utils import GuiUtils
 
 
@@ -75,12 +75,13 @@ class ActionDialog(QDialog):
         layout.addLayout(hl)
 
         fm = QFontMetrics(message_label.font())
+        x_width = fontmetric_width(fm, 'x')
 
-        layout.setContentsMargins(fm.width('x') * 7,
-                                  fm.width('x') * 5,
-                                  fm.width('x') * 7,
-                                  fm.width('x') * 7)
+        layout.setContentsMargins(x_width * 7,
+                                  x_width * 5,
+                                  x_width * 7,
+                                  x_width * 7)
 
         self.setLayout(layout)
 
-        self.window().setFixedWidth(fm.width('x') * 70)
+        self.window().setFixedWidth(x_width * 70)
