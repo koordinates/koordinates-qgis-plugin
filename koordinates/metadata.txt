@@ -22,4 +22,5 @@ tracker=https://github.com/koordinates/koordinates-qgis-plugin/issues
 icon=img/koordinates.png
 category=Plugins
 plugin_dependencies=Kart
+supportsQt6=True
 changelog=Version 2.1.0  (2023-10-30) - Misc fixes
