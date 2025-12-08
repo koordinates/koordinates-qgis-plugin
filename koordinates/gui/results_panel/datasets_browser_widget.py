@@ -122,7 +122,7 @@ class DatasetsBrowserWidget(ResultsPanelWidget):
         )
         self._current_reply.finished.connect(
             partial(self._reply_finished, self._current_reply))
-        self.setCursor(Qt.WaitCursor)
+        self.setCursor(Qt.CursorShape.WaitCursor)
 
     def _reply_finished(self, reply: QNetworkReply):
         if sip.isdeleted(self):
@@ -134,10 +134,10 @@ class DatasetsBrowserWidget(ResultsPanelWidget):
 
         self._current_reply = None
 
-        if reply.error() == QNetworkReply.OperationCanceledError:
+        if reply.error() == QNetworkReply.NetworkError.OperationCanceledError:
             return
 
-        if reply.error() != QNetworkReply.NoError:
+        if reply.error() != QNetworkReply.NetworkError.NoError:
             print('error occurred :(')
             return
         #            self.error_occurred.emit(request.reply().errorString())
@@ -161,7 +161,7 @@ class DatasetsBrowserWidget(ResultsPanelWidget):
         self._datasets.extend(datasets)
         self.visible_count_changed.emit(len(self._datasets))
 
-        self.setCursor(Qt.ArrowCursor)
+        self.setCursor(Qt.CursorShape.ArrowCursor)
         self.table_widget.remove_empty_widgets()
 
         if not finished and not self._load_more_widget:

@@ -151,19 +151,19 @@ class DataBrowserQuery:
 
         if self.created_maximum:
             params["created_at.before"] = QDateTime(self.created_maximum.date()).toString(
-                Qt.ISODate
+                Qt.DateFormat.ISODate
             )
         if self.created_minimum:
             params["created_at.after"] = QDateTime(self.created_minimum.date()).toString(
-                Qt.ISODate
+                Qt.DateFormat.ISODate
             )
         if self.updated_maximum:
             params["updated_at.before"] = QDateTime(self.updated_maximum.date()).toString(
-                Qt.ISODate
+                Qt.DateFormat.ISODate
             )
         if self.updated_minimum:
             params["updated_at.after"] = QDateTime(self.updated_minimum.date()).toString(
-                Qt.ISODate
+                Qt.DateFormat.ISODate
             )
 
         cc_license_versions = []

@@ -72,7 +72,7 @@ class MetadataWidget(QFrame):
         download_xml_layout.addWidget(download_icon)
 
         download_xml_frame.setLayout(download_xml_layout)
-        download_xml_frame.setCursor(Qt.PointingHandCursor)
+        download_xml_frame.setCursor(Qt.CursorShape.PointingHandCursor)
 
         download_xml_frame.mousePressEvent = self._download_xml
 
@@ -101,7 +101,7 @@ class MetadataWidget(QFrame):
         download_pdf_layout.addWidget(download_icon)
 
         download_pdf_frame.setLayout(download_pdf_layout)
-        download_pdf_frame.setCursor(Qt.PointingHandCursor)
+        download_pdf_frame.setCursor(Qt.CursorShape.PointingHandCursor)
 
         download_pdf_frame.mousePressEvent = self._download_pdf
 

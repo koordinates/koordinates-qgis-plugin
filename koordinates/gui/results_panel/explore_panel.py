@@ -79,7 +79,7 @@ class ExplorePanelWidget(ResultsPanelWidget):
 
     def paintEvent(self, event):
         painter = QStylePainter(self)
-        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
         painter.save()
         brush = QBrush(QColor(255, 255, 255))

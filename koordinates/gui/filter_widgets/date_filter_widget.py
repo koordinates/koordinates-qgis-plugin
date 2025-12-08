@@ -85,8 +85,8 @@ class DateFilterWidget(FilterWidgetComboBase):
         vl.addItem(
             QSpacerItem(1,
                         self.fontMetrics().height(),
-                        QSizePolicy.Ignored,
-                        QSizePolicy.Expanding
+                        QSizePolicy.Policy.Ignored,
+                        QSizePolicy.Policy.Expanding
                         )
         )
 
@@ -359,7 +359,7 @@ class DateFilterWidget(FilterWidgetComboBase):
         def _str_to_date(val: str) -> Optional[str]:
             if not val:
                 return None
-            return QDateTime.fromString(val, Qt.ISODate).date()
+            return QDateTime.fromString(val, Qt.DateFormat.ISODate).date()
 
         min_updated = _str_to_date(facets.get('updated_at', {}).get('min'))
         max_updated = _str_to_date(facets.get('updated_at', {}).get('max'))

@@ -13,5 +13,5 @@ class HorizontalLine(QFrame):
         super().__init__(parent)
 
         self.setFixedHeight(1)
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.setStyleSheet("background-color: #eaeaea;")

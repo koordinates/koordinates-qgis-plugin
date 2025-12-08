@@ -54,8 +54,8 @@ class FilterBannerWidget(QWidget):
         self._foreground: Optional[QColor] = None
         self.setMouseTracking(True)
         self.setSizePolicy(
-            QSizePolicy.Preferred,
-            QSizePolicy.Fixed
+            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.Fixed
         )
 
     def set_icon(self, icon: QImage):
@@ -92,9 +92,9 @@ class FilterBannerWidget(QWidget):
 
     def mouseMoveEvent(self, event):
         if self.close_button_rect().contains(event.pos()):
-            self.setCursor(Qt.PointingHandCursor)
+            self.setCursor(Qt.CursorShape.PointingHandCursor)
         else:
-            self.setCursor(Qt.ArrowCursor)
+            self.setCursor(Qt.CursorShape.ArrowCursor)
 
     def mousePressEvent(self, event):
         if self.close_button_rect().contains(event.pos()):
@@ -105,9 +105,9 @@ class FilterBannerWidget(QWidget):
         option.initFrom(self)
 
         painter = QStylePainter(self)
-        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
-        painter.setPen(Qt.NoPen)
+        painter.setPen(Qt.PenStyle.NoPen)
         if self._foreground:
             painter.setBrush(QBrush(self._foreground))
         else:
@@ -130,7 +130,7 @@ class FilterBannerWidget(QWidget):
         if not background_color:
             background_color = QColor('#f5f5f7')
 
-        painter.setPen(Qt.NoPen)
+        painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QBrush(background_color))
         painter.drawRoundedRect(option.rect,
                                 self.THUMBNAIL_CORNER_RADIUS,
@@ -141,8 +141,8 @@ class FilterBannerWidget(QWidget):
                 QSize(
                     int(thumbnail_rect.width()) - 2 * self.THUMBNAIL_MARGIN,
                     int(option.rect.height()) - 2 * self.THUMBNAIL_MARGIN),
-                Qt.KeepAspectRatio,
-                Qt.SmoothTransformation)
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation)
 
             center_y = int((thumbnail_rect.height() - scaled.height()) / 2)
             painter.drawImage(QRectF(option.rect.left() + self.MARGIN_LEFT,
@@ -155,7 +155,7 @@ class FilterBannerWidget(QWidget):
         self._draw_content(event)
 
         painter = QStylePainter(self)
-        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
         if background_color.lightnessF() < 0.5:
             image = GuiUtils.get_svg_as_image('close-reversed.svg', 16, 16)
@@ -241,7 +241,7 @@ class PublisherFilterBannerWidget(FilterBannerWidget):
             line_heights = [1.6, 0]
             left_text_edge = option.rect.left() + self.TEXT_LEFT_EDGE_USER
 
-        painter.setBrush(Qt.NoBrush)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
         if self._foreground:
             painter.setPen(QPen(self._foreground))
         else:

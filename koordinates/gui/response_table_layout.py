@@ -49,12 +49,12 @@ class ResponsiveTableLayout(QLayout):
     def horizontalSpacing(self):
         if self.hspacing >= 0:
             return self.hspacing
-        return self.smartSpacing(QStyle.PM_LayoutHorizontalSpacing)
+        return self.smartSpacing(QStyle.PixelMetric.PM_LayoutHorizontalSpacing)
 
     def verticalSpacing(self):
         if self.vspacing >= 0:
             return self.vspacing
-        return self.smartSpacing(QStyle.PM_LayoutVerticalSpacing)
+        return self.smartSpacing(QStyle.PixelMetric.PM_LayoutVerticalSpacing)
 
     def count(self):
         return len(self.itemList)
@@ -220,7 +220,7 @@ class ResponsiveTableWidget(QWidget):
                  mode: str = StandardExploreModes.Browse):
         super().__init__(parent)
         self._mode: str = mode
-        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
 
         vertical_spacing = self.BROWSE_VERTICAL_SPACING \
             if mode == StandardExploreModes.Browse else \

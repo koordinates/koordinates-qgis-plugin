@@ -114,9 +114,9 @@ class GuiUtils:
             return QImage()
 
         renderer = QSvgRenderer(path)
-        image = QImage(width, height, QImage.Format_ARGB32)
+        image = QImage(width, height, QImage.Format.Format_ARGB32)
         if not background_color:
-            image.fill(Qt.transparent)
+            image.fill(Qt.GlobalColor.transparent)
         else:
             image.fill(background_color)
 

@@ -68,8 +68,8 @@ class ActionButton(QToolButton):
         super().__init__(parent)
 
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setToolButtonStyle(Qt.ToolButtonIconOnly)
-        self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+        self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
+        self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
         self.setStyleSheet(self.BASE_STYLE.format(
             self.BUTTON_COLOR,
             self.BUTTON_OUTLINE,
@@ -94,11 +94,11 @@ class CloneButton(ActionButton):
 
         KartOperationManager.instance().clone_started.connect(
             self._update_state,
-            Qt.QueuedConnection
+            Qt.ConnectionType.QueuedConnection
         )
         KartOperationManager.instance().clone_finished.connect(
             self._update_state,
-            Qt.QueuedConnection
+            Qt.ConnectionType.QueuedConnection
         )
 
         self._update_state()
@@ -154,7 +154,7 @@ authoritative publishers.</p>
                 message=message_text,
                 action='Request Kart beta access',
                 url='https://m.koordinates.com/request-kart-features')
-            dlg.exec_()
+            dlg.exec()
             return
 
         try:
@@ -168,7 +168,7 @@ authoritative publishers.</p>
         except KartNotInstalledException:
             iface.messageBar().pushMessage(
                 "Kart plugin must be installed to clone repositories",
-                Qgis.Warning,
+                Qgis.MessageLevel.Warning,
                 duration=5,
             )
 
@@ -196,7 +196,7 @@ class AddButton(ActionButton):
                 a.triggered.connect(partial(self.add_layer, style.id()))
 
             self.setMenu(menu)
-            self.setPopupMode(QToolButton.InstantPopup)
+            self.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
 
         else:
             icon = GuiUtils.get_icon('add_button.svg')
@@ -216,7 +216,7 @@ class AddButton(ActionButton):
             pen.setColor(QColor(self.BUTTON_OUTLINE))
 
             painter.setPen(pen)
-            painter.setBrush(Qt.NoBrush)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
 
             divider_x = int(self.width() * 0.65)
             painter.drawLine(divider_x, 1,

@@ -65,15 +65,15 @@ class ApiUtils:
         """
         if dataset.get('data', {}).get('geometry_type') in (
                 'polygon', 'multipolygon'):
-            return QgsWkbTypes.PolygonGeometry
+            return QgsWkbTypes.GeometryType.PolygonGeometry
         elif dataset.get('data', {}).get('geometry_type') in (
                 'point', 'multipoint'):
-            return QgsWkbTypes.PointGeometry
+            return QgsWkbTypes.GeometryType.PointGeometry
         elif dataset.get('data', {}).get('geometry_type') in (
                 'linestring', 'multilinestring'):
-            return QgsWkbTypes.LineGeometry
+            return QgsWkbTypes.GeometryType.LineGeometry
 
-        return QgsWkbTypes.UnknownGeometry
+        return QgsWkbTypes.GeometryType.UnknownGeometry
 
     @staticmethod
     def access_from_dataset_response(dataset: dict) -> PublicAccessType:

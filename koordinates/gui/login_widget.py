@@ -78,7 +78,7 @@ class LoginWidget(QFrame):
         self.oauth_close_timer: Optional[QTimer] = None
         self.oauth_refresh_timer: Optional[QTimer] = None
 
-        self.setFrameShape(QFrame.NoFrame)
+        self.setFrameShape(QFrame.Shape.NoFrame)
 
         self.setStyleSheet(
             """LoginWidget {
@@ -91,7 +91,7 @@ class LoginWidget(QFrame):
         vl.setContentsMargins(0, 0, 0, 0)
 
         top_frame = QFrame()
-        top_frame.setFrameShape(QFrame.NoFrame)
+        top_frame.setFrameShape(QFrame.Shape.NoFrame)
         top_frame.setStyleSheet(
             """
          background-color: #323233;
@@ -302,7 +302,7 @@ class LoginWidget(QFrame):
         except FileExistsError:
             iface.messageBar().pushMessage(
                 "Could not log in. Check your connection and your API Key value",
-                Qgis.Warning,
+                Qgis.MessageLevel.Warning,
                 duration=5,
             )
             self.login_button.set_state(AuthState.LoggedOut)
@@ -313,7 +313,7 @@ class LoginWidget(QFrame):
         self.open_login_window_label.hide()
         iface.messageBar().pushMessage(
             "Authorization failed: {}".format(error),
-            Qgis.Warning,
+            Qgis.MessageLevel.Warning,
             duration=5,
         )
 
@@ -323,16 +323,16 @@ class LoginWidget(QFrame):
         self.open_login_window_label.hide()
         iface.messageBar().pushMessage(
             "Request failed: {}".format(error),
-            Qgis.Warning,
+            Qgis.MessageLevel.Warning,
             duration=5,
         )
 
     def remove_api_key(self):
         if platform.system() == "Darwin":
             # remove stored plain text tokens on MacOS
-            QgsSettings().remove("koordinates/token", QgsSettings.Plugins)
+            QgsSettings().remove("koordinates/token", QgsSettings.Section.Plugins)
             QgsSettings().remove("koordinates/refresh_token",
-                                 QgsSettings.Plugins)
+                                 QgsSettings.Section.Plugins)
         else:
             QgsApplication.authManager().removeAuthSetting(AUTH_CONFIG_ID)
             QgsApplication.authManager().removeAuthSetting(
@@ -347,11 +347,11 @@ class LoginWidget(QFrame):
         if platform.system() == "Darwin":
             # store tokens in plain text on MacOS as keychain isn't available due to MacOS security
             QgsSettings().setValue("koordinates/token", key,
-                                   QgsSettings.Plugins)
+                                   QgsSettings.Section.Plugins)
             if refresh_token:
                 QgsSettings().setValue("koordinates/refresh_token",
                                        refresh_token,
-                                       QgsSettings.Plugins)
+                                       QgsSettings.Section.Plugins)
         else:
             QgsApplication.authManager().storeAuthSetting(
                 AUTH_CONFIG_ID, key, True)
@@ -367,10 +367,10 @@ class LoginWidget(QFrame):
         """
         if platform.system() == "Darwin":
             api_key = QgsSettings().value(
-                "koordinates/token", None, str, QgsSettings.Plugins
+                "koordinates/token", None, str, QgsSettings.Section.Plugins
             ) or None
             refresh_token = QgsSettings().value(
-                "koordinates/refresh_token", None, str, QgsSettings.Plugins
+                "koordinates/refresh_token", None, str, QgsSettings.Section.Plugins
             ) or None
         else:
             api_key = (

@@ -33,7 +33,7 @@ class HeaderWidget(QFrame):
         self.dataset = dataset
 
         self.setFixedHeight(72)
-        self.setFrameShape(QFrame.NoFrame)
+        self.setFrameShape(QFrame.Shape.NoFrame)
 
         self.publisher = self.dataset.publisher()
 
@@ -54,7 +54,7 @@ class HeaderWidget(QFrame):
         hl.addWidget(logo_widget)
 
         url_frame = QFrame()
-        url_frame.setFrameShape(QFrame.NoFrame)
+        url_frame.setFrameShape(QFrame.Shape.NoFrame)
         if background_color:
             url_frame.setStyleSheet(
                 """QFrame {
@@ -76,7 +76,7 @@ class HeaderWidget(QFrame):
             Qt.TextInteractionFlag.TextBrowserInteraction)
         url_label.setCursor(Qt.CursorShape.IBeamCursor)
         url_label.setMinimumWidth(10)
-        url_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        url_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         url_layout.addWidget(url_label, 1)
 

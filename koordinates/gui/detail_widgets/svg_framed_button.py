@@ -63,7 +63,7 @@ class SvgFramedButton(QFrame):
         self.setLayout(vl)
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             self.clicked.emit()
         else:
             super().mousePressEvent(event)

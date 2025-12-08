@@ -86,15 +86,15 @@ class PublisherTypeThumbnailProcessor(ThumbnailProcessor):
                     thumbnail.height()))
         scaled = thumbnail.scaled(
             QSize(max_thumbnail_width, max_thumbnail_height),
-            Qt.KeepAspectRatio,
-            Qt.SmoothTransformation)
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation)
 
         if self.background_color:
             with_background = QImage(self.size,
-                                     QImage.Format_ARGB32_Premultiplied)
-            with_background.fill(Qt.transparent)
+                                     QImage.Format.Format_ARGB32_Premultiplied)
+            with_background.fill(Qt.GlobalColor.transparent)
             painter = QPainter(with_background)
-            painter.setRenderHint(QPainter.Antialiasing, True)
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
             painter.setBrush(QBrush(self.background_color))
             painter.drawRoundedRect(0, 0,
@@ -175,9 +175,9 @@ class GenericThumbnailManager(QObject):
             return self.thumbnails[url]
         else:
             req = QNetworkRequest(QUrl(url))
-            req.setAttribute(QNetworkRequest.CacheLoadControlAttribute,
-                             QNetworkRequest.PreferCache)
-            req.setAttribute(QNetworkRequest.CacheSaveControlAttribute, True)
+            req.setAttribute(QNetworkRequest.Attribute.CacheLoadControlAttribute,
+                             QNetworkRequest.CacheLoadControl.PreferCache)
+            req.setAttribute(QNetworkRequest.Attribute.CacheSaveControlAttribute, True)
             reply = QgsNetworkAccessManager.instance().get(req)
             self.queued_replies.add(reply)
             if reply.isFinished():
@@ -188,7 +188,7 @@ class GenericThumbnailManager(QObject):
 
     def thumbnail_downloaded(self, reply):
         self.queued_replies.remove(reply)
-        if reply.error() == QNetworkReply.NoError:
+        if reply.error() == QNetworkReply.NetworkError.NoError:
             url = reply.url().toString()
             img = QImage()
             img.loadFromData(reply.readAll())
@@ -223,9 +223,9 @@ class ThumbnailManager:
                 self.widget_processors[widget] = processor
 
             req = QNetworkRequest(QUrl(url))
-            req.setAttribute(QNetworkRequest.CacheLoadControlAttribute,
-                             QNetworkRequest.PreferCache)
-            req.setAttribute(QNetworkRequest.CacheSaveControlAttribute, True)
+            req.setAttribute(QNetworkRequest.Attribute.CacheLoadControlAttribute,
+                             QNetworkRequest.CacheLoadControl.PreferCache)
+            req.setAttribute(QNetworkRequest.Attribute.CacheSaveControlAttribute, True)
             reply = QgsNetworkAccessManager.instance().get(req)
             self.queued_replies.add(reply)
             if reply.isFinished():
@@ -236,7 +236,7 @@ class ThumbnailManager:
 
     def thumbnailDownloaded(self, reply):
         self.queued_replies.remove(reply)
-        if reply.error() == QNetworkReply.NoError:
+        if reply.error() == QNetworkReply.NetworkError.NoError:
             url = reply.url().toString()
             img = QImage()
             img.loadFromData(reply.readAll())

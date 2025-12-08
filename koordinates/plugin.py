@@ -47,7 +47,7 @@ class KoordinatesPlugin:
         )
 
         self.dock = Koordinates(self.iface.mainWindow())
-        self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dock)
+        self.iface.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dock)
 
         self.explorerAction = QAction("Show Data Browser",
                                       self.iface.mainWindow())
@@ -90,4 +90,4 @@ class KoordinatesPlugin:
         self._kart_operation_manager = None
         KartOperationManager._instance = None
 
-        QCoreApplication.sendPostedEvents(None, QEvent.DeferredDelete)
+        QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)

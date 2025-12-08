@@ -114,7 +114,7 @@ class KartTask(QgsTask):
 
         self._feedback = None
 
-        self._result = bool(process.exitStatus() == QProcess.NormalExit
+        self._result = bool(process.exitStatus() == QProcess.ExitStatus.NormalExit
                             and res == 0)
         return self._was_canceled or self._result
 

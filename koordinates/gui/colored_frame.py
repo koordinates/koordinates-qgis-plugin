@@ -27,7 +27,7 @@ class ColoredFrame(QFrame):
             return
 
         painter = QPainter(self)
-        painter.setPen(Qt.NoPen)
+        painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QBrush(self.color))
         painter.drawRect(QRect(0, 0, self.width(), self.color_height))
         painter.end()

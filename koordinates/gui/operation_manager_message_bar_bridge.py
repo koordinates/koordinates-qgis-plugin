@@ -328,7 +328,7 @@ class OperationManagerMessageBarBridge(QObject):
         if self.table:
             self.table.show()
             self.table.raise_()
-            self.table.setWindowState(self.table.windowState() & ~Qt.WindowMinimized)
+            self.table.setWindowState(self.table.windowState() & ~Qt.WindowState.WindowMinimized)
             self.table.activateWindow()
             return
 
@@ -337,5 +337,5 @@ class OperationManagerMessageBarBridge(QObject):
             parent=iface.mainWindow()
         )
         self.table.setWindowTitle(self.tr('Clone Details'))
-        self.table.setAttribute(Qt.WA_DeleteOnClose)
+        self.table.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         self.table.show()

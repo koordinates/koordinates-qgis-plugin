@@ -54,10 +54,10 @@ class KartOperationManager(QAbstractItemModel):
     Implemented as a model.
     """
 
-    DescriptionRole = Qt.UserRole + 1
-    ProgressRole = Qt.UserRole + 2
-    DetailsRole = Qt.UserRole + 3
-    StatusRole = Qt.UserRole + 4
+    DescriptionRole = Qt.ItemDataRole.UserRole + 1
+    ProgressRole = Qt.ItemDataRole.UserRole + 2
+    DetailsRole = Qt.ItemDataRole.UserRole + 3
+    StatusRole = Qt.ItemDataRole.UserRole + 4
 
     # operation, description, remaining tasks, overall remaining progress
     task_completed = pyqtSignal(KartOperation, str, int, float)
@@ -318,7 +318,7 @@ class KartOperationManager(QAbstractItemModel):
         for task in self._ongoing_tasks:
             if isinstance(task, KartCloneTask):
                 if task.url == url and task.status() not in (
-                        QgsTask.Complete, QgsTask.Terminated):
+                        QgsTask.TaskStatus.Complete, QgsTask.TaskStatus.Terminated):
                     return True
 
         return False
@@ -348,7 +348,7 @@ class KartOperationManager(QAbstractItemModel):
     def columnCount(self, parent=QModelIndex()):
         return 1
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         task = self.index2task(index)
         if task:
             if role == self.DescriptionRole:
@@ -373,7 +373,7 @@ class KartOperationManager(QAbstractItemModel):
         if not index.isValid():
             return f
 
-        return f | Qt.ItemIsEnabled
+        return f | Qt.ItemFlag.ItemIsEnabled
 
     # pylint: enable=missing-docstring, unused-arguments
 

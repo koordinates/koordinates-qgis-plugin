@@ -42,12 +42,12 @@ class PublisherThumbnailLabel(QLabel):
             self.setThumbnail(thumbnail_processor.default_thumbnail())
 
     def setThumbnail(self, image: QImage):
-        image = image.convertToFormat(QImage.Format_ARGB32)
+        image = image.convertToFormat(QImage.Format.Format_ARGB32)
         if image.width() > self.width():
             image = image.scaled(
                 self.width(),
                 int(image.height() * self.width() / image.width()),
-                transformMode=Qt.SmoothTransformation
+                transformMode=Qt.TransformationMode.SmoothTransformation
             )
             self.setFixedHeight(image.height())
 
@@ -55,7 +55,7 @@ class PublisherThumbnailLabel(QLabel):
             image = image.scaled(
                 int(image.width() * self.height() / image.height()),
                 self.height(),
-                transformMode=Qt.SmoothTransformation)
+                transformMode=Qt.TransformationMode.SmoothTransformation)
             self.setFixedWidth(image.width())
 
         self.setPixmap(QPixmap.fromImage(image))

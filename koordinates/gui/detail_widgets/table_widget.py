@@ -43,7 +43,7 @@ class TableWidget(QWidget):
         self.contents = contents
 
         self.rebuild_table()
-        self.table_label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        self.table_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
         self.table_label.linkActivated.connect(self.link_clicked)
 
         vl.addWidget(self.table_label)

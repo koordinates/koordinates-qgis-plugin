@@ -129,10 +129,10 @@ class KoordinatesClient(QObject):
             return
 
         self._explore_sections_reply = None
-        if reply.error() == QNetworkReply.OperationCanceledError:
+        if reply.error() == QNetworkReply.NetworkError.OperationCanceledError:
             return
 
-        if reply.error() != QNetworkReply.NoError:
+        if reply.error() != QNetworkReply.NetworkError.NoError:
             print('error occurred :(')
             return
 
@@ -154,10 +154,10 @@ class KoordinatesClient(QObject):
             return
 
         self._data_options_reply = None
-        if reply.error() == QNetworkReply.OperationCanceledError:
+        if reply.error() == QNetworkReply.NetworkError.OperationCanceledError:
             return
 
-        if reply.error() != QNetworkReply.NoError:
+        if reply.error() != QNetworkReply.NetworkError.NoError:
             print('error occurred :(')
             return
 
@@ -307,10 +307,10 @@ class KoordinatesClient(QObject):
         endpoint, headers, params = self._build_explore_sections_request(context)
         network_request = self._build_request(endpoint, headers, params)
         network_request.setAttribute(
-            QNetworkRequest.CacheLoadControlAttribute,
-            QNetworkRequest.PreferCache)
+            QNetworkRequest.Attribute.CacheLoadControlAttribute,
+            QNetworkRequest.CacheLoadControl.PreferCache)
         network_request.setAttribute(
-            QNetworkRequest.CacheSaveControlAttribute,
+            QNetworkRequest.Attribute.CacheSaveControlAttribute,
             True
         )
         return QgsNetworkAccessManager.instance().get(network_request)
@@ -471,10 +471,10 @@ class KoordinatesClient(QObject):
 
         request = QgsBlockingNetworkRequest()
         if is_starred:
-            if request.post(network_request, b'') != QgsBlockingNetworkRequest.NoError:
+            if request.post(network_request, b'') != QgsBlockingNetworkRequest.ErrorCode.NoError:
                 self.error_occurred.emit(request.reply().errorString())
         else:
-            if request.deleteResource(network_request) != QgsBlockingNetworkRequest.NoError:
+            if request.deleteResource(network_request) != QgsBlockingNetworkRequest.ErrorCode.NoError:
                 self.error_occurred.emit(request.reply().errorString())
 
     def _build_request(self, endpoint: str, headers=None, params=None) -> QNetworkRequest:
@@ -504,7 +504,7 @@ class KoordinatesClient(QObject):
         network_request = self._build_request(endpoint, headers, params)
 
         request = QgsBlockingNetworkRequest()
-        if request.get(network_request) != QgsBlockingNetworkRequest.NoError:
+        if request.get(network_request) != QgsBlockingNetworkRequest.ErrorCode.NoError:
             self.error_occurred.emit(request.reply().errorString())
             reply_json = {}
         else:
@@ -526,7 +526,7 @@ class KoordinatesClient(QObject):
                                          value.encode())
 
         request = QgsBlockingNetworkRequest()
-        if request.get(network_request) != QgsBlockingNetworkRequest.NoError:
+        if request.get(network_request) != QgsBlockingNetworkRequest.ErrorCode.NoError:
             self.error_occurred.emit(request.reply().errorString())
             reply_json = {}
         else:

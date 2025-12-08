@@ -472,7 +472,7 @@ class DatasetItemWidgetBase(QFrame):
         }}"""
 
         self.setStyleSheet(style_sheet)
-        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         self.setFixedHeight(self.CARD_HEIGHT)
         self.dataset_layout = DatasetItemLayout()
         self.setLayout(self.dataset_layout)
@@ -583,7 +583,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         self.title_label = QLabel()
         self.title_label.setWordWrap(True)
-        self.title_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.title_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
 
         thumbnail_svg = DatasetGuiUtils.thumbnail_icon_for_dataset(
             self.dataset
@@ -698,7 +698,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         # else:
         #     self.footprint = None
 
-        self.setCursor(QCursor(Qt.PointingHandCursor))
+        self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         self.set_column_count(column_count)
 
@@ -815,16 +815,16 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         if scale_factor > 1:
             image_size *= scale_factor
 
-        target = QImage(image_size, QImage.Format_ARGB32)
-        target.fill(Qt.transparent)
+        target = QImage(image_size, QImage.Format.Format_ARGB32)
+        target.fill(Qt.GlobalColor.transparent)
 
         painter = QPainter(target)
 
-        painter.setRenderHint(QPainter.Antialiasing, True)
-        painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
-        painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
 
-        painter.setPen(Qt.NoPen)
+        painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QBrush(QColor(255, 0, 0)))
 
         path = QPainterPath()
@@ -866,13 +866,13 @@ class DatasetItemWidget(DatasetItemWidgetBase):
                        )
 
         painter.drawPath(path)
-        painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
+        painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceIn)
 
         if img is not None:
             resized = img.scaled(image_size.width(),
                                  image_size.height(),
-                                 Qt.KeepAspectRatioByExpanding,
-                                 Qt.SmoothTransformation)
+                                 Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+                                 Qt.TransformationMode.SmoothTransformation)
 
             if resized.width() > image_size.width():
                 left = int((resized.width() - image_size.width()) / 2)
@@ -888,7 +888,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             painter.drawImage(0, 0, cropped)
         else:
             painter.setBrush(QBrush(QColor('#cccccc')))
-            painter.setPen(Qt.NoPen)
+            painter.setPen(Qt.PenStyle.NoPen)
             painter.drawRect(0, 0, 600, 600)
 
         painter.end()
@@ -904,11 +904,11 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             return base
 
         painter = QPainter(base)
-        painter.setRenderHint(QPainter.Antialiasing, True)
-        painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
-        painter.setRenderHint(QPainter.TextAntialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.TextAntialiasing, True)
 
-        painter.setPen(Qt.NoPen)
+        painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QBrush(QColor(0, 0, 0, 150)))
         painter.drawRoundedRect(QRectF(15, 100, 117, 32), 4, 4)
 
@@ -942,7 +942,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             font.setBold(True)
             painter.setFont(font)
 
-            painter.setBrush(Qt.NoBrush)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
             painter.setPen(QPen(QColor(255, 255, 255)))
             painter.drawText(QPointF(47, 112), description)
 
@@ -954,7 +954,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             font.setBold(False)
             painter.setFont(font)
 
-            painter.setBrush(Qt.NoBrush)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
             painter.setPen(QPen(QColor(255, 255, 255)))
             painter.drawText(QPointF(47, 126), subtitle)
 
@@ -973,7 +973,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self._update_arrangement()
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             self.show_details()
         else:
             super().mousePressEvent(event)

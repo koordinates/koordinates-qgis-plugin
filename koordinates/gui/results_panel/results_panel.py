@@ -48,10 +48,10 @@ class ResultsPanel(QWidget):
         super().__init__()
 
         self.scroll_area = QgsScrollArea()
-        self.scroll_area.setSizePolicy(QSizePolicy.Preferred,
-                                       QSizePolicy.Preferred)
-        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.scroll_area.setSizePolicy(QSizePolicy.Policy.Preferred,
+                                       QSizePolicy.Policy.Preferred)
+        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self.scroll_area.setWidgetResizable(True)
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -60,8 +60,8 @@ class ResultsPanel(QWidget):
         self.publisher_container.setContentsMargins(0, 12, 0, 12)
         self.publisher_widget = QWidget()
         self.publisher_widget.setLayout(self.publisher_container)
-        self.publisher_widget.setSizePolicy(QSizePolicy.Preferred,
-                                            QSizePolicy.Maximum)
+        self.publisher_widget.setSizePolicy(QSizePolicy.Policy.Preferred,
+                                            QSizePolicy.Policy.Maximum)
         self.publisher_widget.hide()
         layout.addWidget(self.publisher_widget)
 
@@ -76,7 +76,7 @@ class ResultsPanel(QWidget):
         layout.addWidget(self.scroll_area)
         self.setLayout(layout)
 
-        self.scroll_area.setFrameShape(QFrame.NoFrame)
+        self.scroll_area.setFrameShape(QFrame.Shape.NoFrame)
         self.scroll_area.setStyleSheet(
             "#qt_scrollarea_viewport{ background: transparent; }")
 
@@ -110,7 +110,7 @@ class ResultsPanel(QWidget):
 
     def populate(self, query: DataBrowserQuery, context):
         self.cancel_active_requests()
-        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self.container_layout.setContentsMargins(0, 6, 6, 6)
         if self.current_mode == StandardExploreModes.Browse and \
                 self.child_items and \
@@ -132,7 +132,7 @@ class ResultsPanel(QWidget):
             self.container_layout.addWidget(item)
 
     def explore(self, section_slug: str, context):
-        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self.container_layout.setContentsMargins(0, 6, 6, 6)
         if section_slug not in (
                 StandardExploreModes.Browse,
@@ -187,7 +187,7 @@ class ResultsPanel(QWidget):
         self.publisher_cleared.emit()
 
     def show_publishers(self, context):
-        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.container_layout.setContentsMargins(0, 0, 0, 0)
         self.cancel_active_requests()
         self.clear_existing_items()
@@ -228,7 +228,7 @@ class ResultsPanel(QWidget):
         self._current_reply.setProperty('slug', section_slug)
         self._current_reply.finished.connect(
             partial(self._reply_finished, self._current_reply, section_slug))
-        self.setCursor(Qt.WaitCursor)
+        self.setCursor(Qt.CursorShape.WaitCursor)
 
     def _reply_finished(self,
                         reply: QNetworkReply,
@@ -242,10 +242,10 @@ class ResultsPanel(QWidget):
 
         self._current_reply = None
 
-        if reply.error() == QNetworkReply.OperationCanceledError:
+        if reply.error() == QNetworkReply.NetworkError.OperationCanceledError:
             return
 
-        if reply.error() != QNetworkReply.NoError:
+        if reply.error() != QNetworkReply.NetworkError.NoError:
             print('error occurred :(')
             return
         # self.error_occurred.emit(request.reply().errorString())
@@ -272,4 +272,4 @@ class ResultsPanel(QWidget):
             self.child_items.append(item)
             self.container_layout.addWidget(item)
 
-        self.setCursor(Qt.ArrowCursor)
+        self.setCursor(Qt.CursorShape.ArrowCursor)

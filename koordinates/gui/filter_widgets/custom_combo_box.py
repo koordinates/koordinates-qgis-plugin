@@ -43,26 +43,26 @@ class CustomComboBox(QWidget):
         def __init__(self, parent: Optional[QWidget]):
             super().__init__(parent.window() if parent else None)
 
-            self.setWindowFlags(Qt.Popup
-                                | Qt.FramelessWindowHint)
+            self.setWindowFlags(Qt.WindowType.Popup
+                                | Qt.WindowType.FramelessWindowHint)
 
             self.anchor_widget = parent
 
             self.frame = QFrame()
             self.frame.setObjectName('base_frame')
-            self.frame.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
+            self.frame.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Maximum)
 
             opt = QStyleOptionFrame()
-            border = self.style().pixelMetric(QStyle.PM_DefaultFrameWidth, opt)
+            border = self.style().pixelMetric(QStyle.PixelMetric.PM_DefaultFrameWidth, opt)
 
             palette = QPalette()
 
             self.frame.setStyleSheet(
                 "#base_frame {{background-color: {}; border: {}px solid {};}}".format(
-                    palette.color(QPalette.Base).name(),
+                    palette.color(QPalette.ColorRole.Base).name(),
                     border,
-                    palette.color(QPalette.Dark).name()))
-            self.frame.setFrameStyle(QFrame.Panel | QFrame.Plain)
+                    palette.color(QPalette.ColorRole.Dark).name()))
+            self.frame.setFrameStyle(QFrame.Shape.Panel | QFrame.Shadow.Plain)
 
             frame_layout = QVBoxLayout()
             self.frame.setLayout(frame_layout)
@@ -166,7 +166,7 @@ class CustomComboBox(QWidget):
         option = QStyleOptionComboBox()
         option.initFrom(self)
         drop_down_rect = self.style().subControlRect(
-            QStyle.CC_ComboBox, option, QStyle.SC_ComboBoxArrow, None)
+            QStyle.ComplexControl.CC_ComboBox, option, QStyle.SubControl.SC_ComboBoxArrow, None)
         if drop_down_rect.contains(pos):
             return CustomComboBox.BoxComponent.DropDownButton
 
@@ -284,21 +284,21 @@ class CustomComboBox(QWidget):
         option.editable = True
 
         if self._hover_state == CustomComboBox.BoxComponent.DropDownButton:
-            option.state |= QStyle.State_MouseOver
+            option.state |= QStyle.StateFlag.State_MouseOver
         else:
-            option.state &= ~QStyle.State_MouseOver
+            option.state &= ~QStyle.StateFlag.State_MouseOver
 
         style = self.style()
 
-        self.style().drawComplexControl(QStyle.CC_ComboBox, option, painter, None)
+        self.style().drawComplexControl(QStyle.ComplexControl.CC_ComboBox, option, painter, None)
         option.editable = False
-        style.drawControl(QStyle.CE_ComboBoxLabel, option, painter, None)
+        style.drawControl(QStyle.ControlElement.CE_ComboBoxLabel, option, painter, None)
 
         show_clear = self.should_show_clear()
         if show_clear:
             drop_down_rect = style.subControlRect(
-                QStyle.CC_ComboBox, option,
-                QStyle.SC_ComboBoxArrow, None)
+                QStyle.ComplexControl.CC_ComboBox, option,
+                QStyle.SubControl.SC_ComboBoxArrow, None)
             icon_left = drop_down_rect.left() - int(drop_down_rect.width() * 1.1)
             icon_top = drop_down_rect.top() + int(
                 (drop_down_rect.height() - self._icon_size) * 0.5)

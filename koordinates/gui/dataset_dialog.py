@@ -147,10 +147,10 @@ class DatasetDialog(QDialog):
         scroll_area_layout = QHBoxLayout()
         scroll_area_layout.setContentsMargins(20, 0, 20, 0)
         scroll_area = QScrollArea()
-        scroll_area.setFrameShape(QFrame.NoFrame)
+        scroll_area.setFrameShape(QFrame.Shape.NoFrame)
 
-        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         scroll_area.setWidgetResizable(True)
 
         self.thumbnail_label = QLabel()
@@ -503,21 +503,21 @@ class DatasetDialog(QDialog):
         if scale_factor > 1:
             image_size *= scale_factor
 
-        target = QImage(image_size, QImage.Format_ARGB32)
-        target.fill(Qt.transparent)
+        target = QImage(image_size, QImage.Format.Format_ARGB32)
+        target.fill(Qt.GlobalColor.transparent)
 
         painter = QPainter(target)
 
-        painter.setRenderHint(QPainter.Antialiasing, True)
-        painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
-        painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
 
-        painter.setPen(Qt.NoPen)
+        painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QBrush(QColor(255, 0, 0)))
         painter.drawRoundedRect(0, 0, image_size.width(), image_size.height(),
                                 9, 9)
 
-        painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
+        painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceIn)
         painter.setBrush(QBrush(QColor('#dddddd')))
         painter.drawRect(0, 0, image_size.width(), image_size.height())
 
@@ -526,8 +526,8 @@ class DatasetDialog(QDialog):
                 if image_size.width() != img.width() and image_size.height() != img.height():
                     resized = img.scaled(image_size.width(),
                                          image_size.height(),
-                                         Qt.KeepAspectRatioByExpanding,
-                                         Qt.SmoothTransformation)
+                                         Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+                                         Qt.TransformationMode.SmoothTransformation)
                 else:
                     resized = img
 
@@ -553,7 +553,7 @@ class DatasetDialog(QDialog):
                 painter.drawImage(0, 0, img)
         else:
             painter.setBrush(QBrush(QColor('#cccccc')))
-            painter.setPen(Qt.NoPen)
+            painter.setPen(Qt.PenStyle.NoPen)
             painter.drawRect(0, 0, 600, 600)
 
         painter.end()
@@ -592,7 +592,7 @@ class DatasetDialog(QDialog):
                     self.tr('Classifications')
                 )
             )
-            heading.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+            heading.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
             vl = QVBoxLayout()
             vl.setContentsMargins(0, 5, 10, 0)
             vl.addWidget(heading)
@@ -627,7 +627,7 @@ class DatasetDialog(QDialog):
                 """font-size: {}pt;""".format(heading_font_size) +
                 """color: #868889">{}</span>""".format(self.tr('Dimensions'))
             )
-            heading.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+            heading.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
             vl = QVBoxLayout()
             vl.setContentsMargins(0, 5, 10, 0)
             vl.addWidget(heading)

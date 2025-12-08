@@ -143,7 +143,7 @@ class TaskDetailsTable(QTableView):
         super().__init__(parent)
         self._manager = operations_manager
         self.setModel(self._manager)
-        self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
+        self.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.horizontalHeader().setStretchLastSection(True)
         self.horizontalHeader().setVisible(False)
         self.verticalHeader().setVisible(False)

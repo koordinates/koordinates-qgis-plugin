@@ -57,7 +57,7 @@ class FilterWidget(QWidget):
 
         self.sort_order: Union[str, SortOrder] = SortOrder.Popularity
 
-        self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Minimum)
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Minimum)
 
         vl = QVBoxLayout()
         vl.setSpacing(0)
@@ -67,8 +67,8 @@ class FilterWidget(QWidget):
         narrow_layout.setContentsMargins(0, 0, 0, 0)
         narrow_layout.setSpacing(0)
         self.explore_tab_bar = ExploreTabBar()
-        self.explore_tab_bar.setSizePolicy(QSizePolicy.Ignored,
-                                           QSizePolicy.Fixed)
+        self.explore_tab_bar.setSizePolicy(QSizePolicy.Policy.Ignored,
+                                           QSizePolicy.Policy.Fixed)
         narrow_layout.addWidget(self.explore_tab_bar)
 
         self.explore_tab_bar.mode_changed.connect(self._explore_mode_changed)

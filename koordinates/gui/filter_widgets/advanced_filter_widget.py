@@ -139,12 +139,12 @@ class AdvancedFilterWidget(QWidget):
         option.initFrom(self)
 
         painter = QStylePainter(self)
-        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
         painter.save()
         brush = QBrush(QColor(219, 219, 219))
         painter.setBrush(brush)
-        painter.setPen(Qt.NoPen)
+        painter.setPen(Qt.PenStyle.NoPen)
 
         if self.appearance == FilterWidgetAppearance.Horizontal:
             painter.drawRoundedRect(option.rect,

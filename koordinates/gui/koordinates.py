@@ -101,22 +101,22 @@ class CustomTab(QTabBar):
         option.shape = self.shape()
         option.documentMode = self.documentMode()
         option.rect = QRect(0, self.height() - 2, self.width(), 2)
-        painter.drawPrimitive(QStyle.PE_FrameTabBarBase, option)
+        painter.drawPrimitive(QStyle.PrimitiveElement.PE_FrameTabBarBase, option)
 
         for i in range(self.count()):
             option = QStyleOptionTab()
             self.initStyleOption(option, i)
 
             if i == Koordinates.TAB_STARRED_INDEX:
-                painter.drawControl(QStyle.CE_TabBarTabShape, option)
+                painter.drawControl(QStyle.ControlElement.CE_TabBarTabShape, option)
                 painter.drawPixmap(option.rect.center().x() - 7, option.rect.center().y() - 8,
                                    GuiUtils.get_icon_pixmap('star_filled.svg'))
             elif i == Koordinates.TAB_CONTEXT_SWITCHER_INDEX:
-                painter.drawControl(QStyle.CE_TabBarTabShape, option)
+                painter.drawControl(QStyle.ControlElement.CE_TabBarTabShape, option)
                 painter.drawPixmap(option.rect.center().x() - 7, option.rect.center().y() - 8,
                                    GuiUtils.get_icon_pixmap('context_switcher.svg'))
             else:
-                painter.drawControl(QStyle.CE_TabBarTab, option)
+                painter.drawControl(QStyle.ControlElement.CE_TabBarTab, option)
 
 
 class ResponsiveLayout(QLayout):
@@ -288,14 +288,14 @@ class CustomLabelWidgetAction(QWidgetAction):
         if not self._enabled:
             # swallow clicks, we don't want to user to dismiss the menu by clicking
             # disabled actions
-            if event.type() in (QEvent.MouseButtonPress,
-                                QEvent.MouseButtonDblClick,
-                                QEvent.MouseButtonRelease):
+            if event.type() in (QEvent.Type.MouseButtonPress,
+                                QEvent.Type.MouseButtonDblClick,
+                                QEvent.Type.MouseButtonRelease):
                 return True
         else:
-            if event.type() == QEvent.HoverEnter:
+            if event.type() == QEvent.Type.HoverEnter:
                 self.highlight(True)
-            elif event.type() == QEvent.HoverLeave:
+            elif event.type() == QEvent.Type.HoverLeave:
                 self.highlight(False)
 
         return super().eventFilter(obj, event)
@@ -339,9 +339,9 @@ class CustomLabelWidgetAction(QWidgetAction):
                         35 + self._indent * 20
                     ))
                 palette = sub_text_label.palette()
-                text_color = palette.color(QPalette.WindowText)
+                text_color = palette.color(QPalette.ColorRole.WindowText)
                 text_color.setAlphaF(0.7)
-                palette.setColor(QPalette.WindowText, text_color)
+                palette.setColor(QPalette.ColorRole.WindowText, text_color)
                 sub_text_label.setPalette(palette)
                 font = sub_text_label.font()
                 font.setPointSizeF(font.pointSizeF() * 0.85)
@@ -361,9 +361,9 @@ class CustomLabelWidgetAction(QWidgetAction):
             label.installEventFilter(self)
 
             palette = label.palette()
-            text_color = palette.color(QPalette.WindowText)
+            text_color = palette.color(QPalette.ColorRole.WindowText)
             text_color.setAlphaF(0.7)
-            palette.setColor(QPalette.WindowText, text_color)
+            palette.setColor(QPalette.ColorRole.WindowText, text_color)
             label.setPalette(palette)
             label.setStyleSheet('margin: 10px;')
             font = label.font()
@@ -375,7 +375,7 @@ class CustomLabelWidgetAction(QWidgetAction):
             return self._widget
 
     def highlight(self, enabled: bool):
-        self._container.setBackgroundRole(QPalette.Highlight if enabled else QPalette.Window)
+        self._container.setBackgroundRole(QPalette.ColorRole.Highlight if enabled else QPalette.ColorRole.Window)
         self._container.setAutoFillBackground(enabled)
 
 
@@ -386,7 +386,7 @@ class WidgetActionMenuHoverEventFilter(QObject):
         self._last_widget_action = None
 
     def eventFilter(self, obj: QObject, event: QEvent):
-        if event.type() == QEvent.MouseMove:
+        if event.type() == QEvent.Type.MouseMove:
             action = obj.actionAt(event.pos())
             if isinstance(action, CustomLabelWidgetAction) and action._enabled:
                 if self._last_widget_action and action != self._last_widget_action:
@@ -439,7 +439,7 @@ class Koordinates(QgsDockWidget, WIDGET):
         hl.addSpacing(11)
         self.context_tab_container.setLayout(hl)
 
-        self.context_tab_container.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+        self.context_tab_container.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
         self.context_tab.setExpanding(False)
         # self.context_tab.setFixedSize(100,100)
         self.context_tab.addTab('')
@@ -530,13 +530,13 @@ class Koordinates(QgsDockWidget, WIDGET):
         self.label_count = QLabel()
         self.button_sort_order = QToolButton()
         self.button_sort_order.setText('...')
-        self.button_sort_order.setPopupMode(QToolButton.InstantPopup)
-        self.button_sort_order.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        self.button_sort_order.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        self.button_sort_order.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextOnly)
         self.button_sort_order.setAutoRaise(True)
 
         self.browse_header_widget = QWidget()
-        self.browse_header_widget.setSizePolicy(QSizePolicy.Ignored,
-                                                QSizePolicy.Fixed)
+        self.browse_header_widget.setSizePolicy(QSizePolicy.Policy.Ignored,
+                                                QSizePolicy.Policy.Fixed)
         results_top_layout = QHBoxLayout()
         results_top_layout.setContentsMargins(0, 0, 0, 0)
         results_top_layout.addWidget(self.label_count)
@@ -607,10 +607,10 @@ class Koordinates(QgsDockWidget, WIDGET):
         self.button_sort_order.setFont(smaller_font)
 
         self.label_count.setFont(smaller_font)
-        active_color = self.palette().color(QPalette.WindowText)
+        active_color = self.palette().color(QPalette.ColorRole.WindowText)
         active_color.setAlphaF(0.6)
         p = QPalette(self.palette())
-        p.setColor(QPalette.WindowText, active_color)
+        p.setColor(QPalette.ColorRole.WindowText, active_color)
         self.label_count.setPalette(p)
 
         self._set_count_label()
@@ -767,7 +767,7 @@ class Koordinates(QgsDockWidget, WIDGET):
 
             menu.addAction(w)
 
-        menu.exec_(tab_center)
+        menu.exec(tab_center)
 
     def _set_visible_context(self, details):
         self.context_tab.setTabText(self.context_tab.count() - 2,
@@ -928,10 +928,10 @@ class Koordinates(QgsDockWidget, WIDGET):
             return
 
         self._current_facets_reply = None
-        if reply.error() == QNetworkReply.OperationCanceledError:
+        if reply.error() == QNetworkReply.NetworkError.OperationCanceledError:
             return
 
-        if reply.error() != QNetworkReply.NoError:
+        if reply.error() != QNetworkReply.NetworkError.NoError:
             print('error occurred :(')
             return
         #            self.error_occurred.emit(request.reply().errorString())

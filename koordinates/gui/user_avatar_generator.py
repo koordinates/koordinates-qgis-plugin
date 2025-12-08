@@ -63,17 +63,17 @@ class UserAvatarGenerator:
         """
         Generates an avatar image
         """
-        image = QImage(size, size, QImage.Format_ARGB32_Premultiplied)
-        image.fill(Qt.transparent)
+        image = QImage(size, size, QImage.Format.Format_ARGB32_Premultiplied)
+        image.fill(Qt.GlobalColor.transparent)
 
         painter = QPainter(image)
-        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
-        painter.setPen(Qt.NoPen)
+        painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QBrush(background_color))
         painter.drawEllipse(QRectF(0, 0, image.width(), image.height()))
 
-        painter.setBrush(Qt.NoBrush)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.setPen(QPen(foreground_color))
         font = GuiUtils.get_default_font()
         font.setPixelSize(int(image.height() * 0.4))

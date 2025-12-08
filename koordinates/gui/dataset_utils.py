@@ -48,26 +48,26 @@ class DatasetGuiUtils:
         """
         Crops an image to a circle
         """
-        image = image.convertToFormat(QImage.Format_ARGB32)
+        image = image.convertToFormat(QImage.Format.Format_ARGB32)
         if image.width() != size or image.height() != size:
             image = image.scaled(size, size,
-                                 transformMode=Qt.SmoothTransformation)
+                                 transformMode=Qt.TransformationMode.SmoothTransformation)
 
         # round corners of image
         rounded_image = QImage(size, size,
-                               QImage.Format_ARGB32)
-        rounded_image.fill(Qt.transparent)
+                               QImage.Format.Format_ARGB32)
+        rounded_image.fill(Qt.GlobalColor.transparent)
         painter = QPainter(rounded_image)
-        painter.setRenderHint(QPainter.Antialiasing, True)
-        painter.setPen(Qt.NoPen)
-        painter.setBrush(Qt.red)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(Qt.GlobalColor.red)
         if not radius:
             painter.drawEllipse(0, 0, size, size)
         else:
             painter.drawRoundedRect(0, 0, size, size,
                                     radius,
                                     radius)
-        painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
+        painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceIn)
         painter.drawImage(0, 0, image)
         painter.end()
 
@@ -82,11 +82,11 @@ class DatasetGuiUtils:
             suffix = 'dark'
 
         if dataset.datatype == DataType.Vectors:
-            if dataset.geometry_type == QgsWkbTypes.PolygonGeometry:
+            if dataset.geometry_type == QgsWkbTypes.GeometryType.PolygonGeometry:
                 return 'polygon-{}.svg'.format(suffix)
-            elif dataset.geometry_type == QgsWkbTypes.PointGeometry:
+            elif dataset.geometry_type == QgsWkbTypes.GeometryType.PointGeometry:
                 return 'point-{}.svg'.format(suffix)
-            elif dataset.geometry_type == QgsWkbTypes.LineGeometry:
+            elif dataset.geometry_type == QgsWkbTypes.GeometryType.LineGeometry:
                 return 'line-{}.svg'.format(suffix)
         elif dataset.datatype == DataType.Rasters:
             return 'raster-{}.svg'.format(suffix)
@@ -146,11 +146,11 @@ class DatasetGuiUtils:
     @staticmethod
     def get_type_description(dataset: Dataset) -> Optional[str]:
         if dataset.datatype == DataType.Vectors:
-            if dataset.geometry_type == QgsWkbTypes.PolygonGeometry:
+            if dataset.geometry_type == QgsWkbTypes.GeometryType.PolygonGeometry:
                 return 'Polygon Layer'
-            elif dataset.geometry_type == QgsWkbTypes.PointGeometry:
+            elif dataset.geometry_type == QgsWkbTypes.GeometryType.PointGeometry:
                 return 'Point Layer'
-            elif dataset.geometry_type == QgsWkbTypes.LineGeometry:
+            elif dataset.geometry_type == QgsWkbTypes.GeometryType.LineGeometry:
                 return 'Line Layer'
         elif dataset.datatype == DataType.Rasters:
             return 'Raster Layer'
@@ -179,12 +179,12 @@ class DatasetGuiUtils:
 
             count = dataset.details.get("data", {}).get("feature_count") or 0
 
-            if dataset.geometry_type == QgsWkbTypes.PolygonGeometry:
+            if dataset.geometry_type == QgsWkbTypes.GeometryType.PolygonGeometry:
                 return '{} Polygons'.format(
                     DatasetGuiUtils.format_count(count))
-            elif dataset.geometry_type == QgsWkbTypes.PointGeometry:
+            elif dataset.geometry_type == QgsWkbTypes.GeometryType.PointGeometry:
                 return '{} Points'.format(DatasetGuiUtils.format_count(count))
-            elif dataset.geometry_type == QgsWkbTypes.LineGeometry:
+            elif dataset.geometry_type == QgsWkbTypes.GeometryType.LineGeometry:
                 return '{} Lines'.format(DatasetGuiUtils.format_count(count))
         elif dataset.datatype in (DataType.Rasters, DataType.Grids):
             count = dataset.details.get("data", {}).get("feature_count") or 0

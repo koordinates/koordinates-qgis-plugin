@@ -60,7 +60,7 @@ class FlatTabBar(QTabBar):
 
     def paintEvent(self, event):
         painter = QStylePainter(self)
-        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
         for i in range(self.count()):
             option = QStyleOptionTab()
@@ -68,11 +68,11 @@ class FlatTabBar(QTabBar):
 
             _bottom_tab_style = self.bottom_tab_style(i)
 
-            if option.state & QStyle.State_Selected:
+            if option.state & QStyle.StateFlag.State_Selected:
                 painter.save()
                 brush = QBrush(QColor(219, 219, 219))
                 painter.setBrush(brush)
-                painter.setPen(Qt.NoPen)
+                painter.setPen(Qt.PenStyle.NoPen)
                 if _bottom_tab_style == TabStyle.Rounded:
                     painter.drawRoundedRect(option.rect,
                                             self.CORNER_RADIUS,
@@ -104,8 +104,8 @@ class FlatTabBar(QTabBar):
                     painter.drawPath(path)
                 painter.restore()
 
-            option.state = option.state & (~QStyle.State_Selected)
-            painter.drawControl(QStyle.CE_TabBarTabLabel, option)
+            option.state = option.state & (~QStyle.StateFlag.State_Selected)
+            painter.drawControl(QStyle.ControlElement.CE_TabBarTabLabel, option)
 
 
 class FlatUnderlineTabBar(QTabBar):
@@ -140,7 +140,7 @@ class FlatUnderlineTabBar(QTabBar):
     def paintEvent(self, event):
         painter = QStylePainter(self)
 
-        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
         for i in range(self.count()):
             option = QStyleOptionTab()
@@ -150,10 +150,10 @@ class FlatUnderlineTabBar(QTabBar):
 
             option.rect.setWidth(option.rect.width() - self.HORIZONTAL_SPACING)
 
-            if option.state & QStyle.State_Selected:
+            if option.state & QStyle.StateFlag.State_Selected:
                 painter.save()
-                painter.setRenderHint(QPainter.Antialiasing, False)
-                painter.setBrush(Qt.NoBrush)
+                painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
+                painter.setBrush(Qt.BrushStyle.NoBrush)
                 pen = QPen(self._tab_color)
                 pen.setWidth(self.LINE_WIDTH)
                 painter.setPen(pen)
@@ -163,10 +163,10 @@ class FlatUnderlineTabBar(QTabBar):
                                  self.rect().bottom())
                 painter.restore()
 
-            option.state = option.state & (~QStyle.State_Selected)
+            option.state = option.state & (~QStyle.StateFlag.State_Selected)
             painter.setFont(self.font())
             painter.drawText(option.rect,
-                             Qt.TextDontClip | Qt.AlignLeft | Qt.AlignVCenter,
+                             Qt.TextFlag.TextDontClip | Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
                              option.text)
 
 
@@ -274,16 +274,16 @@ class ExploreTabButton(QPushButton):
 
     def paintEvent(self, event):
         painter = QStylePainter(self)
-        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
         option = QStyleOptionButton()
         self.initStyleOption(option)
 
-        if option.state & QStyle.State_On:
+        if option.state & QStyle.StateFlag.State_On:
             painter.save()
             brush = QBrush(QColor(219, 219, 219))
             painter.setBrush(brush)
-            painter.setPen(Qt.NoPen)
+            painter.setPen(Qt.PenStyle.NoPen)
             if self.bottom_tab_style == TabStyle.Rounded:
                 painter.drawRoundedRect(option.rect,
                                         self.CORNER_RADIUS,
@@ -315,6 +315,6 @@ class ExploreTabButton(QPushButton):
                 painter.drawPath(path)
             painter.restore()
 
-        option.state = option.state & (~QStyle.State_Selected)
+        option.state = option.state & (~QStyle.StateFlag.State_Selected)
         option.rect.translate(12, 0)
-        painter.drawControl(QStyle.CE_PushButtonLabel, option)
+        painter.drawControl(QStyle.ControlElement.CE_PushButtonLabel, option)

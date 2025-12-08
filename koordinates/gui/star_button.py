@@ -40,7 +40,7 @@ class StarButton(QSvgWidget):
         self.load(icon)
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             to_star = not self._checked
             KoordinatesClient.instance().star(self.dataset.id,
                                               is_starred=to_star)

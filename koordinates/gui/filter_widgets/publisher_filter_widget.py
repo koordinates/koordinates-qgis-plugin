@@ -89,9 +89,9 @@ class PublisherDelegate(QStyledItemDelegate):
         publisher: Publisher = index.data(PublisherModel.PublisherRole)
 
         painter.save()
-        painter.setRenderHint(QPainter.Antialiasing, True)
-        painter.setRenderHint(QPainter.TextAntialiasing, True)
-        painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.TextAntialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
 
         pen = QPen(QColor('#dddddd'))
         pen.setWidth(0)
@@ -148,7 +148,7 @@ class PublisherDelegate(QStyledItemDelegate):
                     background_color = QColor('#555657')
 
             thumbnail_image = index.data(PublisherModel.ThumbnailRole)
-            painter.setPen(Qt.NoPen)
+            painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(QBrush(background_color))
             painter.drawPath(path)
 
@@ -204,7 +204,7 @@ class PublisherDelegate(QStyledItemDelegate):
                             0,
                             2.6 * line_scale]
 
-        painter.setBrush(Qt.NoBrush)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.setPen(QPen(QColor(0, 0, 0)))
         painter.drawText(QPointF(left_text_edge,
                                  inner_rect.top() + int(
@@ -235,9 +235,9 @@ class PublisherModel(QAbstractItemModel):
     Qt model for publishers
     """
 
-    TitleRole = Qt.UserRole + 1
-    PublisherRole = Qt.UserRole + 2
-    ThumbnailRole = Qt.UserRole + 3
+    TitleRole = Qt.ItemDataRole.UserRole + 1
+    PublisherRole = Qt.ItemDataRole.UserRole + 2
+    ThumbnailRole = Qt.ItemDataRole.UserRole + 3
 
     def __init__(self, parent: Optional[QObject] = None):
         super().__init__(parent)
@@ -303,14 +303,14 @@ class PublisherModel(QAbstractItemModel):
 
         self._current_reply = None
 
-        if reply.error() == QNetworkReply.OperationCanceledError:
+        if reply.error() == QNetworkReply.NetworkError.OperationCanceledError:
             return
 
-        if reply.error() == QNetworkReply.ContentNotFoundError:
+        if reply.error() == QNetworkReply.NetworkError.ContentNotFoundError:
             self.available_count = 0
             return
 
-        if reply.error() != QNetworkReply.NoError:
+        if reply.error() != QNetworkReply.NetworkError.NoError:
             print('error occurred :(')
             return
         # self.error_occurred.emit(request.reply().errorString())
@@ -362,7 +362,7 @@ class PublisherModel(QAbstractItemModel):
     def columnCount(self, parent=QModelIndex()):
         return 1
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         publisher = self.index2publisher(index)
         if publisher:
             if role == self.PublisherRole:
@@ -382,7 +382,7 @@ class PublisherModel(QAbstractItemModel):
         if not index.isValid():
             return f
 
-        return f | Qt.ItemIsEnabled
+        return f | Qt.ItemFlag.ItemIsEnabled
 
     def canFetchMore(self, QModelIndex):
         if not self.publishers:
@@ -429,11 +429,11 @@ class PublisherListView(QListView):
         delegate = PublisherDelegate(self)
         self.setItemDelegate(delegate)
 
-        self.setFrameShape(QFrame.NoFrame)
+        self.setFrameShape(QFrame.Shape.NoFrame)
         self.viewport().setStyleSheet(
             "#qt_scrollarea_viewport{ background: transparent; }")
 
-        self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
+        self.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
 
     def set_filter_string(self, filter_string: str):
         """
@@ -471,7 +471,7 @@ class PublisherSelectionWidget(QWidget):
             search_highlight.setLayout(sub_layout)
             vl.addWidget(search_highlight)
 
-        self.setCursor(Qt.PointingHandCursor)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
 
         self.tab_bar = FlatUnderlineTabBar()
         self.tab_bar.addTab(self.tr('All'))
@@ -532,10 +532,10 @@ class PublisherSelectionWidget(QWidget):
 
         self._current_facets_reply = None
 
-        if reply.error() == QNetworkReply.OperationCanceledError:
+        if reply.error() == QNetworkReply.NetworkError.OperationCanceledError:
             return
 
-        if reply.error() != QNetworkReply.NoError:
+        if reply.error() != QNetworkReply.NetworkError.NoError:
             print('error occurred :(')
             return
         # self.error_occurred.emit(request.reply().errorString())

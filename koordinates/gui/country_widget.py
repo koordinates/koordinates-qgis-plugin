@@ -196,8 +196,8 @@ class EmojiToIconRenderer:
 
         image = QImage(fm.boundingRect(char).width(),
                        fm.boundingRect(char).height(),
-                       QImage.Format_ARGB32)
-        image.fill(Qt.transparent)
+                       QImage.Format.Format_ARGB32)
+        image.fill(Qt.GlobalColor.transparent)
         painter = QPainter(image)
         painter.setFont(EmojiToIconRenderer.EMOJI_FONT)
         painter.drawText(0, 0, image.width(), image.height(), 0, char)
@@ -256,14 +256,14 @@ class CountryWidget(QWidget):
         bottom_pad = int(fm.height() * 0.5)
 
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         if platform.system() != 'Windows':
             painter.setFont(self._emoji_font)
             painter.drawText(
                 QRect(
                     left_space, 0,
                     icon_space, self.height() - bottom_pad
-                ), Qt.AlignLeft | Qt.AlignVCenter,
+                ), Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
                 flag.flag(self._country))
 
         name_font = self.font()
@@ -277,7 +277,7 @@ class CountryWidget(QWidget):
 
         text_left = left_space + icon_space
         painter.drawText(QRect(text_left, 0, self.width() - text_left, self.height() - bottom_pad),
-                         Qt.AlignLeft | Qt.AlignVCenter, COUNTRY_NAMES[self._country])
+                         Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, COUNTRY_NAMES[self._country])
         painter.end()
 
 

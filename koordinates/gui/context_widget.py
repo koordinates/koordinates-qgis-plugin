@@ -69,7 +69,7 @@ class ContextLogo(QLabel):
             image = image.scaled(
                 int(image.width() * ContextLogo.LOGO_HEIGHT / image.height()),
                 ContextLogo.LOGO_HEIGHT,
-                transformMode=Qt.SmoothTransformation
+                transformMode=Qt.TransformationMode.SmoothTransformation
             )
 
         self.setFixedWidth(image.width())
@@ -96,9 +96,9 @@ class ContextItem(QFrame):
 
         self.setMouseTracking(True)
         self.setObjectName('context_item')
-        self.setCursor(QCursor(Qt.PointingHandCursor))
+        self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
-        self.setFrameShape(QFrame.NoFrame)
+        self.setFrameShape(QFrame.Shape.NoFrame)
 
         hl = QHBoxLayout()
         self.icon_label = ContextIcon()
@@ -174,7 +174,7 @@ class ContextItem(QFrame):
         self.update()
 
     def mousePressEvent(self, event):
-        if event.button() != Qt.LeftButton:
+        if event.button() != Qt.MouseButton.LeftButton:
             return
 
         self.selected.emit(self._details['name'])
@@ -225,24 +225,24 @@ class ContextWidget(QWidget):
             super().__init__(parent.window() if parent else None)
 
             self.setAnchorWidget(parent)
-            self.setAnchorPoint(QgsFloatingWidget.TopLeft)
-            self.setAnchorWidgetPoint(QgsFloatingWidget.BottomLeft)
+            self.setAnchorPoint(QgsFloatingWidget.AnchorPoint.TopLeft)
+            self.setAnchorWidgetPoint(QgsFloatingWidget.AnchorPoint.BottomLeft)
 
             self.frame = QFrame()
             self.frame.setObjectName('base_frame')
-            self.frame.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
+            self.frame.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Maximum)
 
             opt = QStyleOptionFrame()
-            border = self.style().pixelMetric(QStyle.PM_DefaultFrameWidth, opt)
+            border = self.style().pixelMetric(QStyle.PixelMetric.PM_DefaultFrameWidth, opt)
 
             palette = QPalette()
 
             self.frame.setStyleSheet(
                 "#base_frame {{background-color: {}; border: {}px solid {};}}".format(
-                    palette.color(QPalette.Base).name(),
+                    palette.color(QPalette.ColorRole.Base).name(),
                     border,
-                    palette.color(QPalette.Dark).name()))
-            self.frame.setFrameStyle(QFrame.Panel | QFrame.Plain)
+                    palette.color(QPalette.ColorRole.Dark).name()))
+            self.frame.setFrameStyle(QFrame.Shape.Panel | QFrame.Shadow.Plain)
 
             frame_layout = QVBoxLayout()
             self.frame.setLayout(frame_layout)
@@ -277,7 +277,7 @@ class ContextWidget(QWidget):
         self._reset_contexts()
         self._current_context_name: str = 'All data'
 
-        self.setFocusPolicy(Qt.StrongFocus)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
         hl = QHBoxLayout()
         hl.setContentsMargins(0, 0, 0, 0)
@@ -287,7 +287,7 @@ class ContextWidget(QWidget):
 
         self.drop_down_button = QToolButton()
         self.drop_down_button.setAutoRaise(True)
-        self.drop_down_button.setArrowType(Qt.DownArrow)
+        self.drop_down_button.setArrowType(Qt.ArrowType.DownArrow)
         self.drop_down_button.setCheckable(True)
         hl.addWidget(self.drop_down_button)
 

@@ -76,7 +76,7 @@ class AttachmentWidget(QFrame):
         download_layout.addWidget(download_icon)
 
         download_frame.setLayout(download_layout)
-        download_frame.setCursor(Qt.PointingHandCursor)
+        download_frame.setCursor(Qt.CursorShape.PointingHandCursor)
 
         download_frame.mousePressEvent = self._download
 

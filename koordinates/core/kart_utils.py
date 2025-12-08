@@ -67,7 +67,7 @@ class KartUtils:
             KartUtils.CURRENT_CLONE_DIALOG.was_canceled.connect(on_reject)
             KartUtils.CURRENT_CLONE_DIALOG.destroyed.connect(on_reject)
 
-            el.exec_()
+            el.exec()
 
             if KartUtils.CLONE_KART_REPO_WAS_ACCEPTED:
                 extent = KartUtils.CURRENT_CLONE_DIALOG.extent()

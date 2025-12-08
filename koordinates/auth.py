@@ -118,12 +118,12 @@ class _Handler(BaseHTTPRequestHandler):
         token_body = urllib.parse.urlencode(body).encode()
 
         network_request = QNetworkRequest(QUrl(TOKEN_URL))
-        network_request.setHeader(QNetworkRequest.ContentTypeHeader,
+        network_request.setHeader(QNetworkRequest.KnownHeaders.ContentTypeHeader,
                                   'application/x-www-form-urlencoded')
 
         if request.post(network_request,
                         data=token_body,
-                        forceRefresh=True) != QgsBlockingNetworkRequest.NoError:
+                        forceRefresh=True) != QgsBlockingNetworkRequest.ErrorCode.NoError:
             self.server.error = request.reply().content().data().decode() \
                                 or request.reply().errorString()
             self._send_response()
@@ -154,13 +154,13 @@ class _Handler(BaseHTTPRequestHandler):
         api_token_body = urllib.parse.urlencode(body).encode()
 
         network_request = QNetworkRequest(QUrl(API_TOKEN_URL))
-        network_request.setHeader(QNetworkRequest.ContentTypeHeader,
+        network_request.setHeader(QNetworkRequest.KnownHeaders.ContentTypeHeader,
                                   'application/x-www-form-urlencoded')
         network_request.setRawHeader(b"Authorization", f"Bearer {access_token}".encode())
 
         if request.post(network_request,
                         data=api_token_body,
-                        forceRefresh=True) != QgsBlockingNetworkRequest.NoError:
+                        forceRefresh=True) != QgsBlockingNetworkRequest.ErrorCode.NoError:
             self.server.error = request.reply().content().data().decode() \
                                 or request.reply().errorString()
             self._send_response()
@@ -230,11 +230,11 @@ class OAuthWorkflow(QThread):
         query.addQueryItem('refresh_token', refresh_token)
 
         network_request = QNetworkRequest(QUrl(TOKEN_URL))
-        network_request.setHeader(QNetworkRequest.ContentTypeHeader,
+        network_request.setHeader(QNetworkRequest.KnownHeaders.ContentTypeHeader,
                                   'application/x-www-form-urlencoded')
         self._refresh_reply = QgsNetworkAccessManager.instance().post(
             network_request,
-            query.toString(QUrl.FullyEncoded).encode()
+            query.toString(QUrl.ComponentFormattingOption.FullyEncoded).encode()
         )
         self._refresh_reply.finished.connect(
             partial(self._refresh_oauth_finished, self._refresh_reply))
@@ -265,7 +265,7 @@ class OAuthWorkflow(QThread):
         api_token_body = urllib.parse.urlencode(body).encode()
 
         network_request = QNetworkRequest(QUrl(API_TOKEN_URL))
-        network_request.setHeader(QNetworkRequest.ContentTypeHeader,
+        network_request.setHeader(QNetworkRequest.KnownHeaders.ContentTypeHeader,
                                   'application/x-www-form-urlencoded')
         network_request.setRawHeader(b"Authorization",
                                      f"Bearer {access_token}".encode())
