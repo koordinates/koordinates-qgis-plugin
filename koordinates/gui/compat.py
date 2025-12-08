@@ -2,8 +2,11 @@
 Qt5/Qt6 compatibility layer for PyQt imports
 """
 
-from qgis.PyQt.QtCore import QSize
-from qgis.PyQt.QtGui import QPixmap, QFontMetrics as _QFontMetrics
+from qgis.PyQt.QtGui import (
+    QPixmap,
+    QFontMetrics as _QFontMetrics,
+    QFontDatabase as _QFontDatabase
+)
 from qgis.PyQt.QtSvg import QSvgRenderer
 from qgis.PyQt.QtWidgets import QLabel
 
@@ -68,24 +71,27 @@ class QFontMetrics(_QFontMetrics):
         """Qt5-compatible width() method that calls horizontalAdvance() in Qt6"""
         if hasattr(super(), 'horizontalAdvance'):
             # Qt6
-            return self.horizontalAdvance(text, length) if length >= 0 else self.horizontalAdvance(text)
+            if length >= 0:
+                return self.horizontalAdvance(text, length)
+            return self.horizontalAdvance(text)
         else:
             # Qt5
-            return super().width(text, length) if length >= 0 else super().width(text)
+            if length >= 0:
+                return super().width(text, length)
+            return super().width(text)
 
 
 def fontmetric_width(fm, text: str) -> int:
     """Get text width from QFontMetrics, compatible with Qt5 and Qt6"""
-    return fm.horizontalAdvance(text) if hasattr(fm, 'horizontalAdvance') else fm.width(text)
-
-
-# QFontDatabase changed from instance methods to static methods in Qt6
-from qgis.PyQt.QtGui import QFontDatabase as _QFontDatabase
+    if hasattr(fm, 'horizontalAdvance'):
+        return fm.horizontalAdvance(text)
+    return fm.width(text)
 
 
 def font_families():
     """Get list of font families, compatible with Qt5 and Qt6"""
-    if hasattr(_QFontDatabase, 'families') and callable(getattr(_QFontDatabase, 'families')):
+    families_attr = getattr(_QFontDatabase, 'families', None)
+    if families_attr and callable(families_attr):
         # Qt6 - static method
         return _QFontDatabase.families()
     else:

@@ -31,6 +31,8 @@ from qgis.core import (
     QgsApplication
 )
 
+from ..compat import fontmetric_width
+
 
 class CustomComboBox(QWidget):
     """
@@ -274,7 +276,7 @@ class CustomComboBox(QWidget):
 
         fm = QFontMetrics(self.font())
         text = self._current_text
-        while len(text) > 5 and fm.width(text) > available_space:
+        while len(text) > 5 and fontmetric_width(fm, text) > available_space:
             text = text[:-1]
 
         if text != self._current_text:

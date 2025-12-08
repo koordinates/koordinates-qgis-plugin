@@ -17,6 +17,7 @@ from qgis.gui import (
     QgsDateEdit
 )
 
+from ..compat import fontmetric_width
 from ...api import DataBrowserQuery
 from .filter_widget_combo_base import FilterWidgetComboBase
 from .range_slider import RangeSlider
@@ -35,7 +36,7 @@ class ClearableDateEdit(QgsDateEdit):
 
         # need to set minimum width of widget to fit the full date string, plus extra
         # space for controls
-        self.setMinimumWidth(QFontMetrics(small_font).width(DATE_FORMAT + 'xxxxxxxxx'))
+        self.setMinimumWidth(fontmetric_width(QFontMetrics(small_font), DATE_FORMAT + 'xxxxxxxxx'))
         self.setDisplayFormat(DATE_FORMAT)
 
         self._default_date = QDate()

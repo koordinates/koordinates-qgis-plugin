@@ -9,6 +9,8 @@ from qgis.PyQt.QtWidgets import (
     QLabel
 )
 
+from .compat import fontmetric_width
+
 
 class ElideLabel(QLabel):
     """
@@ -32,7 +34,7 @@ class ElideLabel(QLabel):
             current_x = 0
             current_y = fm.height()
             words = self.text().split(' ')
-            space_width = fm.width(' ')
+            space_width = fontmetric_width(fm, ' ')
             line_space = fm.lineSpacing()
 
             painter.setFont(self.font())
@@ -40,7 +42,7 @@ class ElideLabel(QLabel):
             word_pos = []
 
             for word in words:
-                word_width = fm.width(word)
+                word_width = fontmetric_width(fm, word)
                 current_x += word_width
                 if current_x > available_width:
                     current_x = word_width

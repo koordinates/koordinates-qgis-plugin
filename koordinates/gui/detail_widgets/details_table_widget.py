@@ -17,6 +17,7 @@ from qgis.PyQt.QtWidgets import (
 )
 
 from .horizontal_line_widget import HorizontalLine
+from ..compat import fontmetric_width
 from ..gui_utils import (
     FONT_FAMILIES,
     MONOSPACE_FONT_FAMILIES
@@ -61,8 +62,7 @@ class DetailsTable(QGridLayout):
             Qt.TextInteractionFlag.TextBrowserInteraction)
         title_label.setOpenExternalLinks(True)
 
-        fm = QFontMetrics(QFont())
-        title_label.setFixedWidth(fm.width('x') * 30)
+        title_label.setFixedWidth(fontmetric_width(QFontMetrics(QFont()), 'x') * 30)
         title_label.setAlignment(
             Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         self.addWidget(title_label, row, 0, 1, 1)

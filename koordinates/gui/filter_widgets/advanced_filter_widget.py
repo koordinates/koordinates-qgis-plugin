@@ -26,6 +26,7 @@ from .publisher_filter_widget import PublisherFilterWidget
 from .group_filter_widget import GroupFilterWidget
 from .license_filter_widget import LicenseFilterWidget
 from .resolution_filter_widget import ResolutionFilterWidget
+from ..compat import fontmetric_width
 from ..enums import FilterWidgetAppearance
 from ..flow_layout import FlowLayout
 from ...api import (
@@ -66,7 +67,7 @@ class AdvancedFilterWidget(QWidget):
             self.group_widget,
             self.access_widget,)
 
-        min_filter_widget_width = QFontMetrics(self.font()).width('x') * 25
+        min_filter_widget_width = fontmetric_width(QFontMetrics(self.font()), 'x') * 25
         # self.category_filter_widget.setMinimumWidth(min_filter_widget_width)
         for w in self.filter_widgets:
             w.setMinimumWidth(min_filter_widget_width)

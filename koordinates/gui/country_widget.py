@@ -7,14 +7,14 @@ from qgis.PyQt.QtCore import (
     Qt
 )
 from qgis.PyQt.QtGui import (
-    QFontMetrics,
     QPainter,
     QFont,
-    QFontDatabase,
     QIcon,
     QImage,
     QPixmap
 )
+
+from .compat import QFontMetrics, fontmetric_width, font_families
 from qgis.PyQt.QtWidgets import (
     QWidget,
     QWidgetAction
@@ -161,7 +161,7 @@ class EmojiToIconRenderer:
         if EmojiToIconRenderer.EMOJI_FONT:
             return
 
-        families = set(QFontDatabase().families())
+        families = set(font_families())
 
         found = False
         for candidate in STANDARD_EMOJI_FONTS:
@@ -215,7 +215,7 @@ class CountryWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        families = set(QFontDatabase().families())
+        families = set(font_families())
 
         found = False
         for candidate in STANDARD_EMOJI_FONTS:
@@ -239,17 +239,18 @@ class CountryWidget(QWidget):
 
     def sizeHint(self):
         fm = QFontMetrics(self.font())
-        return QSize(fm.width('x') * 30, int(fm.height() * 1.5))
+        return QSize(fontmetric_width(fm, 'x') * 30, int(fm.height() * 1.5))
 
     def paintEvent(self, event):
         if not self._country:
             return
 
         fm = QFontMetrics(self.font())
-        left_space = int(fm.width('x') * 4.5)
+        left_space = int(fontmetric_width(fm, 'x') * 4.5)
 
         if platform.system() != 'Windows':
-            icon_space = int(QFontMetrics(self._emoji_font).width(self._country) * 1.5)
+            fm = QFontMetrics(self._emoji_font)
+            icon_space = int(fontmetric_width(fm, self._country) * 1.5)
         else:
             icon_space = 0
 
@@ -276,8 +277,11 @@ class CountryWidget(QWidget):
         painter.setPen(pen)
 
         text_left = left_space + icon_space
-        painter.drawText(QRect(text_left, 0, self.width() - text_left, self.height() - bottom_pad),
-                         Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, COUNTRY_NAMES[self._country])
+        painter.drawText(
+            QRect(text_left, 0, self.width() - text_left,
+                  self.height() - bottom_pad),
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+            COUNTRY_NAMES[self._country])
         painter.end()
 
 
