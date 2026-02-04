@@ -3,10 +3,7 @@ import os
 from typing import Optional
 
 from qgis.PyQt import uic
-from qgis.PyQt.QtWidgets import (
-    QWidget,
-    QLabel
-)
+from qgis.PyQt.QtWidgets import QWidget, QLabel
 
 WIDGET, BASE = uic.loadUiType(
     os.path.join(os.path.dirname(__file__), "locationselectionpanel.ui")
@@ -24,7 +21,7 @@ class LocationSelectionPanel(QWidget, WIDGET):
         self.setupUi(self)
 
         if show_label:
-            self.type_label = QLabel('Storage type')
+            self.type_label = QLabel("Storage type")
             self.type_layout.insertWidget(0, self.type_label)
         else:
             self.type_label = None

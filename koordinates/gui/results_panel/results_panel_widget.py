@@ -1,8 +1,6 @@
 from typing import Optional
 
-from qgis.PyQt.QtWidgets import (
-    QWidget
-)
+from qgis.PyQt.QtWidgets import QWidget
 
 
 class ResultsPanelWidget(QWidget):

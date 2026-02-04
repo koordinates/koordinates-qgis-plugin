@@ -8,11 +8,11 @@
 
 """
 
-__author__ = '(C) 2018 by Nyall Dawson'
-__date__ = '20/04/2018'
-__copyright__ = 'Copyright 2018, North Road'
+__author__ = "(C) 2018 by Nyall Dawson"
+__date__ = "20/04/2018"
+__copyright__ = "Copyright 2018, North Road"
 # This will get replaced with a git SHA1 when you do a git archive
-__revision__ = '$Format:%H$'
+__revision__ = "$Format:%H$"
 
 import unittest
 from ..gui.gui_utils import GuiUtils
@@ -28,29 +28,24 @@ class GuiUtilsTest(unittest.TestCase):
         """
         Tests get_icon
         """
-        self.assertFalse(
-            GuiUtils.get_icon('filter.svg').isNull())
-        self.assertTrue(GuiUtils.get_icon('not_an_icon.svg').isNull())
+        self.assertFalse(GuiUtils.get_icon("filter.svg").isNull())
+        self.assertTrue(GuiUtils.get_icon("not_an_icon.svg").isNull())
 
     def testGetIconSvg(self):
         """
         Tests get_icon svg path
         """
-        self.assertTrue(
-            GuiUtils.get_icon_svg('filter.svg'))
-        self.assertIn('filter.svg',
-                      GuiUtils.get_icon_svg('filter.svg'))
-        self.assertFalse(GuiUtils.get_icon_svg('not_an_icon.svg'))
+        self.assertTrue(GuiUtils.get_icon_svg("filter.svg"))
+        self.assertIn("filter.svg", GuiUtils.get_icon_svg("filter.svg"))
+        self.assertFalse(GuiUtils.get_icon_svg("not_an_icon.svg"))
 
     def testGetUiFilePath(self):
         """
         Tests get_ui_file_path svg path
         """
-        self.assertTrue(
-            GuiUtils.get_ui_file_path('koordinates.ui'))
-        self.assertIn('koordinates.ui',
-                      GuiUtils.get_ui_file_path('koordinates.ui'))
-        self.assertFalse(GuiUtils.get_ui_file_path('not_a_form.ui'))
+        self.assertTrue(GuiUtils.get_ui_file_path("koordinates.ui"))
+        self.assertIn("koordinates.ui", GuiUtils.get_ui_file_path("koordinates.ui"))
+        self.assertFalse(GuiUtils.get_ui_file_path("not_a_form.ui"))
 
 
 if __name__ == "__main__":

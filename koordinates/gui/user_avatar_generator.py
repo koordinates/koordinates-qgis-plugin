@@ -1,18 +1,7 @@
 from typing import Optional
 
-from qgis.PyQt.QtCore import (
-    Qt,
-    QRectF,
-    QPointF
-)
-from qgis.PyQt.QtGui import (
-    QImage,
-    QPainter,
-    QColor,
-    QBrush,
-    QPen,
-    QFontMetrics
-)
+from qgis.PyQt.QtCore import Qt, QRectF, QPointF
+from qgis.PyQt.QtGui import QImage, QPainter, QColor, QBrush, QPen, QFontMetrics
 
 from .gui_utils import GuiUtils
 
@@ -40,7 +29,8 @@ class UserAvatarGenerator:
             initials,
             UserAvatarGenerator.FORE_COLOR,
             UserAvatarGenerator.BACK_COLOR,
-            size or UserAvatarGenerator.AVATAR_SIZE)
+            size or UserAvatarGenerator.AVATAR_SIZE,
+        )
 
         if size is None:
             cls.AVATAR_CACHE[initials] = image
@@ -53,27 +43,26 @@ class UserAvatarGenerator:
         """
         words = name.split()
         initials = [word[0].upper() for word in words]
-        return ''.join(initials)[:3]
+        return "".join(initials)[:3]
 
     @staticmethod
-    def generate_avatar(initials: str,
-                        foreground_color: QColor,
-                        background_color: QColor,
-                        size: int) -> QImage:
+    def generate_avatar(
+        initials: str, foreground_color: QColor, background_color: QColor, size: int
+    ) -> QImage:
         """
         Generates an avatar image
         """
-        image = QImage(size, size, QImage.Format_ARGB32_Premultiplied)
-        image.fill(Qt.transparent)
+        image = QImage(size, size, QImage.Format.Format_ARGB32_Premultiplied)
+        image.fill(Qt.GlobalColor.transparent)
 
         painter = QPainter(image)
-        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
-        painter.setPen(Qt.NoPen)
+        painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QBrush(background_color))
         painter.drawEllipse(QRectF(0, 0, image.width(), image.height()))
 
-        painter.setBrush(Qt.NoBrush)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.setPen(QPen(foreground_color))
         font = GuiUtils.get_default_font()
         font.setPixelSize(int(image.height() * 0.4))
@@ -82,8 +71,7 @@ class UserAvatarGenerator:
         baseline = int((image.height() + metrics.capHeight()) / 2)
         left = int(image.width() - metrics.horizontalAdvance(initials)) / 2
         painter.setFont(font)
-        painter.drawText(QPointF(left, baseline),
-                         initials)
+        painter.drawText(QPointF(left, baseline), initials)
 
         painter.end()
 

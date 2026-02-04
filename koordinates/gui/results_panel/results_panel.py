@@ -1,30 +1,15 @@
 import json
 import os
 from functools import partial
-from typing import (
-    List,
-    Optional,
-    Union
-)
+from typing import List, Optional, Union
 
 from qgis.PyQt import sip
-from qgis.PyQt.QtCore import (
-    Qt,
-    pyqtSignal
-)
+from qgis.PyQt.QtCore import Qt, pyqtSignal
 from qgis.PyQt.QtNetwork import QNetworkReply
-from qgis.PyQt.QtWidgets import (
-    QFrame,
-    QVBoxLayout,
-    QSizePolicy,
-    QWidget
-)
+from qgis.PyQt.QtWidgets import QFrame, QVBoxLayout, QSizePolicy, QWidget
 from qgis.gui import QgsScrollArea
 
-from koordinates.api import (
-    KoordinatesClient,
-    DataBrowserQuery
-)
+from koordinates.api import KoordinatesClient, DataBrowserQuery
 from .datasets_browser_widget import DatasetsBrowserWidget
 from ..enums import StandardExploreModes
 from .explore_panel import ExplorePanelWidget
@@ -39,6 +24,7 @@ class ResultsPanel(QWidget):
     """
     A panel for showing explore/browse results
     """
+
     total_count_changed = pyqtSignal(int)
     visible_count_changed = pyqtSignal(int)
     publisher_selected = pyqtSignal(Publisher)
@@ -48,10 +34,15 @@ class ResultsPanel(QWidget):
         super().__init__()
 
         self.scroll_area = QgsScrollArea()
-        self.scroll_area.setSizePolicy(QSizePolicy.Preferred,
-                                       QSizePolicy.Preferred)
-        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.scroll_area.setSizePolicy(
+            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred
+        )
+        self.scroll_area.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        self.scroll_area.setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOn
+        )
         self.scroll_area.setWidgetResizable(True)
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -60,8 +51,9 @@ class ResultsPanel(QWidget):
         self.publisher_container.setContentsMargins(0, 12, 0, 12)
         self.publisher_widget = QWidget()
         self.publisher_widget.setLayout(self.publisher_container)
-        self.publisher_widget.setSizePolicy(QSizePolicy.Preferred,
-                                            QSizePolicy.Maximum)
+        self.publisher_widget.setSizePolicy(
+            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum
+        )
         self.publisher_widget.hide()
         layout.addWidget(self.publisher_widget)
 
@@ -76,12 +68,12 @@ class ResultsPanel(QWidget):
         layout.addWidget(self.scroll_area)
         self.setLayout(layout)
 
-        self.scroll_area.setFrameShape(QFrame.NoFrame)
+        self.scroll_area.setFrameShape(QFrame.Shape.NoFrame)
         self.scroll_area.setStyleSheet(
-            "#qt_scrollarea_viewport{ background: transparent; }")
+            "#qt_scrollarea_viewport{ background: transparent; }"
+        )
 
-        self.child_items: List[
-            Union[DatasetsBrowserWidget, ExplorePanelWidget]] = []
+        self.child_items: List[Union[DatasetsBrowserWidget, ExplorePanelWidget]] = []
 
         self.setMinimumWidth(370)
         self.current_mode: Optional[str] = None
@@ -93,8 +85,7 @@ class ResultsPanel(QWidget):
         """
         Cancels any active request
         """
-        if self._current_reply is not None and \
-                not sip.isdeleted(self._current_reply):
+        if self._current_reply is not None and not sip.isdeleted(self._current_reply):
             self._current_reply.abort()
 
         self._current_reply = None
@@ -110,11 +101,15 @@ class ResultsPanel(QWidget):
 
     def populate(self, query: DataBrowserQuery, context):
         self.cancel_active_requests()
-        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.scroll_area.setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOn
+        )
         self.container_layout.setContentsMargins(0, 6, 6, 6)
-        if self.current_mode == StandardExploreModes.Browse and \
-                self.child_items and \
-                isinstance(self.child_items[0], DatasetsBrowserWidget):
+        if (
+            self.current_mode == StandardExploreModes.Browse
+            and self.child_items
+            and isinstance(self.child_items[0], DatasetsBrowserWidget)
+        ):
             self.child_items[0].populate(query, context)
             # scroll to top on new search
             self.scroll_area.verticalScrollBar().setValue(0)
@@ -132,11 +127,14 @@ class ResultsPanel(QWidget):
             self.container_layout.addWidget(item)
 
     def explore(self, section_slug: str, context):
-        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.scroll_area.setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOn
+        )
         self.container_layout.setContentsMargins(0, 6, 6, 6)
         if section_slug not in (
-                StandardExploreModes.Browse,
-                StandardExploreModes.Publishers):
+            StandardExploreModes.Browse,
+            StandardExploreModes.Publishers,
+        ):
             self.current_mode = section_slug
 
         if self._publisher_banner:
@@ -154,20 +152,19 @@ class ResultsPanel(QWidget):
         Sets the publisher associated with the results
         """
         if publisher:
-            if self._publisher_banner and \
-                    self._publisher_banner.publisher.id() == publisher.id():
+            if (
+                self._publisher_banner
+                and self._publisher_banner.publisher.id() == publisher.id()
+            ):
                 pass
             else:
                 if self._publisher_banner:
                     self._publisher_banner.deleteLater()
 
-                self._publisher_banner = PublisherFilterBannerWidget(
-                    publisher)
-                self.publisher_container.addWidget(
-                    self._publisher_banner)
+                self._publisher_banner = PublisherFilterBannerWidget(publisher)
+                self.publisher_container.addWidget(self._publisher_banner)
                 self.publisher_widget.show()
-                self._publisher_banner.closed.connect(
-                    self._remove_publisher_filter)
+                self._publisher_banner.closed.connect(self._remove_publisher_filter)
                 self.updateGeometry()
         elif self._publisher_banner:
             self._publisher_banner.deleteLater()
@@ -187,7 +184,9 @@ class ResultsPanel(QWidget):
         self.publisher_cleared.emit()
 
     def show_publishers(self, context):
-        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.scroll_area.setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
         self.container_layout.setContentsMargins(0, 0, 0, 0)
         self.cancel_active_requests()
         self.clear_existing_items()
@@ -207,12 +206,9 @@ class ResultsPanel(QWidget):
         self.publisher_selected.emit(publisher)
         self.set_publisher(publisher)
 
-    def _start_explore(self,
-                       section_slug: str,
-                       context: Optional[str] = None):
-        if self._current_reply is not None and \
-                not sip.isdeleted(self._current_reply):
-            if self._current_reply.property('slug') == section_slug:
+    def _start_explore(self, section_slug: str, context: Optional[str] = None):
+        if self._current_reply is not None and not sip.isdeleted(self._current_reply):
+            if self._current_reply.property("slug") == section_slug:
                 return
 
             self._current_reply.abort()
@@ -222,17 +218,15 @@ class ResultsPanel(QWidget):
             self._current_context = context
 
         self._current_reply = KoordinatesClient.instance().explore_async(
-            section_slug=section_slug,
-            context=self._current_context
+            section_slug=section_slug, context=self._current_context
         )
-        self._current_reply.setProperty('slug', section_slug)
+        self._current_reply.setProperty("slug", section_slug)
         self._current_reply.finished.connect(
-            partial(self._reply_finished, self._current_reply, section_slug))
-        self.setCursor(Qt.WaitCursor)
+            partial(self._reply_finished, self._current_reply, section_slug)
+        )
+        self.setCursor(Qt.CursorShape.WaitCursor)
 
-    def _reply_finished(self,
-                        reply: QNetworkReply,
-                        section_slug: str):
+    def _reply_finished(self, reply: QNetworkReply, section_slug: str):
         if sip.isdeleted(self):
             return
 
@@ -242,29 +236,30 @@ class ResultsPanel(QWidget):
 
         self._current_reply = None
 
-        if reply.error() == QNetworkReply.OperationCanceledError:
+        if reply.error() == QNetworkReply.NetworkError.OperationCanceledError:
             return
 
-        if reply.error() != QNetworkReply.NoError:
-            print('error occurred :(')
+        if reply.error() != QNetworkReply.NetworkError.NoError:
+            print("error occurred :(")
             return
         # self.error_occurred.emit(request.reply().errorString())
 
         result = json.loads(reply.readAll().data().decode())
-        if 'panels' not in result:
-            print('error occurred :(')
+        if "panels" not in result:
+            print("error occurred :(")
             return
 
         filtered_panels = []
 
         # we shouldn't need this logic, but the API currently returns
         # some items which are not present in the filter param!
-        for panel in result['panels']:
+        for panel in result["panels"]:
             # filter panel items to supported ones
-            panel['items'] = [item for item in panel['items']
-                              if item['kind'].startswith('layer.')]
+            panel["items"] = [
+                item for item in panel["items"] if item["kind"].startswith("layer.")
+            ]
             # and then completely skip any empty panels
-            if panel['items']:
+            if panel["items"]:
                 filtered_panels.append(panel)
 
         for panel in filtered_panels:
@@ -272,4 +267,4 @@ class ResultsPanel(QWidget):
             self.child_items.append(item)
             self.container_layout.addWidget(item)
 
-        self.setCursor(Qt.ArrowCursor)
+        self.setCursor(Qt.CursorShape.ArrowCursor)

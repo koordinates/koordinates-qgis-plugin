@@ -1,9 +1,6 @@
 from typing import Optional
 
-from qgis.core import (
-    QgsApplication,
-    QgsProject
-)
+from qgis.core import QgsApplication, QgsProject
 
 from .dataset import Dataset
 
@@ -13,8 +10,8 @@ class LayerUtils:
     Layer handling utility functions
     """
 
-    WMTS_URL_BASE = 'https://koordinates.com/services'
-    WMTS_ENDPOINT = 'wmts/1.0.0/layer'
+    WMTS_URL_BASE = "https://koordinates.com/services"
+    WMTS_ENDPOINT = "wmts/1.0.0/layer"
 
     @staticmethod
     def get_random_color_string() -> str:
@@ -26,9 +23,7 @@ class LayerUtils:
         return color.name()[1:]
 
     @staticmethod
-    def add_layer_to_project(
-            dataset: Dataset,
-            style_id: Optional[int] = None):
+    def add_layer_to_project(dataset: Dataset, style_id: Optional[int] = None):
         """
         Adds the layer to the current project from a dataset definition
         """

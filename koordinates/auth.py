@@ -11,26 +11,17 @@ from urllib.parse import parse_qs, urlsplit
 
 import requests
 from qgis.PyQt import sip
-from qgis.PyQt.QtCore import (
-    QThread,
-    pyqtSignal,
-    QUrl,
-    QUrlQuery
-)
+from qgis.PyQt.QtCore import QThread, pyqtSignal, QUrl, QUrlQuery
 from qgis.PyQt.QtGui import QDesktopServices
-from qgis.PyQt.QtNetwork import (
-    QNetworkRequest,
-    QNetworkReply
-)
-from qgis.core import (
-    QgsBlockingNetworkRequest,
-    QgsNetworkAccessManager
-)
+from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply
+from qgis.core import QgsBlockingNetworkRequest, QgsNetworkAccessManager
 
 from .pkce import generate_pkce_pair
 
 AUTH_HANDLER_REDIRECT = "https://id.koordinates.com/o/authorize/qgis/"
-AUTH_HANDLER_REDIRECT_CANCELLED = "https://id.koordinates.com/o/authorize/qgis/cancelled/"
+AUTH_HANDLER_REDIRECT_CANCELLED = (
+    "https://id.koordinates.com/o/authorize/qgis/cancelled/"
+)
 
 AUTH_HANDLER_RESPONSE = """\
 <html>
@@ -66,27 +57,30 @@ else:
 REDIRECT_PORT = 8989
 REDIRECT_URL = f"http://127.0.0.1:{REDIRECT_PORT}/"
 SCOPE = "read"
-SCOPE_KX = " ".join([
-    "query",
-    "tiles",
-    "catalog",
-    "users:read",
-    "sets:read",
-    "layers:read",
-    "repos:read",
-    "repos:push",
-    "viewers:read",
-    "viewers:write",
-    "wxs:wfs",
-    "exports:write",
-    "notifications:read",
-])
+SCOPE_KX = " ".join(
+    [
+        "query",
+        "tiles",
+        "catalog",
+        "users:read",
+        "sets:read",
+        "layers:read",
+        "repos:read",
+        "repos:push",
+        "viewers:read",
+        "viewers:write",
+        "wxs:wfs",
+        "exports:write",
+        "notifications:read",
+    ]
+)
 
 
 class AuthState(Enum):
     """
     Authentication states
     """
+
     LoggedOut = 0
     LoggingIn = 1
     LoggedIn = 2
@@ -102,7 +96,7 @@ class _Handler(BaseHTTPRequestHandler):
         code = params.get("code")
 
         if not code:
-            self.server.error = 'Authorization canceled'
+            self.server.error = "Authorization canceled"
             self._send_response()
             return
 
@@ -118,14 +112,19 @@ class _Handler(BaseHTTPRequestHandler):
         token_body = urllib.parse.urlencode(body).encode()
 
         network_request = QNetworkRequest(QUrl(TOKEN_URL))
-        network_request.setHeader(QNetworkRequest.ContentTypeHeader,
-                                  'application/x-www-form-urlencoded')
+        network_request.setHeader(
+            QNetworkRequest.KnownHeaders.ContentTypeHeader,
+            "application/x-www-form-urlencoded",
+        )
 
-        if request.post(network_request,
-                        data=token_body,
-                        forceRefresh=True) != QgsBlockingNetworkRequest.NoError:
-            self.server.error = request.reply().content().data().decode() \
-                                or request.reply().errorString()
+        if (
+            request.post(network_request, data=token_body, forceRefresh=True)
+            != QgsBlockingNetworkRequest.ErrorCode.NoError
+        ):
+            self.server.error = (
+                request.reply().content().data().decode()
+                or request.reply().errorString()
+            )
             self._send_response()
             return
 
@@ -137,11 +136,11 @@ class _Handler(BaseHTTPRequestHandler):
 
         if not access_token or not expires_in or not refresh_token:
             if not access_token:
-                self.server.error = 'Could not find access_token in reply'
+                self.server.error = "Could not find access_token in reply"
             elif not expires_in:
-                self.server.error = 'Could not find expires_in in reply'
+                self.server.error = "Could not find expires_in in reply"
             elif not refresh_token:
-                self.server.error = 'Could not find refresh_token in reply'
+                self.server.error = "Could not find refresh_token in reply"
 
             self._send_response()
             return
@@ -154,15 +153,22 @@ class _Handler(BaseHTTPRequestHandler):
         api_token_body = urllib.parse.urlencode(body).encode()
 
         network_request = QNetworkRequest(QUrl(API_TOKEN_URL))
-        network_request.setHeader(QNetworkRequest.ContentTypeHeader,
-                                  'application/x-www-form-urlencoded')
-        network_request.setRawHeader(b"Authorization", f"Bearer {access_token}".encode())
+        network_request.setHeader(
+            QNetworkRequest.KnownHeaders.ContentTypeHeader,
+            "application/x-www-form-urlencoded",
+        )
+        network_request.setRawHeader(
+            b"Authorization", f"Bearer {access_token}".encode()
+        )
 
-        if request.post(network_request,
-                        data=api_token_body,
-                        forceRefresh=True) != QgsBlockingNetworkRequest.NoError:
-            self.server.error = request.reply().content().data().decode() \
-                                or request.reply().errorString()
+        if (
+            request.post(network_request, data=api_token_body, forceRefresh=True)
+            != QgsBlockingNetworkRequest.ErrorCode.NoError
+        ):
+            self.server.error = (
+                request.reply().content().data().decode()
+                or request.reply().errorString()
+            )
             self._send_response()
             return
 
@@ -188,7 +194,10 @@ class _Handler(BaseHTTPRequestHandler):
             self.end_headers()
             if self.server.error is not None:
                 self.wfile.write(
-                    AUTH_HANDLER_RESPONSE_ERROR.format(self.server.error).encode("utf-8"))
+                    AUTH_HANDLER_RESPONSE_ERROR.format(self.server.error).encode(
+                        "utf-8"
+                    )
+                )
             else:
                 self.wfile.write(AUTH_HANDLER_RESPONSE.encode("utf-8"))
 
@@ -225,37 +234,42 @@ class OAuthWorkflow(QThread):
 
     def refresh(self, refresh_token: str):
         query = QUrlQuery()
-        query.addQueryItem('grant_type', 'refresh_token')
-        query.addQueryItem('client_id', CLIENT_ID)
-        query.addQueryItem('refresh_token', refresh_token)
+        query.addQueryItem("grant_type", "refresh_token")
+        query.addQueryItem("client_id", CLIENT_ID)
+        query.addQueryItem("refresh_token", refresh_token)
 
         network_request = QNetworkRequest(QUrl(TOKEN_URL))
-        network_request.setHeader(QNetworkRequest.ContentTypeHeader,
-                                  'application/x-www-form-urlencoded')
+        network_request.setHeader(
+            QNetworkRequest.KnownHeaders.ContentTypeHeader,
+            "application/x-www-form-urlencoded",
+        )
         self._refresh_reply = QgsNetworkAccessManager.instance().post(
             network_request,
-            query.toString(QUrl.FullyEncoded).encode()
+            query.toString(QUrl.ComponentFormattingOption.FullyEncoded).encode(),
         )
         self._refresh_reply.finished.connect(
-            partial(self._refresh_oauth_finished, self._refresh_reply))
+            partial(self._refresh_oauth_finished, self._refresh_reply)
+        )
 
     def _refresh_oauth_finished(self, reply: QNetworkReply):
-        if (self._refresh_reply is None or
-                reply != self._refresh_reply or
-                sip.isdeleted(self._refresh_reply)):
+        if (
+            self._refresh_reply is None
+            or reply != self._refresh_reply
+            or sip.isdeleted(self._refresh_reply)
+        ):
             return
 
         result = json.loads(self._refresh_reply.readAll().data())
         self._refresh_reply = None
 
-        if 'error' in result:
+        if "error" in result:
             # assume refresh token is expired
             self.run()
             return
 
-        access_token = result['access_token']
-        refresh_token = result['refresh_token']
-        expires_in = result['expires_in']
+        access_token = result["access_token"]
+        refresh_token = result["refresh_token"]
+        expires_in = result["expires_in"]
 
         body = {
             "scope": SCOPE_KX,
@@ -265,37 +279,43 @@ class OAuthWorkflow(QThread):
         api_token_body = urllib.parse.urlencode(body).encode()
 
         network_request = QNetworkRequest(QUrl(API_TOKEN_URL))
-        network_request.setHeader(QNetworkRequest.ContentTypeHeader,
-                                  'application/x-www-form-urlencoded')
-        network_request.setRawHeader(b"Authorization",
-                                     f"Bearer {access_token}".encode())
+        network_request.setHeader(
+            QNetworkRequest.KnownHeaders.ContentTypeHeader,
+            "application/x-www-form-urlencoded",
+        )
+        network_request.setRawHeader(
+            b"Authorization", f"Bearer {access_token}".encode()
+        )
 
         self._refresh_kx_key_reply = QgsNetworkAccessManager.instance().post(
-            network_request,
-            api_token_body)
+            network_request, api_token_body
+        )
         self._refresh_kx_key_reply.finished.connect(
-            partial(self._refresh_kx_key_finished,
-                    self._refresh_kx_key_reply,
-                    refresh_token,
-                    expires_in))
+            partial(
+                self._refresh_kx_key_finished,
+                self._refresh_kx_key_reply,
+                refresh_token,
+                expires_in,
+            )
+        )
 
-    def _refresh_kx_key_finished(self,
-                                 reply: QNetworkReply,
-                                 refresh_token: str,
-                                 expires_in: int):
-        if (reply != self._refresh_kx_key_reply or
-                sip.isdeleted(self._refresh_kx_key_reply)):
+    def _refresh_kx_key_finished(
+        self, reply: QNetworkReply, refresh_token: str, expires_in: int
+    ):
+        if reply != self._refresh_kx_key_reply or sip.isdeleted(
+            self._refresh_kx_key_reply
+        ):
             return
 
         result = json.loads(self._refresh_kx_key_reply.readAll().data())
         self._refresh_kx_key_reply = None
 
-        if 'error' in result:
+        if "error" in result:
             # assume refresh token is expired
             self.run()
             return
 
-        kx_key = result['key']
+        kx_key = result["key"]
         OAuthWorkflow.EXPIRY_DURATION_SECONDS = expires_in
         self.finished.emit(kx_key, refresh_token)
 

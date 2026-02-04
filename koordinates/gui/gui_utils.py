@@ -7,21 +7,18 @@ the Free Software Foundation; either version 2 of the License, or
 (at your option) any later version.
 """
 
-__author__ = '(C) 2018 by Nyall Dawson'
-__date__ = '20/04/2018'
-__copyright__ = 'Copyright 2018, North Road'
+__author__ = "(C) 2018 by Nyall Dawson"
+__date__ = "20/04/2018"
+__copyright__ = "Copyright 2018, North Road"
 # This will get replaced with a git SHA1 when you do a git archive
-__revision__ = '$Format:%H$'
+__revision__ = "$Format:%H$"
 
 import math
 import os
 import re
 from typing import Optional
 
-from qgis.PyQt.QtCore import (
-    Qt,
-    QTemporaryDir
-)
+from qgis.PyQt.QtCore import Qt, QTemporaryDir
 from qgis.PyQt.QtGui import (
     QIcon,
     QFont,
@@ -30,19 +27,20 @@ from qgis.PyQt.QtGui import (
     QPixmap,
     QFontDatabase,
     QColor,
-    QPainter
+    QPainter,
 )
 from qgis.PyQt.QtSvg import QSvgRenderer
-from qgis.core import (
-    Qgis
+from qgis.core import Qgis
+
+FONT_FAMILIES = (
+    "KxMetric, -apple-system, BlinkMacSystemFont,"
+    "'avenir next', avenir, helvetica, 'helvetica neue', ubuntu,"
+    "roboto, noto, 'segoe ui', arial, sans-serif"
 )
-
-
-FONT_FAMILIES = "KxMetric, -apple-system, BlinkMacSystemFont," \
-                "'avenir next', avenir, helvetica, 'helvetica neue', ubuntu," \
-                "roboto, noto, 'segoe ui', arial, sans-serif"
-MONOSPACE_FONT_FAMILIES = "SFMono-Regular, Menlo, Monaco, Consolas, " \
-                          "'Liberation Mono', 'Courier New', monospace"
+MONOSPACE_FONT_FAMILIES = (
+    "SFMono-Regular, Menlo, Monaco, Consolas, "
+    "'Liberation Mono', 'Courier New', monospace"
+)
 
 
 class GuiUtils:
@@ -75,13 +73,9 @@ class GuiUtils:
         :param icon: icon name (svg file name)
         :return: icon svg path
         """
-        path = os.path.join(
-            os.path.dirname(__file__),
-            '..',
-            'icons',
-            icon)
+        path = os.path.join(os.path.dirname(__file__), "..", "icons", icon)
         if not os.path.exists(path):
-            return ''
+            return ""
 
         return path
 
@@ -92,11 +86,7 @@ class GuiUtils:
         :param icon: icon name (png file name)
         :return: icon png path
         """
-        path = os.path.join(
-            os.path.dirname(__file__),
-            '..',
-            'icons',
-            icon)
+        path = os.path.join(os.path.dirname(__file__), "..", "icons", icon)
         if not os.path.exists(path):
             return QPixmap()
 
@@ -104,8 +94,9 @@ class GuiUtils:
         return QPixmap.fromImage(im)
 
     @staticmethod
-    def get_svg_as_image(icon: str, width: int, height: int,
-                         background_color: Optional[QColor] = None) -> QImage:
+    def get_svg_as_image(
+        icon: str, width: int, height: int, background_color: Optional[QColor] = None
+    ) -> QImage:
         """
         Returns an SVG returned as an image
         """
@@ -114,9 +105,9 @@ class GuiUtils:
             return QImage()
 
         renderer = QSvgRenderer(path)
-        image = QImage(width, height, QImage.Format_ARGB32)
+        image = QImage(width, height, QImage.Format.Format_ARGB32)
         if not background_color:
-            image.fill(Qt.transparent)
+            image.fill(Qt.GlobalColor.transparent)
         else:
             image.fill(background_color)
 
@@ -132,10 +123,11 @@ class GuiUtils:
         Returns SVG content as a QIcon
         """
         icon_path = GuiUtils.TEMP_DIR.filePath(
-            'icon{}.svg'.format(GuiUtils.TEMP_FILE_COUNTER))
+            "icon{}.svg".format(GuiUtils.TEMP_FILE_COUNTER)
+        )
         GuiUtils.TEMP_FILE_COUNTER += 1
 
-        with open(icon_path, 'wt', encoding='utf8') as f:
+        with open(icon_path, "wt", encoding="utf8") as f:
             f.write(svg_content.decode())
 
         return QIcon(icon_path)
@@ -147,13 +139,9 @@ class GuiUtils:
         :param file: file name (uifile name)
         :return: ui file path
         """
-        path = os.path.join(
-            os.path.dirname(__file__),
-            '..',
-            'ui',
-            file)
+        path = os.path.join(os.path.dirname(__file__), "..", "ui", file)
         if not os.path.exists(path):
-            return ''
+            return ""
 
         return path
 
@@ -164,8 +152,11 @@ class GuiUtils:
         """
         fm = QFontMetrics((QFont()))
         scale = 1.1 * standard_size / 24.0
-        return int(math.floor(max(Qgis.UI_SCALE_FACTOR * fm.height() * scale,
-                                  float(standard_size))))
+        return int(
+            math.floor(
+                max(Qgis.UI_SCALE_FACTOR * fm.height() * scale, float(standard_size))
+            )
+        )
 
     @staticmethod
     def get_default_font() -> QFont:
@@ -173,8 +164,8 @@ class GuiUtils:
         Returns the best font match for the Koordinates default font
         families which is available on the system
         """
-        for family in FONT_FAMILIES.split(','):
-            family_cleaned = re.match(r'^\s*\'?(.*?)\'?\s*$', family).group(1)
+        for family in FONT_FAMILIES.split(","):
+            family_cleaned = re.match(r"^\s*\'?(.*?)\'?\s*$", family).group(1)
             font = QFont(family_cleaned)
             if font.exactMatch():
                 return font
@@ -188,13 +179,9 @@ class GuiUtils:
         :param font: font name
         :return: font file path
         """
-        path = os.path.join(
-            os.path.dirname(__file__),
-            '..',
-            'fonts',
-            font)
+        path = os.path.join(os.path.dirname(__file__), "..", "fonts", font)
         if not os.path.exists(path):
-            return ''
+            return ""
 
         return path
 

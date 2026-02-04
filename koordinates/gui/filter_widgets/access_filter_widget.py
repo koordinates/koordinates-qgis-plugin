@@ -1,16 +1,8 @@
 from typing import Optional
-from qgis.PyQt.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QRadioButton,
-    QButtonGroup
-)
+from qgis.PyQt.QtWidgets import QWidget, QVBoxLayout, QRadioButton, QButtonGroup
 
 from .filter_widget_combo_base import FilterWidgetComboBase
-from ...api import (
-    DataBrowserQuery,
-    AccessType
-)
+from ...api import DataBrowserQuery, AccessType
 
 
 class AccessFilterWidget(FilterWidgetComboBase):
@@ -24,10 +16,10 @@ class AccessFilterWidget(FilterWidgetComboBase):
         self.drop_down_widget = QWidget()
         vl = QVBoxLayout()
 
-        self.public_radio = QRadioButton('Public')
+        self.public_radio = QRadioButton("Public")
         vl.addWidget(self.public_radio)
 
-        self.private_radio = QRadioButton('Me')
+        self.private_radio = QRadioButton("Me")
         vl.addWidget(self.private_radio)
 
         self.access_group = QButtonGroup()
@@ -47,8 +39,7 @@ class AccessFilterWidget(FilterWidgetComboBase):
 
     def _access_group_member_clicked(self, clicked_button):
         self._block_changes += 1
-        for radio in (self.public_radio,
-                      self.private_radio):
+        for radio in (self.public_radio, self.private_radio):
             if radio.isChecked() and radio != clicked_button:
                 radio.setChecked(False)
 
@@ -60,8 +51,7 @@ class AccessFilterWidget(FilterWidgetComboBase):
         self._floating_widget.reflow()
 
     def clear(self):
-        if not any((self.public_radio.isChecked(),
-                   self.private_radio.isChecked())):
+        if not any((self.public_radio.isChecked(), self.private_radio.isChecked())):
             return
 
         self.public_radio.setChecked(False)
@@ -76,12 +66,12 @@ class AccessFilterWidget(FilterWidgetComboBase):
         return super().should_show_clear()
 
     def _update_value(self):
-        text = 'Access'
+        text = "Access"
 
         if self.public_radio.isChecked():
-            text = 'Only public data'
+            text = "Only public data"
         elif self.private_radio.isChecked():
-            text = 'Shared with me'
+            text = "Shared with me"
 
         self.set_current_text(text)
         if not self._block_changes:

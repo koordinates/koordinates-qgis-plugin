@@ -1,7 +1,4 @@
-from typing import (
-    Optional,
-    List
-)
+from typing import Optional, List
 
 from qgis.PyQt import sip
 from qgis.PyQt.QtCore import QEventLoop
@@ -16,15 +13,17 @@ class KartUtils:
     Contains Kart integration support utilities
     """
 
-    CURRENT_CLONE_DIALOG: Optional['CloneDialog'] = None  # NOQA
+    CURRENT_CLONE_DIALOG: Optional["CloneDialog"] = None  # NOQA
     CLONE_KART_REPO_WAS_ACCEPTED: bool = False
 
     @staticmethod
-    def clone_kart_repo(title: str,
-                        url: str,
-                        username: Optional[str],
-                        password: Optional[str],
-                        parent: Optional[QWidget]) -> bool:
+    def clone_kart_repo(
+        title: str,
+        url: str,
+        username: Optional[str],
+        password: Optional[str],
+        parent: Optional[QWidget],
+    ) -> bool:
         """
         Shows a dialog for cloning a kart repository
 
@@ -33,8 +32,9 @@ class KartUtils:
         """
         import qgis
 
-        if KartUtils.CURRENT_CLONE_DIALOG is not None and \
-                not sip.isdeleted(KartUtils.CURRENT_CLONE_DIALOG):
+        if KartUtils.CURRENT_CLONE_DIALOG is not None and not sip.isdeleted(
+            KartUtils.CURRENT_CLONE_DIALOG
+        ):
             KartUtils.CURRENT_CLONE_DIALOG.close()
             KartUtils.CURRENT_CLONE_DIALOG.deleteLater()
             KartUtils.CURRENT_CLONE_DIALOG = None
@@ -48,7 +48,8 @@ class KartUtils:
 
             KartUtils.CURRENT_CLONE_DIALOG = CloneDialog(parent)
             KartUtils.CURRENT_CLONE_DIALOG.setWindowTitle(
-                'Get Data Repository — {}'.format(title))
+                "Get Data Repository — {}".format(title)
+            )
             KartUtils.CURRENT_CLONE_DIALOG.show()
             KartUtils.CURRENT_CLONE_DIALOG.activateWindow()
             KartUtils.CURRENT_CLONE_DIALOG.raise_()
@@ -67,7 +68,7 @@ class KartUtils:
             KartUtils.CURRENT_CLONE_DIALOG.was_canceled.connect(on_reject)
             KartUtils.CURRENT_CLONE_DIALOG.destroyed.connect(on_reject)
 
-            el.exec_()
+            el.exec()
 
             if KartUtils.CLONE_KART_REPO_WAS_ACCEPTED:
                 extent = KartUtils.CURRENT_CLONE_DIALOG.extent()
@@ -96,12 +97,13 @@ class KartUtils:
             raise KartNotInstalledException()
 
     @staticmethod
-    def get_kart_repos() -> List['Repository']:  # NOQA
+    def get_kart_repos() -> List["Repository"]:  # NOQA
         """
         Returns a list of the cloned kart repositories
         """
         try:
             from kart.core import RepoManager
+
             return RepoManager.instance().repos()[:]
 
         except ImportError:
@@ -114,6 +116,7 @@ class KartUtils:
         """
         try:
             from kart.core import RepoManager
+
             return [repo.path for repo in RepoManager.instance().repos()]
 
         except ImportError:

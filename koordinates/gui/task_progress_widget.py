@@ -1,8 +1,6 @@
 from typing import Optional
 
-from qgis.PyQt.QtCore import (
-    QModelIndex
-)
+from qgis.PyQt.QtCore import QModelIndex
 from qgis.PyQt.QtWidgets import (
     QPushButton,
     QProgressBar,
@@ -12,14 +10,11 @@ from qgis.PyQt.QtWidgets import (
     QLabel,
     QTableView,
     QDialog,
-    QAbstractItemView
+    QAbstractItemView,
 )
 from qgis.gui import QgsGui
 
-from ..core import (
-    KartOperationManager,
-    OperationStatus
-)
+from ..core import KartOperationManager, OperationStatus
 
 
 class TaskDetailsWidget(QWidget):
@@ -28,10 +23,9 @@ class TaskDetailsWidget(QWidget):
     are retrieved via the KartOperationManager model implementation
     """
 
-    def __init__(self,
-                 index: QModelIndex,
-                 operations_manager: KartOperationManager,
-                 parent=None):
+    def __init__(
+        self, index: QModelIndex, operations_manager: KartOperationManager, parent=None
+    ):
         super().__init__(parent)
 
         self.index = index
@@ -54,7 +48,7 @@ class TaskDetailsWidget(QWidget):
         self.progress_bar = QProgressBar()
         self.progress_bar.setRange(0, 100)
         hl.addWidget(self.progress_bar, 1)
-        self.cancel_button = QPushButton(self.tr('Cancel'))
+        self.cancel_button = QPushButton(self.tr("Cancel"))
         hl.addWidget(self.cancel_button)
         self.cancel_button.clicked.connect(self._cancel)
         vl.addLayout(hl)
@@ -63,7 +57,7 @@ class TaskDetailsWidget(QWidget):
         self.details_label = QLabel()
         self.details_label.setWordWrap(True)
         hl.addWidget(self.details_label, 1)
-        self.retry_button = QPushButton(self.tr('Retry'))
+        self.retry_button = QPushButton(self.tr("Retry"))
         hl.addWidget(self.retry_button)
         self.retry_button.clicked.connect(self._retry)
         vl.addLayout(hl)
@@ -78,40 +72,46 @@ class TaskDetailsWidget(QWidget):
         """
         Updates the widget from the current model data
         """
-        self.title_label.setText(self.operations_manager.data(
-            self.index, KartOperationManager.DescriptionRole
-        ))
+        self.title_label.setText(
+            self.operations_manager.data(
+                self.index, KartOperationManager.DescriptionRole
+            )
+        )
         status = self.operations_manager.data(
             self.index, KartOperationManager.StatusRole
         )
         if status == OperationStatus.Ongoing:
-            self.operation_label.setText(self.tr('CLONING'))
-            self.operation_label.setStyleSheet('''
+            self.operation_label.setText(self.tr("CLONING"))
+            self.operation_label.setStyleSheet("""
                         background-color: #868889;
                         border: 2px solid #6b6d6e;
                         border-radius: 4px;
                         color: #ffffff;
                         font-size: 10pt;
-            ''')
+            """)
             self.details_label.hide()
             self.retry_button.hide()
             self.progress_bar.setValue(
-                int(self.operations_manager.data(
-                    self.index, KartOperationManager.ProgressRole
-                )))
+                int(
+                    self.operations_manager.data(
+                        self.index, KartOperationManager.ProgressRole
+                    )
+                )
+            )
         elif status == OperationStatus.Failed:
-            self.operation_label.setText(self.tr('ERROR'))
-            self.operation_label.setStyleSheet('''
+            self.operation_label.setText(self.tr("ERROR"))
+            self.operation_label.setStyleSheet("""
                         background-color: #d64041;
                         border: 2px solid #ab3334;
                         border-radius: 4px;
                         color: #ffffff;
                         font-size: 10pt;
-                        ''')
-            self.details_label.setText(self.operations_manager.data(
-                self.index,
-                KartOperationManager.DetailsRole
-            ))
+                        """)
+            self.details_label.setText(
+                self.operations_manager.data(
+                    self.index, KartOperationManager.DetailsRole
+                )
+            )
             self.details_label.show()
             self.retry_button.show()
             self.progress_bar.hide()
@@ -137,13 +137,11 @@ class TaskDetailsTable(QTableView):
     A table view showing current task details
     """
 
-    def __init__(self,
-                 operations_manager: KartOperationManager,
-                 parent=None):
+    def __init__(self, operations_manager: KartOperationManager, parent=None):
         super().__init__(parent)
         self._manager = operations_manager
         self.setModel(self._manager)
-        self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
+        self.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.horizontalHeader().setStretchLastSection(True)
         self.horizontalHeader().setVisible(False)
         self.verticalHeader().setVisible(False)
@@ -154,10 +152,12 @@ class TaskDetailsTable(QTableView):
         if row_count:
             self._rows_inserted(QModelIndex(), 0, row_count - 1)
 
-    def _rows_inserted(self,
-                       parent: QModelIndex,  # pylint: disable=unused-argument
-                       first: int,
-                       last: int):
+    def _rows_inserted(
+        self,
+        parent: QModelIndex,  # pylint: disable=unused-argument
+        first: int,
+        last: int,
+    ):
         """
         Called when rows are inserted into the model
         """
@@ -167,10 +167,9 @@ class TaskDetailsTable(QTableView):
             self.setIndexWidget(index, widget)
             self.setRowHeight(row, widget.minimumHeight())
 
-    def _data_changed(self,
-                      top_left: QModelIndex,
-                      bottom_right: QModelIndex,
-                      roles=[]):  # pylint: disable=unused-argument
+    def _data_changed(
+        self, top_left: QModelIndex, bottom_right: QModelIndex, roles=[]
+    ):  # pylint: disable=unused-argument
         """
         Called when model data is changed for a range of indexes
         """
@@ -189,12 +188,12 @@ class TaskDetailsDialog(QDialog):
     A dialog for showing task details
     """
 
-    def __init__(self,
-                 operations_manager: KartOperationManager,
-                 parent: Optional[QWidget] = None):
+    def __init__(
+        self, operations_manager: KartOperationManager, parent: Optional[QWidget] = None
+    ):
         super().__init__(parent)
 
-        self.setObjectName('TaskDetailsDialog')
+        self.setObjectName("TaskDetailsDialog")
         QgsGui.enableAutoGeometryRestore(self)
 
         vl = QVBoxLayout()

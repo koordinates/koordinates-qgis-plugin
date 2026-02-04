@@ -1,6 +1,7 @@
 from qgis.PyQt.QtCore import pyqtSignal
 
 from .custom_combo_box import CustomComboBox
+from ..compat import fontmetric_width
 from ...api import DataBrowserQuery
 
 
@@ -16,7 +17,7 @@ class FilterWidgetComboBase(CustomComboBox):
         self.set_show_clear_button(True)
         self._block_changes = 0
 
-        self._indent_margin = self.fontMetrics().width('xx')
+        self._indent_margin = fontmetric_width(self.fontMetrics(), "xx")
 
     def apply_constraints_to_query(self, query: DataBrowserQuery):
         """

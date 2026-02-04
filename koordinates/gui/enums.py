@@ -1,7 +1,4 @@
-from enum import (
-    Enum,
-    auto
-)
+from enum import Enum, auto
 
 
 class TabStyle(Enum):
@@ -21,7 +18,8 @@ class StandardExploreModes:
     Any string can be accepted as an explore mode, but these are current
     well known ones...
     """
-    Popular = 'popular'
-    Recent = 'recent'
-    Browse = 'browse'
-    Publishers = 'publishers'
+
+    Popular = "popular"
+    Recent = "recent"
+    Browse = "browse"
+    Publishers = "publishers"

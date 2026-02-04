@@ -1,37 +1,32 @@
 from typing import Optional
 
-from qgis.PyQt.QtCore import (
-    Qt,
-    QSize,
-    QUrl
-)
-from qgis.PyQt.QtSvg import QSvgWidget
-from qgis.PyQt.QtGui import (
-    QDesktopServices,
-    QFontMetrics
-)
-from qgis.PyQt.QtWidgets import (
-    QDialog,
-    QHBoxLayout,
-    QVBoxLayout,
-    QLabel
-)
+from qgis.PyQt.QtCore import Qt, QSize, QUrl
+from qgis.PyQt.QtGui import QDesktopServices, QFontMetrics
+from qgis.PyQt.QtWidgets import QDialog, QHBoxLayout, QVBoxLayout, QLabel
 
 from .action_button import ActionButton
+from .compat import QSvgWidget, fontmetric_width
 from .gui_utils import GuiUtils
 
 
 class ActionDialog(QDialog):
 
-    def __init__(self, title: str, message: str, action: str,
-                 url: Optional[str] = None, parent=None):
+    def __init__(
+        self,
+        title: str,
+        message: str,
+        action: str,
+        url: Optional[str] = None,
+        parent=None,
+    ):
         super().__init__(parent)
 
         self.setWindowTitle(title)
         layout = QVBoxLayout()
         hl = QHBoxLayout()
         koordinates_logo_widget = QSvgWidget(
-            GuiUtils.get_icon_svg('koordinates_logo.svg'))
+            GuiUtils.get_icon_svg("koordinates_logo.svg")
+        )
         koordinates_logo_widget.setFixedSize(QSize(100, 28))
         hl.addWidget(koordinates_logo_widget)
         hl.addStretch()
@@ -42,7 +37,8 @@ class ActionDialog(QDialog):
         font = self.font()
         font.setPointSize(font.pointSize() - 1)
         message_label = QLabel(
-            """<div style="line-height: 1.2;">{}</div>""".format(message))
+            """<div style="line-height: 1.2;">{}</div>""".format(message)
+        )
         message_label.setWordWrap(True)
         message_label.setAlignment(
             Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop
@@ -58,13 +54,12 @@ class ActionDialog(QDialog):
         button.setText(action)
         button.setFixedHeight(32)
         button.setFont(self.font())
-        button.setStyleSheet(
-            button.styleSheet() + """
+        button.setStyleSheet(button.styleSheet() + """
             QToolButton { padding-left: 10px; padding-right: 10px }
-            """
-        )
+            """)
 
         if url:
+
             def open_url():
                 QDesktopServices.openUrl(QUrl(url))
 
@@ -75,12 +70,10 @@ class ActionDialog(QDialog):
         layout.addLayout(hl)
 
         fm = QFontMetrics(message_label.font())
+        x_width = fontmetric_width(fm, "x")
 
-        layout.setContentsMargins(fm.width('x') * 7,
-                                  fm.width('x') * 5,
-                                  fm.width('x') * 7,
-                                  fm.width('x') * 7)
+        layout.setContentsMargins(x_width * 7, x_width * 5, x_width * 7, x_width * 7)
 
         self.setLayout(layout)
 
-        self.window().setFixedWidth(fm.width('x') * 70)
+        self.window().setFixedWidth(x_width * 70)

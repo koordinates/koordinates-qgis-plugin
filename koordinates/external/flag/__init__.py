@@ -23,10 +23,10 @@ import warnings
 import re
 from typing import List
 
-__version__: str = '1.3.1'
-__author__: str = 'cuzi'
-__email__: str = 'cuzi@openmail.cc'
-__source__: str = 'https://github.com/cvzi/flag'
+__version__: str = "1.3.1"
+__author__: str = "cuzi"
+__email__: str = "cuzi@openmail.cc"
+__source__: str = "https://github.com/cvzi/flag"
 __license__: str = """
 MIT License
 
@@ -57,13 +57,14 @@ __all__ = [
     "dflagize",
     "flagize_subregional",
     "dflagize_subregional",
-    "Flag"]
+    "Flag",
+]
 
 
 OFFSET = ord("🇦") - ord("A")
 OFFSET_TAG = 0xE0000
-CANCELTAG = "\U000E007F"
-BLACKFLAG = "\U0001F3F4"
+CANCELTAG = "\U000e007f"
+BLACKFLAG = "\U0001f3f4"
 ASCII_LOWER = "abcdefghijklmnopqrstuvwxyz0123456789"
 
 
@@ -124,8 +125,9 @@ class Flag:
     of colons. Offers the same methods as the module.
     """
 
-    def __init__(self, prefix_str: str = ":",
-                 suffix_str: str = ":", warn: bool = True) -> None:
+    def __init__(
+        self, prefix_str: str = ":", suffix_str: str = ":", warn: bool = True
+    ) -> None:
         """Set a custom prefix and suffix. Instead of ``:XY:`` it will
         use ``{prefix}XY{suffix}``.
 
@@ -190,8 +192,9 @@ class Flag:
         def flag_repl(matchobj):
             return flag_regional_indicator(matchobj.group(1))
 
-        text = re.sub(self._prefix_re +
-                      "([a-zA-Z]{2})" + self._suffix_re, flag_repl, text)
+        text = re.sub(
+            self._prefix_re + "([a-zA-Z]{2})" + self._suffix_re, flag_repl, text
+        )
 
         if subregions:
             text = self.flagize_subregional(text)
@@ -219,7 +222,7 @@ class Flag:
         def dflag_repl(matchobj):
             return dflag(matchobj.group(0))
 
-        regex = re.compile("([\U0001F1E6-\U0001F1FF]{2})", flags=re.UNICODE)
+        regex = re.compile("([\U0001f1e6-\U0001f1ff]{2})", flags=re.UNICODE)
 
         text = regex.sub(dflag_repl, text)
 
@@ -244,15 +247,19 @@ class Flag:
         if self._prefix_warn:
             warnings.warn(
                 """The empty prefix (%r) is unsafe for subregional flags.
-You can use Flag(%r, %r, warn=False) to disable this warning""" %
-                (self._prefix, self._prefix, self._suffix), UserWarning)
+You can use Flag(%r, %r, warn=False) to disable this warning"""
+                % (self._prefix, self._prefix, self._suffix),
+                UserWarning,
+            )
             self._prefix_warn = False
         elif self._suffix_warn:
             warnings.warn(
                 """The suffix (%r) is unsafe for subregional flags
 because it is short and contains a-z, 0-9 or starts with -
-You can use Flag(%r, %r, warn=False) to disable this warning""" %
-                (self._suffix, self._prefix, self._suffix), UserWarning)
+You can use Flag(%r, %r, warn=False) to disable this warning"""
+                % (self._suffix, self._prefix, self._suffix),
+                UserWarning,
+            )
             self._suffix_warn = False
 
         def flag_repl(matchobj):
@@ -264,10 +271,12 @@ You can use Flag(%r, %r, warn=False) to disable this warning""" %
         # - For sake of completeness: 3-digit unicode_region_subtag like 840
         #   for US formatted as ":84-0:"
         text = re.sub(
-            self._prefix_re +
-            "([a-zA-Z]{2}|[0-9]{2})-([0-9a-zA-Z]{1,4})" + self._suffix_re,
+            self._prefix_re
+            + "([a-zA-Z]{2}|[0-9]{2})-([0-9a-zA-Z]{1,4})"
+            + self._suffix_re,
             flag_repl,
-            text)
+            text,
+        )
 
         return text
 
@@ -285,20 +294,23 @@ You can use Flag(%r, %r, warn=False) to disable this warning""" %
         def dflag(i):
             points = [ord(x) - OFFSET_TAG for x in i]
             subregion = "".join(["%c" % point for point in points[2:]])
-            return "%s%c%c-%s%s" % (self._prefix,
-                                    points[0],
-                                    points[1],
-                                    subregion,
-                                    self._suffix)
+            return "%s%c%c-%s%s" % (
+                self._prefix,
+                points[0],
+                points[1],
+                subregion,
+                self._suffix,
+            )
 
         def dflag_repl(matchobj):
             return dflag(matchobj.group(1))
 
         regex = re.compile(
-            BLACKFLAG +
-            "([\U000E0030-\U000E0039\U000E0061-\U000E007A]{3,6})" +
-            CANCELTAG,
-            flags=re.UNICODE)
+            BLACKFLAG
+            + "([\U000e0030-\U000e0039\U000e0061-\U000e007a]{3,6})"
+            + CANCELTAG,
+            flags=re.UNICODE,
+        )
         text = regex.sub(dflag_repl, text)
 
         return text
@@ -335,10 +347,10 @@ def flag(countrycode: str) -> str:
     if len(code) > 2 and len(code) < 7:
         # Tag sequence
         return flag_tag_sequence(code)
-    found = ''.join(code)
+    found = "".join(code)
     raise ValueError(
-        'invalid countrycode, found %d (%r) in %r.' %
-        (len(found), found, countrycode))
+        "invalid countrycode, found %d (%r) in %r." % (len(found), found, countrycode)
+    )
 
 
 def flagize(text: str, subregions: bool = False) -> str:

@@ -1,19 +1,9 @@
 import platform
-from typing import (
-    Optional,
-    List
-)
+from typing import Optional, List
 
-from qgis.PyQt.QtCore import (
-    Qt,
-    QUrl
-)
+from qgis.PyQt.QtCore import Qt, QUrl
 from qgis.PyQt.QtGui import QDesktopServices
-from qgis.PyQt.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QLabel
-)
+from qgis.PyQt.QtWidgets import QWidget, QVBoxLayout, QLabel
 
 from ..gui_utils import FONT_FAMILIES
 
@@ -29,10 +19,12 @@ class TableWidget(QWidget):
 
     INITIAL_VISIBLE_ROWS = 4
 
-    def __init__(self,
-                 headings: List[str],
-                 contents: List[List[str]],
-                 parent: Optional[QWidget] = None):
+    def __init__(
+        self,
+        headings: List[str],
+        contents: List[List[str]],
+        parent: Optional[QWidget] = None,
+    ):
         super().__init__(parent)
 
         vl = QVBoxLayout()
@@ -43,7 +35,9 @@ class TableWidget(QWidget):
         self.contents = contents
 
         self.rebuild_table()
-        self.table_label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        self.table_label.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextBrowserInteraction
+        )
         self.table_label.linkActivated.connect(self.link_clicked)
 
         vl.addWidget(self.table_label)
@@ -51,7 +45,7 @@ class TableWidget(QWidget):
 
     def rebuild_table(self, expand=False):
         base_font_size = 10
-        if platform.system() == 'Darwin':
+        if platform.system() == "Darwin":
             base_font_size = 14
 
         padding = int(base_font_size * 0.75)
@@ -73,7 +67,7 @@ class TableWidget(QWidget):
             html += "</tr>"
 
         if not expand:
-            visible_rows = self.contents[:self.INITIAL_VISIBLE_ROWS]
+            visible_rows = self.contents[: self.INITIAL_VISIBLE_ROWS]
         else:
             visible_rows = self.contents[:]
 
@@ -104,7 +98,7 @@ class TableWidget(QWidget):
         self.table_label.setText(html)
 
     def link_clicked(self, link):
-        if link == 'more':
+        if link == "more":
             self.rebuild_table(True)
         else:
             QDesktopServices.openUrl(QUrl(link))

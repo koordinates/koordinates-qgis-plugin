@@ -57,7 +57,7 @@ def package(version=None):
 
 def install(profile: str = None):
     if not profile:
-        profile = 'default'
+        profile = "default"
 
     src = os.path.join(os.path.dirname(__file__), "koordinates")
     if os.name == "nt":
@@ -65,9 +65,7 @@ def install(profile: str = None):
             f"~/AppData/Roaming/QGIS/QGIS3/profiles/{profile}/python/plugins"
         )
     elif sys.platform == "darwin":
-        default_profile_plugins = (
-            f"~/Library/Application Support/QGIS/QGIS3/profiles/{profile}/python/plugins"
-        )
+        default_profile_plugins = f"~/Library/Application Support/QGIS/QGIS3/profiles/{profile}/python/plugins"
     else:
         default_profile_plugins = (
             f"~/.local/share/QGIS/QGIS3/profiles/{profile}/python/plugins"

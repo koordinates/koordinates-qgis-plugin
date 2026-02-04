@@ -1,30 +1,11 @@
 from functools import partial
-from typing import (
-    Optional,
-    Callable,
-    List
-)
+from typing import Optional, Callable, List
 
-from qgis.PyQt.QtCore import (
-    Qt,
-    QAbstractItemModel,
-    QModelIndex,
-    pyqtSignal
-)
-from qgis.core import (
-    QgsApplication,
-    QgsReferencedRectangle,
-    QgsTask
-)
+from qgis.PyQt.QtCore import Qt, QAbstractItemModel, QModelIndex, pyqtSignal
+from qgis.core import QgsApplication, QgsReferencedRectangle, QgsTask
 
-from .enums import (
-    KartOperation,
-    OperationStatus
-)
-from .kart_task import (
-    KartCloneTask,
-    KartTask
-)
+from .enums import KartOperation, OperationStatus
+from .kart_task import KartCloneTask, KartTask
 
 
 class FailedOperationDetails:
@@ -32,15 +13,13 @@ class FailedOperationDetails:
     Encapsulates information about a failed operation
     """
 
-    def __init__(self,
-                 description: str,
-                 error: str):
+    def __init__(self, description: str, error: str):
         self.description = description
         self.error = error
 
-        self.title: str = ''
-        self.url: str = ''
-        self.destination: str = ''
+        self.title: str = ""
+        self.url: str = ""
+        self.destination: str = ""
         self.location: Optional[str] = None
         self.extent: Optional[QgsReferencedRectangle] = None
         self.username: Optional[str] = None
@@ -54,10 +33,10 @@ class KartOperationManager(QAbstractItemModel):
     Implemented as a model.
     """
 
-    DescriptionRole = Qt.UserRole + 1
-    ProgressRole = Qt.UserRole + 2
-    DetailsRole = Qt.UserRole + 3
-    StatusRole = Qt.UserRole + 4
+    DescriptionRole = Qt.ItemDataRole.UserRole + 1
+    ProgressRole = Qt.ItemDataRole.UserRole + 2
+    DetailsRole = Qt.ItemDataRole.UserRole + 3
+    StatusRole = Qt.ItemDataRole.UserRole + 4
 
     # operation, description, remaining tasks, overall remaining progress
     task_completed = pyqtSignal(KartOperation, str, int, float)
@@ -78,10 +57,10 @@ class KartOperationManager(QAbstractItemModel):
     # argument is clone URL
     clone_finished = pyqtSignal(str)
 
-    _instance: Optional['KartOperationManager'] = None
+    _instance: Optional["KartOperationManager"] = None
 
     @classmethod
-    def instance(cls) -> 'KartOperationManager':
+    def instance(cls) -> "KartOperationManager":
         """
         Returns the operation manager instance
         """
@@ -100,21 +79,23 @@ class KartOperationManager(QAbstractItemModel):
         if not self._failures:
             return
 
-        self.beginRemoveRows(QModelIndex(), len(self._ongoing_tasks),
-                             self.rowCount())
+        self.beginRemoveRows(QModelIndex(), len(self._ongoing_tasks), self.rowCount())
         self._failures = []
         self.endRemoveRows()
 
-    def _push_task(self,
-                   task: KartTask,
-                   on_complete: Optional[Callable[[KartTask], None]] = None,
-                   on_fail: Optional[Callable[[KartTask], None]] = None,
-                   on_cancel: Optional[Callable[[KartTask], None]] = None):
+    def _push_task(
+        self,
+        task: KartTask,
+        on_complete: Optional[Callable[[KartTask], None]] = None,
+        on_fail: Optional[Callable[[KartTask], None]] = None,
+        on_cancel: Optional[Callable[[KartTask], None]] = None,
+    ):
         """
         Pushes a new active task to the manager
         """
-        self.beginInsertRows(QModelIndex(), len(self._ongoing_tasks),
-                             len(self._ongoing_tasks))
+        self.beginInsertRows(
+            QModelIndex(), len(self._ongoing_tasks), len(self._ongoing_tasks)
+        )
         self._ongoing_tasks.append(task)
         self.endInsertRows()
 
@@ -162,8 +143,9 @@ class KartOperationManager(QAbstractItemModel):
         Called when a task has failed
         """
         result, short_description, detailed_description = task.result()
-        details = FailedOperationDetails(description=short_description,
-                                         error=detailed_description)
+        details = FailedOperationDetails(
+            description=short_description, error=detailed_description
+        )
 
         if isinstance(task, KartCloneTask):
             details.url = task.url
@@ -201,16 +183,20 @@ class KartOperationManager(QAbstractItemModel):
                 self._emit_progress_message()
         else:
             if result:
-                self.task_completed.emit(task.operation(),
-                                         short_description,
-                                         len(self._ongoing_tasks),
-                                         remaining_progress)
+                self.task_completed.emit(
+                    task.operation(),
+                    short_description,
+                    len(self._ongoing_tasks),
+                    remaining_progress,
+                )
             else:
-                self.task_failed.emit(task.operation(),
-                                      short_description,
-                                      detailed_description,
-                                      len(self._ongoing_tasks),
-                                      remaining_progress)
+                self.task_failed.emit(
+                    task.operation(),
+                    short_description,
+                    detailed_description,
+                    len(self._ongoing_tasks),
+                    remaining_progress,
+                )
 
     def calculate_remaining_progress(self) -> float:
         """
@@ -219,8 +205,11 @@ class KartOperationManager(QAbstractItemModel):
         if not self._ongoing_tasks:
             return -1
 
-        return 100 * sum(t.progress() for t in self._ongoing_tasks) / \
-            (100 * len(self._ongoing_tasks))
+        return (
+            100
+            * sum(t.progress() for t in self._ongoing_tasks)
+            / (100 * len(self._ongoing_tasks))
+        )
 
     def _emit_progress_message(self):
         """
@@ -231,14 +220,14 @@ class KartOperationManager(QAbstractItemModel):
                 self._ongoing_tasks[0].operation(),
                 self._ongoing_tasks[0].description(),
                 1,
-                self._ongoing_tasks[0].progress()
+                self._ongoing_tasks[0].progress(),
             )
         elif all(isinstance(t, KartCloneTask) for t in self._ongoing_tasks):
             self.task_progress_changed.emit(
                 KartOperation.Clone,
-                '',
+                "",
                 len(self._ongoing_tasks),
-                self.calculate_remaining_progress()
+                self.calculate_remaining_progress(),
             )
         else:
             # mixed task types, not handled yet
@@ -270,14 +259,16 @@ class KartOperationManager(QAbstractItemModel):
         for t in self._ongoing_tasks:
             t.cancel()
 
-    def start_clone(self,
-                    title: str,
-                    url: str,
-                    destination: str,
-                    location: Optional[str] = None,
-                    extent: Optional[QgsReferencedRectangle] = None,
-                    username: Optional[str] = None,
-                    password: Optional[str] = None):
+    def start_clone(
+        self,
+        title: str,
+        url: str,
+        destination: str,
+        location: Optional[str] = None,
+        extent: Optional[QgsReferencedRectangle] = None,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
+    ):
         """
         Starts a clone operation in a background thread
 
@@ -297,17 +288,19 @@ class KartOperationManager(QAbstractItemModel):
             # if kart plugin is not available then a KartNotInstalledException
             # will have been raised when creating the KartCloneTask
             from kart.core import RepoManager  # NOQA
+
             RepoManager.instance().add_repo(_task.repo)
             self.clone_finished.emit(_task.url)
 
         def on_task_failed_or_cancel(_task: KartCloneTask):
             self.clone_finished.emit(_task.url)
 
-        self._push_task(task,
-                        on_complete=on_task_complete,
-                        on_fail=on_task_failed_or_cancel,
-                        on_cancel=on_task_failed_or_cancel
-                        )
+        self._push_task(
+            task,
+            on_complete=on_task_complete,
+            on_fail=on_task_failed_or_cancel,
+            on_cancel=on_task_failed_or_cancel,
+        )
 
         self.clone_started.emit(url)
 
@@ -318,7 +311,9 @@ class KartOperationManager(QAbstractItemModel):
         for task in self._ongoing_tasks:
             if isinstance(task, KartCloneTask):
                 if task.url == url and task.status() not in (
-                        QgsTask.Complete, QgsTask.Terminated):
+                    QgsTask.TaskStatus.Complete,
+                    QgsTask.TaskStatus.Terminated,
+                ):
                     return True
 
         return False
@@ -330,8 +325,9 @@ class KartOperationManager(QAbstractItemModel):
         if column < 0 or column >= self.columnCount():
             return QModelIndex()
 
-        if not parent.isValid() and 0 <= (row < len(
-                self._ongoing_tasks) + len(self._failures)):
+        if not parent.isValid() and 0 <= (
+            row < len(self._ongoing_tasks) + len(self._failures)
+        ):
             return self.createIndex(row, column)
 
         return QModelIndex()
@@ -348,7 +344,7 @@ class KartOperationManager(QAbstractItemModel):
     def columnCount(self, parent=QModelIndex()):
         return 1
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         task = self.index2task(index)
         if task:
             if role == self.DescriptionRole:
@@ -373,7 +369,7 @@ class KartOperationManager(QAbstractItemModel):
         if not index.isValid():
             return f
 
-        return f | Qt.ItemIsEnabled
+        return f | Qt.ItemFlag.ItemIsEnabled
 
     # pylint: enable=missing-docstring, unused-arguments
 
@@ -400,26 +396,33 @@ class KartOperationManager(QAbstractItemModel):
                 location=task.location,
                 extent=task.extent,
                 username=task.username,
-                password=task.password
+                password=task.password,
             )
 
     def index2task(self, index: QModelIndex) -> Optional[QgsTask]:
         """
         Returns the task at the given model index
         """
-        if not index.isValid() or index.row() < 0 or index.row() >= len(
-                self._ongoing_tasks):
+        if (
+            not index.isValid()
+            or index.row() < 0
+            or index.row() >= len(self._ongoing_tasks)
+        ):
             return None
 
         return self._ongoing_tasks[index.row()]
 
-    def index2failed_task_details(self, index: QModelIndex) -> \
-            Optional[FailedOperationDetails]:
+    def index2failed_task_details(
+        self, index: QModelIndex
+    ) -> Optional[FailedOperationDetails]:
         """
         Returns the details of the failed operation at the given model index
         """
-        if not index.isValid() or index.row() < len(self._ongoing_tasks) or \
-                index.row() >= len(self._ongoing_tasks) + len(self._failures):
+        if (
+            not index.isValid()
+            or index.row() < len(self._ongoing_tasks)
+            or index.row() >= len(self._ongoing_tasks) + len(self._failures)
+        ):
             return None
 
         return self._failures[index.row() - len(self._ongoing_tasks)]

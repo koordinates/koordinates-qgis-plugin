@@ -1,22 +1,9 @@
 from typing import Optional
 
-from qgis.PyQt.QtCore import (
-    Qt,
-    QRect,
-    QSize
-)
-from qgis.PyQt.QtWidgets import (
-    QLayout,
-    QSizePolicy,
-    QStyle,
-    QWidget,
-    QWidgetItem
-)
+from qgis.PyQt.QtCore import Qt, QRect, QSize
+from qgis.PyQt.QtWidgets import QLayout, QSizePolicy, QStyle, QWidget, QWidgetItem
 
-from .dataset_browser_items import (
-    EmptyDatasetItemWidget,
-    DatasetItemWidget
-)
+from .dataset_browser_items import EmptyDatasetItemWidget, DatasetItemWidget
 from .enums import StandardExploreModes
 
 
@@ -49,12 +36,12 @@ class ResponsiveTableLayout(QLayout):
     def horizontalSpacing(self):
         if self.hspacing >= 0:
             return self.hspacing
-        return self.smartSpacing(QStyle.PM_LayoutHorizontalSpacing)
+        return self.smartSpacing(QStyle.PixelMetric.PM_LayoutHorizontalSpacing)
 
     def verticalSpacing(self):
         if self.vspacing >= 0:
             return self.vspacing
-        return self.smartSpacing(QStyle.PM_LayoutVerticalSpacing)
+        return self.smartSpacing(QStyle.PixelMetric.PM_LayoutVerticalSpacing)
 
     def count(self):
         return len(self.itemList)
@@ -119,8 +106,9 @@ class ResponsiveTableLayout(QLayout):
             size = size.expandedTo(item.minimumSize())
 
         margins = self.contentsMargins()
-        size += QSize(margins.left() + margins.right(),
-                      margins.top() + margins.bottom())
+        size += QSize(
+            margins.left() + margins.right(), margins.top() + margins.bottom()
+        )
         return size
 
     def _doLayout(self, rect, testOnly):
@@ -215,19 +203,23 @@ class ResponsiveTableWidget(QWidget):
     EXPLORE_VERTICAL_SPACING = 20
     HORIZONTAL_SPACING = 10
 
-    def __init__(self,
-                 parent: Optional[QWidget] = None,
-                 mode: str = StandardExploreModes.Browse):
+    def __init__(
+        self, parent: Optional[QWidget] = None, mode: str = StandardExploreModes.Browse
+    ):
         super().__init__(parent)
         self._mode: str = mode
-        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
 
-        vertical_spacing = self.BROWSE_VERTICAL_SPACING \
-            if mode == StandardExploreModes.Browse else \
-            self.EXPLORE_VERTICAL_SPACING
-        self.setLayout(ResponsiveTableLayout(parent=None,
-                                             vspacing=vertical_spacing,
-                                             hspacing=self.HORIZONTAL_SPACING))
+        vertical_spacing = (
+            self.BROWSE_VERTICAL_SPACING
+            if mode == StandardExploreModes.Browse
+            else self.EXPLORE_VERTICAL_SPACING
+        )
+        self.setLayout(
+            ResponsiveTableLayout(
+                parent=None, vspacing=vertical_spacing, hspacing=self.HORIZONTAL_SPACING
+            )
+        )
 
         self.layout().setContentsMargins(0, 0, 0, 0)
 
@@ -279,10 +271,9 @@ class ResponsiveTableWidget(QWidget):
         self.layout().takeAt(idx + 1)
 
     def push_dataset(self, dataset):
-        dataset_widget = DatasetItemWidget(dataset,
-                                           self.column_count(),
-                                           self,
-                                           mode=self._mode)
+        dataset_widget = DatasetItemWidget(
+            dataset, self.column_count(), self, mode=self._mode
+        )
 
         next_empty_widget = self.find_next_empty_widget()
         if next_empty_widget is not None:

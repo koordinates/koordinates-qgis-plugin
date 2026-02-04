@@ -1,23 +1,10 @@
 import os
 import platform
-from typing import (
-    Optional,
-    Dict
-)
+from typing import Optional, Dict
 
 from qgis.PyQt.QtCore import QRect
-from qgis.PyQt.QtGui import (
-    QPainter,
-    QColor,
-    QBrush,
-    QPen
-)
-from qgis.PyQt.QtWidgets import (
-    QVBoxLayout,
-    QWidget,
-    QLabel,
-    QStylePainter
-)
+from qgis.PyQt.QtGui import QPainter, QColor, QBrush, QPen
+from qgis.PyQt.QtWidgets import QVBoxLayout, QWidget, QLabel, QStylePainter
 
 from ..enums import StandardExploreModes
 
@@ -34,10 +21,12 @@ class ExplorePanelWidget(ResultsPanelWidget):
 
     CORNER_RADIUS = 4
 
-    def __init__(self,
-                 content: Dict,
-                 parent: Optional[QWidget] = None,
-                 mode: str = StandardExploreModes.Browse):
+    def __init__(
+        self,
+        content: Dict,
+        parent: Optional[QWidget] = None,
+        mode: str = StandardExploreModes.Browse,
+    ):
         super().__init__(parent)
 
         self.title_label = QLabel()
@@ -50,22 +39,18 @@ class ExplorePanelWidget(ResultsPanelWidget):
             # requires Qt 5.14+
             font_scale = 1
 
-        if platform.system() == 'Darwin':
+        if platform.system() == "Darwin":
             # fonts looks smaller on a Mac, where things "just work" :P
             main_title_size = 17
         elif font_scale > 1:
             main_title_size = int(15 / font_scale)
 
-        self.title_label.setText(
-            f"""<p style="line-height: 130%;
+        self.title_label.setText(f"""<p style="line-height: 130%;
                 font-size: {main_title_size}pt;
-                font-family: Arial, Sans"><b>{content['title']}</b>"""
-        )
+                font-family: Arial, Sans"><b>{content['title']}</b>""")
 
-        self.browser = DatasetsBrowserWidget(
-            mode=mode
-        )
-        self.browser.set_datasets(item['content'] for item in content['items'])
+        self.browser = DatasetsBrowserWidget(mode=mode)
+        self.browser.set_datasets(item["content"] for item in content["items"])
 
         vl = QVBoxLayout()
         vl.setContentsMargins(12, 12, 12, 0)
@@ -79,30 +64,30 @@ class ExplorePanelWidget(ResultsPanelWidget):
 
     def paintEvent(self, event):
         painter = QStylePainter(self)
-        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
         painter.save()
         brush = QBrush(QColor(255, 255, 255))
         painter.setBrush(brush)
-        pen = QPen(QColor('#dddddd'))
+        pen = QPen(QColor("#dddddd"))
         pen.setWidth(2)
         pen.setCosmetic(True)
 
-        actual_rect_height = self.title_label.height() \
-            + self.layout().contentsMargins().top() \
-            + self.layout().contentsMargins().bottom() \
-            + self.layout().spacing() \
+        actual_rect_height = (
+            self.title_label.height()
+            + self.layout().contentsMargins().top()
+            + self.layout().contentsMargins().bottom()
+            + self.layout().spacing()
             + self.browser.content_height()
+        )
 
         background_rect = QRect(
             self.rect().left(),
             self.rect().top(),
             self.rect().width(),
-            actual_rect_height
+            actual_rect_height,
         )
 
         painter.setPen(pen)
-        painter.drawRoundedRect(background_rect,
-                                self.CORNER_RADIUS,
-                                self.CORNER_RADIUS)
+        painter.drawRoundedRect(background_rect, self.CORNER_RADIUS, self.CORNER_RADIUS)
         painter.restore()

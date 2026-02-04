@@ -1,14 +1,7 @@
 from typing import Optional
 
-from qgis.PyQt.QtCore import (
-    pyqtSignal,
-    Qt
-)
-from qgis.PyQt.QtWidgets import (
-    QFrame,
-    QVBoxLayout,
-    QHBoxLayout
-)
+from qgis.PyQt.QtCore import pyqtSignal, Qt
+from qgis.PyQt.QtWidgets import QFrame, QVBoxLayout, QHBoxLayout
 
 from koordinates.gui.svg_label import SvgLabel
 
@@ -19,12 +12,20 @@ class SvgFramedButton(QFrame):
 
     The SVG is rendered in a bordered frame.
     """
+
     clicked = pyqtSignal()
 
-    def __init__(self, icon_name: str, width: int, height: int,
-                 icon_width: int, icon_height: int, parent=None,
-                 border_color: Optional[str] = None,
-                 hover_border_color: Optional[str] = None):
+    def __init__(
+        self,
+        icon_name: str,
+        width: int,
+        height: int,
+        icon_width: int,
+        icon_height: int,
+        parent=None,
+        border_color: Optional[str] = None,
+        hover_border_color: Optional[str] = None,
+    ):
         super().__init__(parent)
 
         self.setFixedSize(width, height)
@@ -45,7 +46,7 @@ class SvgFramedButton(QFrame):
             SvgFramedButton:hover {{ border-color: {}}}
             """.format(
                     border_color,
-                    hover_border_color if hover_border_color else border_color
+                    hover_border_color if hover_border_color else border_color,
                 )
             )
 
@@ -63,7 +64,7 @@ class SvgFramedButton(QFrame):
         self.setLayout(vl)
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             self.clicked.emit()
         else:
             super().mousePressEvent(event)

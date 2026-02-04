@@ -1,19 +1,9 @@
 from typing import List, Dict
 
 from qgis.PyQt import sip
-from qgis.PyQt.QtCore import (
-    Qt,
-    QSize,
-    pyqtSignal
-)
-from qgis.PyQt.QtGui import (
-    QPalette,
-    QPixmap,
-    QImage,
-    QCursor,
-    QColor
-)
-from qgis.PyQt.QtSvg import QSvgWidget
+from qgis.PyQt.QtCore import Qt, QSize, pyqtSignal
+from qgis.PyQt.QtGui import QPalette, QPixmap, QImage, QCursor, QColor
+from .compat import QSvgWidget
 from qgis.PyQt.QtWidgets import (
     QWidget,
     QLabel,
@@ -26,17 +16,15 @@ from qgis.PyQt.QtWidgets import (
     QToolButton,
     QHBoxLayout,
     QWidgetAction,
-    QMenu
+    QMenu,
 )
-from qgis.gui import (
-    QgsFloatingWidget
-)
+from qgis.gui import QgsFloatingWidget
 
 from .gui_utils import GuiUtils
 from .thumbnails import (
     downloadThumbnail,
     UserThumbnailProcessor,
-    PublisherTypeThumbnailProcessor
+    PublisherTypeThumbnailProcessor,
 )
 from .dataset_utils import DatasetGuiUtils
 
@@ -50,11 +38,7 @@ class ContextIcon(QLabel):
         self.setFixedSize(QSize(ContextIcon.SIZE, ContextIcon.SIZE))
 
     def setThumbnail(self, image: QImage):
-        self.setPixmap(
-            QPixmap.fromImage(
-                image
-            )
-        )
+        self.setPixmap(QPixmap.fromImage(image))
 
 
 class ContextLogo(QLabel):
@@ -69,7 +53,7 @@ class ContextLogo(QLabel):
             image = image.scaled(
                 int(image.width() * ContextLogo.LOGO_HEIGHT / image.height()),
                 ContextLogo.LOGO_HEIGHT,
-                transformMode=Qt.SmoothTransformation
+                transformMode=Qt.TransformationMode.SmoothTransformation,
             )
 
         self.setFixedWidth(image.width())
@@ -95,51 +79,43 @@ class ContextItem(QFrame):
         self._selected = False
 
         self.setMouseTracking(True)
-        self.setObjectName('context_item')
-        self.setCursor(QCursor(Qt.PointingHandCursor))
+        self.setObjectName("context_item")
+        self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
-        self.setFrameShape(QFrame.NoFrame)
+        self.setFrameShape(QFrame.Shape.NoFrame)
 
         hl = QHBoxLayout()
         self.icon_label = ContextIcon()
 
-        if self._details['name'] == 'All data':
+        if self._details["name"] == "All data":
             self.icon_label.setThumbnail(
                 GuiUtils.get_svg_as_image(
-                    'kx_icon.svg',
-                    ContextIcon.SIZE,
-                    ContextIcon.SIZE,
-                    QColor(0, 0, 0)
-                ))
-        elif self._details.get('type') == 'user':
+                    "kx_icon.svg", ContextIcon.SIZE, ContextIcon.SIZE, QColor(0, 0, 0)
+                )
+            )
+        elif self._details.get("type") == "user":
             processor = UserThumbnailProcessor(
-                self._details.get('name'),
-                QSize(ContextIcon.SIZE, ContextIcon.SIZE)
+                self._details.get("name"), QSize(ContextIcon.SIZE, ContextIcon.SIZE)
             )
-            downloadThumbnail(
-                self._details.get('logo'),
-                self.icon_label,
-                processor
-            )
+            downloadThumbnail(self._details.get("logo"), self.icon_label, processor)
         else:
-            logo_url = self._details['org'].get('logo_square_url') or \
-                       self._details.get('logo')
+            logo_url = self._details["org"].get("logo_square_url") or self._details.get(
+                "logo"
+            )
             if logo_url:
-                background_color = \
-                    self._details['org'].get('background_color') or \
-                    self._details.get('background_color')
+                background_color = self._details["org"].get(
+                    "background_color"
+                ) or self._details.get("background_color")
                 processor = PublisherTypeThumbnailProcessor(
                     QSize(ContextIcon.SIZE, ContextIcon.SIZE),
-                    background_color=QColor('#' + background_color) if background_color else None
+                    background_color=(
+                        QColor("#" + background_color) if background_color else None
+                    ),
                 )
-                downloadThumbnail(
-                    logo_url,
-                    self.icon_label,
-                    processor
-                )
+                downloadThumbnail(logo_url, self.icon_label, processor)
 
         hl.addWidget(self.icon_label)
-        self.name_label = QLabel(self._details['name'])
+        self.name_label = QLabel(self._details["name"])
         hl.addWidget(self.name_label, 1)
         self.checked_label = QSvgWidget()
         self.checked_label.setFixedSize(16, 16)
@@ -150,23 +126,18 @@ class ContextItem(QFrame):
         self.setLayout(hl)
 
     def context_name(self) -> str:
-        return self._details['name']
+        return self._details["name"]
 
     def set_selected(self, selected):
         self._selected = selected
-        back_color = '#ffffff'
+        back_color = "#ffffff"
         if self._selected:
-            back_color = '#f5f5f7'
-            self.checked_label.load(
-                GuiUtils.get_icon_svg(
-                    'tick.svg'
-                )
-            )
+            back_color = "#f5f5f7"
+            self.checked_label.load(GuiUtils.get_icon_svg("tick.svg"))
         else:
             self.checked_label.load(None)
 
-        self.setStyleSheet(
-            """
+        self.setStyleSheet("""
             #context_item {{ background-color: {}; border: 1px solid #dddddd; border-radius: 4px }}
             #context_item:hover {{ background-color: #f5f5f7; }}
             """.format(back_color))
@@ -174,10 +145,10 @@ class ContextItem(QFrame):
         self.update()
 
     def mousePressEvent(self, event):
-        if event.button() != Qt.LeftButton:
+        if event.button() != Qt.MouseButton.LeftButton:
             return
 
-        self.selected.emit(self._details['name'])
+        self.selected.emit(self._details["name"])
 
 
 class NoMouseReleaseMenu(QMenu):
@@ -193,7 +164,9 @@ class NoMouseReleaseMenu(QMenu):
 class ContextItemMenuAction(QWidgetAction):
     selected = pyqtSignal(str)
 
-    def __init__(self, details: Dict, selected: bool, is_first_action=False, parent=None):
+    def __init__(
+        self, details: Dict, selected: bool, is_first_action=False, parent=None
+    ):
         super().__init__(parent)
 
         self.widget = ContextItem(details)
@@ -225,24 +198,30 @@ class ContextWidget(QWidget):
             super().__init__(parent.window() if parent else None)
 
             self.setAnchorWidget(parent)
-            self.setAnchorPoint(QgsFloatingWidget.TopLeft)
-            self.setAnchorWidgetPoint(QgsFloatingWidget.BottomLeft)
+            self.setAnchorPoint(QgsFloatingWidget.AnchorPoint.TopLeft)
+            self.setAnchorWidgetPoint(QgsFloatingWidget.AnchorPoint.BottomLeft)
 
             self.frame = QFrame()
-            self.frame.setObjectName('base_frame')
-            self.frame.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
+            self.frame.setObjectName("base_frame")
+            self.frame.setSizePolicy(
+                QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Maximum
+            )
 
             opt = QStyleOptionFrame()
-            border = self.style().pixelMetric(QStyle.PM_DefaultFrameWidth, opt)
+            border = self.style().pixelMetric(
+                QStyle.PixelMetric.PM_DefaultFrameWidth, opt
+            )
 
             palette = QPalette()
 
             self.frame.setStyleSheet(
                 "#base_frame {{background-color: {}; border: {}px solid {};}}".format(
-                    palette.color(QPalette.Base).name(),
+                    palette.color(QPalette.ColorRole.Base).name(),
                     border,
-                    palette.color(QPalette.Dark).name()))
-            self.frame.setFrameStyle(QFrame.Panel | QFrame.Plain)
+                    palette.color(QPalette.ColorRole.Dark).name(),
+                )
+            )
+            self.frame.setFrameStyle(QFrame.Shape.Panel | QFrame.Shadow.Plain)
 
             frame_layout = QVBoxLayout()
             self.frame.setLayout(frame_layout)
@@ -275,9 +254,9 @@ class ContextWidget(QWidget):
 
         self._contexts = []
         self._reset_contexts()
-        self._current_context_name: str = 'All data'
+        self._current_context_name: str = "All data"
 
-        self.setFocusPolicy(Qt.StrongFocus)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
         hl = QHBoxLayout()
         hl.setContentsMargins(0, 0, 0, 0)
@@ -287,7 +266,7 @@ class ContextWidget(QWidget):
 
         self.drop_down_button = QToolButton()
         self.drop_down_button.setAutoRaise(True)
-        self.drop_down_button.setArrowType(Qt.DownArrow)
+        self.drop_down_button.setArrowType(Qt.ArrowType.DownArrow)
         self.drop_down_button.setCheckable(True)
         hl.addWidget(self.drop_down_button)
 
@@ -316,15 +295,14 @@ class ContextWidget(QWidget):
             self._floating_widget.deleteLater()
 
     def _reset_contexts(self):
-        self._contexts = [{
-            "name": "All data",
-            "type": "site",
-            "domain": "all",
-            "org": {
-                "logo_square_url": "",
-                "logo_owner_url": ""
+        self._contexts = [
+            {
+                "name": "All data",
+                "type": "site",
+                "domain": "all",
+                "org": {"logo_square_url": "", "logo_owner_url": ""},
             }
-        }]
+        ]
 
     def set_contexts(self, contexts=List):
         """
@@ -347,7 +325,7 @@ class ContextWidget(QWidget):
             self._context_widgets.append(w)
             self._contents_widget.layout().addWidget(w)
             w.selected.connect(self.on_context_selected)
-            if self._current_context_name == c['name']:
+            if self._current_context_name == c["name"]:
                 w.set_selected(True)
 
         self._update_logo()
@@ -356,13 +334,13 @@ class ContextWidget(QWidget):
         self._floating_widget.reflow()
 
     def _update_logo(self):
-        if self._current_context_name != 'All data':
-            downloadThumbnail(self.current_context()["org"]["logo_owner_url"], self.label)
+        if self._current_context_name != "All data":
+            downloadThumbnail(
+                self.current_context()["org"]["logo_owner_url"], self.label
+            )
         else:
             image = GuiUtils.get_svg_as_image(
-                'koordinates_logo.svg',
-                110,
-                ContextLogo.LOGO_HEIGHT
+                "koordinates_logo.svg", 110, ContextLogo.LOGO_HEIGHT
             )
 
             self.label.setPixmap(QPixmap.fromImage(image))
@@ -403,7 +381,7 @@ class ContextWidget(QWidget):
         """
         Returns the details of the current context
         """
-        return [c for c in self._contexts if c['name'] == self._current_context_name][0]
+        return [c for c in self._contexts if c["name"] == self._current_context_name][0]
 
     def _on_focus_change(self, old, new):
         if not self._floating_widget.isVisible():
