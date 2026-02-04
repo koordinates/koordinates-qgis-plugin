@@ -1,22 +1,9 @@
 import json
 import platform
-from enum import (
-    Enum,
-    auto
-)
-from typing import (
-    Optional,
-    Dict
-)
+from enum import Enum, auto
+from typing import Optional, Dict
 
-from qgis.PyQt.QtCore import (
-    Qt,
-    QPointF,
-    QRect,
-    QRectF,
-    QSize,
-    QTimer
-)
+from qgis.PyQt.QtCore import Qt, QPointF, QRect, QRectF, QSize, QTimer
 from qgis.PyQt.QtGui import (
     QColor,
     QPixmap,
@@ -26,7 +13,7 @@ from qgis.PyQt.QtGui import (
     QImage,
     QBrush,
     QFont,
-    QPen
+    QPen,
 )
 from .compat import QSvgWidget
 from qgis.PyQt.QtWidgets import (
@@ -36,7 +23,7 @@ from qgis.PyQt.QtWidgets import (
     QVBoxLayout,
     QSizePolicy,
     QWidgetItem,
-    QLayout
+    QLayout,
 )
 from qgis.core import (
     QgsProject,
@@ -44,35 +31,25 @@ from qgis.core import (
     QgsCoordinateTransform,
     QgsCoordinateReferenceSystem,
     QgsFields,
-    QgsJsonUtils
+    QgsJsonUtils,
 )
 from qgis.utils import iface
 
 from koordinates.gui.dataset_dialog import DatasetDialog
 from koordinates.gui.thumbnails import downloadThumbnail
-from .action_button import (
-    CloneButton,
-    AddButton
-)
-from .dataset_utils import (
-    DatasetGuiUtils,
-    IconStyle
-)
+from .action_button import CloneButton, AddButton
+from .dataset_utils import DatasetGuiUtils, IconStyle
 from .enums import StandardExploreModes
 from .gui_utils import GuiUtils
 from .star_button import StarButton
-from ..api import (
-    DataType,
-    Capability,
-    PublicAccessType,
-    Dataset
-)
+from ..api import DataType, Capability, PublicAccessType, Dataset
 
 
 class CardLayout(Enum):
     """
     Dataset card layout arrangements
     """
+
     Tall = auto()
     Wide = auto()
     Compact = auto()
@@ -80,7 +57,6 @@ class CardLayout(Enum):
 
 
 class DatasetItemLayout(QLayout):
-
     COMPACT_WIDTH_THRESHOLD = 430
 
     def __init__(self, parent=None):
@@ -248,8 +224,10 @@ class DatasetItemLayout(QLayout):
         _arrangement = self.arrangement(rect)
 
         if _arrangement == CardLayout.Wide:
-            size = QSize(DatasetItemWidgetBase.THUMBNAIL_SIZE,
-                         DatasetItemWidgetBase.THUMBNAIL_SIZE)
+            size = QSize(
+                DatasetItemWidgetBase.THUMBNAIL_SIZE,
+                DatasetItemWidgetBase.THUMBNAIL_SIZE,
+            )
         elif _arrangement == CardLayout.Tall:
             size = QSize(rect.width(), DatasetItemWidgetBase.THUMBNAIL_SIZE)
         else:
@@ -271,57 +249,38 @@ class DatasetItemLayout(QLayout):
             if self.thumbnail_item:
                 self.thumbnail_widget.show()
                 self.thumbnail_item.setGeometry(
-                    QRect(
-                        1, 1,
-                        rect.width(),
-                        DatasetItemWidgetBase.THUMBNAIL_SIZE
-                    )
+                    QRect(1, 1, rect.width(), DatasetItemWidgetBase.THUMBNAIL_SIZE)
                 )
             if self.title_container:
                 self.title_container.setGeometry(
                     QRect(
-                        17, 165,
-                        rect.width() - 17 * 2 - 20 -
-                        (24 if self.private_icon_item else 0),
-                        60
+                        17,
+                        165,
+                        rect.width()
+                        - 17 * 2
+                        - 20
+                        - (24 if self.private_icon_item else 0),
+                        60,
                     )
                 )
 
             if self.private_icon_item:
                 self.private_icon_item.widget().show()
                 self.private_icon_item.setGeometry(
-                    QRect(
-                        rect.width() - 64, 162,
-                        30,
-                        20
-                    )
+                    QRect(rect.width() - 64, 162, 30, 20)
                 )
 
             if self.star_button_item:
-                self.star_button_item.setGeometry(
-                    QRect(
-                        rect.width() - 40, 162,
-                        30,
-                        20
-                    )
-                )
+                self.star_button_item.setGeometry(QRect(rect.width() - 40, 162, 30, 20))
 
             if self.details_container:
                 self.details_container.setGeometry(
-                    QRect(
-                        17, 213,
-                        rect.width() - 17 * 2,
-                        56
-                    )
+                    QRect(17, 213, rect.width() - 17 * 2, 56)
                 )
 
             if self.button_container:
                 self.button_container.setGeometry(
-                    QRect(
-                        16, 280,
-                        rect.width() - 12 * 2,
-                        32
-                    )
+                    QRect(16, 280, rect.width() - 12 * 2, 32)
                 )
         elif new_arrangement == CardLayout.Wide:
             has_thumbnail = False
@@ -330,9 +289,10 @@ class DatasetItemLayout(QLayout):
                 has_thumbnail = True
                 self.thumbnail_item.setGeometry(
                     QRect(
-                        1, 1,
+                        1,
+                        1,
                         DatasetItemWidgetBase.THUMBNAIL_SIZE,
-                        DatasetItemWidgetBase.THUMBNAIL_SIZE
+                        DatasetItemWidgetBase.THUMBNAIL_SIZE,
                     )
                 )
 
@@ -340,48 +300,29 @@ class DatasetItemLayout(QLayout):
             if self.title_container:
                 self.title_container.setGeometry(
                     QRect(
-                        left, 15,
-                        rect.width() - left - 40 -
-                        (24 if self.private_icon_item else 0),
-                        90
+                        left,
+                        15,
+                        rect.width()
+                        - left
+                        - 40
+                        - (24 if self.private_icon_item else 0),
+                        90,
                     )
                 )
 
             if self.private_icon_item:
                 self.private_icon_item.widget().show()
-                self.private_icon_item.setGeometry(
-                    QRect(
-                        rect.width() - 64, 12,
-                        30,
-                        20
-                    )
-                )
+                self.private_icon_item.setGeometry(QRect(rect.width() - 64, 12, 30, 20))
 
             if self.star_button_item:
-                self.star_button_item.setGeometry(
-                    QRect(
-                        rect.width() - 40, 12,
-                        30,
-                        20
-                    )
-                )
+                self.star_button_item.setGeometry(QRect(rect.width() - 40, 12, 30, 20))
 
             if self.details_container:
-                self.details_container.setGeometry(
-                    QRect(
-                        left, 80,
-                        105,
-                        61
-                    )
-                )
+                self.details_container.setGeometry(QRect(left, 80, 105, 61))
 
             if self.button_container:
                 self.button_container.setGeometry(
-                    QRect(
-                        left + 103, 103,
-                        rect.width() - left - 103 - 10,
-                        38
-                    )
+                    QRect(left + 103, 103, rect.width() - left - 103 - 10, 38)
                 )
         elif new_arrangement == CardLayout.Compact:
             has_thumbnail = False
@@ -391,21 +332,20 @@ class DatasetItemLayout(QLayout):
                 has_thumbnail = True
                 size = self.thumbnail_size_for_rect(rect)
                 self.thumbnail_item.setGeometry(
-                    QRect(
-                        1, 1,
-                        size.width(),
-                        size.height()
-                    )
+                    QRect(1, 1, size.width(), size.height())
                 )
                 left += size.width()
 
             if self.title_container:
                 self.title_container.setGeometry(
                     QRect(
-                        left, 15,
-                        rect.width() - left - 40 -
-                        (24 if self.private_icon_item else 0),
-                        90
+                        left,
+                        15,
+                        rect.width()
+                        - left
+                        - 40
+                        - (24 if self.private_icon_item else 0),
+                        90,
                     )
                 )
 
@@ -413,30 +353,14 @@ class DatasetItemLayout(QLayout):
                 self.private_icon_item.widget().hide()
 
             if self.star_button_item:
-                self.star_button_item.setGeometry(
-                    QRect(
-                        rect.width() - 40, 12,
-                        30,
-                        20
-                    )
-                )
+                self.star_button_item.setGeometry(QRect(rect.width() - 40, 12, 30, 20))
 
             if self.details_container:
-                self.details_container.setGeometry(
-                    QRect(
-                        left, 60,
-                        85,
-                        61
-                    )
-                )
+                self.details_container.setGeometry(QRect(left, 60, 85, 61))
 
             if self.button_container:
                 self.button_container.setGeometry(
-                    QRect(
-                        left, 103,
-                        rect.width() - left - 10,
-                        38
-                    )
+                    QRect(left, 103, rect.width() - left - 10, 38)
                 )
 
 
@@ -451,15 +375,14 @@ class DatasetItemWidgetBase(QFrame):
     CARD_HEIGHT = THUMBNAIL_SIZE + 2  # +2 for 2x1px border
     CARD_HEIGHT_TALL = THUMBNAIL_SIZE + 170 + 2  # +2 for 2x1px border
 
-    def __init__(self,
-                 parent=None,
-                 mode: str = StandardExploreModes.Browse):
+    def __init__(self, parent=None, mode: str = StandardExploreModes.Browse):
         super().__init__(parent)
         self.column_count = None
         self._mode = mode
 
         item_style_sheet = "border-radius: {}px; background: white;".format(
-            self.THUMBNAIL_CORNER_RADIUS)
+            self.THUMBNAIL_CORNER_RADIUS
+        )
 
         if self._mode == StandardExploreModes.Browse:
             item_style_sheet += "\nborder: 1px solid #dddddd;"
@@ -494,9 +417,9 @@ class DatasetItemWidgetBase(QFrame):
         if arrangement is None:
             return
 
-        self.setFixedHeight(self.dataset_layout.fixed_height_for_arrangement(
-            arrangement
-        ))
+        self.setFixedHeight(
+            self.dataset_layout.fixed_height_for_arrangement(arrangement)
+        )
 
         # might not be needed anymore...
         if arrangement != CardLayout.Tall:
@@ -556,11 +479,13 @@ class DatasetItemWidget(DatasetItemWidgetBase):
     Shows details for a dataset item
     """
 
-    def __init__(self,
-                 dataset: Dict,
-                 column_count,
-                 parent,
-                 mode: str = StandardExploreModes.Browse):
+    def __init__(
+        self,
+        dataset: Dict,
+        column_count,
+        parent,
+        mode: str = StandardExploreModes.Browse,
+    ):
         super().__init__(parent, mode)
 
         self.setMouseTracking(True)
@@ -583,23 +508,22 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         self.title_label = QLabel()
         self.title_label.setWordWrap(True)
-        self.title_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
-
-        thumbnail_svg = DatasetGuiUtils.thumbnail_icon_for_dataset(
-            self.dataset
+        self.title_label.setAlignment(
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop
         )
+
+        thumbnail_svg = DatasetGuiUtils.thumbnail_icon_for_dataset(self.dataset)
         if thumbnail_svg:
-            self.setThumbnail(GuiUtils.get_svg_as_image(thumbnail_svg,
-                                                        150, 150))
+            self.setThumbnail(GuiUtils.get_svg_as_image(thumbnail_svg, 150, 150))
         else:
             thumbnail_url = self.dataset.thumbnail_url()
             if thumbnail_url:
                 downloadThumbnail(thumbnail_url, self)
 
         if self.dataset.access == PublicAccessType.none:
-            private_icon = QSvgWidget(GuiUtils.get_icon_svg('private.svg'))
+            private_icon = QSvgWidget(GuiUtils.get_icon_svg("private.svg"))
             private_icon.setFixedSize(QSize(24, 24))
-            private_icon.setToolTip(self.tr('Private'))
+            private_icon.setToolTip(self.tr("Private"))
             self.dataset_layout.set_private_icon(private_icon)
 
         self.star_button = StarButton(self.dataset)
@@ -611,7 +535,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.dataset_layout.set_title_layout(title_layout)
 
         detail_font_size = 9
-        if platform.system() == 'Darwin':
+        if platform.system() == "Darwin":
             # fonts looks smaller on a mac, where things "just work" :P
             detail_font_size = 10
         elif font_scale > 1:
@@ -619,23 +543,20 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         self._update_title()
 
-        self.labelUpdatedIcon = QSvgWidget(
-            GuiUtils.get_icon_svg("history_gray.svg"))
+        self.labelUpdatedIcon = QSvgWidget(GuiUtils.get_icon_svg("history_gray.svg"))
         self.labelUpdatedIcon.setFixedSize(13, 12)
         self.labelUpdated = QLabel()
 
-        license = self.dataset.details.get('license')
+        license = self.dataset.details.get("license")
         self.license_label = None
         if license:
-            license_type = license.get('type')
+            license_type = license.get("type")
             if license_type:
                 license_type = license_type.upper()
                 self.license_label = QLabel()
-                self.license_label.setText(
-                    f"""<span style="color: #868889;
+                self.license_label.setText(f"""<span style="color: #868889;
                         font-family: Arial, Sans;
-                        font-size: {detail_font_size}pt">{license_type}</span>"""
-                )
+                        font-size: {detail_font_size}pt">{license_type}</span>""")
 
         changed_date = self.dataset.updated_at_date()
         if changed_date is not None:
@@ -673,8 +594,10 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         """
         self.setStyleSheet(base_style)
 
-        if (Capability.Clone in self.dataset.capabilities
-                or Capability.RequestClone in self.dataset.capabilities):
+        if (
+            Capability.Clone in self.dataset.capabilities
+            or Capability.RequestClone in self.dataset.capabilities
+        ):
             self.btnClone = CloneButton(self.dataset)
             buttons_layout.addWidget(self.btnClone)
         else:
@@ -689,7 +612,8 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         self.dataset_layout.set_button_layout(buttons_layout)
 
         self.bbox: Optional[QgsGeometry] = self._geomFromGeoJson(
-            self.dataset.details.get("data", {}).get("extent"))
+            self.dataset.details.get("data", {}).get("extent")
+        )
         # if self.bbox:
         #     self.footprint = QgsRubberBand(iface.mapCanvas(), QgsWkbTypes.PolygonGeometry)
         #     self.footprint.setWidth(2)
@@ -711,22 +635,21 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         main_title_size = 11
         title_font_size = 11
-        if platform.system() == 'Darwin':
+        if platform.system() == "Darwin":
             # fonts looks smaller on a mac, where things "just work" :P
             main_title_size = 14
             title_font_size = 14
         elif font_scale > 1:
-            main_title_size = int(
-                12 / font_scale)
-            title_font_size = int(
-                12 / font_scale)
+            main_title_size = int(12 / font_scale)
+            title_font_size = int(12 / font_scale)
 
-        publisher_name = self.dataset.publisher().name() if \
-            self.dataset.publisher() else ''
+        publisher_name = (
+            self.dataset.publisher().name() if self.dataset.publisher() else ""
+        )
         title = self.dataset.title()
         max_title_length = 70
         if len(title) > max_title_length:
-            title = title[:max_title_length - 3] + '...'
+            title = title[: max_title_length - 3] + "..."
         self.title_label.setText(
             f"""<p style="line-height: 130%;
                 font-size: {main_title_size}pt;
@@ -776,13 +699,10 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
     def update_thumbnail(self):
         self.timer = None
-        thumbnail_svg = DatasetGuiUtils.thumbnail_icon_for_dataset(
-            self.dataset
-        )
+        thumbnail_svg = DatasetGuiUtils.thumbnail_icon_for_dataset(self.dataset)
         if thumbnail_svg:
             size = 150
-            self.raw_thumbnail = GuiUtils.get_svg_as_image(
-                thumbnail_svg, size, size)
+            self.raw_thumbnail = GuiUtils.get_svg_as_image(thumbnail_svg, size, size)
 
         thumbnail = self.process_thumbnail(self.raw_thumbnail)
         if not thumbnail:
@@ -821,7 +741,6 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         painter = QPainter(target)
 
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
 
         painter.setPen(Qt.PenStyle.NoPen)
@@ -833,46 +752,56 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             path.lineTo(size.width(), 0)
             path.lineTo(size.width(), size.height())
             path.lineTo(self.THUMBNAIL_CORNER_RADIUS, size.height())
-            path.arcTo(0,
-                       size.height() - self.THUMBNAIL_CORNER_RADIUS * 2,
-                       self.THUMBNAIL_CORNER_RADIUS * 2,
-                       self.THUMBNAIL_CORNER_RADIUS * 2,
-                       270, -90
-                       )
+            path.arcTo(
+                0,
+                size.height() - self.THUMBNAIL_CORNER_RADIUS * 2,
+                self.THUMBNAIL_CORNER_RADIUS * 2,
+                self.THUMBNAIL_CORNER_RADIUS * 2,
+                270,
+                -90,
+            )
             path.lineTo(0, self.THUMBNAIL_CORNER_RADIUS)
-            path.arcTo(0,
-                       0,
-                       self.THUMBNAIL_CORNER_RADIUS * 2,
-                       self.THUMBNAIL_CORNER_RADIUS * 2,
-                       180, -90
-                       )
+            path.arcTo(
+                0,
+                0,
+                self.THUMBNAIL_CORNER_RADIUS * 2,
+                self.THUMBNAIL_CORNER_RADIUS * 2,
+                180,
+                -90,
+            )
         else:
             path.moveTo(self.THUMBNAIL_CORNER_RADIUS, 0)
             path.lineTo(size.width() - self.THUMBNAIL_CORNER_RADIUS, 0)
-            path.arcTo(size.width() - self.THUMBNAIL_CORNER_RADIUS * 2,
-                       0,
-                       self.THUMBNAIL_CORNER_RADIUS * 2,
-                       self.THUMBNAIL_CORNER_RADIUS * 2,
-                       90, -90
-                       )
+            path.arcTo(
+                size.width() - self.THUMBNAIL_CORNER_RADIUS * 2,
+                0,
+                self.THUMBNAIL_CORNER_RADIUS * 2,
+                self.THUMBNAIL_CORNER_RADIUS * 2,
+                90,
+                -90,
+            )
             path.lineTo(size.width(), size.height())
             path.lineTo(0, size.height())
             path.lineTo(0, self.THUMBNAIL_CORNER_RADIUS)
-            path.arcTo(0,
-                       0,
-                       self.THUMBNAIL_CORNER_RADIUS * 2,
-                       self.THUMBNAIL_CORNER_RADIUS * 2,
-                       180, -90
-                       )
+            path.arcTo(
+                0,
+                0,
+                self.THUMBNAIL_CORNER_RADIUS * 2,
+                self.THUMBNAIL_CORNER_RADIUS * 2,
+                180,
+                -90,
+            )
 
         painter.drawPath(path)
         painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceIn)
 
         if img is not None:
-            resized = img.scaled(image_size.width(),
-                                 image_size.height(),
-                                 Qt.AspectRatioMode.KeepAspectRatioByExpanding,
-                                 Qt.TransformationMode.SmoothTransformation)
+            resized = img.scaled(
+                image_size.width(),
+                image_size.height(),
+                Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+                Qt.TransformationMode.SmoothTransformation,
+            )
 
             if resized.width() > image_size.width():
                 left = int((resized.width() - image_size.width()) / 2)
@@ -884,20 +813,19 @@ class DatasetItemWidget(DatasetItemWidgetBase):
                 top = 0
 
             cropped = resized.copy(
-                QRect(left, top, image_size.width(), image_size.height()))
+                QRect(left, top, image_size.width(), image_size.height())
+            )
             painter.drawImage(0, 0, cropped)
         else:
-            painter.setBrush(QBrush(QColor('#cccccc')))
+            painter.setBrush(QBrush(QColor("#cccccc")))
             painter.setPen(Qt.PenStyle.NoPen)
             painter.drawRect(0, 0, 600, 600)
 
         painter.end()
 
         target.setDevicePixelRatio(scale_factor)
-        target.setDotsPerMeterX(
-            int(target.dotsPerMeterX() * scale_factor))
-        target.setDotsPerMeterY(int(
-            target.dotsPerMeterY() * scale_factor))
+        target.setDotsPerMeterX(int(target.dotsPerMeterX() * scale_factor))
+        target.setDotsPerMeterY(int(target.dotsPerMeterY() * scale_factor))
         base = target
 
         if arrangement == CardLayout.Compact:
@@ -905,24 +833,22 @@ class DatasetItemWidget(DatasetItemWidgetBase):
 
         painter = QPainter(base)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         painter.setRenderHint(QPainter.RenderHint.TextAntialiasing, True)
 
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QBrush(QColor(0, 0, 0, 150)))
         painter.drawRoundedRect(QRectF(15, 100, 117, 32), 4, 4)
 
-        icon = DatasetGuiUtils.get_icon_for_dataset(self.dataset,
-                                                    IconStyle.Light)
+        icon = DatasetGuiUtils.get_icon_for_dataset(self.dataset, IconStyle.Light)
         if icon:
-            painter.drawImage(QRectF(21, 106, 20, 20),
-                              GuiUtils.get_svg_as_image(icon,
-                                                        int(20 * scale_factor),
-                                                        int(20 * scale_factor)))
+            painter.drawImage(
+                QRectF(21, 106, 20, 20),
+                GuiUtils.get_svg_as_image(
+                    icon, int(20 * scale_factor), int(20 * scale_factor)
+                ),
+            )
 
-        description = DatasetGuiUtils.get_type_description(
-            self.dataset
-        )
+        description = DatasetGuiUtils.get_type_description(self.dataset)
 
         try:
             font_scale = self.screen().logicalDotsPerInch() / 92
@@ -931,13 +857,13 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             font_scale = 1
 
         overlay_font_size = 7.5
-        if platform.system() == 'Darwin':
+        if platform.system() == "Darwin":
             overlay_font_size = 9
         elif font_scale > 1:
             overlay_font_size = 7.5 / font_scale
 
         if description:
-            font = QFont('Arial')
+            font = QFont("Arial")
             font.setPointSizeF(overlay_font_size / scale_factor)
             font.setBold(True)
             painter.setFont(font)
@@ -946,10 +872,9 @@ class DatasetItemWidget(DatasetItemWidgetBase):
             painter.setPen(QPen(QColor(255, 255, 255)))
             painter.drawText(QPointF(47, 112), description)
 
-        subtitle = DatasetGuiUtils.get_subtitle(self.dataset,
-                                                short_format=True)
+        subtitle = DatasetGuiUtils.get_subtitle(self.dataset, short_format=True)
         if subtitle:
-            font = QFont('Arial')
+            font = QFont("Arial")
             font.setPointSizeF(overlay_font_size / scale_factor)
             font.setBold(False)
             painter.setFont(font)
@@ -965,8 +890,7 @@ class DatasetItemWidget(DatasetItemWidgetBase):
         super().resizeEvent(event)
 
         arrangement = self.dataset_layout.arrangement()
-        if arrangement != self.old_arrangement or \
-                arrangement == CardLayout.Tall:
+        if arrangement != self.old_arrangement or arrangement == CardLayout.Tall:
             self.defer_update_thumbnail()
 
         self.old_arrangement = arrangement
