@@ -1,6 +1,6 @@
 [general]
 name=Koordinates
-qgisMinimumVersion=3.22
+qgisMinimumVersion=4.0
 description=Discover, view and clone Koordinates hosted data directly from QGIS.
 about=<div style="max-width:33em">The <a href="https://koordinates.com/explore/">Koordinates</a> plugin allows users to discover, view and clone Koordinates-hosted data directly from QGIS.
 
