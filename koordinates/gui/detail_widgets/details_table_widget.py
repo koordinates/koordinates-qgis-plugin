@@ -1,27 +1,15 @@
 import platform
-from typing import (
-    List,
-    Tuple
-)
+from typing import List, Tuple
 
 from qgis.PyQt.QtCore import (
     Qt,
 )
-from qgis.PyQt.QtGui import (
-    QFontMetrics,
-    QFont
-)
-from qgis.PyQt.QtWidgets import (
-    QGridLayout,
-    QLabel
-)
+from qgis.PyQt.QtGui import QFontMetrics, QFont
+from qgis.PyQt.QtWidgets import QGridLayout, QLabel
 
 from .horizontal_line_widget import HorizontalLine
 from ..compat import fontmetric_width
-from ..gui_utils import (
-    FONT_FAMILIES,
-    MONOSPACE_FONT_FAMILIES
-)
+from ..gui_utils import FONT_FAMILIES, MONOSPACE_FONT_FAMILIES
 
 
 class DetailsTable(QGridLayout):
@@ -33,13 +21,14 @@ class DetailsTable(QGridLayout):
         super().__init__(parent)
         self.setVerticalSpacing(13)
         self.font_size = 10
-        if platform.system() == 'Darwin':
+        if platform.system() == "Darwin":
             self.font_size = 14
 
         heading = QLabel(
-            """<b style="font-family: {};""".format(FONT_FAMILIES) +
-            """font-size: {}pt;""".format(self.font_size) +
-            """color: black">{}</b>""".format(title))
+            """<b style="font-family: {};""".format(FONT_FAMILIES)
+            + """font-size: {}pt;""".format(self.font_size)
+            + """color: black">{}</b>""".format(title)
+        )
         self.addWidget(heading, 0, 0, 1, 2)
         self.setColumnStretch(1, 1)
 
@@ -47,36 +36,33 @@ class DetailsTable(QGridLayout):
         if self.rowCount() > 1:
             self.addWidget(HorizontalLine(), self.rowCount(), 0, 1, 2)
 
-        is_monospace = title.startswith('_')
+        is_monospace = title.startswith("_")
         if is_monospace:
             title = title[1:]
 
         row = self.rowCount()
-        title_label = QLabel(
-            """<span style="font-family: {};
+        title_label = QLabel("""<span style="font-family: {};
             font-size: {}pt;
-            color: #868889">{}</span>""".format(FONT_FAMILIES,
-                                                self.font_size,
-                                                title))
+            color: #868889">{}</span>""".format(FONT_FAMILIES, self.font_size, title))
         title_label.setTextInteractionFlags(
-            Qt.TextInteractionFlag.TextBrowserInteraction)
+            Qt.TextInteractionFlag.TextBrowserInteraction
+        )
         title_label.setOpenExternalLinks(True)
 
-        title_label.setFixedWidth(fontmetric_width(QFontMetrics(QFont()), 'x') * 30)
-        title_label.setAlignment(
-            Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+        title_label.setFixedWidth(fontmetric_width(QFontMetrics(QFont()), "x") * 30)
+        title_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         self.addWidget(title_label, row, 0, 1, 1)
-        font_family = FONT_FAMILIES if not is_monospace \
-            else MONOSPACE_FONT_FAMILIES
+        font_family = FONT_FAMILIES if not is_monospace else MONOSPACE_FONT_FAMILIES
         value_label = QLabel(
-            """<span style="font-family: {};""".format(font_family) +
-            """font-size: {}pt;""".format(self.font_size) +
-            """color: black">{}</span>""".format(value))
+            """<span style="font-family: {};""".format(font_family)
+            + """font-size: {}pt;""".format(self.font_size)
+            + """color: black">{}</span>""".format(value)
+        )
         value_label.setTextInteractionFlags(
-            Qt.TextInteractionFlag.TextBrowserInteraction)
+            Qt.TextInteractionFlag.TextBrowserInteraction
+        )
         value_label.setOpenExternalLinks(True)
-        value_label.setAlignment(
-            Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+        value_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         value_label.setWordWrap(True)
         self.addWidget(value_label, row, 1, 1, 1)
 

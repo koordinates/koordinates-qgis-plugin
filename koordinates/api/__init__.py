@@ -1,8 +1,4 @@
-from .client import (  # NOQA
-    KoordinatesClient,
-    UserCapability,
-    PAGE_SIZE
-)
+from .client import KoordinatesClient, UserCapability, PAGE_SIZE  # NOQA
 from .data_browser import DataBrowserQuery  # NOQA
 from .dataset import Dataset  # NOQA
 from .publisher import Publisher, PublisherTheme  # NOQA
@@ -19,7 +15,7 @@ from .enums import (  # NOQA
     Capability,
     PublicAccessType,
     PublisherType,
-    UserDatasetCapability
+    UserDatasetCapability,
 )
 from .layer_utils import LayerUtils  # NOQA
 from .repo import Repo  # NOQA

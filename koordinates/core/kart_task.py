@@ -1,17 +1,8 @@
 import re
-from typing import (
-    List,
-    Optional,
-    Tuple
-)
+from typing import List, Optional, Tuple
 
 from qgis.PyQt.QtCore import QProcess
-from qgis.core import (
-    QgsTask,
-    QgsBlockingProcess,
-    QgsFeedback,
-    QgsReferencedRectangle
-)
+from qgis.core import QgsTask, QgsBlockingProcess, QgsFeedback, QgsReferencedRectangle
 
 from .enums import KartOperation
 from .exceptions import KartNotInstalledException
@@ -26,9 +17,8 @@ class KartTask(QgsTask):
         super().__init__(description)
 
         try:
-            from kart.kartapi import (
-                kartExecutable
-            )
+            from kart.kartapi import kartExecutable
+
             self._kart_executable = kartExecutable()
         except ImportError:
             raise KartNotInstalledException
@@ -42,7 +32,7 @@ class KartTask(QgsTask):
         self._result: bool = False
         self._was_canceled: bool = False
 
-        self._stdout_buffer = ''
+        self._stdout_buffer = ""
 
     def operation(self) -> KartOperation:
         """
@@ -54,7 +44,7 @@ class KartTask(QgsTask):
         """
         Returns a short description of the task's result
         """
-        return self.tr('Success')
+        return self.tr("Success")
 
     def was_canceled(self) -> bool:
         """
@@ -73,7 +63,7 @@ class KartTask(QgsTask):
         return (
             self._result,
             self.short_result_description(),
-            '<br>'.join(self._output)
+            "<br>".join(self._output),
         )
 
     def output(self) -> List[str]:
@@ -86,14 +76,13 @@ class KartTask(QgsTask):
         """
         Called when the kart process emits messages on stdout
         """
-        val = ba.data().decode('UTF-8', errors='replace')
+        val = ba.data().decode("UTF-8", errors="replace")
         self._stdout_buffer += val
 
-        if self._stdout_buffer.endswith('\n') or self._stdout_buffer.endswith(
-                '\r'):
+        if self._stdout_buffer.endswith("\n") or self._stdout_buffer.endswith("\r"):
             # flush buffer
             self._output.append(self._stdout_buffer.rstrip())
-            self._stdout_buffer = ''
+            self._stdout_buffer = ""
 
     def run(self):
         self._feedback = QgsFeedback()
@@ -114,8 +103,9 @@ class KartTask(QgsTask):
 
         self._feedback = None
 
-        self._result = bool(process.exitStatus() == QProcess.ExitStatus.NormalExit
-                            and res == 0)
+        self._result = bool(
+            process.exitStatus() == QProcess.ExitStatus.NormalExit and res == 0
+        )
         return self._was_canceled or self._result
 
     def cancel(self):
@@ -134,18 +124,18 @@ class KartCloneTask(KartTask):
     # let's say counting takes.... 5% of time.
     COUNT_PERCENT_OF_TIME = 0.05
 
-    def __init__(self,
-                 title: str,
-                 url: str,
-                 destination: str,
-                 location: Optional[str] = None,
-                 extent: Optional[QgsReferencedRectangle] = None,
-                 username: Optional[str] = None,
-                 password: Optional[str] = None):
+    def __init__(
+        self,
+        title: str,
+        url: str,
+        destination: str,
+        location: Optional[str] = None,
+        extent: Optional[QgsReferencedRectangle] = None,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
+    ):
         try:
-            from kart.kartapi import (
-                Repository
-            )
+            from kart.kartapi import Repository
         except ImportError:
             raise KartNotInstalledException()
 
@@ -158,10 +148,7 @@ class KartCloneTask(KartTask):
             password=password,
         )
 
-        super().__init__(
-            'Cloning {}'.format(title),
-            commands
-        )
+        super().__init__("Cloning {}".format(title), commands)
 
         self.title = title
         self.url = url
@@ -177,28 +164,28 @@ class KartCloneTask(KartTask):
 
     def short_result_description(self) -> str:
         return (
-            self.tr('Cloned {}') if self._result
-            else self.tr('Failed to clone {}')
+            self.tr("Cloned {}") if self._result else self.tr("Failed to clone {}")
         ).format(self.title)
 
     def on_stdout(self, ba):
-        val = ba.data().decode('UTF-8', errors='replace')
+        val = ba.data().decode("UTF-8", errors="replace")
 
-        counting_regex = re.compile(r'.*Counting objects:?\s*(\d+)%.*')
-        receiving_regex = re.compile(r'.*Receiving objects:?\s*(\d+)%.*')
+        counting_regex = re.compile(r".*Counting objects:?\s*(\d+)%.*")
+        receiving_regex = re.compile(r".*Receiving objects:?\s*(\d+)%.*")
 
         counting_match = counting_regex.search(val)
         percent = None
 
         if counting_match:
-            percent = int(counting_match.group(1)) * \
-                      KartCloneTask.COUNT_PERCENT_OF_TIME
+            percent = int(counting_match.group(1)) * KartCloneTask.COUNT_PERCENT_OF_TIME
         else:
             receiving_match = receiving_regex.search(val)
             if receiving_match:
-                percent = int(receiving_match.group(1)) * \
-                          (1 - KartCloneTask.COUNT_PERCENT_OF_TIME) \
-                          + KartCloneTask.COUNT_PERCENT_OF_TIME
+                percent = (
+                    int(receiving_match.group(1))
+                    * (1 - KartCloneTask.COUNT_PERCENT_OF_TIME)
+                    + KartCloneTask.COUNT_PERCENT_OF_TIME
+                )
 
         if percent is not None:
             self.setProgress(percent)
@@ -210,9 +197,7 @@ class KartCloneTask(KartTask):
 
         res = super().run()
         if res:
-            from kart.kartapi import (
-                Repository
-            )
+            from kart.kartapi import Repository
 
             self.repo = Repository(self.destination)
 

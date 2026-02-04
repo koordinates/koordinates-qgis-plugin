@@ -3,16 +3,9 @@ import binascii
 
 from qgis.PyQt.QtCore import QUrlQuery
 
-from qgis.core import (
-    QgsGeometry,
-    QgsWkbTypes
-)
+from qgis.core import QgsGeometry, QgsWkbTypes
 
-from .enums import (
-    DataType,
-    PublicAccessType,
-    Capability
-)
+from .enums import DataType, PublicAccessType, Capability
 
 
 class ApiUtils:
@@ -39,38 +32,37 @@ class ApiUtils:
         """
         Extracts data type from a dataset response
         """
-        if dataset.get('type') == 'layer':
-            if dataset.get('kind') == 'vector':
+        if dataset.get("type") == "layer":
+            if dataset.get("kind") == "vector":
                 return DataType.Vectors
-            elif dataset.get('kind') == 'raster':
+            elif dataset.get("kind") == "raster":
                 return DataType.Rasters
-            elif dataset.get('kind') == 'grid':
+            elif dataset.get("kind") == "grid":
                 return DataType.Grids
-            elif dataset.get('kind') == 'pointcloud':
+            elif dataset.get("kind") == "pointcloud":
                 return DataType.PointClouds
-        elif dataset.get('type') == 'table':
+        elif dataset.get("type") == "table":
             return DataType.Tables
-        elif dataset.get('type') == 'document':
+        elif dataset.get("type") == "document":
             return DataType.Documents
-        elif dataset.get('type') == 'set':
+        elif dataset.get("type") == "set":
             return DataType.Sets
-        elif dataset.get('type') == 'repo':
+        elif dataset.get("type") == "repo":
             return DataType.Repositories
 
     @staticmethod
-    def geometry_type_from_dataset_response(dataset: dict) \
-            -> QgsWkbTypes.GeometryType:
+    def geometry_type_from_dataset_response(dataset: dict) -> QgsWkbTypes.GeometryType:
         """
         Extracts geometry type from a dataset response
         """
-        if dataset.get('data', {}).get('geometry_type') in (
-                'polygon', 'multipolygon'):
+        if dataset.get("data", {}).get("geometry_type") in ("polygon", "multipolygon"):
             return QgsWkbTypes.GeometryType.PolygonGeometry
-        elif dataset.get('data', {}).get('geometry_type') in (
-                'point', 'multipoint'):
+        elif dataset.get("data", {}).get("geometry_type") in ("point", "multipoint"):
             return QgsWkbTypes.GeometryType.PointGeometry
-        elif dataset.get('data', {}).get('geometry_type') in (
-                'linestring', 'multilinestring'):
+        elif dataset.get("data", {}).get("geometry_type") in (
+            "linestring",
+            "multilinestring",
+        ):
             return QgsWkbTypes.GeometryType.LineGeometry
 
         return QgsWkbTypes.GeometryType.UnknownGeometry
@@ -80,7 +72,7 @@ class ApiUtils:
         """
         Returns the public access type for a dataset
         """
-        if dataset.get('public_access') is None:
+        if dataset.get("public_access") is None:
             return PublicAccessType.none
 
         return PublicAccessType.Download

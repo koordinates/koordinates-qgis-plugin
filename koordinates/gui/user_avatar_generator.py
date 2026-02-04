@@ -1,18 +1,7 @@
 from typing import Optional
 
-from qgis.PyQt.QtCore import (
-    Qt,
-    QRectF,
-    QPointF
-)
-from qgis.PyQt.QtGui import (
-    QImage,
-    QPainter,
-    QColor,
-    QBrush,
-    QPen,
-    QFontMetrics
-)
+from qgis.PyQt.QtCore import Qt, QRectF, QPointF
+from qgis.PyQt.QtGui import QImage, QPainter, QColor, QBrush, QPen, QFontMetrics
 
 from .gui_utils import GuiUtils
 
@@ -40,7 +29,8 @@ class UserAvatarGenerator:
             initials,
             UserAvatarGenerator.FORE_COLOR,
             UserAvatarGenerator.BACK_COLOR,
-            size or UserAvatarGenerator.AVATAR_SIZE)
+            size or UserAvatarGenerator.AVATAR_SIZE,
+        )
 
         if size is None:
             cls.AVATAR_CACHE[initials] = image
@@ -53,13 +43,12 @@ class UserAvatarGenerator:
         """
         words = name.split()
         initials = [word[0].upper() for word in words]
-        return ''.join(initials)[:3]
+        return "".join(initials)[:3]
 
     @staticmethod
-    def generate_avatar(initials: str,
-                        foreground_color: QColor,
-                        background_color: QColor,
-                        size: int) -> QImage:
+    def generate_avatar(
+        initials: str, foreground_color: QColor, background_color: QColor, size: int
+    ) -> QImage:
         """
         Generates an avatar image
         """
@@ -82,8 +71,7 @@ class UserAvatarGenerator:
         baseline = int((image.height() + metrics.capHeight()) / 2)
         left = int(image.width() - metrics.horizontalAdvance(initials)) / 2
         painter.setFont(font)
-        painter.drawText(QPointF(left, baseline),
-                         initials)
+        painter.drawText(QPointF(left, baseline), initials)
 
         painter.end()
 

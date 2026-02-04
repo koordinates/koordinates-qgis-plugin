@@ -2,11 +2,7 @@ import json
 import locale
 import os
 from functools import partial
-from typing import (
-    Dict,
-    Optional,
-    List
-)
+from typing import Dict, Optional, List
 
 from qgis.PyQt import sip
 from qgis.PyQt import uic
@@ -18,14 +14,9 @@ from qgis.PyQt.QtCore import (
     QObject,
     QEvent,
     QUrlQuery,
-    pyqtSignal
+    pyqtSignal,
 )
-from qgis.PyQt.QtGui import (
-    QDesktopServices,
-    QPalette,
-    QColor,
-    QIcon
-)
+from qgis.PyQt.QtGui import QDesktopServices, QPalette, QColor, QIcon
 from qgis.PyQt.QtNetwork import QNetworkReply
 from qgis.PyQt.QtWidgets import (
     QVBoxLayout,
@@ -47,19 +38,12 @@ from qgis.PyQt.QtWidgets import (
     QToolButton,
     QButtonGroup,
     QWidgetAction,
-    QRadioButton
+    QRadioButton,
 )
-from qgis.gui import (
-    QgsDockWidget,
-    QgsFilterLineEdit
-)
+from qgis.gui import QgsDockWidget, QgsFilterLineEdit
 
 from .colored_frame import ColoredFrame
-from .context_widget import (
-    ContextItemMenuAction,
-    ContextLogo,
-    NoMouseReleaseMenu
-)
+from .context_widget import ContextItemMenuAction, ContextLogo, NoMouseReleaseMenu
 from .country_widget import CountryWidgetAction
 from .results_panel import ResultsPanel
 from .filter_widget import FilterWidget
@@ -67,23 +51,15 @@ from .gui_utils import GuiUtils
 from .login_widget import LoginWidget
 from .svg_label import SvgLabel
 from .thumbnails import downloadThumbnail
-from ..api import (
-    KoordinatesClient,
-    SortOrder,
-    DataBrowserQuery,
-    Publisher,
-    DataType
-)
-from .enums import (
-    StandardExploreModes
-)
+from ..api import KoordinatesClient, SortOrder, DataBrowserQuery, Publisher, DataType
+from .enums import StandardExploreModes
 from .country_widget import EmojiToIconRenderer
 
 from ..auth import OAuthWorkflow
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
-WIDGET, _ = uic.loadUiType(GuiUtils.get_ui_file_path('koordinates.ui'))
+WIDGET, _ = uic.loadUiType(GuiUtils.get_ui_file_path("koordinates.ui"))
 
 SETTINGS_NAMESPACE = "Koordinates"
 
@@ -109,12 +85,18 @@ class CustomTab(QTabBar):
 
             if i == Koordinates.TAB_STARRED_INDEX:
                 painter.drawControl(QStyle.ControlElement.CE_TabBarTabShape, option)
-                painter.drawPixmap(option.rect.center().x() - 7, option.rect.center().y() - 8,
-                                   GuiUtils.get_icon_pixmap('star_filled.svg'))
+                painter.drawPixmap(
+                    option.rect.center().x() - 7,
+                    option.rect.center().y() - 8,
+                    GuiUtils.get_icon_pixmap("star_filled.svg"),
+                )
             elif i == Koordinates.TAB_CONTEXT_SWITCHER_INDEX:
                 painter.drawControl(QStyle.ControlElement.CE_TabBarTabShape, option)
-                painter.drawPixmap(option.rect.center().x() - 7, option.rect.center().y() - 8,
-                                   GuiUtils.get_icon_pixmap('context_switcher.svg'))
+                painter.drawPixmap(
+                    option.rect.center().x() - 7,
+                    option.rect.center().y() - 8,
+                    GuiUtils.get_icon_pixmap("context_switcher.svg"),
+                )
             else:
                 painter.drawControl(QStyle.ControlElement.CE_TabBarTab, option)
 
@@ -207,25 +189,23 @@ class ResponsiveLayout(QLayout):
                 height = self.filter_widget.sizeHint().height()
 
                 new_geom = QRect(
-                    effective_rect.left(), top,
-                    effective_rect.width(),
-                    height
+                    effective_rect.left(), top, effective_rect.width(), height
                 )
-                advanced_filter_item_rect_changed = \
+                advanced_filter_item_rect_changed = (
                     new_geom != self.filter_item.geometry()
-
-                self.filter_item.setGeometry(
-                    new_geom
                 )
+
+                self.filter_item.setGeometry(new_geom)
 
                 top += height
 
             if self.results_layout:
                 self.results_layout.setGeometry(
                     QRect(
-                        effective_rect.left(), top,
+                        effective_rect.left(),
+                        top,
                         effective_rect.width(),
-                        effective_rect.height() - top
+                        effective_rect.height() - top,
                     )
                 )
         else:
@@ -240,16 +220,17 @@ class ResponsiveLayout(QLayout):
                         effective_rect.left(),
                         effective_rect.top(),
                         270,
-                        effective_rect.height()
+                        effective_rect.height(),
                     )
                 )
 
             if self.results_layout:
                 self.results_layout.setGeometry(
                     QRect(
-                        effective_rect.left() + 270 + 8, effective_rect.top(),
+                        effective_rect.left() + 270 + 8,
+                        effective_rect.top(),
                         effective_rect.width() - 270 - 8,
-                        effective_rect.height()
+                        effective_rect.height(),
                     )
                 )
 
@@ -262,13 +243,16 @@ class ResponsiveLayout(QLayout):
 class CustomLabelWidgetAction(QWidgetAction):
     selected = pyqtSignal()
 
-    def __init__(self, text: str,
-                 enabled: bool = True,
-                 checkable: bool = False,
-                 indent: int = 0,
-                 sub_text: Optional[str] = None,
-                 icon: Optional[QIcon] = None,
-                 parent: Optional[QWidget] = None):
+    def __init__(
+        self,
+        text: str,
+        enabled: bool = True,
+        checkable: bool = False,
+        indent: int = 0,
+        sub_text: Optional[str] = None,
+        icon: Optional[QIcon] = None,
+        parent: Optional[QWidget] = None,
+    ):
         super().__init__(parent)
         self._text = text
         self._widget = None
@@ -288,9 +272,11 @@ class CustomLabelWidgetAction(QWidgetAction):
         if not self._enabled:
             # swallow clicks, we don't want to user to dismiss the menu by clicking
             # disabled actions
-            if event.type() in (QEvent.Type.MouseButtonPress,
-                                QEvent.Type.MouseButtonDblClick,
-                                QEvent.Type.MouseButtonRelease):
+            if event.type() in (
+                QEvent.Type.MouseButtonPress,
+                QEvent.Type.MouseButtonDblClick,
+                QEvent.Type.MouseButtonRelease,
+            ):
                 return True
         else:
             if event.type() == QEvent.Type.HoverEnter:
@@ -322,9 +308,9 @@ class CustomLabelWidgetAction(QWidgetAction):
             check_box.setStyleSheet(
                 """margin-top: 8px; margin-right:30px;
                  margin-bottom:{}px; margin-left:{}px;""".format(
-                    8 if not self._sub_text else 0,
-                    15 + self._indent * 20
-                ))
+                    8 if not self._sub_text else 0, 15 + self._indent * 20
+                )
+            )
             check_box.toggled.connect(self._on_radio_button_toggled)
             self._widget = check_box
 
@@ -337,7 +323,8 @@ class CustomLabelWidgetAction(QWidgetAction):
                     """margin-top: 0px; margin-right:20px;
                      margin-bottom: 8px; margin-left:{}px;""".format(
                         35 + self._indent * 20
-                    ))
+                    )
+                )
                 palette = sub_text_label.palette()
                 text_color = palette.color(QPalette.ColorRole.WindowText)
                 text_color.setAlphaF(0.7)
@@ -365,7 +352,7 @@ class CustomLabelWidgetAction(QWidgetAction):
             text_color.setAlphaF(0.7)
             palette.setColor(QPalette.ColorRole.WindowText, text_color)
             label.setPalette(palette)
-            label.setStyleSheet('margin: 10px;')
+            label.setStyleSheet("margin: 10px;")
             font = label.font()
             font.setPointSizeF(font.pointSizeF() * 0.9)
             label.setFont(font)
@@ -375,7 +362,9 @@ class CustomLabelWidgetAction(QWidgetAction):
             return self._widget
 
     def highlight(self, enabled: bool):
-        self._container.setBackgroundRole(QPalette.ColorRole.Highlight if enabled else QPalette.ColorRole.Window)
+        self._container.setBackgroundRole(
+            QPalette.ColorRole.Highlight if enabled else QPalette.ColorRole.Window
+        )
         self._container.setAutoFillBackground(enabled)
 
 
@@ -423,7 +412,9 @@ class Koordinates(QgsDockWidget, WIDGET):
         # self.button_home.setIcon(GuiUtils.get_icon('home.svg'))
         # self.button_home.setToolTip('Home')
 
-        self.logo_widget = SvgLabel('koordinates_logo.svg', 110, ContextLogo.LOGO_HEIGHT)
+        self.logo_widget = SvgLabel(
+            "koordinates_logo.svg", 110, ContextLogo.LOGO_HEIGHT
+        )
         hl = QHBoxLayout()
         hl.setContentsMargins(0, 0, 0, 0)
         hl.addWidget(self.logo_widget)
@@ -439,24 +430,30 @@ class Koordinates(QgsDockWidget, WIDGET):
         hl.addSpacing(11)
         self.context_tab_container.setLayout(hl)
 
-        self.context_tab_container.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
+        self.context_tab_container.setSizePolicy(
+            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed
+        )
         self.context_tab.setExpanding(False)
         # self.context_tab.setFixedSize(100,100)
-        self.context_tab.addTab('')
-        self.context_tab.addTab('')
-        self.context_tab.setTabIcon(self.TAB_STARRED_INDEX, GuiUtils.get_icon('star_filled.svg'))
-        self.context_tab.setTabToolTip(self.TAB_STARRED_INDEX, 'Starred')
+        self.context_tab.addTab("")
+        self.context_tab.addTab("")
+        self.context_tab.setTabIcon(
+            self.TAB_STARRED_INDEX, GuiUtils.get_icon("star_filled.svg")
+        )
+        self.context_tab.setTabToolTip(self.TAB_STARRED_INDEX, "Starred")
         self.context_tab.setDrawBase(True)
         self.context_tab_container.setFixedHeight(self.context_tab.sizeHint().height())
 
         self.context_frame = ColoredFrame()
         self.context_frame.set_color(QColor())
-        self.context_frame.setObjectName('context_frame')
+        self.context_frame.setObjectName("context_frame")
         context_frame_layout = QVBoxLayout()
         context_frame_layout.setContentsMargins(0, 0, 0, 0)
 
         context_layout = QVBoxLayout()
-        context_layout.setContentsMargins(0, self.context_tab.sizeHint().height() - 2, 0, 0)
+        context_layout.setContentsMargins(
+            0, self.context_tab.sizeHint().height() - 2, 0, 0
+        )
         context_layout.setSpacing(0)
         self.context_header = QWidget()
         hl = QHBoxLayout()
@@ -490,33 +487,34 @@ class Koordinates(QgsDockWidget, WIDGET):
 
         self.context_tab.show()
 
-        self.context_tab.setTabText(self.TAB_EXPLORE_INDEX, self.tr('Explore'))
-        self.context_tab.setTabToolTip(self.TAB_EXPLORE_INDEX, self.tr('Explore'))
+        self.context_tab.setTabText(self.TAB_EXPLORE_INDEX, self.tr("Explore"))
+        self.context_tab.setTabToolTip(self.TAB_EXPLORE_INDEX, self.tr("Explore"))
 
         self.context_tab.setCurrentIndex(self.TAB_EXPLORE_INDEX)
 
         # self.context_container.setFixedHeight(self.context_tab.sizeHint().height() + 100)
 
-        self.button_help.setIcon(GuiUtils.get_icon('help.svg'))
-        self.button_help.setToolTip('Help')
+        self.button_help.setIcon(GuiUtils.get_icon("help.svg"))
+        self.button_help.setToolTip("Help")
 
-        self.button_user.setIcon(GuiUtils.get_icon('user.svg'))
-        self.button_user.setToolTip('User')
+        self.button_user.setIcon(GuiUtils.get_icon("user.svg"))
+        self.button_user.setToolTip("User")
 
         # a QToolButton with an icon will appear smaller by default vs one with text, so
         # force the advanced button to match the Clear All button size
         temp_combo = QComboBox()
-        for b in (self.button_help,
-                  # self.button_home,
-                  self.button_user):
+        for b in (
+            self.button_help,
+            # self.button_home,
+            self.button_user,
+        ):
             b.setFixedHeight(temp_combo.sizeHint().height())
             b.setFixedWidth(b.height())
 
         self.results_panel = ResultsPanel()
         self.results_panel.visible_count_changed.connect(self._visible_count_changed)
         self.results_panel.total_count_changed.connect(self._total_count_changed)
-        self.results_panel.publisher_selected.connect(
-            self._publisher_selected)
+        self.results_panel.publisher_selected.connect(self._publisher_selected)
         self.oauth: Optional[OAuthWorkflow] = None
 
         self.login_widget = LoginWidget(self)
@@ -529,14 +527,17 @@ class Koordinates(QgsDockWidget, WIDGET):
 
         self.label_count = QLabel()
         self.button_sort_order = QToolButton()
-        self.button_sort_order.setText('...')
-        self.button_sort_order.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        self.button_sort_order.setText("...")
+        self.button_sort_order.setPopupMode(
+            QToolButton.ToolButtonPopupMode.InstantPopup
+        )
         self.button_sort_order.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextOnly)
         self.button_sort_order.setAutoRaise(True)
 
         self.browse_header_widget = QWidget()
-        self.browse_header_widget.setSizePolicy(QSizePolicy.Policy.Ignored,
-                                                QSizePolicy.Policy.Fixed)
+        self.browse_header_widget.setSizePolicy(
+            QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed
+        )
         results_top_layout = QHBoxLayout()
         results_top_layout.setContentsMargins(0, 0, 0, 0)
         results_top_layout.addWidget(self.label_count)
@@ -557,7 +558,7 @@ class Koordinates(QgsDockWidget, WIDGET):
         self.search_line_edit = QgsFilterLineEdit()
         self.search_line_edit.setShowClearButton(True)
         self.search_line_edit.setShowSearchIcon(True)
-        self.search_line_edit.setPlaceholderText('Search')
+        self.search_line_edit.setPlaceholderText("Search")
         self.search_line_edit.setFixedHeight(
             int(self.search_line_edit.sizeHint().height() * 1.2)
         )
@@ -567,9 +568,7 @@ class Koordinates(QgsDockWidget, WIDGET):
         self.filter_widget.set_search_line_edit(self.search_line_edit)
         filter_layout.addSpacing(6)
 
-        self.filter_widget.publisher_changed.connect(
-            self.results_panel.set_publisher
-        )
+        self.filter_widget.publisher_changed.connect(self.results_panel.set_publisher)
 
         self.horizontal_filter_container.setLayout(filter_layout)
 
@@ -588,7 +587,8 @@ class Koordinates(QgsDockWidget, WIDGET):
 
         self.filter_widget.clear_all.connect(self._clear_all_filters)
         self.results_panel.publisher_cleared.connect(
-            self.filter_widget.remove_publisher_filter)
+            self.filter_widget.remove_publisher_filter
+        )
 
         self.button_sort_order.setStyleSheet(
             """QToolButton::menu-indicator { image: none }
@@ -619,25 +619,25 @@ class Koordinates(QgsDockWidget, WIDGET):
         self._set_sort_order_button_text()
 
         self.help_menu = QMenu(self.button_help)
-        self.help_action = QAction('Koordinates Help', self.help_menu)
+        self.help_action = QAction("Koordinates Help", self.help_menu)
         self.help_action.triggered.connect(self._show_help)
         self.help_menu.addAction(self.help_action)
-        self.report_action = QAction('Report a Bug or Issue', self.help_menu)
+        self.report_action = QAction("Report a Bug or Issue", self.help_menu)
         self.report_action.triggered.connect(self._report_bug)
         self.help_menu.addAction(self.report_action)
 
         self.button_help.setMenu(self.help_menu)
 
         self.user_menu = QMenu(self.button_user)
-        self.current_user_action = QAction('Current User', self.user_menu)
+        self.current_user_action = QAction("Current User", self.user_menu)
         self.user_menu.addAction(self.current_user_action)
         self.user_country_action = CountryWidgetAction(self.user_menu)
         self.user_menu.addAction(self.user_country_action)
         self.user_menu.addSeparator()
-        self.edit_profile_action = QAction('Edit Profile', self.user_menu)
+        self.edit_profile_action = QAction("Edit Profile", self.user_menu)
         self.edit_profile_action.triggered.connect(self._edit_profile)
         self.user_menu.addAction(self.edit_profile_action)
-        self.logout_action = QAction('Logout', self.user_menu)
+        self.logout_action = QAction("Logout", self.user_menu)
         self.logout_action.triggered.connect(self.logout)
         self.user_menu.addAction(self.logout_action)
         self.user_menu.aboutToShow.connect(self._user_menu_about_to_show)
@@ -662,8 +662,9 @@ class Koordinates(QgsDockWidget, WIDGET):
         """
         self.login_widget.cancel_active_requests()
 
-        if self._current_facets_reply is not None and \
-                not sip.isdeleted(self._current_facets_reply):
+        if self._current_facets_reply is not None and not sip.isdeleted(
+            self._current_facets_reply
+        ):
             self._current_facets_reply.abort()
 
         self._current_facets_reply = None
@@ -688,9 +689,10 @@ class Koordinates(QgsDockWidget, WIDGET):
                     or self.filter_widget.sort_order == SortOrder.Popularity
                 )
             else:
-                is_checked = (action.data() == self.filter_widget.sort_order or
-                              (self.filter_widget.sort_order == SortOrder.Popularity and
-                               not action.data()))
+                is_checked = action.data() == self.filter_widget.sort_order or (
+                    self.filter_widget.sort_order == SortOrder.Popularity
+                    and not action.data()
+                )
                 if isinstance(action, CustomLabelWidgetAction):
                     action.set_widget_checked(is_checked)
 
@@ -723,20 +725,13 @@ class Koordinates(QgsDockWidget, WIDGET):
         Sets the correct text for the sort order button
         """
         if isinstance(self.filter_widget.sort_order, str):
-            region_string = {
-                'AU': 'AU',
-                'NZ': 'NZ',
-                'GB': 'UK',
-                'US': 'US'
-            }.get(self.filter_widget.sort_order)
+            region_string = {"AU": "AU", "NZ": "NZ", "GB": "UK", "US": "US"}.get(
+                self.filter_widget.sort_order
+            )
             if region_string:
-                self.button_sort_order.setText(
-                    'Popular for {}'.format(region_string)
-                )
+                self.button_sort_order.setText("Popular for {}".format(region_string))
             else:
-                self.button_sort_order.setText(
-                    'Popular'
-                )
+                self.button_sort_order.setText("Popular")
         else:
             self.button_sort_order.setText(
                 self.filter_widget.sort_order.to_button_text()
@@ -761,8 +756,9 @@ class Koordinates(QgsDockWidget, WIDGET):
             self._set_visible_context(c)
 
         for idx, c in enumerate(self._contexts):
-            w = ContextItemMenuAction(c, c['name'] == current_context_tab,
-                                      idx == 0, menu)
+            w = ContextItemMenuAction(
+                c, c["name"] == current_context_tab, idx == 0, menu
+            )
             w.selected.connect(partial(on_selected, c))
 
             menu.addAction(w)
@@ -770,15 +766,17 @@ class Koordinates(QgsDockWidget, WIDGET):
         menu.exec(tab_center)
 
     def _set_visible_context(self, details):
-        self.context_tab.setTabText(self.context_tab.count() - 2,
-                                    'My data' if details['type'] == 'user' else details['name'])
-        self.context_tab.setTabData(self.context_tab.count() - 2, details['name'])
+        self.context_tab.setTabText(
+            self.context_tab.count() - 2,
+            "My data" if details["type"] == "user" else details["name"],
+        )
+        self.context_tab.setTabData(self.context_tab.count() - 2, details["name"])
         self._prev_tab = -1
         self.context_tab.setCurrentIndex(self.context_tab.count() - 2)
         self._context_tab_changed(self.context_tab.currentIndex())
 
     def _tab_bar_clicked(self, target: int):
-        if self.context_tab.tabData(target) == 'CONTEXT_SWITCHER':
+        if self.context_tab.tabData(target) == "CONTEXT_SWITCHER":
             self._show_context_switcher_menu()
 
     def _context_tab_changed(self, current: int):
@@ -794,56 +792,71 @@ class Koordinates(QgsDockWidget, WIDGET):
             self.context_frame.set_color(QColor())
             self.context_frame.color_height = int(self.filter_widget.height() / 2)
             self.context_header.setVisible(False)
-        elif self.context_tab.tabData(current) == 'CONTEXT_SWITCHER':
+        elif self.context_tab.tabData(current) == "CONTEXT_SWITCHER":
             self.context_tab.setCurrentIndex(self._prev_tab)
             return
         else:
             self.filter_top_frame.layout().setContentsMargins(0, 0, 0, 0)
-            self._current_context = \
-                [c for c in self._contexts if c['name'] == self.context_tab.tabData(current)][0]
+            self._current_context = [
+                c
+                for c in self._contexts
+                if c["name"] == self.context_tab.tabData(current)
+            ][0]
 
-            if self._current_context['type'] == 'user':
+            if self._current_context["type"] == "user":
                 KoordinatesClient.instance().reset_domain()
                 if KoordinatesClient.instance().user_details()["avatar_url"]:
                     self.context_logo_label.circle = True
-                    downloadThumbnail(KoordinatesClient.instance().user_details()["avatar_url"],
-                                      self.context_logo_label)
+                    downloadThumbnail(
+                        KoordinatesClient.instance().user_details()["avatar_url"],
+                        self.context_logo_label,
+                    )
                     self.context_logo_label.show()
                 else:
                     self.context_logo_label.hide()
-                self.context_frame.color_height = int(
-                    self.filter_widget.height() / 2) + ContextLogo.LOGO_HEIGHT + 15
+                self.context_frame.color_height = (
+                    int(self.filter_widget.height() / 2) + ContextLogo.LOGO_HEIGHT + 15
+                )
 
                 self.context_name_label.setText(
                     '<b style="color: white; font-size: 10pt">{}</b>'.format(
-                        self._current_context['name']))
+                        self._current_context["name"]
+                    )
+                )
                 self.context_name_label.show()
-                self.context_frame.set_color(QColor('#323233'))
+                self.context_frame.set_color(QColor("#323233"))
                 self.context_header.setVisible(True)
             else:
                 self.context_logo_label.circle = False
-                KoordinatesClient.instance().domain = \
-                    self._current_context.get('domain')
-                downloadThumbnail(self._current_context.get("logo"),
-                                  self.context_logo_label)
+                KoordinatesClient.instance().domain = self._current_context.get(
+                    "domain"
+                )
+                downloadThumbnail(
+                    self._current_context.get("logo"), self.context_logo_label
+                )
                 self.context_logo_label.show()
-                self.context_frame.color_height = int(
-                    self.filter_widget.height() / 2) + ContextLogo.LOGO_HEIGHT + 15
+                self.context_frame.color_height = (
+                    int(self.filter_widget.height() / 2) + ContextLogo.LOGO_HEIGHT + 15
+                )
 
-                background_color_text = self._current_context["org"].get("background_color")
-                if background_color_text and not background_color_text.startswith('#'):
-                    background_color_text = '#' + background_color_text
+                background_color_text = self._current_context["org"].get(
+                    "background_color"
+                )
+                if background_color_text and not background_color_text.startswith("#"):
+                    background_color_text = "#" + background_color_text
 
                 background_color = QColor(background_color_text)
                 if not background_color.isValid():
-                    background_color = QColor('#323233')
+                    background_color = QColor("#323233")
 
                 self.context_frame.set_color(background_color)
 
                 if not self._current_context.get("logo"):
                     self.context_name_label.setText(
                         '<b style="color: white; font-size: 10pt">{}</b>'.format(
-                            self._current_context['name']))
+                            self._current_context["name"]
+                        )
+                    )
                     self.context_name_label.show()
                     self.context_logo_label.hide()
                 else:
@@ -858,9 +871,7 @@ class Koordinates(QgsDockWidget, WIDGET):
         self.filter_widget.set_starred(current == self.TAB_STARRED_INDEX)
 
         is_explore_tab = current == self.TAB_EXPLORE_INDEX
-        self.filter_widget.set_is_browse_tab(
-            is_explore_tab
-        )
+        self.filter_widget.set_is_browse_tab(is_explore_tab)
         self.filter_widget._clear_all()
 
         self._block_searching -= 1
@@ -868,8 +879,7 @@ class Koordinates(QgsDockWidget, WIDGET):
             # force browse tab
             self.filter_widget.set_explore_mode(StandardExploreModes.Browse)
         else:
-            if self.filter_widget.explore_mode() == \
-                    StandardExploreModes.Browse:
+            if self.filter_widget.explore_mode() == StandardExploreModes.Browse:
                 self.search()
             else:
                 self.explore()
@@ -880,7 +890,7 @@ class Koordinates(QgsDockWidget, WIDGET):
         """
         user = KoordinatesClient.instance().user_details()
         self.current_user_action.setText(
-            '{} {}'.format(user.get('first_name'), user.get('last_name')).strip()
+            "{} {}".format(user.get("first_name"), user.get("last_name")).strip()
         )
 
     def search(self):
@@ -904,20 +914,21 @@ class Koordinates(QgsDockWidget, WIDGET):
         self.browse_header_widget.hide()
         self.results_panel.show_publishers(context)
 
-    def _fetch_facets(self,
-                      query: Optional[DataBrowserQuery] = None,
-                      context: Optional[str] = None):
+    def _fetch_facets(
+        self, query: Optional[DataBrowserQuery] = None, context: Optional[str] = None
+    ):
         if self._current_facets_reply is not None and not sip.isdeleted(
-                self._current_facets_reply):
+            self._current_facets_reply
+        ):
             self._current_facets_reply.abort()
             self._current_facets_reply = None
 
         self._current_facets_reply = KoordinatesClient.instance().facets_async(
-            query=query,
-            context=context
+            query=query, context=context
         )
         self._current_facets_reply.finished.connect(
-            partial(self._facets_reply_finished, self._current_facets_reply))
+            partial(self._facets_reply_finished, self._current_facets_reply)
+        )
 
     def _facets_reply_finished(self, reply: QNetworkReply):
         if sip.isdeleted(self):
@@ -932,16 +943,16 @@ class Koordinates(QgsDockWidget, WIDGET):
             return
 
         if reply.error() != QNetworkReply.NetworkError.NoError:
-            print('error occurred :(')
+            print("error occurred :(")
             return
         #            self.error_occurred.emit(request.reply().errorString())
 
         # inject context into facets, so that this is accessible to widgets
         request_url = reply.request().url()
-        from_context = QUrlQuery(request_url.query()).queryItemValue('from')
+        from_context = QUrlQuery(request_url.query()).queryItemValue("from")
 
         self._facets = json.loads(reply.readAll().data().decode())
-        self._facets['from'] = from_context
+        self._facets["from"] = from_context
         self.filter_widget.set_facets(self._facets)
 
     def _visible_count_changed(self, count):
@@ -956,14 +967,13 @@ class Koordinates(QgsDockWidget, WIDGET):
         if self._total_count < 0 or self._visible_count < 0:
             self.label_count.clear()
         elif self._total_count == 0:
-            self.label_count.setText(
-                'Showing 0 of 0 results'
-            )
+            self.label_count.setText("Showing 0 of 0 results")
         else:
             self.label_count.setText(
-                'Showing {} of {} results'.format(
+                "Showing {} of {} results".format(
                     locale.format_string("%d", self._visible_count, grouping=True),
-                    locale.format_string("%d", self._total_count, grouping=True))
+                    locale.format_string("%d", self._total_count, grouping=True),
+                )
             )
 
     def _publisher_selected(self, publisher: Publisher):
@@ -982,11 +992,11 @@ class Koordinates(QgsDockWidget, WIDGET):
             self.stackedWidget.setCurrentWidget(self.pageBrowser)
 
             user = KoordinatesClient.instance().user_details()
-            self.user_country_action.set_country_code(user['country'])
+            self.user_country_action.set_country_code(user["country"])
 
             self._build_sort_menu()
 
-            self._create_context_tabs(user.get('contexts', []))
+            self._create_context_tabs(user.get("contexts", []))
 
             self.filter_widget.set_logged_in(True)
         else:
@@ -1011,29 +1021,27 @@ class Koordinates(QgsDockWidget, WIDGET):
 
         self.sort_menu.clear()
 
-        country_choices = (self._data_options
-                           .get('filters', {})
-                           .get('country', {})
-                           .get('choices', []))
+        country_choices = (
+            self._data_options.get("filters", {}).get("country", {}).get("choices", [])
+        )
 
-        user_country_code = user_details['country']
+        user_country_code = user_details["country"]
 
         sort_by_action = CustomLabelWidgetAction(
-            self.tr('Sort by'), enabled=False,
-            parent=self.sort_menu)
+            self.tr("Sort by"), enabled=False, parent=self.sort_menu
+        )
         self.sort_menu.addAction(sort_by_action)
 
-        self.sort_by_popular_action = CustomLabelWidgetAction(self.tr('Popular'),
-                                                              enabled=False,
-                                                              checkable=True,
-                                                              parent=self.sort_menu)
+        self.sort_by_popular_action = CustomLabelWidgetAction(
+            self.tr("Popular"), enabled=False, checkable=True, parent=self.sort_menu
+        )
         self.sort_menu.addAction(self.sort_by_popular_action)
         for country_choice in country_choices:
-            country = country_choice['display_name']
-            code = country_choice['value']
+            country = country_choice["display_name"]
+            code = country_choice["value"]
 
-            if code == 'global':
-                code = ''
+            if code == "global":
+                code = ""
 
             if not code:
                 sub_text = self.tr("Don't bias results by location")
@@ -1045,34 +1053,39 @@ class Koordinates(QgsDockWidget, WIDGET):
             if code:
                 icon = EmojiToIconRenderer.render_flag_to_icon(code)
             else:
-                icon = EmojiToIconRenderer.render_emoji_to_icon('🌎')
-            sort_by_action = CustomLabelWidgetAction(country,
-                                                     enabled=True,
-                                                     checkable=True,
-                                                     indent=1,
-                                                     sub_text=sub_text,
-                                                     icon=icon,
-                                                     parent=self.sort_menu)
+                icon = EmojiToIconRenderer.render_emoji_to_icon("🌎")
+            sort_by_action = CustomLabelWidgetAction(
+                country,
+                enabled=True,
+                checkable=True,
+                indent=1,
+                sub_text=sub_text,
+                icon=icon,
+                parent=self.sort_menu,
+            )
 
             self.sort_menu.addAction(sort_by_action)
             sort_by_action.setData(code)
             sort_by_action.selected.connect(partial(self._set_popular_sort_order, code))
 
         for order in (
-                SortOrder.RecentlyAdded,
-                SortOrder.RecentlyUpdated,
-                SortOrder.AlphabeticalAZ,
-                SortOrder.AlphabeticalZA,
-                SortOrder.Oldest):
-            sort_by_action = CustomLabelWidgetAction(SortOrder.to_text(order),
-                                                     enabled=True,
-                                                     checkable=True,
-                                                     parent=self.sort_menu)
+            SortOrder.RecentlyAdded,
+            SortOrder.RecentlyUpdated,
+            SortOrder.AlphabeticalAZ,
+            SortOrder.AlphabeticalZA,
+            SortOrder.Oldest,
+        ):
+            sort_by_action = CustomLabelWidgetAction(
+                SortOrder.to_text(order),
+                enabled=True,
+                checkable=True,
+                parent=self.sort_menu,
+            )
             self.sort_menu.addAction(sort_by_action)
             sort_by_action.selected.connect(partial(self._set_sort_order, order))
             sort_by_action.setData(order)
 
-        self.filter_widget.sort_order = ''
+        self.filter_widget.sort_order = ""
         self._set_sort_order_button_text()
 
     def _create_context_tabs(self, contexts: List):
@@ -1088,14 +1101,19 @@ class Koordinates(QgsDockWidget, WIDGET):
             self.context_tab.removeTab(i)
 
         if self._contexts:
-            tab_text = self._contexts[0]['name'] if self._contexts[0][
-                                                        'type'] != 'user' else 'My data'
+            tab_text = (
+                self._contexts[0]["name"]
+                if self._contexts[0]["type"] != "user"
+                else "My data"
+            )
             idx = self.context_tab.addTab(tab_text)
-            self.context_tab.setTabData(idx, self._contexts[0]['name'])
+            self.context_tab.setTabData(idx, self._contexts[0]["name"])
             if len(self._contexts) > 1:
-                idx = self.context_tab.addTab('')
-                self.context_tab.setTabIcon(idx, GuiUtils.get_icon('context_switcher.svg'))
-                self.context_tab.setTabData(idx, 'CONTEXT_SWITCHER')
+                idx = self.context_tab.addTab("")
+                self.context_tab.setTabIcon(
+                    idx, GuiUtils.get_icon("context_switcher.svg")
+                )
+                self.context_tab.setTabData(idx, "CONTEXT_SWITCHER")
         else:
             pass
 
@@ -1109,16 +1127,14 @@ class Koordinates(QgsDockWidget, WIDGET):
         """
         Opens the edit profile page
         """
-        QDesktopServices.openUrl(QUrl('https://id.koordinates.com/profile/'))
+        QDesktopServices.openUrl(QUrl("https://id.koordinates.com/profile/"))
 
     def _show_help(self):
         """
         Shows the help web page
         """
         QDesktopServices.openUrl(
-            QUrl(
-                'https://help.koordinates.com/plugins/qgis-koordinates-plugin/'
-            )
+            QUrl("https://help.koordinates.com/plugins/qgis-koordinates-plugin/")
         )
 
     def _report_bug(self):
@@ -1126,9 +1142,7 @@ class Koordinates(QgsDockWidget, WIDGET):
         Shows the report bug page
         """
         QDesktopServices.openUrl(
-            QUrl(
-                'https://github.com/koordinates/koordinates-qgis-plugin/issues'
-            )
+            QUrl("https://github.com/koordinates/koordinates-qgis-plugin/issues")
         )
 
     def resizeEvent(self, event):

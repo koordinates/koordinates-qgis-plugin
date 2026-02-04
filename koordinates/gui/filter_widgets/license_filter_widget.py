@@ -4,14 +4,11 @@ from qgis.PyQt.QtWidgets import (
     QVBoxLayout,
     QRadioButton,
     QCheckBox,
-    QButtonGroup
+    QButtonGroup,
 )
 
 from .filter_widget_combo_base import FilterWidgetComboBase
-from ...api import (
-    DataBrowserQuery,
-    CreativeCommonLicenseVersions
-)
+from ...api import DataBrowserQuery, CreativeCommonLicenseVersions
 
 
 class LicenseFilterWidget(FilterWidgetComboBase):
@@ -25,40 +22,42 @@ class LicenseFilterWidget(FilterWidgetComboBase):
         self.drop_down_widget = QWidget()
         vl = QVBoxLayout()
 
-        self.cc_4_checkbox = QCheckBox('CC Attribution 4.0')
+        self.cc_4_checkbox = QCheckBox("CC Attribution 4.0")
         vl.addWidget(self.cc_4_checkbox)
 
-        self.cc_3_checkbox = QCheckBox('CC Attribution 3.0')
+        self.cc_3_checkbox = QCheckBox("CC Attribution 3.0")
         vl.addWidget(self.cc_3_checkbox)
 
         self.cc_options_widget = QWidget()
         cc_options_layout = QVBoxLayout()
         cc_options_layout.setContentsMargins(self._indent_margin, 0, 0, 0)
 
-        cc_attribute_checkbox = QCheckBox('Must attribute licensor')
+        cc_attribute_checkbox = QCheckBox("Must attribute licensor")
         cc_attribute_checkbox.setChecked(True)
         cc_attribute_checkbox.setEnabled(False)
         cc_options_layout.addWidget(cc_attribute_checkbox)
 
-        self.derivatives_allowed_radio = QRadioButton('Derivatives allowed')
+        self.derivatives_allowed_radio = QRadioButton("Derivatives allowed")
         cc_options_layout.addWidget(self.derivatives_allowed_radio)
-        self.no_derivatives_allowed_radio = QRadioButton('No derivatives allowed')
+        self.no_derivatives_allowed_radio = QRadioButton("No derivatives allowed")
         cc_options_layout.addWidget(self.no_derivatives_allowed_radio)
         self.derivatives_group = QButtonGroup()
         self.derivatives_group.addButton(self.derivatives_allowed_radio)
         self.derivatives_group.addButton(self.no_derivatives_allowed_radio)
 
-        self.commercial_use_allowed_radio = QRadioButton('Commercial use allowed')
+        self.commercial_use_allowed_radio = QRadioButton("Commercial use allowed")
         cc_options_layout.addWidget(self.commercial_use_allowed_radio)
-        self.no_commercial_use_allowed_radio = QRadioButton('No commerical use allowed')
+        self.no_commercial_use_allowed_radio = QRadioButton("No commerical use allowed")
         cc_options_layout.addWidget(self.no_commercial_use_allowed_radio)
         self.commercial_group = QButtonGroup()
         self.commercial_group.addButton(self.commercial_use_allowed_radio)
         self.commercial_group.addButton(self.no_commercial_use_allowed_radio)
 
-        self.no_changes_need_to_be_shared_radio = QRadioButton('Changes don\'t need to be shared')
+        self.no_changes_need_to_be_shared_radio = QRadioButton(
+            "Changes don't need to be shared"
+        )
         cc_options_layout.addWidget(self.no_changes_need_to_be_shared_radio)
-        self.changes_need_to_be_shared_radio = QRadioButton('Changes need to be shared')
+        self.changes_need_to_be_shared_radio = QRadioButton("Changes need to be shared")
         cc_options_layout.addWidget(self.changes_need_to_be_shared_radio)
         self.share_alike_group = QButtonGroup()
         self.share_alike_group.addButton(self.no_changes_need_to_be_shared_radio)
@@ -84,8 +83,9 @@ class LicenseFilterWidget(FilterWidgetComboBase):
         self._update_value()
 
     def _update_visible_frames(self):
-        self.cc_options_widget.setVisible(self.cc_3_checkbox.isChecked()
-                                          or self.cc_4_checkbox.isChecked())
+        self.cc_options_widget.setVisible(
+            self.cc_3_checkbox.isChecked() or self.cc_4_checkbox.isChecked()
+        )
 
         self.drop_down_widget.adjustSize()
         self._floating_widget.reflow()
@@ -111,24 +111,24 @@ class LicenseFilterWidget(FilterWidgetComboBase):
         return super().should_show_clear()
 
     def _update_value(self):
-        text = 'License'
+        text = "License"
 
-        options = ['BY']
+        options = ["BY"]
         if self.changes_need_to_be_shared_radio.isChecked():
-            options.append('SA')
+            options.append("SA")
         if self.no_commercial_use_allowed_radio.isChecked():
-            options.append('NC')
+            options.append("NC")
         if self.no_derivatives_allowed_radio.isChecked():
-            options.append('ND')
+            options.append("ND")
 
-        cc_license_suffice = '-'.join(options)
+        cc_license_suffice = "-".join(options)
 
         if self.cc_3_checkbox.isChecked() and self.cc_4_checkbox.isChecked():
-            text = 'CC4 + CC3 {}'.format(cc_license_suffice)
+            text = "CC4 + CC3 {}".format(cc_license_suffice)
         elif self.cc_3_checkbox.isChecked():
-            text = 'CC3 {}'.format(cc_license_suffice)
+            text = "CC3 {}".format(cc_license_suffice)
         elif self.cc_4_checkbox.isChecked():
-            text = 'CC4 {}'.format(cc_license_suffice)
+            text = "CC4 {}".format(cc_license_suffice)
 
         self.set_current_text(text)
         if not self._block_changes:
@@ -140,12 +140,15 @@ class LicenseFilterWidget(FilterWidgetComboBase):
             query.cc_license_allow_commercial = None
             query.cc_license_allow_derivates = None
         else:
-            query.cc_license_changes_must_be_shared = \
+            query.cc_license_changes_must_be_shared = (
                 self.changes_need_to_be_shared_radio.isChecked()
-            query.cc_license_allow_commercial = \
+            )
+            query.cc_license_allow_commercial = (
                 self.commercial_use_allowed_radio.isChecked()
-            query.cc_license_allow_derivates = \
+            )
+            query.cc_license_allow_derivates = (
                 self.derivatives_allowed_radio.isChecked()
+            )
 
         if self.cc_3_checkbox.isChecked():
             query.cc_license_versions.add(CreativeCommonLicenseVersions.Version3)

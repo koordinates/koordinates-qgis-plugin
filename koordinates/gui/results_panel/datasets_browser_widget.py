@@ -2,36 +2,17 @@ import json
 import math
 import os
 from functools import partial
-from typing import (
-    Optional,
-    List,
-    Dict
-)
+from typing import Optional, List, Dict
 
 from qgis.PyQt import sip
-from qgis.PyQt.QtCore import (
-    Qt,
-    pyqtSignal
-)
-from qgis.PyQt.QtGui import (
-    QFontMetrics
-)
+from qgis.PyQt.QtCore import Qt, pyqtSignal
+from qgis.PyQt.QtGui import QFontMetrics
 from qgis.PyQt.QtNetwork import QNetworkReply
-from qgis.PyQt.QtWidgets import (
-    QHBoxLayout,
-    QFrame,
-    QLabel,
-    QToolButton,
-    QVBoxLayout
-)
+from qgis.PyQt.QtWidgets import QHBoxLayout, QFrame, QLabel, QToolButton, QVBoxLayout
 
 from .results_panel_widget import ResultsPanelWidget
 from ..response_table_layout import ResponsiveTableWidget
-from ...api import (
-    KoordinatesClient,
-    PAGE_SIZE,
-    DataBrowserQuery
-)
+from ...api import KoordinatesClient, PAGE_SIZE, DataBrowserQuery
 from ..enums import StandardExploreModes
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
@@ -47,14 +28,12 @@ class DatasetsBrowserWidget(ResultsPanelWidget):
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
 
-        self.table_widget = ResponsiveTableWidget(
-            mode=mode
-        )
+        self.table_widget = ResponsiveTableWidget(mode=mode)
 
         layout.addWidget(self.table_widget)
         self.setLayout(layout)
 
-        self.setObjectName('DatasetsBrowserWidget')
+        self.setObjectName("DatasetsBrowserWidget")
 
         self._current_query: Optional[DataBrowserQuery] = None
         self._current_reply: Optional[QNetworkReply] = None
@@ -77,8 +56,7 @@ class DatasetsBrowserWidget(ResultsPanelWidget):
         return self.table_widget.content_height()
 
     def cancel_active_requests(self):
-        if self._current_reply is not None and \
-                not sip.isdeleted(self._current_reply):
+        if self._current_reply is not None and not sip.isdeleted(self._current_reply):
             self._current_reply.abort()
 
         self._current_reply = None
@@ -101,12 +79,13 @@ class DatasetsBrowserWidget(ResultsPanelWidget):
         self.visible_count_changed.emit(-1)
         self._fetch_records(query, context)
 
-    def _fetch_records(self,
-                       query: Optional[DataBrowserQuery] = None,
-                       context: Optional[str] = None,
-                       page: int = 1):
-        if self._current_reply is not None and not sip.isdeleted(
-                self._current_reply):
+    def _fetch_records(
+        self,
+        query: Optional[DataBrowserQuery] = None,
+        context: Optional[str] = None,
+        page: int = 1,
+    ):
+        if self._current_reply is not None and not sip.isdeleted(self._current_reply):
             self._current_reply.abort()
             self._current_reply = None
 
@@ -116,12 +95,11 @@ class DatasetsBrowserWidget(ResultsPanelWidget):
             self._current_context = context
 
         self._current_reply = KoordinatesClient.instance().datasets_async(
-            query=self._current_query,
-            context=self._current_context,
-            page=page
+            query=self._current_query, context=self._current_context, page=page
         )
         self._current_reply.finished.connect(
-            partial(self._reply_finished, self._current_reply))
+            partial(self._reply_finished, self._current_reply)
+        )
         self.setCursor(Qt.CursorShape.WaitCursor)
 
     def _reply_finished(self, reply: QNetworkReply):
@@ -138,19 +116,17 @@ class DatasetsBrowserWidget(ResultsPanelWidget):
             return
 
         if reply.error() != QNetworkReply.NetworkError.NoError:
-            print('error occurred :(')
+            print("error occurred :(")
             return
         #            self.error_occurred.emit(request.reply().errorString())
 
         result = json.loads(reply.readAll().data().decode())
-        if 'panels' in result:
-            datasets = [item['content'] for item in
-                        result['panels'][0]['items']]
+        if "panels" in result:
+            datasets = [item["content"] for item in result["panels"][0]["items"]]
         else:
             datasets = result
 
-        tokens = reply.rawHeader(b"X-Resource-Range").data().decode().split(
-            "/")
+        tokens = reply.rawHeader(b"X-Resource-Range").data().decode().split("/")
         total = tokens[-1]
         self.total_count_changed.emit(int(total))
         last = tokens[0].split("-")[-1]
@@ -174,10 +150,10 @@ class DatasetsBrowserWidget(ResultsPanelWidget):
             self.table_widget.remove_widget(self._load_more_widget)
             self._load_more_widget = None
 
-        if total == '0' and not self._no_records_widget:
+        if total == "0" and not self._no_records_widget:
             self._no_records_widget = NoRecordsItemWidget()
             self.table_widget.push_widget(self._no_records_widget)
-        elif total != '0' and self._no_records_widget:
+        elif total != "0" and self._no_records_widget:
             self.table_widget.remove_widget(self._no_records_widget)
             self._no_records_widget = None
 
@@ -224,8 +200,7 @@ class NoRecordsItemWidget(QFrame):
         QFrame.__init__(self)
         self.no_data_frame = QLabel("No data available")
 
-        self.no_data_frame.setStyleSheet(
-            """
+        self.no_data_frame.setStyleSheet("""
             QLabel {
                 background-color: #ffffff;
                 border: 1px solid #cccccc;
@@ -233,8 +208,7 @@ class NoRecordsItemWidget(QFrame):
                 padding: 29px 23px 29px 23px;
                 color: #a4a6a6;
                 }
-            """
-        )
+            """)
 
         top_padding = QFontMetrics(self.font()).height() * 3
         vl = QVBoxLayout()

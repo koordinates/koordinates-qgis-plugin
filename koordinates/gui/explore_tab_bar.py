@@ -1,22 +1,8 @@
-from typing import (
-    Optional,
-    List
-)
+from typing import Optional, List
 
 from qgis.PyQt import sip
-from qgis.PyQt.QtCore import (
-    Qt,
-    QSize,
-    pyqtSignal
-)
-from qgis.PyQt.QtGui import (
-    QPainter,
-    QBrush,
-    QColor,
-    QPen,
-    QPainterPath,
-    QFontMetrics
-)
+from qgis.PyQt.QtCore import Qt, QSize, pyqtSignal
+from qgis.PyQt.QtGui import QPainter, QBrush, QColor, QPen, QPainterPath, QFontMetrics
 from qgis.PyQt.QtWidgets import (
     QWidget,
     QTabBar,
@@ -24,18 +10,12 @@ from qgis.PyQt.QtWidgets import (
     QStylePainter,
     QStyleOptionTab,
     QStyleOptionButton,
-    QPushButton
+    QPushButton,
 )
 
-from .enums import (
-    TabStyle,
-    StandardExploreModes
-)
+from .enums import TabStyle, StandardExploreModes
 from .gui_utils import GuiUtils
-from ..api import (
-    KoordinatesClient,
-    ExploreSection
-)
+from ..api import KoordinatesClient, ExploreSection
 
 
 class FlatTabBar(QTabBar):
@@ -74,33 +54,38 @@ class FlatTabBar(QTabBar):
                 painter.setBrush(brush)
                 painter.setPen(Qt.PenStyle.NoPen)
                 if _bottom_tab_style == TabStyle.Rounded:
-                    painter.drawRoundedRect(option.rect,
-                                            self.CORNER_RADIUS,
-                                            self.CORNER_RADIUS)
+                    painter.drawRoundedRect(
+                        option.rect, self.CORNER_RADIUS, self.CORNER_RADIUS
+                    )
                 else:
                     path = QPainterPath()
-                    path.moveTo(option.rect.left() + self.CORNER_RADIUS,
-                                option.rect.top())
-                    path.lineTo(option.rect.right() - self.CORNER_RADIUS,
-                                option.rect.top())
-                    path.arcTo(option.rect.right() - self.CORNER_RADIUS * 2,
-                               option.rect.top(),
-                               self.CORNER_RADIUS * 2,
-                               self.CORNER_RADIUS * 2,
-                               90, -90
-                               )
-                    path.lineTo(option.rect.right(),
-                                option.rect.bottom() + 1)
-                    path.lineTo(option.rect.left(),
-                                option.rect.bottom() + 1)
-                    path.lineTo(option.rect.left(),
-                                option.rect.top() + self.CORNER_RADIUS)
-                    path.arcTo(option.rect.left(),
-                               option.rect.top(),
-                               self.CORNER_RADIUS * 2,
-                               self.CORNER_RADIUS * 2,
-                               180, -90
-                               )
+                    path.moveTo(
+                        option.rect.left() + self.CORNER_RADIUS, option.rect.top()
+                    )
+                    path.lineTo(
+                        option.rect.right() - self.CORNER_RADIUS, option.rect.top()
+                    )
+                    path.arcTo(
+                        option.rect.right() - self.CORNER_RADIUS * 2,
+                        option.rect.top(),
+                        self.CORNER_RADIUS * 2,
+                        self.CORNER_RADIUS * 2,
+                        90,
+                        -90,
+                    )
+                    path.lineTo(option.rect.right(), option.rect.bottom() + 1)
+                    path.lineTo(option.rect.left(), option.rect.bottom() + 1)
+                    path.lineTo(
+                        option.rect.left(), option.rect.top() + self.CORNER_RADIUS
+                    )
+                    path.arcTo(
+                        option.rect.left(),
+                        option.rect.top(),
+                        self.CORNER_RADIUS * 2,
+                        self.CORNER_RADIUS * 2,
+                        180,
+                        -90,
+                    )
                     painter.drawPath(path)
                 painter.restore()
 
@@ -124,7 +109,7 @@ class FlatUnderlineTabBar(QTabBar):
         font = self.font()
         font.setBold(True)
         self.setFont(font)
-        self._tab_color = QColor('#0a9b46')
+        self._tab_color = QColor("#0a9b46")
 
     def sizeHint(self):
         return QSize(0, 36)
@@ -134,8 +119,9 @@ class FlatUnderlineTabBar(QTabBar):
         fm = QFontMetrics(self.font())
         text_width = int(fm.boundingRect(text).width() * 1.03)
         margin = self.LEFT_MARGIN if index == 0 else 0
-        return QSize(margin + text_width + self.HORIZONTAL_SPACING,
-                     self.sizeHint().height())
+        return QSize(
+            margin + text_width + self.HORIZONTAL_SPACING, self.sizeHint().height()
+        )
 
     def paintEvent(self, event):
         painter = QStylePainter(self)
@@ -157,17 +143,23 @@ class FlatUnderlineTabBar(QTabBar):
                 pen = QPen(self._tab_color)
                 pen.setWidth(self.LINE_WIDTH)
                 painter.setPen(pen)
-                painter.drawLine(option.rect.left(),
-                                 self.rect().bottom(),
-                                 option.rect.right(),
-                                 self.rect().bottom())
+                painter.drawLine(
+                    option.rect.left(),
+                    self.rect().bottom(),
+                    option.rect.right(),
+                    self.rect().bottom(),
+                )
                 painter.restore()
 
             option.state = option.state & (~QStyle.StateFlag.State_Selected)
             painter.setFont(self.font())
-            painter.drawText(option.rect,
-                             Qt.TextFlag.TextDontClip | Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
-                             option.text)
+            painter.drawText(
+                option.rect,
+                Qt.TextFlag.TextDontClip
+                | Qt.AlignmentFlag.AlignLeft
+                | Qt.AlignmentFlag.AlignVCenter,
+                option.text,
+            )
 
 
 class ExploreTabBar(FlatTabBar):
@@ -180,9 +172,9 @@ class ExploreTabBar(FlatTabBar):
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
 
-        self.addTab(GuiUtils.get_icon('browse.svg'), self.tr('Browse'))
+        self.addTab(GuiUtils.get_icon("browse.svg"), self.tr("Browse"))
         self.setTabData(0, StandardExploreModes.Browse)
-        self.addTab(GuiUtils.get_icon('publishers.svg'), self.tr('Publishers'))
+        self.addTab(GuiUtils.get_icon("publishers.svg"), self.tr("Publishers"))
         self.setTabData(1, StandardExploreModes.Publishers)
 
         KoordinatesClient.instance().explore_sections_retrieved.connect(
@@ -201,7 +193,7 @@ class ExploreTabBar(FlatTabBar):
         current_mode: str = self.tabData(index)
         return {
             StandardExploreModes.Browse: TabStyle.Flat,
-            StandardExploreModes.Publishers: TabStyle.Flat
+            StandardExploreModes.Publishers: TabStyle.Flat,
         }.get(current_mode, TabStyle.Rounded)
 
     def current_mode(self) -> str:
@@ -226,27 +218,24 @@ class ExploreTabBar(FlatTabBar):
             return
 
         # clear out old explore section tabs
-        for i in range(self.count()-1, -1, -1):
+        for i in range(self.count() - 1, -1, -1):
             if self.tabData(i) not in (
-                    StandardExploreModes.Browse,
-                    StandardExploreModes.Publishers
+                StandardExploreModes.Browse,
+                StandardExploreModes.Publishers,
             ):
                 self.removeTab(i)
 
         for section in sections:
-            if section.slug == 'popular':
+            if section.slug == "popular":
                 # special case for popular, should always be first tab
                 self.insertTab(
-                    0,
-                    section.icon or GuiUtils.get_icon('popular.svg'),
-                    section.label
+                    0, section.icon or GuiUtils.get_icon("popular.svg"), section.label
                 )
                 self.setTabToolTip(0, section.description)
                 self.setTabData(0, StandardExploreModes.Popular)
             else:
                 self.addTab(
-                    section.icon or GuiUtils.get_icon('popular.svg'),
-                    section.label
+                    section.icon or GuiUtils.get_icon("popular.svg"), section.label
                 )
                 tab_index = self.count() - 1
                 self.setTabToolTip(tab_index, section.description)
@@ -257,6 +246,7 @@ class ExploreTabButton(QPushButton):
     """
     Custom button for displaying tab style switcher as vertical stack
     """
+
     CORNER_RADIUS = 4
 
     def __init__(self, parent: Optional[QWidget] = None):
@@ -285,33 +275,32 @@ class ExploreTabButton(QPushButton):
             painter.setBrush(brush)
             painter.setPen(Qt.PenStyle.NoPen)
             if self.bottom_tab_style == TabStyle.Rounded:
-                painter.drawRoundedRect(option.rect,
-                                        self.CORNER_RADIUS,
-                                        self.CORNER_RADIUS)
+                painter.drawRoundedRect(
+                    option.rect, self.CORNER_RADIUS, self.CORNER_RADIUS
+                )
             else:
                 path = QPainterPath()
-                path.moveTo(option.rect.left() + self.CORNER_RADIUS,
-                            option.rect.top())
-                path.lineTo(option.rect.right() - self.CORNER_RADIUS,
-                            option.rect.top())
-                path.arcTo(option.rect.right() - self.CORNER_RADIUS * 2,
-                           option.rect.top(),
-                           self.CORNER_RADIUS * 2,
-                           self.CORNER_RADIUS * 2,
-                           90, -90
-                           )
-                path.lineTo(option.rect.right(),
-                            option.rect.bottom() + 1)
-                path.lineTo(option.rect.left(),
-                            option.rect.bottom() + 1)
-                path.lineTo(option.rect.left(),
-                            option.rect.top() + self.CORNER_RADIUS)
-                path.arcTo(option.rect.left(),
-                           option.rect.top(),
-                           self.CORNER_RADIUS * 2,
-                           self.CORNER_RADIUS * 2,
-                           180, -90
-                           )
+                path.moveTo(option.rect.left() + self.CORNER_RADIUS, option.rect.top())
+                path.lineTo(option.rect.right() - self.CORNER_RADIUS, option.rect.top())
+                path.arcTo(
+                    option.rect.right() - self.CORNER_RADIUS * 2,
+                    option.rect.top(),
+                    self.CORNER_RADIUS * 2,
+                    self.CORNER_RADIUS * 2,
+                    90,
+                    -90,
+                )
+                path.lineTo(option.rect.right(), option.rect.bottom() + 1)
+                path.lineTo(option.rect.left(), option.rect.bottom() + 1)
+                path.lineTo(option.rect.left(), option.rect.top() + self.CORNER_RADIUS)
+                path.arcTo(
+                    option.rect.left(),
+                    option.rect.top(),
+                    self.CORNER_RADIUS * 2,
+                    self.CORNER_RADIUS * 2,
+                    180,
+                    -90,
+                )
                 painter.drawPath(path)
             painter.restore()
 

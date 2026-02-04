@@ -6,7 +6,7 @@ from qgis.core import (
     QgsDataItemProvider,
     QgsDataCollectionItem,
     QgsDirectoryItem,
-    QgsDataItem
+    QgsDataItem,
 )
 
 from ..core import KartUtils
@@ -18,9 +18,7 @@ class KartRepositoryItem(QgsDirectoryItem):
     Represents a Kart repository
     """
 
-    def __init__(self,
-                 parent: QgsDataItem,
-                 repo: 'Repository'):  # NOQA
+    def __init__(self, parent: QgsDataItem, repo: "Repository"):  # NOQA
         path = repo.path
         title = repo.title()
         if not title:
@@ -35,19 +33,19 @@ class KoordinatesRootItem(QgsDataCollectionItem):
     """
 
     def __init__(self):
-        super().__init__(None, 'Koordinates', '', 'koordinates')
+        super().__init__(None, "Koordinates", "", "koordinates")
         self.setCapabilitiesV2(
             Qgis.BrowserItemCapabilities(
-                Qgis.BrowserItemCapability.Fast |
-                Qgis.BrowserItemCapability.Fertile
+                Qgis.BrowserItemCapability.Fast | Qgis.BrowserItemCapability.Fertile
             )
         )
 
-        self.setIcon(GuiUtils.get_icon('browser_icon.svg'))
+        self.setIcon(GuiUtils.get_icon("browser_icon.svg"))
         self.populate()
 
         try:
             from kart.core import RepoManager
+
             manager = RepoManager.instance()
             manager.repo_added.connect(self.refresh)
             manager.repo_removed.connect(self.refresh)
@@ -59,9 +57,7 @@ class KoordinatesRootItem(QgsDataCollectionItem):
         res = []
 
         for repo in KartUtils.get_kart_repos():
-            res.append(
-                KartRepositoryItem(self, repo)
-            )
+            res.append(KartRepositoryItem(self, repo))
 
         return res
 
@@ -75,10 +71,10 @@ class KoordinatesDataItemProvider(QgsDataItemProvider):
         super().__init__()
 
     def name(self):
-        return 'koordinates'
+        return "koordinates"
 
     def dataProviderKey(self):
-        return 'koordinates'
+        return "koordinates"
 
     def capabilities(self):
         return QgsDataProvider.DataCapability.Dir

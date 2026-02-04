@@ -12,7 +12,7 @@ from .enums import (
     RasterFilterOptions,
     GridFilterOptions,
     CreativeCommonLicenseVersions,
-    PublisherType
+    PublisherType,
 )
 from .publisher import Publisher
 
@@ -62,37 +62,40 @@ class DataBrowserQuery:
         params = {}
 
         if self.search:
-            params['q'] = self.search
+            params["q"] = self.search
 
         if self.starred:
-            params['is_starred'] = True
+            params["is_starred"] = True
 
         if self.access_type is not None:
             if self.access_type == AccessType.Private:
-                params['public'] = False
+                params["public"] = False
             elif self.access_type == AccessType.Public:
-                params['public'] = True
+                params["public"] = True
 
         if self.category:
-            params['category'] = self.category
+            params["category"] = self.category
 
         if self.group:
-            params['group'] = self.group
+            params["group"] = self.group
 
         if self.publisher:
             if self.publisher.publisher_type == PublisherType.User:
-                params['user'] = self.publisher.id()[len('user:'):]
+                params["user"] = self.publisher.id()[len("user:") :]
             else:
-                params['from'] = self.publisher.id()
+                params["from"] = self.publisher.id()
 
         kind_params = []
         for data_type in self.data_types:
             if data_type == DataType.Vectors and self.vector_filters is not None:
                 continue
 
-            if data_type == DataType.Grids and \
-                    GridFilterOptions.MultiAttributeGridsOnly in self.grid_filter_options:
-                kind_params.append('attribute-grid')
+            if (
+                data_type == DataType.Grids
+                and GridFilterOptions.MultiAttributeGridsOnly
+                in self.grid_filter_options
+            ):
+                kind_params.append("attribute-grid")
                 continue
 
             kind_params.extend(DataType.to_filter_strings(data_type))
@@ -105,15 +108,15 @@ class DataBrowserQuery:
         geometry_params = []
         for vector_filter in self.vector_filters:
             if vector_filter == VectorFilter.Point:
-                geometry_params.append('point')
+                geometry_params.append("point")
             elif vector_filter == VectorFilter.Line:
-                geometry_params.append('linestring')
+                geometry_params.append("linestring")
             elif vector_filter == VectorFilter.Polygon:
-                geometry_params.append('polygon')
+                geometry_params.append("polygon")
             elif vector_filter == VectorFilter.HasZ:
-                params['has_z'] = True
+                params["has_z"] = True
             elif vector_filter == VectorFilter.HasPrimaryKey:
-                params['has_pk'] = True
+                params["has_pk"] = True
 
         if len(geometry_params) > 1:
             params["data.geometry_type"] = sorted(geometry_params)
@@ -129,13 +132,15 @@ class DataBrowserQuery:
             elif raster_filter == RasterFilter.ByBand:
                 for raster_band_filter in self.raster_band_filters:
                     if raster_band_filter == RasterBandFilter.RGB:
-                        raster_band_filters = ['red', 'green', 'blue']
+                        raster_band_filters = ["red", "green", "blue"]
                     elif raster_band_filter == RasterBandFilter.BlackAndWhite:
-                        raster_band_filters = ['gray']
+                        raster_band_filters = ["gray"]
 
-        if RasterFilterOptions.WithAlphaChannel in self.raster_filter_options \
-                and self.data_types == {DataType.Rasters}:
-            raster_band_filters.append('alpha')
+        if (
+            RasterFilterOptions.WithAlphaChannel in self.raster_filter_options
+            and self.data_types == {DataType.Rasters}
+        ):
+            raster_band_filters.append("alpha")
 
         if len(raster_band_filters) > 1:
             params["raster_band"] = sorted(raster_band_filters)
@@ -150,28 +155,28 @@ class DataBrowserQuery:
                     params["raster_resolution.lt"] = self.maximum_resolution
 
         if self.created_maximum:
-            params["created_at.before"] = QDateTime(self.created_maximum.date()).toString(
-                Qt.DateFormat.ISODate
-            )
+            params["created_at.before"] = QDateTime(
+                self.created_maximum.date()
+            ).toString(Qt.DateFormat.ISODate)
         if self.created_minimum:
-            params["created_at.after"] = QDateTime(self.created_minimum.date()).toString(
-                Qt.DateFormat.ISODate
-            )
+            params["created_at.after"] = QDateTime(
+                self.created_minimum.date()
+            ).toString(Qt.DateFormat.ISODate)
         if self.updated_maximum:
-            params["updated_at.before"] = QDateTime(self.updated_maximum.date()).toString(
-                Qt.DateFormat.ISODate
-            )
+            params["updated_at.before"] = QDateTime(
+                self.updated_maximum.date()
+            ).toString(Qt.DateFormat.ISODate)
         if self.updated_minimum:
-            params["updated_at.after"] = QDateTime(self.updated_minimum.date()).toString(
-                Qt.DateFormat.ISODate
-            )
+            params["updated_at.after"] = QDateTime(
+                self.updated_minimum.date()
+            ).toString(Qt.DateFormat.ISODate)
 
         cc_license_versions = []
         for version in self.cc_license_versions:
             if version == CreativeCommonLicenseVersions.Version3:
-                cc_license_versions.append('3.0')
+                cc_license_versions.append("3.0")
             elif version == CreativeCommonLicenseVersions.Version4:
-                cc_license_versions.append('4.0')
+                cc_license_versions.append("4.0")
 
         if len(cc_license_versions) > 1:
             params["license.version"] = sorted(cc_license_versions)
@@ -181,19 +186,19 @@ class DataBrowserQuery:
         license_types = []
         if self.cc_license_allow_derivates is not None:
             if self.cc_license_allow_derivates:
-                license_types.append('-cc-by-nd')
+                license_types.append("-cc-by-nd")
             else:
-                license_types.append('cc-by-nd')
+                license_types.append("cc-by-nd")
         if self.cc_license_allow_commercial is not None:
             if self.cc_license_allow_commercial:
-                license_types.append('-cc-by-nc')
+                license_types.append("-cc-by-nc")
             else:
-                license_types.append('cc-by-nc')
+                license_types.append("cc-by-nc")
         if self.cc_license_changes_must_be_shared is not None:
             if self.cc_license_changes_must_be_shared:
-                license_types.append('cc-by-sa')
+                license_types.append("cc-by-sa")
             else:
-                license_types.append('-cc-by-sa')
+                license_types.append("-cc-by-sa")
 
         if len(license_types) > 1:
             params["license.type"] = sorted(license_types)
@@ -202,13 +207,13 @@ class DataBrowserQuery:
 
         # extra query logic for defaults:
         # 1. If no filters are active, the query string is initialized to the default data types
-        if 'kind' not in params and DataType.Vectors not in self.data_types:
-            params['kind'] = ['layer', 'table', 'set', 'document']
+        if "kind" not in params and DataType.Vectors not in self.data_types:
+            params["kind"] = ["layer", "table", "set", "document"]
 
         # 2. If there are filters active, but nothing for `kind` or `data.geometry_type`
         # then the query string has the default data types appended to it
-        if 'data.geometry_type' not in params and DataType.Vectors in self.data_types:
-            params['data.geometry_type'] = ['point', 'linestring', 'polygon']
+        if "data.geometry_type" not in params and DataType.Vectors in self.data_types:
+            params["data.geometry_type"] = ["point", "linestring", "polygon"]
 
         # 3. If intersite data is enabled, and there are no active filters blocking
         # intersite data (presence of `from`, `org`, or `user` query params) then the
@@ -221,20 +226,20 @@ class DataBrowserQuery:
         # then the query string has `geotag_boost=10` appended to it
 
         if self.order == SortOrder.Popularity:
-            params['sort'] = 'popularity'
+            params["sort"] = "popularity"
             if self.popular_order_string:
-                params['country'] = self.popular_order_string
-                params['country_boost'] = 6
-                params['multiplier_boost'] = True
+                params["country"] = self.popular_order_string
+                params["country_boost"] = 6
+                params["multiplier_boost"] = True
         elif self.order == SortOrder.RecentlyAdded:
-            params['sort'] = 'created_at'
+            params["sort"] = "created_at"
         elif self.order == SortOrder.RecentlyUpdated:
-            params['sort'] = 'updated_at'
+            params["sort"] = "updated_at"
         elif self.order == SortOrder.AlphabeticalAZ:
-            params['sort'] = 'name'
+            params["sort"] = "name"
         elif self.order == SortOrder.AlphabeticalZA:
-            params['sort'] = '-name'
+            params["sort"] = "-name"
         elif self.order == SortOrder.Oldest:
-            params['sort'] = '-created_at'
+            params["sort"] = "-created_at"
 
         return params

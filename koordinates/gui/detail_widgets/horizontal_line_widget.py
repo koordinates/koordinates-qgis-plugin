@@ -1,7 +1,4 @@
-from qgis.PyQt.QtWidgets import (
-    QFrame,
-    QSizePolicy
-)
+from qgis.PyQt.QtWidgets import QFrame, QSizePolicy
 
 
 class HorizontalLine(QFrame):

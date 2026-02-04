@@ -7,17 +7,15 @@ the Free Software Foundation; either version 2 of the License, or
 (at your option) any later version.
 """
 
-__author__ = 'Nyall Dawson <nyall@north-road.com>'
-__revision__ = '$Format:%H$'
-__date__ = '12/09/2022'
+__author__ = "Nyall Dawson <nyall@north-road.com>"
+__revision__ = "$Format:%H$"
+__date__ = "12/09/2022"
 __license__ = "GPL"
-__copyright__ = 'Copyright 2022, Koordinates'
+__copyright__ = "Copyright 2022, Koordinates"
 
 import unittest
 
-from ..gui.dataset_utils import (
-    DatasetGuiUtils
-)
+from ..gui.dataset_utils import DatasetGuiUtils
 
 
 class TestDatasetGuiUtils(unittest.TestCase):
@@ -26,33 +24,33 @@ class TestDatasetGuiUtils(unittest.TestCase):
     """
 
     def test_format_count(self):
-        self.assertEqual(DatasetGuiUtils.format_count(0), '0')
-        self.assertEqual(DatasetGuiUtils.format_count(1), '1')
-        self.assertEqual(DatasetGuiUtils.format_count(9), '9')
-        self.assertEqual(DatasetGuiUtils.format_count(10), '10')
-        self.assertEqual(DatasetGuiUtils.format_count(101), '101')
-        self.assertEqual(DatasetGuiUtils.format_count(999), '999')
-        self.assertEqual(DatasetGuiUtils.format_count(1000), '1K')
-        self.assertEqual(DatasetGuiUtils.format_count(1001), '1K')
-        self.assertEqual(DatasetGuiUtils.format_count(1010), '1K')
-        self.assertEqual(DatasetGuiUtils.format_count(1100), '1.1K')
-        self.assertEqual(DatasetGuiUtils.format_count(1300), '1.3K')
-        self.assertEqual(DatasetGuiUtils.format_count(1700), '1.7K')
-        self.assertEqual(DatasetGuiUtils.format_count(1999), '1.9K')
-        self.assertEqual(DatasetGuiUtils.format_count(2000), '2K')
-        self.assertEqual(DatasetGuiUtils.format_count(2200), '2.2K')
-        self.assertEqual(DatasetGuiUtils.format_count(9200), '9.2K')
-        self.assertEqual(DatasetGuiUtils.format_count(9900), '9.9K')
-        self.assertEqual(DatasetGuiUtils.format_count(10000), '10K')
-        self.assertEqual(DatasetGuiUtils.format_count(10100), '10.1K')
-        self.assertEqual(DatasetGuiUtils.format_count(11000), '11K')
-        self.assertEqual(DatasetGuiUtils.format_count(482300), '482.3K')
-        self.assertEqual(DatasetGuiUtils.format_count(999999), '999.9K')
-        self.assertEqual(DatasetGuiUtils.format_count(1000000), '1M')
-        self.assertEqual(DatasetGuiUtils.format_count(1000001), '1M')
-        self.assertEqual(DatasetGuiUtils.format_count(1100000), '1.1M')
-        self.assertEqual(DatasetGuiUtils.format_count(10000000), '10M')
+        self.assertEqual(DatasetGuiUtils.format_count(0), "0")
+        self.assertEqual(DatasetGuiUtils.format_count(1), "1")
+        self.assertEqual(DatasetGuiUtils.format_count(9), "9")
+        self.assertEqual(DatasetGuiUtils.format_count(10), "10")
+        self.assertEqual(DatasetGuiUtils.format_count(101), "101")
+        self.assertEqual(DatasetGuiUtils.format_count(999), "999")
+        self.assertEqual(DatasetGuiUtils.format_count(1000), "1K")
+        self.assertEqual(DatasetGuiUtils.format_count(1001), "1K")
+        self.assertEqual(DatasetGuiUtils.format_count(1010), "1K")
+        self.assertEqual(DatasetGuiUtils.format_count(1100), "1.1K")
+        self.assertEqual(DatasetGuiUtils.format_count(1300), "1.3K")
+        self.assertEqual(DatasetGuiUtils.format_count(1700), "1.7K")
+        self.assertEqual(DatasetGuiUtils.format_count(1999), "1.9K")
+        self.assertEqual(DatasetGuiUtils.format_count(2000), "2K")
+        self.assertEqual(DatasetGuiUtils.format_count(2200), "2.2K")
+        self.assertEqual(DatasetGuiUtils.format_count(9200), "9.2K")
+        self.assertEqual(DatasetGuiUtils.format_count(9900), "9.9K")
+        self.assertEqual(DatasetGuiUtils.format_count(10000), "10K")
+        self.assertEqual(DatasetGuiUtils.format_count(10100), "10.1K")
+        self.assertEqual(DatasetGuiUtils.format_count(11000), "11K")
+        self.assertEqual(DatasetGuiUtils.format_count(482300), "482.3K")
+        self.assertEqual(DatasetGuiUtils.format_count(999999), "999.9K")
+        self.assertEqual(DatasetGuiUtils.format_count(1000000), "1M")
+        self.assertEqual(DatasetGuiUtils.format_count(1000001), "1M")
+        self.assertEqual(DatasetGuiUtils.format_count(1100000), "1.1M")
+        self.assertEqual(DatasetGuiUtils.format_count(10000000), "10M")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

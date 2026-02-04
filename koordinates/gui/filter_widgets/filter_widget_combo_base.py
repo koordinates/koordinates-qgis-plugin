@@ -17,7 +17,7 @@ class FilterWidgetComboBase(CustomComboBox):
         self.set_show_clear_button(True)
         self._block_changes = 0
 
-        self._indent_margin = fontmetric_width(self.fontMetrics(), 'xx')
+        self._indent_margin = fontmetric_width(self.fontMetrics(), "xx")
 
     def apply_constraints_to_query(self, query: DataBrowserQuery):
         """

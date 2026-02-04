@@ -10,9 +10,7 @@ from qgis.core import (
     QgsRectangle,
     QgsReferencedRectangle,
 )
-from qgis.gui import (
-    QgsMapToolExtent
-)
+from qgis.gui import QgsMapToolExtent
 from qgis.utils import iface
 
 WIDGET, BASE = uic.loadUiType(
@@ -25,18 +23,23 @@ class ExtentSelectionPanel(QWidget, WIDGET):
     Custom widget for easy selection of a map extent
     """
 
-    MODE_CANVAS = 'MODE_CANVAS'
-    MODE_SELECT = 'MODE_SELECT'
-    MODE_LAYER = 'MODE_LAYER'
+    MODE_CANVAS = "MODE_CANVAS"
+    MODE_SELECT = "MODE_SELECT"
+    MODE_LAYER = "MODE_LAYER"
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
 
-        self.combo_mode.addItem(self.tr('Use Visible Map Extent'),
-                                ExtentSelectionPanel.MODE_CANVAS)
-        self.combo_mode.addItem(self.tr('Select Extent On Map'), ExtentSelectionPanel.MODE_SELECT)
-        self.combo_mode.addItem(self.tr('Use Layer Extent'), ExtentSelectionPanel.MODE_LAYER)
+        self.combo_mode.addItem(
+            self.tr("Use Visible Map Extent"), ExtentSelectionPanel.MODE_CANVAS
+        )
+        self.combo_mode.addItem(
+            self.tr("Select Extent On Map"), ExtentSelectionPanel.MODE_SELECT
+        )
+        self.combo_mode.addItem(
+            self.tr("Use Layer Extent"), ExtentSelectionPanel.MODE_LAYER
+        )
         self.combo_mode.currentIndexChanged.connect(self._mode_changed)
 
         self.button_select_from_map.clicked.connect(self.draw_on_canvas)
@@ -70,8 +73,7 @@ class ExtentSelectionPanel(QWidget, WIDGET):
 
     def extent_drawn(self, rect: QgsRectangle):
         self._custom_extent = QgsReferencedRectangle(
-            rect,
-            iface.mapCanvas().mapSettings().destinationCrs()
+            rect, iface.mapCanvas().mapSettings().destinationCrs()
         )
         iface.mapCanvas().setMapTool(self.prev_map_tool)
         self.toggle_dialog_visibility(True)
@@ -83,7 +85,7 @@ class ExtentSelectionPanel(QWidget, WIDGET):
 
     def toggle_dialog_visibility(self, visible: bool):
         dialog = self.window()
-        if dialog.objectName() == 'QgisApp':
+        if dialog.objectName() == "QgisApp":
             return
 
         if not visible:
@@ -108,5 +110,7 @@ class ExtentSelectionPanel(QWidget, WIDGET):
         elif self.combo_mode.currentData() == ExtentSelectionPanel.MODE_SELECT:
             return self._custom_extent
         elif self.combo_mode.currentData() == ExtentSelectionPanel.MODE_LAYER:
-            return QgsReferencedRectangle(self.layer_combo.currentLayer().extent(),
-                                          self.layer_combo.currentLayer().crs())
+            return QgsReferencedRectangle(
+                self.layer_combo.currentLayer().extent(),
+                self.layer_combo.currentLayer().crs(),
+            )

@@ -1,7 +1,4 @@
-from typing import (
-    Optional,
-    Tuple
-)
+from typing import Optional, Tuple
 import platform
 
 from qgis.PyQt import sip
@@ -80,23 +77,19 @@ class LoginWidget(QFrame):
 
         self.setFrameShape(QFrame.Shape.NoFrame)
 
-        self.setStyleSheet(
-            """LoginWidget {
+        self.setStyleSheet("""LoginWidget {
          background-color: white;
          border: 1px solid rgb(180, 180, 180);
-          }"""
-        )
+          }""")
 
         vl = QVBoxLayout()
         vl.setContentsMargins(0, 0, 0, 0)
 
         top_frame = QFrame()
         top_frame.setFrameShape(QFrame.Shape.NoFrame)
-        top_frame.setStyleSheet(
-            """
+        top_frame.setStyleSheet("""
          background-color: #323233;
-        """
-        )
+        """)
         top_frame.setFixedHeight(270)
 
         top_frame_layout = QVBoxLayout()
@@ -120,13 +113,11 @@ class LoginWidget(QFrame):
         self.login_label.setWordWrap(True)
         font = self.font()
         font.setPointSize(10)
-        self.login_label.setText(
-            """<style>
+        self.login_label.setText("""<style>
         p { line-height: 1.3; }
         </style><p>Login to your Koordinates account to get started.</p>
         <p>The next step will open a web browser and might require you to sign in to your
-        Koordinates account.</p>"""
-        )
+        Koordinates account.</p>""")
         self.login_label.setFont(font)
         contents_layout.addWidget(self.login_label)
         contents_layout.addSpacing(18)
@@ -150,13 +141,11 @@ class LoginWidget(QFrame):
         contents_layout.addSpacing(21)
         signup_label = QLabel()
         signup_label.setWordWrap(True)
-        signup_label.setText(
-            """<style>
+        signup_label.setText("""<style>
             a {color: #868889;}
             </style><span
             style="color: #868889;">Need to create a Koordinates ID? <a
-            href="https://id.koordinates.com/signup">Sign Up</a></span>"""
-        )
+            href="https://id.koordinates.com/signup">Sign Up</a></span>""")
         signup_label.setFont(font)
         signup_label.setOpenExternalLinks(True)
         contents_layout.addWidget(signup_label)
@@ -165,14 +154,12 @@ class LoginWidget(QFrame):
 
         tos_label = QLabel()
         tos_label.setWordWrap(True)
-        tos_label.setText(
-            """<style>
+        tos_label.setText("""<style>
             a {color: #868889; text-decoration: none}
             </style><span
             style="color: #868889;"><a
             href="https://koordinates.com/privacy-policy/">Privacy Policy</a> • <a
-            href="https://koordinates.com/terms-of-use/">Terms of Use</a></span>"""
-        )
+            href="https://koordinates.com/terms-of-use/">Terms of Use</a></span>""")
         tos_label.setFont(font)
         tos_label.setOpenExternalLinks(True)
         contents_layout.addWidget(tos_label)
@@ -254,8 +241,7 @@ class LoginWidget(QFrame):
         self.oauth = None
 
     def _refresh_auth(self):
-        if (self.oauth_refresh_timer and
-                not sip.isdeleted(self.oauth_refresh_timer)):
+        if self.oauth_refresh_timer and not sip.isdeleted(self.oauth_refresh_timer):
             self.oauth_refresh_timer.timeout.disconnect(self._refresh_auth)
             self.oauth_refresh_timer.deleteLater()
             self.oauth_refresh_timer = None
@@ -295,7 +281,8 @@ class LoginWidget(QFrame):
                 self.oauth_refresh_timer.setSingleShot(True)
                 # request refresh 30 mins before expiry
                 self.oauth_refresh_timer.setInterval(
-                    (OAuthWorkflow.EXPIRY_DURATION_SECONDS - 1800) * 1000)
+                    (OAuthWorkflow.EXPIRY_DURATION_SECONDS - 1800) * 1000
+                )
                 self.oauth_refresh_timer.timeout.connect(self._refresh_auth)
                 self.oauth_refresh_timer.start()
 
@@ -331,12 +318,12 @@ class LoginWidget(QFrame):
         if platform.system() == "Darwin":
             # remove stored plain text tokens on MacOS
             QgsSettings().remove("koordinates/token", QgsSettings.Section.Plugins)
-            QgsSettings().remove("koordinates/refresh_token",
-                                 QgsSettings.Section.Plugins)
+            QgsSettings().remove(
+                "koordinates/refresh_token", QgsSettings.Section.Plugins
+            )
         else:
             QgsApplication.authManager().removeAuthSetting(AUTH_CONFIG_ID)
-            QgsApplication.authManager().removeAuthSetting(
-                AUTH_CONFIG_REFRESH_TOKEN)
+            QgsApplication.authManager().removeAuthSetting(AUTH_CONFIG_REFRESH_TOKEN)
 
     def store_api_key(self, key: str, refresh_token: Optional[str]) -> bool:
         """
@@ -346,17 +333,20 @@ class LoginWidget(QFrame):
         """
         if platform.system() == "Darwin":
             # store tokens in plain text on MacOS as keychain isn't available due to MacOS security
-            QgsSettings().setValue("koordinates/token", key,
-                                   QgsSettings.Section.Plugins)
+            QgsSettings().setValue(
+                "koordinates/token", key, QgsSettings.Section.Plugins
+            )
             if refresh_token:
-                QgsSettings().setValue("koordinates/refresh_token",
-                                       refresh_token,
-                                       QgsSettings.Section.Plugins)
+                QgsSettings().setValue(
+                    "koordinates/refresh_token",
+                    refresh_token,
+                    QgsSettings.Section.Plugins,
+                )
         else:
+            QgsApplication.authManager().storeAuthSetting(AUTH_CONFIG_ID, key, True)
             QgsApplication.authManager().storeAuthSetting(
-                AUTH_CONFIG_ID, key, True)
-            QgsApplication.authManager().storeAuthSetting(
-                AUTH_CONFIG_REFRESH_TOKEN, refresh_token or '', True)
+                AUTH_CONFIG_REFRESH_TOKEN, refresh_token or "", True
+            )
         return True
 
     def retrieve_api_key(self) -> Tuple[Optional[str], Optional[str]]:
@@ -366,12 +356,18 @@ class LoginWidget(QFrame):
         Returns None if no stored key is available
         """
         if platform.system() == "Darwin":
-            api_key = QgsSettings().value(
-                "koordinates/token", None, str, QgsSettings.Section.Plugins
-            ) or None
-            refresh_token = QgsSettings().value(
-                "koordinates/refresh_token", None, str, QgsSettings.Section.Plugins
-            ) or None
+            api_key = (
+                QgsSettings().value(
+                    "koordinates/token", None, str, QgsSettings.Section.Plugins
+                )
+                or None
+            )
+            refresh_token = (
+                QgsSettings().value(
+                    "koordinates/refresh_token", None, str, QgsSettings.Section.Plugins
+                )
+                or None
+            )
         else:
             api_key = (
                 QgsApplication.authManager().authSetting(
@@ -380,9 +376,9 @@ class LoginWidget(QFrame):
                 or None
             )
             refresh_token = (
-                    QgsApplication.authManager().authSetting(
-                        AUTH_CONFIG_REFRESH_TOKEN, defaultValue="", decrypt=True
-                    )
-                    or None
+                QgsApplication.authManager().authSetting(
+                    AUTH_CONFIG_REFRESH_TOKEN, defaultValue="", decrypt=True
+                )
+                or None
             )
         return api_key, refresh_token

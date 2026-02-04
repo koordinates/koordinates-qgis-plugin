@@ -1,12 +1,5 @@
-from qgis.PyQt.QtCore import (
-    Qt,
-    QRect
-)
-from qgis.PyQt.QtGui import (
-    QPainter,
-    QColor,
-    QBrush
-)
+from qgis.PyQt.QtCore import Qt, QRect
+from qgis.PyQt.QtGui import QPainter, QColor, QBrush
 from qgis.PyQt.QtWidgets import QFrame
 
 

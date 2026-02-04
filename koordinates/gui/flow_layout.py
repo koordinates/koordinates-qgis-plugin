@@ -1,15 +1,7 @@
 import math
 
-from qgis.PyQt.QtCore import (
-    Qt,
-    QRect,
-    QSize
-)
-from qgis.PyQt.QtWidgets import (
-    QLayout,
-    QSizePolicy,
-    QStyle
-)
+from qgis.PyQt.QtCore import Qt, QRect, QSize
+from qgis.PyQt.QtWidgets import QLayout, QSizePolicy, QStyle
 
 
 class FlowLayout(QLayout):
@@ -80,8 +72,9 @@ class FlowLayout(QLayout):
                 size = size.expandedTo(item.minimumSize())
 
         margins = self.contentsMargins()
-        size += QSize(margins.left() + margins.right(),
-                      margins.top() + margins.bottom())
+        size += QSize(
+            margins.left() + margins.right(), margins.top() + margins.bottom()
+        )
         return size
 
     def _doLayout(self, rect, testOnly):
@@ -95,7 +88,7 @@ class FlowLayout(QLayout):
                     _space_x = _wid.style().layoutSpacing(
                         QSizePolicy.ControlType.PushButton,
                         QSizePolicy.ControlType.PushButton,
-                        Qt.Orientation.Horizontal
+                        Qt.Orientation.Horizontal,
                     )
 
                 spacing.append(_space_x)
@@ -136,14 +129,14 @@ class FlowLayout(QLayout):
                 space_x = wid.style().layoutSpacing(
                     QSizePolicy.ControlType.PushButton,
                     QSizePolicy.ControlType.PushButton,
-                    Qt.Orientation.Horizontal
+                    Qt.Orientation.Horizontal,
                 )
             space_y = self.verticalSpacing()
             if space_y == -1:
                 space_y = wid.style().layoutSpacing(
                     QSizePolicy.ControlType.PushButton,
                     QSizePolicy.ControlType.PushButton,
-                    Qt.Orientation.Vertical
+                    Qt.Orientation.Vertical,
                 )
 
             next_x = x + item.minimumSize().width() + space_x
@@ -195,8 +188,9 @@ class FlowLayout(QLayout):
 
             max_widget_width = 999999999999
             for line in new_assigned_lines:
-                max_widget_width = min(max_widget_width_for_line(line, effective_rect),
-                                       max_widget_width)
+                max_widget_width = min(
+                    max_widget_width_for_line(line, effective_rect), max_widget_width
+                )
 
             for idx, line in enumerate(new_assigned_lines):
                 y_offset = y_offsets[idx]
@@ -214,7 +208,7 @@ class FlowLayout(QLayout):
                         space_x = _wid.style().layoutSpacing(
                             QSizePolicy.ControlType.PushButton,
                             QSizePolicy.ControlType.PushButton,
-                            Qt.Orientation.Horizontal
+                            Qt.Orientation.Horizontal,
                         )
 
                     x += max_widget_width + space_x

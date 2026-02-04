@@ -4,18 +4,8 @@ from typing import Optional
 
 
 from qgis.PyQt import sip
-from qgis.PyQt.QtCore import (
-    QSize,
-    QPoint,
-    QRect,
-    Qt
-)
-from qgis.PyQt.QtGui import (
-    QPalette,
-    QIcon,
-    QPainter,
-    QFontMetrics
-)
+from qgis.PyQt.QtCore import QSize, QPoint, QRect, Qt
+from qgis.PyQt.QtGui import QPalette, QIcon, QPainter, QFontMetrics
 from qgis.PyQt.QtWidgets import (
     QWidget,
     QStyle,
@@ -24,12 +14,9 @@ from qgis.PyQt.QtWidgets import (
     QVBoxLayout,
     QComboBox,
     QStyleOptionComboBox,
-    QSizePolicy
+    QSizePolicy,
 )
-from qgis.core import (
-    Qgis,
-    QgsApplication
-)
+from qgis.core import Qgis, QgsApplication
 
 from ..compat import fontmetric_width
 
@@ -45,17 +32,20 @@ class CustomComboBox(QWidget):
         def __init__(self, parent: Optional[QWidget]):
             super().__init__(parent.window() if parent else None)
 
-            self.setWindowFlags(Qt.WindowType.Popup
-                                | Qt.WindowType.FramelessWindowHint)
+            self.setWindowFlags(Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint)
 
             self.anchor_widget = parent
 
             self.frame = QFrame()
-            self.frame.setObjectName('base_frame')
-            self.frame.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Maximum)
+            self.frame.setObjectName("base_frame")
+            self.frame.setSizePolicy(
+                QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Maximum
+            )
 
             opt = QStyleOptionFrame()
-            border = self.style().pixelMetric(QStyle.PixelMetric.PM_DefaultFrameWidth, opt)
+            border = self.style().pixelMetric(
+                QStyle.PixelMetric.PM_DefaultFrameWidth, opt
+            )
 
             palette = QPalette()
 
@@ -63,7 +53,9 @@ class CustomComboBox(QWidget):
                 "#base_frame {{background-color: {}; border: {}px solid {};}}".format(
                     palette.color(QPalette.ColorRole.Base).name(),
                     border,
-                    palette.color(QPalette.ColorRole.Dark).name()))
+                    palette.color(QPalette.ColorRole.Dark).name(),
+                )
+            )
             self.frame.setFrameStyle(QFrame.Shape.Panel | QFrame.Shadow.Plain)
 
             frame_layout = QVBoxLayout()
@@ -95,9 +87,7 @@ class CustomComboBox(QWidget):
             Moves the popup to the correct anchor placement
             """
             new_pos = self.anchor_widget.mapToGlobal(
-                QPoint(0,
-                       self.anchor_widget.height()
-                       )
+                QPoint(0, self.anchor_widget.height())
             )
 
             try:
@@ -109,9 +99,7 @@ class CustomComboBox(QWidget):
                         # align with right side of anchor widget instead, to
                         # avoid combo box overflowing outside of screen
                         right_edge = new_pos.x() + self.anchor_widget.width()
-                        new_pos.setX(
-                            right_edge - self.width()
-                        )
+                        new_pos.setX(right_edge - self.width())
             except AttributeError:
                 # requires Qt 5.14+
                 pass
@@ -137,17 +125,20 @@ class CustomComboBox(QWidget):
         self._clear_icon = QIcon()
 
         self._icon_size = math.floor(
-            max(Qgis.UI_SCALE_FACTOR * self.fontMetrics().height() * 0.75, 16.0))
+            max(Qgis.UI_SCALE_FACTOR * self.fontMetrics().height() * 0.75, 16.0)
+        )
 
         self._clear_pixmap = QgsApplication.getThemeIcon("/mIconClearText.svg").pixmap(
-            QSize(self._icon_size, self._icon_size))
-        self._clear_hover_pixmap = QgsApplication.getThemeIcon("/mIconClearTextHover.svg").pixmap(
-            QSize(self._icon_size, self._icon_size))
+            QSize(self._icon_size, self._icon_size)
+        )
+        self._clear_hover_pixmap = QgsApplication.getThemeIcon(
+            "/mIconClearTextHover.svg"
+        ).pixmap(QSize(self._icon_size, self._icon_size))
 
         self._show_clear_button = True
         self._clear_action = None
 
-        self._current_text: str = ''
+        self._current_text: str = ""
         self._hover_state = None
 
         self._floating_widget = CustomComboBox.ContentsWidget(self)
@@ -168,7 +159,11 @@ class CustomComboBox(QWidget):
         option = QStyleOptionComboBox()
         option.initFrom(self)
         drop_down_rect = self.style().subControlRect(
-            QStyle.ComplexControl.CC_ComboBox, option, QStyle.SubControl.SC_ComboBoxArrow, None)
+            QStyle.ComplexControl.CC_ComboBox,
+            option,
+            QStyle.SubControl.SC_ComboBoxArrow,
+            None,
+        )
         if drop_down_rect.contains(pos):
             return CustomComboBox.BoxComponent.DropDownButton
 
@@ -292,21 +287,29 @@ class CustomComboBox(QWidget):
 
         style = self.style()
 
-        self.style().drawComplexControl(QStyle.ComplexControl.CC_ComboBox, option, painter, None)
+        self.style().drawComplexControl(
+            QStyle.ComplexControl.CC_ComboBox, option, painter, None
+        )
         option.editable = False
         style.drawControl(QStyle.ControlElement.CE_ComboBoxLabel, option, painter, None)
 
         show_clear = self.should_show_clear()
         if show_clear:
             drop_down_rect = style.subControlRect(
-                QStyle.ComplexControl.CC_ComboBox, option,
-                QStyle.SubControl.SC_ComboBoxArrow, None)
+                QStyle.ComplexControl.CC_ComboBox,
+                option,
+                QStyle.SubControl.SC_ComboBoxArrow,
+                None,
+            )
             icon_left = drop_down_rect.left() - int(drop_down_rect.width() * 1.1)
             icon_top = drop_down_rect.top() + int(
-                (drop_down_rect.height() - self._icon_size) * 0.5)
-            pixmap = self._clear_pixmap \
-                if self._hover_state != CustomComboBox.BoxComponent.ClearButton \
+                (drop_down_rect.height() - self._icon_size) * 0.5
+            )
+            pixmap = (
+                self._clear_pixmap
+                if self._hover_state != CustomComboBox.BoxComponent.ClearButton
                 else self._clear_hover_pixmap
+            )
             painter.drawPixmap(icon_left, icon_top, pixmap)
 
         painter.end()

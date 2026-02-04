@@ -1,6 +1,4 @@
-from qgis.PyQt.QtCore import (
-    Qt
-)
+from qgis.PyQt.QtCore import Qt
 
 from .compat import QSvgWidget
 from .gui_utils import GuiUtils
@@ -29,19 +27,18 @@ class StarButton(QSvgWidget):
 
     def _update_icon(self):
         if self._checked:
-            icon = GuiUtils.get_icon_svg('star_starred.svg')
+            icon = GuiUtils.get_icon_svg("star_starred.svg")
         elif self._hover:
-            icon = GuiUtils.get_icon_svg('star_not-starred-hover.svg')
+            icon = GuiUtils.get_icon_svg("star_not-starred-hover.svg")
         else:
-            icon = GuiUtils.get_icon_svg('star_not-starred.svg')
+            icon = GuiUtils.get_icon_svg("star_not-starred.svg")
 
         self.load(icon)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
             to_star = not self._checked
-            KoordinatesClient.instance().star(self.dataset.id,
-                                              is_starred=to_star)
+            KoordinatesClient.instance().star(self.dataset.id, is_starred=to_star)
             self._checked = to_star
             self._update_icon()
         else:

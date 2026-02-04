@@ -1,16 +1,9 @@
 from typing import Optional
 
-from qgis.PyQt.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QRadioButton,
-    QButtonGroup
-)
+from qgis.PyQt.QtWidgets import QWidget, QVBoxLayout, QRadioButton, QButtonGroup
 
 from .filter_widget_combo_base import FilterWidgetComboBase
-from ...api import (
-    DataBrowserQuery
-)
+from ...api import DataBrowserQuery
 
 
 class GroupFilterWidget(FilterWidgetComboBase):
@@ -64,7 +57,7 @@ class GroupFilterWidget(FilterWidgetComboBase):
         return any(radio.isChecked() for radio in self._radios)
 
     def _update_value(self):
-        text = 'Group'
+        text = "Group"
 
         for radio in self._radios:
             if radio.isChecked():
@@ -78,7 +71,7 @@ class GroupFilterWidget(FilterWidgetComboBase):
         query.group = None
         for radio in self._radios:
             if radio.isChecked():
-                query.group = radio.property('key')
+                query.group = radio.property("key")
 
     def set_from_query(self, query: DataBrowserQuery):
         self._block_changes += 1
@@ -87,15 +80,15 @@ class GroupFilterWidget(FilterWidgetComboBase):
             if not query.group:
                 radio.setChecked(False)
             else:
-                radio.setChecked(radio.property('key') == query.group)
+                radio.setChecked(radio.property("key") == query.group)
 
         self._update_value()
         self._update_visible_frames()
         self._block_changes -= 1
 
     def set_facets(self, facets: dict):
-        groups = facets.get('group', [])
-        new_context = facets.get('from')
+        groups = facets.get("group", [])
+        new_context = facets.get("from")
 
         if new_context == self._current_context:
             return
@@ -110,8 +103,8 @@ class GroupFilterWidget(FilterWidgetComboBase):
         else:
             self.show()
             for group in groups:
-                radio = QRadioButton(group['name'])
-                radio.setProperty('key', str(group['key']))
+                radio = QRadioButton(group["name"])
+                radio.setProperty("key", str(group["key"]))
                 self._radios.append(radio)
                 self.button_group.addButton(radio)
                 self.radio_layout.addWidget(radio)

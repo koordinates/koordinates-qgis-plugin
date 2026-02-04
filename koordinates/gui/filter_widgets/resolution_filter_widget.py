@@ -1,12 +1,7 @@
 from typing import Optional
 import math
 
-from qgis.PyQt.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel
-)
+from qgis.PyQt.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel
 
 from .filter_widget_combo_base import FilterWidgetComboBase
 from ...api import DataBrowserQuery
@@ -31,7 +26,7 @@ class ResolutionFilterWidget(FilterWidgetComboBase):
         self.min_label = QLabel()
         hl.addWidget(self.min_label)
         hl.addStretch()
-        hl.addWidget(QLabel('to'))
+        hl.addWidget(QLabel("to"))
         hl.addStretch()
         self.max_label = QLabel()
         hl.addWidget(self.max_label)
@@ -51,8 +46,9 @@ class ResolutionFilterWidget(FilterWidgetComboBase):
     @staticmethod
     def scale(value, domain, range):
         exp = 6.5
-        return ((range[1] - range[0]) / math.pow(domain[1] - domain[0], exp)) * math.pow(
-            value - domain[0], exp) + range[0]
+        return (
+            (range[1] - range[0]) / math.pow(domain[1] - domain[0], exp)
+        ) * math.pow(value - domain[0], exp) + range[0]
 
     @staticmethod
     def unscale(value, domain, range):
@@ -63,17 +59,16 @@ class ResolutionFilterWidget(FilterWidgetComboBase):
 
         try:
             return domain[0] + math.pow(
-                (value - range[0]) * math.pow(domain[1] - domain[0], exp) / (range[1] - range[0])
-                , 1 / exp
+                (value - range[0])
+                * math.pow(domain[1] - domain[0], exp)
+                / (range[1] - range[0]),
+                1 / exp,
             )
         except ValueError:
             return 0
 
     def map_slider_value_to_resolution(self, value):
-        return round(self.scale(
-            value,
-            (0, 100000),
-            self._range), 2)
+        return round(self.scale(value, (0, 100000), self._range), 2)
 
     def map_value_to_slider(self, value):
         if self.map_slider_value_to_resolution(0) == value:
@@ -84,25 +79,30 @@ class ResolutionFilterWidget(FilterWidgetComboBase):
         return vv
 
     def current_range(self):
-        return (self.map_slider_value_to_resolution(self.slider.lowerValue()),
-                self.map_slider_value_to_resolution(self.slider.upperValue()))
+        return (
+            self.map_slider_value_to_resolution(self.slider.lowerValue()),
+            self.map_slider_value_to_resolution(self.slider.upperValue()),
+        )
 
     def _update_labels(self):
         lower, upper = self.current_range()
-        self.min_label.setText('{} m'.format(lower))
-        self.max_label.setText('{} m'.format(upper))
-        if self.slider.lowerValue() == self.slider.minimum() and \
-                self.slider.upperValue() == self.slider.maximum():
-            self.set_current_text('Resolution')
+        self.min_label.setText("{} m".format(lower))
+        self.max_label.setText("{} m".format(upper))
+        if (
+            self.slider.lowerValue() == self.slider.minimum()
+            and self.slider.upperValue() == self.slider.maximum()
+        ):
+            self.set_current_text("Resolution")
         else:
-            self.set_current_text('Resolution {} m - {} m'.format(lower,
-                                                                  upper))
+            self.set_current_text("Resolution {} m - {} m".format(lower, upper))
         if not self._block_changes:
             self.changed.emit()
 
     def clear(self):
-        if self.slider.lowerValue() == self.slider.minimum() and \
-                self.slider.upperValue() == self.slider.maximum():
+        if (
+            self.slider.lowerValue() == self.slider.minimum()
+            and self.slider.upperValue() == self.slider.maximum()
+        ):
             return
 
         self._block_changes += 1
@@ -111,20 +111,26 @@ class ResolutionFilterWidget(FilterWidgetComboBase):
         self._update_labels()
 
     def should_show_clear(self):
-        if self.slider.lowerValue() == self.slider.minimum() and \
-                self.slider.upperValue() == self.slider.maximum():
+        if (
+            self.slider.lowerValue() == self.slider.minimum()
+            and self.slider.upperValue() == self.slider.maximum()
+        ):
             return False
 
         return super().should_show_clear()
 
     def apply_constraints_to_query(self, query: DataBrowserQuery):
-        mapped_lower_value = self.map_slider_value_to_resolution(self.slider.lowerValue())
+        mapped_lower_value = self.map_slider_value_to_resolution(
+            self.slider.lowerValue()
+        )
         mapped_minimum = self.map_slider_value_to_resolution(self.slider.minimum())
         if mapped_lower_value != mapped_minimum:
             query.minimum_resolution = mapped_lower_value
         else:
             query.minimum_resolution = None
-        mapped_upper_value = self.map_slider_value_to_resolution(self.slider.upperValue())
+        mapped_upper_value = self.map_slider_value_to_resolution(
+            self.slider.upperValue()
+        )
         mapped_maximum = self.map_slider_value_to_resolution(self.slider.maximum())
         if mapped_upper_value != mapped_maximum:
             query.maximum_resolution = mapped_upper_value
@@ -142,7 +148,8 @@ class ResolutionFilterWidget(FilterWidgetComboBase):
             self.slider.setLowerValue(self.slider.minimum())
         if query.maximum_resolution is not None:
             self.slider.setUpperValue(
-                self.map_value_to_slider(query.maximum_resolution))
+                self.map_value_to_slider(query.maximum_resolution)
+            )
         else:
             self.slider.setUpperValue(self.slider.maximum())
 
@@ -150,8 +157,8 @@ class ResolutionFilterWidget(FilterWidgetComboBase):
         self._block_changes -= 1
 
     def set_facets(self, facets: dict):
-        min_res = facets.get('raster_resolution', {}).get('min')
-        max_res = facets.get('raster_resolution', {}).get('max')
+        min_res = facets.get("raster_resolution", {}).get("min")
+        max_res = facets.get("raster_resolution", {}).get("max")
 
         prev_range = list(self.current_range())
         if prev_range[0] == self._range[0]:

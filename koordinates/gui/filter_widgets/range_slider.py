@@ -13,7 +13,7 @@ class RangeSlider(QgsRangeSlider):
     """
 
     def sizeHint(self):
-        if platform.system() == 'Darwin':
+        if platform.system() == "Darwin":
             # sizeHint crashes on mac for hidden QSlider widgets
             return QSize(100, 30)
 

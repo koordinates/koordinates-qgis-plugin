@@ -1,15 +1,8 @@
 from qgis.PyQt.QtCore import QCoreApplication
-from qgis.PyQt.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QRadioButton,
-    QButtonGroup
-)
+from qgis.PyQt.QtWidgets import QWidget, QVBoxLayout, QRadioButton, QButtonGroup
 
 from .filter_widget_combo_base import FilterWidgetComboBase
-from ...api import (
-    DataBrowserQuery
-)
+from ...api import DataBrowserQuery
 
 
 class CategoryFilterWidget(FilterWidgetComboBase):
@@ -23,7 +16,7 @@ class CategoryFilterWidget(FilterWidgetComboBase):
         self.drop_down_widget = QWidget()
         vl = QVBoxLayout()
 
-        self.all_categories_radio = QRadioButton('All categories')
+        self.all_categories_radio = QRadioButton("All categories")
         self.category_radios = []
         self.category_group = QButtonGroup()
         self.category_group.addButton(self.all_categories_radio)
@@ -40,7 +33,7 @@ class CategoryFilterWidget(FilterWidgetComboBase):
         self.clear()
 
     def set_facets(self, facets: dict):
-        new_categories = set(c['key'] for c in facets.get('category'))
+        new_categories = set(c["key"] for c in facets.get("category"))
         if new_categories == self.current_categories:
             # no change, do nothing
             return
@@ -50,7 +43,7 @@ class CategoryFilterWidget(FilterWidgetComboBase):
         prev_key, prev_name = self._get_current_category()
 
         for w in self.category_radios:
-            if hasattr(w, '_child_frame') and w._child_frame is not None:
+            if hasattr(w, "_child_frame") and w._child_frame is not None:
                 w._child_frame.deleteLater()
 
             w.deleteLater()
@@ -59,29 +52,29 @@ class CategoryFilterWidget(FilterWidgetComboBase):
 
         categories = []
         new_keys = set()
-        for c in facets.get('category', []):
-            key = c['key']
+        for c in facets.get("category", []):
+            key = c["key"]
             new_keys.add(key)
-            if '/' in key:
+            if "/" in key:
                 continue  # child category
             else:
-                c['children'] = []
+                c["children"] = []
                 categories.append(c)
-        for c in facets.get('category', []):
-            key = c['key']
-            if '/' not in key:
+        for c in facets.get("category", []):
+            key = c["key"]
+            if "/" not in key:
                 continue  # parent category
             else:
-                parent_key = key.split('/')[0]
-                parent = [p for p in categories if p['key'] == parent_key]
+                parent_key = key.split("/")[0]
+                parent = [p for p in categories if p["key"] == parent_key]
                 if not parent:
                     continue  # something bad!
-                parent[0]['children'].append(c)
+                parent[0]["children"].append(c)
 
         if prev_key and prev_key not in new_keys:
             # when a facet response doesn't include the current key, we still
             # force show it to avoid removing a previously set filter
-            label = prev_name.replace('&', '&&')
+            label = prev_name.replace("&", "&&")
             r = QRadioButton(label)
             r._key = prev_key
             r._name = prev_name
@@ -93,10 +86,10 @@ class CategoryFilterWidget(FilterWidgetComboBase):
             self.category_radios.append(r)
 
         for c in categories:
-            name = c['name']
-            label = name.replace('&', '&&')
+            name = c["name"]
+            label = name.replace("&", "&&")
             r = QRadioButton(label)
-            r._key = c['key']
+            r._key = c["key"]
             r._name = name
             r._child_frame = None
             r._child_group = None
@@ -114,10 +107,10 @@ class CategoryFilterWidget(FilterWidgetComboBase):
                 child_frame_layout = QVBoxLayout()
                 child_frame_layout.setContentsMargins(self._indent_margin, 0, 0, 0)
                 for child in children:
-                    name = child['name']
-                    label = name.replace('&', '&&')
+                    name = child["name"]
+                    label = name.replace("&", "&&")
                     r_child = QRadioButton(label)
-                    r_child._key = child['key']
+                    r_child._key = child["key"]
                     r_child._name = name
                     r_child._parent_radio = r
 
@@ -152,7 +145,7 @@ class CategoryFilterWidget(FilterWidgetComboBase):
                 if prev_key == r._key:
                     found = True
                     r.setChecked(True)
-                    if hasattr(r, '_parent_radio') and r._parent_radio is not None:
+                    if hasattr(r, "_parent_radio") and r._parent_radio is not None:
                         r._parent_radio.setChecked(True)
                     break
             if not found:
@@ -166,7 +159,7 @@ class CategoryFilterWidget(FilterWidgetComboBase):
 
     def _update_visible_frames(self):
         for r in self.category_radios:
-            if hasattr(r, '_child_frame') and r._child_frame is not None:
+            if hasattr(r, "_child_frame") and r._child_frame is not None:
                 r._child_frame.setVisible(r.isChecked())
                 r._child_frame.adjustSize()
 
@@ -194,13 +187,13 @@ class CategoryFilterWidget(FilterWidgetComboBase):
                 if not r.isChecked():
                     continue
 
-                if hasattr(r, '_parent_radio') and r._parent_radio is not None:
+                if hasattr(r, "_parent_radio") and r._parent_radio is not None:
                     if r._parent_radio.isChecked():
                         return r._key, r._name
                     else:
                         continue
                 else:
-                    if hasattr(r, '_child_frame') and r._child_frame is not None:
+                    if hasattr(r, "_child_frame") and r._child_frame is not None:
                         found_checked_child = False
                         for b in r._child_group.buttons():
                             if b.isChecked():
@@ -215,7 +208,7 @@ class CategoryFilterWidget(FilterWidgetComboBase):
         return None, None
 
     def _update_value(self):
-        text = 'Category'
+        text = "Category"
 
         key, name = self._get_current_category()
         if name:
@@ -240,7 +233,7 @@ class CategoryFilterWidget(FilterWidgetComboBase):
             for r in self.category_radios:
                 if query.category == r._key:
                     r.setChecked(True)
-                    if hasattr(r, '_parent_radio') and r._parent_radio is not None:
+                    if hasattr(r, "_parent_radio") and r._parent_radio is not None:
                         r._parent_radio.setChecked(True)
                     break
 

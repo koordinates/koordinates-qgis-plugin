@@ -1,32 +1,16 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from functools import partial
-from typing import (
-    Dict,
-    Optional
-)
+from typing import Dict, Optional
 
 from qgis.PyQt.QtCore import QUrl
-from qgis.PyQt.QtCore import (
-    Qt,
-    QObject,
-    pyqtSignal,
-    QSize
-)
-from qgis.PyQt.QtGui import (
-    QImage,
-    QColor,
-    QPainter,
-    QBrush
-)
+from qgis.PyQt.QtCore import Qt, QObject, pyqtSignal, QSize
+from qgis.PyQt.QtGui import QImage, QColor, QPainter, QBrush
 from qgis.PyQt.QtNetwork import QNetworkReply, QNetworkRequest
 from qgis.core import QgsNetworkAccessManager
 
 from .gui_utils import GuiUtils
-from ..api import (
-    Publisher,
-    PublisherType
-)
+from ..api import Publisher, PublisherType
 
 
 class ThumbnailProcessor(ABC):
@@ -46,9 +30,7 @@ class UserThumbnailProcessor(ThumbnailProcessor):
     A thumbnail processor for user thumbnails
     """
 
-    def __init__(self,
-                 name: str,
-                 size: QSize):
+    def __init__(self, name: str, size: QSize):
         self.name = name
         self.size = size
 
@@ -57,15 +39,10 @@ class UserThumbnailProcessor(ThumbnailProcessor):
         from .user_avatar_generator import UserAvatarGenerator
 
         if thumbnail and not thumbnail.isNull():
-            scaled = DatasetGuiUtils.crop_image_to_circle(
-                thumbnail, self.size.height()
-            )
+            scaled = DatasetGuiUtils.crop_image_to_circle(thumbnail, self.size.height())
             return scaled
 
-        return UserAvatarGenerator.get_avatar(
-            self.name,
-            self.size.height()
-        )
+        return UserAvatarGenerator.get_avatar(self.name, self.size.height())
 
 
 class PublisherTypeThumbnailProcessor(ThumbnailProcessor):
@@ -73,35 +50,29 @@ class PublisherTypeThumbnailProcessor(ThumbnailProcessor):
     A thumbnail processor for publisher type thumbnails
     """
 
-    def __init__(self,
-                 size: QSize,
-                 background_color: Optional[QColor] = None):
+    def __init__(self, size: QSize, background_color: Optional[QColor] = None):
         self.size = size
         self.background_color = background_color
 
     def process_thumbnail(self, thumbnail: Optional[QImage]) -> QImage:
         max_thumbnail_width = self.size.width()
-        max_thumbnail_height = \
-            int(min(self.size.height(),
-                    thumbnail.height()))
+        max_thumbnail_height = int(min(self.size.height(), thumbnail.height()))
         scaled = thumbnail.scaled(
             QSize(max_thumbnail_width, max_thumbnail_height),
             Qt.AspectRatioMode.KeepAspectRatio,
-            Qt.TransformationMode.SmoothTransformation)
+            Qt.TransformationMode.SmoothTransformation,
+        )
 
         if self.background_color:
-            with_background = QImage(self.size,
-                                     QImage.Format.Format_ARGB32_Premultiplied)
+            with_background = QImage(
+                self.size, QImage.Format.Format_ARGB32_Premultiplied
+            )
             with_background.fill(Qt.GlobalColor.transparent)
             painter = QPainter(with_background)
             painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
             painter.setBrush(QBrush(self.background_color))
-            painter.drawRoundedRect(0, 0,
-                                    self.size.width(),
-                                    self.size.height(),
-                                    3,
-                                    3)
+            painter.drawRoundedRect(0, 0, self.size.width(), self.size.height(), 3, 3)
 
             x_center = int((self.size.width() - scaled.width()) / 2)
             y_center = int((self.size.height() - scaled.height()) / 2)
@@ -118,9 +89,7 @@ class PublisherThumbnailProcessor(ThumbnailProcessor):
     A thumbnail processor for publisher thumbnails
     """
 
-    def __init__(self,
-                 publisher: Publisher,
-                 size: QSize):
+    def __init__(self, publisher: Publisher, size: QSize):
         self.publisher = publisher
         self.size = size
 
@@ -135,14 +104,14 @@ class PublisherThumbnailProcessor(ThumbnailProcessor):
 
         if self.publisher.publisher_type == PublisherType.User:
             return UserThumbnailProcessor(
-                self.publisher.name(),
-                self.size).process_thumbnail(thumbnail)
+                self.publisher.name(), self.size
+            ).process_thumbnail(thumbnail)
 
         if thumbnail and not thumbnail.isNull():
             if self.publisher.publisher_type == PublisherType.Publisher:
-                return PublisherTypeThumbnailProcessor(
-                    self.size
-                ).process_thumbnail(thumbnail)
+                return PublisherTypeThumbnailProcessor(self.size).process_thumbnail(
+                    thumbnail
+                )
             else:
                 scaled = DatasetGuiUtils.crop_image_to_circle(
                     thumbnail, thumbnail.height()
@@ -150,7 +119,7 @@ class PublisherThumbnailProcessor(ThumbnailProcessor):
             return scaled
 
         else:
-            thumbnail = GuiUtils.get_svg_as_image('globe.svg', 40, 40)
+            thumbnail = GuiUtils.get_svg_as_image("globe.svg", 40, 40)
 
         return thumbnail
 
@@ -175,16 +144,17 @@ class GenericThumbnailManager(QObject):
             return self.thumbnails[url]
         else:
             req = QNetworkRequest(QUrl(url))
-            req.setAttribute(QNetworkRequest.Attribute.CacheLoadControlAttribute,
-                             QNetworkRequest.CacheLoadControl.PreferCache)
+            req.setAttribute(
+                QNetworkRequest.Attribute.CacheLoadControlAttribute,
+                QNetworkRequest.CacheLoadControl.PreferCache,
+            )
             req.setAttribute(QNetworkRequest.Attribute.CacheSaveControlAttribute, True)
             reply = QgsNetworkAccessManager.instance().get(req)
             self.queued_replies.add(reply)
             if reply.isFinished():
                 self.thumbnail_downloaded(reply)
             else:
-                reply.finished.connect(
-                    partial(self.thumbnail_downloaded, reply))
+                reply.finished.connect(partial(self.thumbnail_downloaded, reply))
 
     def thumbnail_downloaded(self, reply):
         self.queued_replies.remove(reply)
@@ -203,10 +173,9 @@ class ThumbnailManager:
         self.widget_processors: Dict[object, ThumbnailProcessor] = {}
         self.queued_replies = set()
 
-    def downloadThumbnail(self,
-                          url: str,
-                          widget,
-                          processor: Optional[ThumbnailProcessor] = None):
+    def downloadThumbnail(
+        self, url: str, widget, processor: Optional[ThumbnailProcessor] = None
+    ):
         if not url and processor:
             thumbnail = processor.process_thumbnail(None)
             widget.setThumbnail(thumbnail)
@@ -223,16 +192,17 @@ class ThumbnailManager:
                 self.widget_processors[widget] = processor
 
             req = QNetworkRequest(QUrl(url))
-            req.setAttribute(QNetworkRequest.Attribute.CacheLoadControlAttribute,
-                             QNetworkRequest.CacheLoadControl.PreferCache)
+            req.setAttribute(
+                QNetworkRequest.Attribute.CacheLoadControlAttribute,
+                QNetworkRequest.CacheLoadControl.PreferCache,
+            )
             req.setAttribute(QNetworkRequest.Attribute.CacheSaveControlAttribute, True)
             reply = QgsNetworkAccessManager.instance().get(req)
             self.queued_replies.add(reply)
             if reply.isFinished():
                 self.thumbnailDownloaded(reply)
             else:
-                reply.finished.connect(
-                    partial(self.thumbnailDownloaded, reply))
+                reply.finished.connect(partial(self.thumbnailDownloaded, reply))
 
     def thumbnailDownloaded(self, reply):
         self.queued_replies.remove(reply)
@@ -244,10 +214,9 @@ class ThumbnailManager:
             for w in self.widgets[url]:
                 thumbnail_image = QImage(img)
                 if w in self.widget_processors:
-                    thumbnail_image = \
-                        self.widget_processors[w].process_thumbnail(
-                            thumbnail_image
-                        )
+                    thumbnail_image = self.widget_processors[w].process_thumbnail(
+                        thumbnail_image
+                    )
                     del self.widget_processors[w]
 
                 try:
@@ -260,7 +229,5 @@ class ThumbnailManager:
 _thumbnailManager = ThumbnailManager()
 
 
-def downloadThumbnail(url: str,
-                      widget,
-                      processor: Optional[ThumbnailProcessor] = None):
+def downloadThumbnail(url: str, widget, processor: Optional[ThumbnailProcessor] = None):
     _thumbnailManager.downloadThumbnail(url, widget, processor)

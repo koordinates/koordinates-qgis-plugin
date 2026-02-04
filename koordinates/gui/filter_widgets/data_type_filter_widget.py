@@ -1,14 +1,11 @@
-from typing import (
-    Optional,
-    Set
-)
+from typing import Optional, Set
 
 from qgis.PyQt.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QRadioButton,
     QCheckBox,
-    QButtonGroup
+    QButtonGroup,
 )
 
 from .filter_widget_combo_base import FilterWidgetComboBase
@@ -38,61 +35,61 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
         self.drop_down_widget = QWidget()
         vl = QVBoxLayout()
 
-        self.layers_radio = QRadioButton('Layers')
+        self.layers_radio = QRadioButton("Layers")
         vl.addWidget(self.layers_radio)
 
         self.layers_widget = QWidget()
         layers_widget_layout = QVBoxLayout()
         layers_widget_layout.setContentsMargins(self._indent_margin, 0, 0, 0)
 
-        self.vector_radio = QRadioButton('Vectors')
+        self.vector_radio = QRadioButton("Vectors")
         layers_widget_layout.addWidget(self.vector_radio)
 
         self.vector_frame = QWidget()
         vector_frame_layout = QVBoxLayout()
         vector_frame_layout.setContentsMargins(self._indent_margin, 0, 0, 0)
 
-        self.point_checkbox = QCheckBox('Point')
+        self.point_checkbox = QCheckBox("Point")
         vector_frame_layout.addWidget(self.point_checkbox)
-        self.line_checkbox = QCheckBox('Line')
+        self.line_checkbox = QCheckBox("Line")
         vector_frame_layout.addWidget(self.line_checkbox)
-        self.polygon_checkbox = QCheckBox('Polygon')
+        self.polygon_checkbox = QCheckBox("Polygon")
         vector_frame_layout.addWidget(self.polygon_checkbox)
 
         self.point_checkbox.toggled.connect(self._enforce_geometry_type_constraints)
         self.line_checkbox.toggled.connect(self._enforce_geometry_type_constraints)
         self.polygon_checkbox.toggled.connect(self._enforce_geometry_type_constraints)
 
-        self.has_z_elevation_checkbox = QCheckBox('Has Z elevation')
+        self.has_z_elevation_checkbox = QCheckBox("Has Z elevation")
         vector_frame_layout.addWidget(self.has_z_elevation_checkbox)
-        self.vector_has_primary_key_checkbox = QCheckBox('Has primary key')
+        self.vector_has_primary_key_checkbox = QCheckBox("Has primary key")
         vector_frame_layout.addWidget(self.vector_has_primary_key_checkbox)
         self.vector_frame.setLayout(vector_frame_layout)
         layers_widget_layout.addWidget(self.vector_frame)
 
         self.vector_frame.setVisible(False)
 
-        self.raster_radio = QRadioButton('Rasters')
+        self.raster_radio = QRadioButton("Rasters")
         layers_widget_layout.addWidget(self.raster_radio)
 
         self.raster_frame = QWidget()
         raster_frame_layout = QVBoxLayout()
         raster_frame_layout.setContentsMargins(self._indent_margin, 0, 0, 0)
 
-        self.aerial_radio = QRadioButton('Aerial && satellite photos')
+        self.aerial_radio = QRadioButton("Aerial && satellite photos")
         raster_frame_layout.addWidget(self.aerial_radio)
-        self.not_aerial_radio = QRadioButton('Not aerial && satellite photos')
+        self.not_aerial_radio = QRadioButton("Not aerial && satellite photos")
         raster_frame_layout.addWidget(self.not_aerial_radio)
-        self.band_radio = QRadioButton('By band')
+        self.band_radio = QRadioButton("By band")
         raster_frame_layout.addWidget(self.band_radio)
 
         self.raster_band_frame = QWidget()
         raster_band_frame_layout = QVBoxLayout()
         raster_band_frame_layout.setContentsMargins(self._indent_margin, 0, 0, 0)
 
-        self.rgb_radio = QRadioButton('RGB')
+        self.rgb_radio = QRadioButton("RGB")
         raster_band_frame_layout.addWidget(self.rgb_radio)
-        self.grayscale_radio = QRadioButton('Grayscale')
+        self.grayscale_radio = QRadioButton("Grayscale")
         raster_band_frame_layout.addWidget(self.grayscale_radio)
 
         self.raster_band_frame.setLayout(raster_band_frame_layout)
@@ -101,7 +98,7 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
         self.raster_band_frame.setVisible(False)
         self.band_radio.toggled.connect(self._update_visible_frames)
 
-        self.alpha_channel_checkbox = QCheckBox('Only with alpha channel')
+        self.alpha_channel_checkbox = QCheckBox("Only with alpha channel")
         raster_frame_layout.addWidget(self.alpha_channel_checkbox)
 
         self.raster_frame.setLayout(raster_frame_layout)
@@ -110,16 +107,18 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
 
         self.raster_frame.setVisible(False)
 
-        self.point_cloud_radio = QRadioButton('Point Clouds')
+        self.point_cloud_radio = QRadioButton("Point Clouds")
         layers_widget_layout.addWidget(self.point_cloud_radio)
 
-        self.grid_radio = QRadioButton('Grids')
+        self.grid_radio = QRadioButton("Grids")
         layers_widget_layout.addWidget(self.grid_radio)
 
         self.grid_frame = QWidget()
         grid_frame_layout = QVBoxLayout()
         grid_frame_layout.setContentsMargins(self._indent_margin, 0, 0, 0)
-        self.multi_attribute_grids_only_checkbox = QCheckBox('Multi-attribute grids only (RAT\'s)')
+        self.multi_attribute_grids_only_checkbox = QCheckBox(
+            "Multi-attribute grids only (RAT's)"
+        )
         grid_frame_layout.addWidget(self.multi_attribute_grids_only_checkbox)
 
         self.grid_frame.setLayout(grid_frame_layout)
@@ -130,13 +129,13 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
         self.layers_widget.setLayout(layers_widget_layout)
         vl.addWidget(self.layers_widget)
 
-        self.table_radio = QRadioButton('Tables')
+        self.table_radio = QRadioButton("Tables")
         vl.addWidget(self.table_radio)
 
         self.table_frame = QWidget()
         table_frame_layout = QVBoxLayout()
         table_frame_layout.setContentsMargins(self._indent_margin, 0, 0, 0)
-        self.table_has_pk_checkbox = QCheckBox('Has primary key')
+        self.table_has_pk_checkbox = QCheckBox("Has primary key")
         table_frame_layout.addWidget(self.table_has_pk_checkbox)
         self.table_frame.setLayout(table_frame_layout)
 
@@ -145,14 +144,14 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
         vl.addWidget(self.table_frame)
 
         if self.WITH_SETS:
-            self.set_radio = QRadioButton('Sets')
+            self.set_radio = QRadioButton("Sets")
             vl.addWidget(self.set_radio)
         else:
             self.set_radio = None
 
-        self.data_repository_radio = QRadioButton('Repositories')
+        self.data_repository_radio = QRadioButton("Repositories")
         vl.addWidget(self.data_repository_radio)
-        self.document_radio = QRadioButton('Documents')
+        self.document_radio = QRadioButton("Documents")
         vl.addWidget(self.document_radio)
 
         self.drop_down_widget.setLayout(vl)
@@ -172,7 +171,7 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
             self.grid_radio,
             self.table_radio,
             self.data_repository_radio,
-            self.document_radio
+            self.document_radio,
         ]
         if self.WITH_SETS:
             self.type_radios.append(self.set_radio)
@@ -205,20 +204,23 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
             if radio.isChecked() and radio != clicked_button:
                 radio.setChecked(False)
 
-        if clicked_button in (self.aerial_radio,
-                              self.not_aerial_radio,
-                              self.band_radio,
-                              self.rgb_radio,
-                              self.grayscale_radio):
+        if clicked_button in (
+            self.aerial_radio,
+            self.not_aerial_radio,
+            self.band_radio,
+            self.rgb_radio,
+            self.grayscale_radio,
+        ):
             self.raster_radio.setChecked(True)
 
-        if clicked_button in (self.rgb_radio,
-                              self.grayscale_radio):
+        if clicked_button in (self.rgb_radio, self.grayscale_radio):
             self.band_radio.setChecked(clicked_button.isChecked())
 
-        if clicked_button == self.band_radio and \
-                not self.grayscale_radio.isChecked() and \
-                not self.rgb_radio.isChecked():
+        if (
+            clicked_button == self.band_radio
+            and not self.grayscale_radio.isChecked()
+            and not self.rgb_radio.isChecked()
+        ):
             self.rgb_radio.setChecked(True)
 
         if not any(radio.isChecked() for radio in self.type_radios):
@@ -232,10 +234,12 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
         self.vector_frame.setVisible(self.vector_radio.isChecked())
         self.raster_band_frame.setVisible(self.band_radio.isChecked())
 
-        should_show_raster_group = self.raster_radio.isChecked() or \
-            self.aerial_radio.isChecked() or \
-            self.not_aerial_radio.isChecked() or \
-            self.band_radio.isChecked()
+        should_show_raster_group = (
+            self.raster_radio.isChecked()
+            or self.aerial_radio.isChecked()
+            or self.not_aerial_radio.isChecked()
+            or self.band_radio.isChecked()
+        )
 
         self.raster_frame.setVisible(should_show_raster_group)
 
@@ -251,8 +255,11 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
         if self._block_geometry_type_constraint_update:
             return
 
-        none_selected = not (self.point_checkbox.isChecked() or self.line_checkbox.isChecked()
-                             or self.polygon_checkbox.isChecked())
+        none_selected = not (
+            self.point_checkbox.isChecked()
+            or self.line_checkbox.isChecked()
+            or self.polygon_checkbox.isChecked()
+        )
         if none_selected:
             self._block_geometry_type_constraint_update += 1
             self.point_checkbox.setChecked(True)
@@ -287,77 +294,83 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
         return super().should_show_clear()
 
     def _update_value(self):
-        text = ''
+        text = ""
         if self.layers_radio.isChecked():
-            text = 'Data type'
+            text = "Data type"
         elif self.vector_radio.isChecked():
             options = []
-            if self.point_checkbox.isChecked() and \
-                    self.line_checkbox.isChecked() and \
-                    self.polygon_checkbox.isChecked():
-                text = 'Vectors'
+            if (
+                self.point_checkbox.isChecked()
+                and self.line_checkbox.isChecked()
+                and self.polygon_checkbox.isChecked()
+            ):
+                text = "Vectors"
             else:
                 if self.point_checkbox.isChecked():
-                    options.append('Point')
+                    options.append("Point")
                 if self.line_checkbox.isChecked():
-                    options.append('Line')
+                    options.append("Line")
                 if self.polygon_checkbox.isChecked():
-                    options.append('Polygon')
-                text = 'Vector'
+                    options.append("Polygon")
+                text = "Vector"
 
             if self.has_z_elevation_checkbox.isChecked():
-                options.append('Has Z')
+                options.append("Has Z")
             if self.vector_has_primary_key_checkbox.isChecked():
-                options.append('Primary key')
+                options.append("Primary key")
 
             if options:
-                text = '{}: {}'.format(text, ', '.join(options))
+                text = "{}: {}".format(text, ", ".join(options))
 
-        elif self.raster_radio.isChecked() and not self.aerial_radio.isChecked() and \
-                not self.not_aerial_radio.isChecked() and not self.band_radio.isChecked():
+        elif (
+            self.raster_radio.isChecked()
+            and not self.aerial_radio.isChecked()
+            and not self.not_aerial_radio.isChecked()
+            and not self.band_radio.isChecked()
+        ):
             if self.alpha_channel_checkbox.isChecked():
-                text = 'Raster: Alpha'
+                text = "Raster: Alpha"
             else:
-                text = 'Rasters'
+                text = "Rasters"
         elif self.aerial_radio.isChecked():
             if self.alpha_channel_checkbox.isChecked():
-                text = 'Raster: Aerial & satellite photos, Alpha'
+                text = "Raster: Aerial & satellite photos, Alpha"
             else:
-                text = 'Raster: Aerial & satellite photos'
+                text = "Raster: Aerial & satellite photos"
         elif self.not_aerial_radio.isChecked():
             if self.alpha_channel_checkbox.isChecked():
-                text = 'Raster: Not aerial & satellite photos, Alpha'
+                text = "Raster: Not aerial & satellite photos, Alpha"
             else:
-                text = 'Raster: Not aerial & satellite photos'
+                text = "Raster: Not aerial & satellite photos"
         elif self.band_radio.isChecked():
             if self.rgb_radio.isChecked():
                 if self.alpha_channel_checkbox.isChecked():
-                    text = 'Raster: RGB, Alpha'
+                    text = "Raster: RGB, Alpha"
                 else:
-                    text = 'Raster: RGB'
+                    text = "Raster: RGB"
             elif self.grayscale_radio.isChecked():
                 if self.alpha_channel_checkbox.isChecked():
-                    text = 'Raster: Grayscale, Alpha'
+                    text = "Raster: Grayscale, Alpha"
                 else:
-                    text = 'Raster: Grayscale'
+                    text = "Raster: Grayscale"
         elif self.point_cloud_radio.isChecked():
-            text = 'Point Clouds'
+            text = "Point Clouds"
         elif self.grid_radio.isChecked():
             if self.multi_attribute_grids_only_checkbox.isChecked():
-                text = 'Multi-attribute grids'
+                text = "Multi-attribute grids"
             else:
-                text = 'Grids'
+                text = "Grids"
         elif self.table_radio.isChecked():
             if self.table_has_pk_checkbox.isChecked():
-                text = 'Tables: Primary key'
+                text = "Tables: Primary key"
             else:
-                text = 'Tables'
+                text = "Tables"
         elif self.WITH_SETS and self.set_radio.isChecked():
-            text = 'Sets'
+            text = "Sets"
         elif self.data_repository_radio.isChecked():
-            text = 'Repositories'
+            text = "Repositories"
         elif self.document_radio.isChecked():
-            text = 'Documents'
+            text = "Documents"
 
         self.set_current_text(text)
         if not self._block_changes:
@@ -372,10 +385,14 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
             types = {DataType.Vectors, DataType.Rasters, DataType.Grids}
         elif self.vector_radio.isChecked():
             types = {DataType.Vectors}
-        elif any((self.raster_radio.isChecked(),
-                  self.aerial_radio.isChecked(),
-                  self.not_aerial_radio.isChecked(),
-                  self.band_radio.isChecked())):
+        elif any(
+            (
+                self.raster_radio.isChecked(),
+                self.aerial_radio.isChecked(),
+                self.not_aerial_radio.isChecked(),
+                self.band_radio.isChecked(),
+            )
+        ):
             types = {DataType.Rasters}
         elif self.grid_radio.isChecked():
             types = {DataType.Grids}
@@ -397,9 +414,11 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
             query.data_types = {DataType.Vectors, DataType.Rasters, DataType.Grids}
         elif self.vector_radio.isChecked():
             query.data_types = {DataType.Vectors}
-            if self.point_checkbox.isChecked() and \
-                    self.line_checkbox.isChecked() and \
-                    self.polygon_checkbox.isChecked():
+            if (
+                self.point_checkbox.isChecked()
+                and self.line_checkbox.isChecked()
+                and self.polygon_checkbox.isChecked()
+            ):
                 pass
             else:
                 if self.point_checkbox.isChecked():
@@ -414,8 +433,12 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
             if self.vector_has_primary_key_checkbox.isChecked():
                 query.vector_filters.add(VectorFilter.HasPrimaryKey)
 
-        elif self.raster_radio.isChecked() and not self.aerial_radio.isChecked() and \
-                not self.not_aerial_radio.isChecked() and not self.band_radio.isChecked():
+        elif (
+            self.raster_radio.isChecked()
+            and not self.aerial_radio.isChecked()
+            and not self.not_aerial_radio.isChecked()
+            and not self.band_radio.isChecked()
+        ):
             query.data_types = {DataType.Rasters}
         elif self.aerial_radio.isChecked():
             query.data_types = {DataType.Rasters}
@@ -447,7 +470,10 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
         elif self.document_radio.isChecked():
             query.data_types = {DataType.Documents}
 
-        if DataType.Rasters in query.data_types and self.alpha_channel_checkbox.isChecked():
+        if (
+            DataType.Rasters in query.data_types
+            and self.alpha_channel_checkbox.isChecked()
+        ):
             query.raster_filter_options.add(RasterFilterOptions.WithAlphaChannel)
 
     def set_from_query(self, query: DataBrowserQuery):
@@ -463,11 +489,17 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
                 self.line_checkbox.setChecked(True)
                 self.polygon_checkbox.setChecked(True)
             else:
-                self.point_checkbox.setChecked(VectorFilter.Point in query.vector_filters)
+                self.point_checkbox.setChecked(
+                    VectorFilter.Point in query.vector_filters
+                )
                 self.line_checkbox.setChecked(VectorFilter.Line in query.vector_filters)
-                self.polygon_checkbox.setChecked(VectorFilter.Polygon in query.vector_filters)
+                self.polygon_checkbox.setChecked(
+                    VectorFilter.Polygon in query.vector_filters
+                )
 
-            self.has_z_elevation_checkbox.setChecked(VectorFilter.HasZ in query.vector_filters)
+            self.has_z_elevation_checkbox.setChecked(
+                VectorFilter.HasZ in query.vector_filters
+            )
             self.vector_has_primary_key_checkbox.setChecked(
                 VectorFilter.HasPrimaryKey in query.vector_filters
             )
@@ -488,7 +520,8 @@ class DataTypeFilterWidget(FilterWidgetComboBase):
         elif query.data_types == {DataType.Grids}:
             type_radio = self.grid_radio
             self.multi_attribute_grids_only_checkbox.setChecked(
-                GridFilterOptions.MultiAttributeGridsOnly in query.grid_filter_options)
+                GridFilterOptions.MultiAttributeGridsOnly in query.grid_filter_options
+            )
         elif query.data_types == {DataType.Tables}:
             type_radio = self.table_radio
             self.table_has_pk_checkbox.setChecked(

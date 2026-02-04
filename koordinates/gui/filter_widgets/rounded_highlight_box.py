@@ -1,16 +1,8 @@
 from typing import Optional
 
 from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtGui import (
-    QPainter,
-    QBrush,
-    QColor
-)
-from qgis.PyQt.QtWidgets import (
-    QWidget,
-    QStyleOption,
-    QStylePainter
-)
+from qgis.PyQt.QtGui import QPainter, QBrush, QColor
+from qgis.PyQt.QtWidgets import QWidget, QStyleOption, QStylePainter
 
 
 class RoundedHighlightBox(QWidget):
@@ -38,7 +30,5 @@ class RoundedHighlightBox(QWidget):
         painter.setBrush(brush)
         painter.setPen(Qt.PenStyle.NoPen)
 
-        painter.drawRoundedRect(option.rect,
-                                self.CORNER_RADIUS,
-                                self.CORNER_RADIUS)
+        painter.drawRoundedRect(option.rect, self.CORNER_RADIUS, self.CORNER_RADIUS)
         painter.restore()

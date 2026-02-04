@@ -1,23 +1,8 @@
 from typing import Optional
 
-from qgis.PyQt.QtCore import (
-    Qt,
-    QTimer,
-    pyqtSignal,
-    QSize
-)
-from qgis.PyQt.QtGui import (
-    QFontMetrics,
-    QPainter,
-    QBrush,
-    QColor,
-    QPainterPath
-)
-from qgis.PyQt.QtWidgets import (
-    QWidget,
-    QStylePainter,
-    QStyleOption
-)
+from qgis.PyQt.QtCore import Qt, QTimer, pyqtSignal, QSize
+from qgis.PyQt.QtGui import QFontMetrics, QPainter, QBrush, QColor, QPainterPath
+from qgis.PyQt.QtWidgets import QWidget, QStylePainter, QStyleOption
 
 from .access_filter_widget import AccessFilterWidget
 from .data_type_filter_widget import DataTypeFilterWidget
@@ -29,11 +14,7 @@ from .resolution_filter_widget import ResolutionFilterWidget
 from ..compat import fontmetric_width
 from ..enums import FilterWidgetAppearance
 from ..flow_layout import FlowLayout
-from ...api import (
-    DataBrowserQuery,
-    DataType,
-    Publisher
-)
+from ...api import DataBrowserQuery, DataType, Publisher
 
 
 class AdvancedFilterWidget(QWidget):
@@ -65,9 +46,10 @@ class AdvancedFilterWidget(QWidget):
             self.date_filter_widget,
             self.license_widget,
             self.group_widget,
-            self.access_widget,)
+            self.access_widget,
+        )
 
-        min_filter_widget_width = fontmetric_width(QFontMetrics(self.font()), 'x') * 25
+        min_filter_widget_width = fontmetric_width(QFontMetrics(self.font()), "x") * 25
         # self.category_filter_widget.setMinimumWidth(min_filter_widget_width)
         for w in self.filter_widgets:
             w.setMinimumWidth(min_filter_widget_width)
@@ -89,15 +71,12 @@ class AdvancedFilterWidget(QWidget):
         for w in self.filter_widgets:
             w.changed.connect(self._filter_widget_changed)
 
-        self.publisher_filter_widget.changed.connect(
-            self._publisher_filter_changed
-        )
+        self.publisher_filter_widget.changed.connect(self._publisher_filter_changed)
 
         self.setLayout(filter_widget_layout)
 
     def sizeHint(self):
-        return QSize(self.width(),
-                     self.layout().heightForWidth(self.width()))
+        return QSize(self.width(), self.layout().heightForWidth(self.width()))
 
     def clear_all(self):
         for w in self.filter_widgets:
@@ -111,9 +90,7 @@ class AdvancedFilterWidget(QWidget):
         """
         Triggered when the current publisher filter is changed
         """
-        self.publisher_changed.emit(
-            self.publisher_filter_widget.current_publisher()
-        )
+        self.publisher_changed.emit(self.publisher_filter_widget.current_publisher())
 
     def set_publisher_filter_visible(self, visible: bool):
         """
@@ -148,31 +125,30 @@ class AdvancedFilterWidget(QWidget):
         painter.setPen(Qt.PenStyle.NoPen)
 
         if self.appearance == FilterWidgetAppearance.Horizontal:
-            painter.drawRoundedRect(option.rect,
-                                    self.CORNER_RADIUS,
-                                    self.CORNER_RADIUS)
+            painter.drawRoundedRect(option.rect, self.CORNER_RADIUS, self.CORNER_RADIUS)
         else:
             path = QPainterPath()
             path.moveTo(option.rect.left(), option.rect.top())
             path.lineTo(option.rect.right(), option.rect.top())
-            path.lineTo(option.rect.right(),
-                        option.rect.bottom() - self.CORNER_RADIUS)
-            path.arcTo(option.rect.right() - self.CORNER_RADIUS * 2,
-                       option.rect.bottom() - self.CORNER_RADIUS * 2,
-                       self.CORNER_RADIUS * 2,
-                       self.CORNER_RADIUS * 2,
-                       0, -90
-                       )
-            path.lineTo(option.rect.left() + self.CORNER_RADIUS,
-                        option.rect.bottom())
-            path.arcTo(option.rect.left(),
-                       option.rect.bottom() - self.CORNER_RADIUS * 2,
-                       self.CORNER_RADIUS * 2,
-                       self.CORNER_RADIUS * 2,
-                       270, -90
-                       )
-            path.lineTo(option.rect.left(),
-                        option.rect.top())
+            path.lineTo(option.rect.right(), option.rect.bottom() - self.CORNER_RADIUS)
+            path.arcTo(
+                option.rect.right() - self.CORNER_RADIUS * 2,
+                option.rect.bottom() - self.CORNER_RADIUS * 2,
+                self.CORNER_RADIUS * 2,
+                self.CORNER_RADIUS * 2,
+                0,
+                -90,
+            )
+            path.lineTo(option.rect.left() + self.CORNER_RADIUS, option.rect.bottom())
+            path.arcTo(
+                option.rect.left(),
+                option.rect.bottom() - self.CORNER_RADIUS * 2,
+                self.CORNER_RADIUS * 2,
+                self.CORNER_RADIUS * 2,
+                270,
+                -90,
+            )
+            path.lineTo(option.rect.left(), option.rect.top())
             painter.drawPath(path)
         painter.restore()
 
@@ -185,8 +161,9 @@ class AdvancedFilterWidget(QWidget):
 
         selected_data_types = self.data_type_filter_widget.data_types()
 
-        if selected_data_types == {DataType.Rasters} or \
-                selected_data_types == {DataType.Grids}:
+        if selected_data_types == {DataType.Rasters} or selected_data_types == {
+            DataType.Grids
+        }:
             # show resolution
             self.resolution_widget.setVisible(True)
         else:

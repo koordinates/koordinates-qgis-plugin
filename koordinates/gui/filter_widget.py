@@ -1,35 +1,13 @@
-from typing import (
-    Optional,
-    List,
-    Union
-)
+from typing import Optional, List, Union
 
 from qgis.PyQt import sip
-from qgis.PyQt.QtCore import (
-    QTimer,
-    pyqtSignal,
-    QSize
-)
-from qgis.PyQt.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QButtonGroup,
-    QSizePolicy
-)
-from qgis.gui import (
-    QgsFilterLineEdit
-)
+from qgis.PyQt.QtCore import QTimer, pyqtSignal, QSize
+from qgis.PyQt.QtWidgets import QWidget, QVBoxLayout, QButtonGroup, QSizePolicy
+from qgis.gui import QgsFilterLineEdit
 
 from .filter_widgets import AdvancedFilterWidget
-from .enums import (
-    TabStyle,
-    FilterWidgetAppearance,
-    StandardExploreModes
-)
-from .explore_tab_bar import (
-    ExploreTabBar,
-    ExploreTabButton
-)
+from .enums import TabStyle, FilterWidgetAppearance, StandardExploreModes
+from .explore_tab_bar import ExploreTabBar, ExploreTabButton
 from .gui_utils import GuiUtils
 from ..api import (
     KoordinatesClient,
@@ -37,7 +15,7 @@ from ..api import (
     SortOrder,
     DataType,
     AccessType,
-    ExploreSection
+    ExploreSection,
 )
 
 
@@ -67,16 +45,15 @@ class FilterWidget(QWidget):
         narrow_layout.setContentsMargins(0, 0, 0, 0)
         narrow_layout.setSpacing(0)
         self.explore_tab_bar = ExploreTabBar()
-        self.explore_tab_bar.setSizePolicy(QSizePolicy.Policy.Ignored,
-                                           QSizePolicy.Policy.Fixed)
+        self.explore_tab_bar.setSizePolicy(
+            QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed
+        )
         narrow_layout.addWidget(self.explore_tab_bar)
 
         self.explore_tab_bar.mode_changed.connect(self._explore_mode_changed)
         self.advanced_filter_widget = AdvancedFilterWidget(self)
-        self.advanced_filter_widget.filters_changed.connect(
-            self._filter_widget_changed)
-        self.advanced_filter_widget.publisher_changed.connect(
-            self.publisher_changed)
+        self.advanced_filter_widget.filters_changed.connect(self._filter_widget_changed)
+        self.advanced_filter_widget.publisher_changed.connect(self.publisher_changed)
 
         narrow_layout.addWidget(self.advanced_filter_widget)
 
@@ -99,13 +76,13 @@ class FilterWidget(QWidget):
         self.explore_buttons: List[ExploreTabButton] = []
 
         self.browse_button = ExploreTabButton()
-        self.browse_button.setIcon(GuiUtils.get_icon('browse.svg'))
-        self.browse_button.setText(self.tr('Browse'))
+        self.browse_button.setIcon(GuiUtils.get_icon("browse.svg"))
+        self.browse_button.setText(self.tr("Browse"))
         self.browse_button.bottom_tab_style = TabStyle.Flat
 
         self.publishers_button = ExploreTabButton()
-        self.publishers_button.setIcon(GuiUtils.get_icon('publishers.svg'))
-        self.publishers_button.setText(self.tr('Publishers'))
+        self.publishers_button.setIcon(GuiUtils.get_icon("publishers.svg"))
+        self.publishers_button.setText(self.tr("Publishers"))
 
         self.explore_button_group = QButtonGroup(self)
         self.explore_button_group.addButton(self.browse_button)
@@ -159,14 +136,12 @@ class FilterWidget(QWidget):
         for section in sections:
 
             explore_button = ExploreTabButton()
-            explore_button.setIcon(
-                section.icon or GuiUtils.get_icon('popular.svg')
-            )
+            explore_button.setIcon(section.icon or GuiUtils.get_icon("popular.svg"))
             explore_button.setText(section.label)
             explore_button.setToolTip(section.description)
-            explore_button.setProperty('slug', section.slug)
+            explore_button.setProperty("slug", section.slug)
 
-            if section.slug == 'popular':
+            if section.slug == "popular":
                 # special case for popular, should always be first button
                 self.explore_buttons_layout.insertWidget(0, explore_button)
             else:
@@ -184,17 +159,22 @@ class FilterWidget(QWidget):
     def sizeHint(self):
         if not self._wide_mode:
             width = self.width()
-            height = self.explore_tab_bar.sizeHint().height() \
-                if self.explore_tab_bar.isVisible() else 0
+            height = (
+                self.explore_tab_bar.sizeHint().height()
+                if self.explore_tab_bar.isVisible()
+                else 0
+            )
             if self.advanced_filter_widget.isVisible():
                 height += self.advanced_filter_widget.sizeHint().height()
             if self.popular_recent_padding_widget.isVisible():
-                height += \
-                    self.popular_recent_padding_widget.height()
+                height += self.popular_recent_padding_widget.height()
         else:
             width = self.advanced_filter_widget.sizeHint().width()
-            height = self.browse_button.sizeHint().height() \
-                if self.browse_button.isVisible() else 0
+            height = (
+                self.browse_button.sizeHint().height()
+                if self.browse_button.isVisible()
+                else 0
+            )
             height += self.explore_buttons_layout.sizeHint().height()
             if self.advanced_filter_widget.isVisible():
                 height += self.advanced_filter_widget.sizeHint().height()
@@ -207,17 +187,13 @@ class FilterWidget(QWidget):
 
         self._wide_mode = wide_mode
         if self._wide_mode:
-            self.narrow_widget.layout().removeWidget(
-                self.advanced_filter_widget)
+            self.narrow_widget.layout().removeWidget(self.advanced_filter_widget)
             self.wide_mode_filter_layout.addWidget(self.advanced_filter_widget)
             self.wide_widget.show()
             self.narrow_widget.hide()
-            self.advanced_filter_widget.set_appearance(
-                FilterWidgetAppearance.Vertical
-            )
+            self.advanced_filter_widget.set_appearance(FilterWidgetAppearance.Vertical)
         else:
-            self.wide_mode_filter_layout.removeWidget(
-                self.advanced_filter_widget)
+            self.wide_mode_filter_layout.removeWidget(self.advanced_filter_widget)
             self.narrow_widget.layout().addWidget(self.advanced_filter_widget)
             self.wide_widget.hide()
             self.narrow_widget.show()
@@ -245,9 +221,7 @@ class FilterWidget(QWidget):
         for button in self.explore_buttons:
             button.setVisible(is_browse)
         self.publishers_button.setVisible(is_browse)
-        self.advanced_filter_widget.set_publisher_filter_visible(
-            is_browse
-        )
+        self.advanced_filter_widget.set_publisher_filter_visible(is_browse)
         if not is_browse:
             self.advanced_filter_widget.set_appearance(
                 FilterWidgetAppearance.Horizontal
@@ -255,10 +229,12 @@ class FilterWidget(QWidget):
         else:
             if self._wide_mode:
                 self.advanced_filter_widget.set_appearance(
-                    FilterWidgetAppearance.Vertical)
+                    FilterWidgetAppearance.Vertical
+                )
             else:
                 self.advanced_filter_widget.set_appearance(
-                    FilterWidgetAppearance.Horizontal)
+                    FilterWidgetAppearance.Horizontal
+                )
 
     def _explore_mode_changed(self):
         """
@@ -279,9 +255,7 @@ class FilterWidget(QWidget):
         elif button == self.publishers_button:
             self.set_explore_mode(StandardExploreModes.Publishers)
         else:
-            self.set_explore_mode(
-                button.property('slug')
-            )
+            self.set_explore_mode(button.property("slug"))
 
     def explore_mode(self) -> str:
         """
@@ -291,15 +265,14 @@ class FilterWidget(QWidget):
 
     def set_explore_mode(self, mode: str):
         show_filters = mode == StandardExploreModes.Browse
-        self.advanced_filter_widget.setVisible(
-            show_filters
-        )
+        self.advanced_filter_widget.setVisible(show_filters)
         if show_filters:
             self.advanced_filter_widget.updateGeometry()
 
-        if mode in (
-                StandardExploreModes.Popular,
-                StandardExploreModes.Recent) and self.search_line_edit:
+        if (
+            mode in (StandardExploreModes.Popular, StandardExploreModes.Recent)
+            and self.search_line_edit
+        ):
             self.search_line_edit.clear()
 
         # add a little bit of padding in popular/recent modes
@@ -314,7 +287,7 @@ class FilterWidget(QWidget):
             self.publishers_button.setChecked(True)
         else:
             for button in self.explore_buttons:
-                if button.property('slug') == mode:
+                if button.property("slug") == mode:
                     button.setChecked(True)
                     break
 
@@ -367,19 +340,23 @@ class FilterWidget(QWidget):
         elif mode == StandardExploreModes.Popular:
             query.order = SortOrder.Popularity
             query.access_type = AccessType.Public
-            query.data_types = {DataType.Tables,
-                                DataType.Vectors,
-                                DataType.Rasters,
-                                DataType.Grids,
-                                DataType.PointClouds}
+            query.data_types = {
+                DataType.Tables,
+                DataType.Vectors,
+                DataType.Rasters,
+                DataType.Grids,
+                DataType.PointClouds,
+            }
         elif mode == StandardExploreModes.Recent:
             query.order = SortOrder.RecentlyUpdated
             query.access_type = AccessType.Public
-            query.data_types = {DataType.Tables,
-                                DataType.Vectors,
-                                DataType.Rasters,
-                                DataType.Grids,
-                                DataType.PointClouds}
+            query.data_types = {
+                DataType.Tables,
+                DataType.Vectors,
+                DataType.Rasters,
+                DataType.Grids,
+                DataType.PointClouds,
+            }
 
         return query
 

@@ -7,17 +7,15 @@ the Free Software Foundation; either version 2 of the License, or
 (at your option) any later version.
 """
 
-__author__ = 'Nyall Dawson <nyall@north-road.com>'
-__revision__ = '$Format:%H$'
-__date__ = '12/09/2022'
+__author__ = "Nyall Dawson <nyall@north-road.com>"
+__revision__ = "$Format:%H$"
+__date__ = "12/09/2022"
 __license__ = "GPL"
-__copyright__ = 'Copyright 2022, Koordinates'
+__copyright__ = "Copyright 2022, Koordinates"
 
 import unittest
 
-from ..api import (
-    Repo
-)
+from ..api import Repo
 
 
 class TestRepo(unittest.TestCase):
@@ -43,5 +41,4 @@ class TestRepo(unittest.TestCase):
                 "description": "Description",
             }
         )
-        self.assertEqual(r.clone_url(),
-                         'https://data.koordinates.com/koordinates/aaa')
+        self.assertEqual(r.clone_url(), "https://data.koordinates.com/koordinates/aaa")
